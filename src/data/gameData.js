@@ -1744,3 +1744,188 @@ export const EXPLORE_TEXTS = {
     'Time stutters, seconds repeating themselves before lurching forward...',
   ],
 };
+
+// ---- RANDOM EVENTS ----
+// Events that can occur during exploration with risk/reward choices.
+// Each event has choices with weighted outcomes (odds sum to 1.0).
+// outcome.type: 'gold', 'item', 'damage', 'energy_drain', 'battle', 'nothing', 'heal'
+export const RANDOM_EVENTS = [
+  {
+    id: 'mysterious-chest',
+    title: 'Mysterious Chest',
+    description: 'You spot an ornate chest sitting in the open. It could be a stash of loot... or a trap.',
+    choices: [
+      {
+        label: 'Open the Chest',
+        outcomes: [
+          { weight: 0.45, type: 'item', text: 'The chest creaks open revealing valuable loot inside!' },
+          { weight: 0.25, type: 'gold_big', text: 'Jackpot! The chest is packed with gold coins.' },
+          { weight: 0.20, type: 'damage', amount: 0.30, text: 'TRAP! A poison dart shoots from the lock and pierces your arm!' },
+          { weight: 0.10, type: 'battle_hard', text: 'The chest was a mimic! It springs to life and attacks!' },
+        ],
+      },
+      {
+        label: 'Leave It Alone',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'You walk away cautiously. Better safe than sorry.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'wounded-traveler',
+    title: 'Wounded Traveler',
+    description: 'A figure lies slumped against the wall, groaning for help. They could be genuine... or bait.',
+    choices: [
+      {
+        label: 'Help Them',
+        outcomes: [
+          { weight: 0.40, type: 'gold', text: 'Grateful, they press a pouch of coins into your hand before limping away.' },
+          { weight: 0.20, type: 'item', text: '"Take this," they say, handing you gear they can no longer carry.' },
+          { weight: 0.25, type: 'energy_drain', amount: 4, text: 'You spend time patching them up but they have nothing to offer. Energy wasted.' },
+          { weight: 0.15, type: 'ambush', text: 'It was an ambush! They leap up and accomplices emerge from the shadows!' },
+        ],
+      },
+      {
+        label: 'Ignore Them',
+        outcomes: [
+          { weight: 0.70, type: 'nothing', text: 'You keep moving. Not your problem.' },
+          { weight: 0.30, type: 'guilt_gold', text: 'You walk past but guilt nags you. You toss them a few coins.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'strange-merchant',
+    title: 'Strange Merchant',
+    description: 'A hooded figure beckons from the shadows, offering a "once in a lifetime deal" for some gold.',
+    choices: [
+      {
+        label: 'Pay Up',
+        outcomes: [
+          { weight: 0.35, type: 'item_rare', text: 'They hand over something genuinely valuable. A rare find!' },
+          { weight: 0.30, type: 'item', text: 'Decent gear, roughly worth what you paid. Fair enough.' },
+          { weight: 0.25, type: 'scam', text: 'The item crumbles to dust in your hands. You\'ve been scammed!' },
+          { weight: 0.10, type: 'item_great', text: 'Your eyes widen. This piece is incredible — worth ten times what you paid!' },
+        ],
+      },
+      {
+        label: 'Walk Away',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'You decline. The merchant shrugs and melts back into the dark.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'glowing-shrine',
+    title: 'Glowing Shrine',
+    description: 'A faintly glowing shrine hums with energy. You sense it could restore or drain you.',
+    choices: [
+      {
+        label: 'Touch the Shrine',
+        outcomes: [
+          { weight: 0.35, type: 'heal', amount: 0.40, text: 'Warm light floods through you. Your wounds close and you feel revitalized!' },
+          { weight: 0.25, type: 'energy_restore', amount: 10, text: 'A surge of energy courses through your body!' },
+          { weight: 0.25, type: 'damage', amount: 0.25, text: 'The shrine crackles and zaps you with dark energy!' },
+          { weight: 0.15, type: 'energy_drain', amount: 6, text: 'The shrine siphons your vitality. You feel drained and sluggish.' },
+        ],
+      },
+      {
+        label: 'Pray at the Shrine',
+        outcomes: [
+          { weight: 0.50, type: 'heal', amount: 0.15, text: 'A gentle warmth washes over you. Minor wounds mend themselves.' },
+          { weight: 0.50, type: 'nothing', text: 'Nothing happens. The glow fades as you finish your prayer.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'abandoned-camp',
+    title: 'Abandoned Camp',
+    description: 'A recently abandoned campsite with supplies scattered around. Someone left in a hurry.',
+    choices: [
+      {
+        label: 'Scavenge the Camp',
+        outcomes: [
+          { weight: 0.35, type: 'item', text: 'You find usable gear stashed under a blanket.' },
+          { weight: 0.25, type: 'gold', text: 'A coin purse sits forgotten near the dead fire.' },
+          { weight: 0.20, type: 'battle_hard', text: 'The owner returns and they are NOT happy to see you!' },
+          { weight: 0.20, type: 'energy_drain', amount: 3, text: 'You search everywhere but find nothing of value. Wasted effort.' },
+        ],
+      },
+      {
+        label: 'Rest Here',
+        outcomes: [
+          { weight: 0.60, type: 'heal', amount: 0.20, text: 'You sit by the remains of the fire and catch your breath.' },
+          { weight: 0.40, type: 'ambush', text: 'You let your guard down and creatures creep in while you rest!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'locked-door',
+    title: 'Locked Door',
+    description: 'A heavy door with strange markings blocks a side passage. You hear faint sounds from within.',
+    choices: [
+      {
+        label: 'Force It Open',
+        outcomes: [
+          { weight: 0.30, type: 'gold_big', text: 'The door gives way to a hidden cache of treasure!' },
+          { weight: 0.25, type: 'item_rare', text: 'Inside you find a pristine piece of equipment on a pedestal.' },
+          { weight: 0.25, type: 'damage', amount: 0.20, text: 'The door was booby-trapped! An explosion throws you backwards.' },
+          { weight: 0.20, type: 'battle_hard', text: 'Something terrible was locked behind that door for a reason!' },
+        ],
+      },
+      {
+        label: 'Move On',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'Some doors are better left closed. You continue on your way.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'gambling-stranger',
+    title: 'Gambling Stranger',
+    description: 'A grinning stranger offers a coin-flip gamble: "Double your gold or lose it all. Well... some of it."',
+    choices: [
+      {
+        label: 'Take the Bet',
+        outcomes: [
+          { weight: 0.45, type: 'gold_double', text: 'Lady luck smiles on you! Your wager doubles!' },
+          { weight: 0.45, type: 'gold_lose', text: 'The stranger cackles as they pocket your coins. Better luck next time.' },
+          { weight: 0.10, type: 'gold_jackpot', text: 'Triple payout! The stranger stares in disbelief and reluctantly pays up.' },
+        ],
+      },
+      {
+        label: 'Decline',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: '"No guts, no glory," they shrug and shuffle away.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'suspicious-potion',
+    title: 'Suspicious Potion',
+    description: 'A bubbling vial sits on a makeshift shelf, its contents shifting between colors.',
+    choices: [
+      {
+        label: 'Drink It',
+        outcomes: [
+          { weight: 0.30, type: 'heal', amount: 0.50, text: 'Incredible! A powerful healing elixir surges through your veins!' },
+          { weight: 0.25, type: 'energy_restore', amount: 15, text: 'A jolt of pure energy! You feel like you could explore forever!' },
+          { weight: 0.25, type: 'damage', amount: 0.35, text: 'POISON! Your stomach lurches and your vision swims!' },
+          { weight: 0.20, type: 'energy_drain', amount: 8, text: 'A sedative! Your limbs grow heavy and you can barely keep your eyes open.' },
+        ],
+      },
+      {
+        label: 'Leave It',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'You\'re not that desperate. The mystery potion stays on the shelf.' },
+        ],
+      },
+    ],
+  },
+];

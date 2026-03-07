@@ -14,6 +14,8 @@ import ProfileScreen from './components/screens/ProfileScreen';
 import SkillsScreen from './components/screens/SkillsScreen';
 import ClassSelectScreen from './components/screens/ClassSelectScreen';
 import BossConfirmScreen from './components/screens/BossConfirmScreen';
+import RandomEventScreen from './components/screens/RandomEventScreen';
+import EventResultScreen from './components/screens/EventResultScreen';
 import UsernameScreen from './components/screens/UsernameScreen';
 import RegionsScreen from './components/screens/RegionsScreen';
 import JournalScreen from './components/screens/JournalScreen';
@@ -261,6 +263,21 @@ export default function App() {
                 text={state.exploreText}
                 onContinue={actions.exploreStep}
                 onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'random-event' && (
+              <RandomEventScreen
+                event={state.randomEvent}
+                onChoose={actions.randomEventChoose}
+                onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'event-result' && (
+              <EventResultScreen
+                result={state.eventResult}
+                onContinue={actions.eventResultContinue}
               />
             )}
 
