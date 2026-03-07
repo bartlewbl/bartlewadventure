@@ -2875,14 +2875,6 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-.skill-tree-innate {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
 .skill-tree-connector {
   text-align: center;
   color: #555;
@@ -2927,11 +2919,6 @@ body {
   background: rgba(14, 22, 42, 0.9);
   border: 2px solid rgba(255, 255, 255, 0.1);
   transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
-}
-
-.skill-tree-node-innate {
-  max-width: 320px;
-  border-width: 2px;
 }
 
 .skill-tree-node-available {

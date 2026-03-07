@@ -65,22 +65,26 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
 
       <div className="skill-tree-container">
         {/* Class innate skills */}
-        <div className="skill-tree-innate">
-          <div className="skill-tree-node skill-tree-node-innate" style={{ borderColor: cls.color }}>
-            <div className="skill-tree-node-header">
-              <span className="skill-tree-node-type passive">PASSIVE</span>
-              <span className="skill-tree-node-name" style={{ color: cls.color }}>{cls.passive}</span>
+        <div className="skill-tree-tier">
+          <div className="skill-tree-tier-label">Innate — Lv.1</div>
+          <div className="skill-tree-choices">
+            <div className="skill-tree-node skill-tree-node-selected" style={{ borderColor: cls.color }}>
+              <div className="skill-tree-node-header">
+                <span className="skill-tree-node-type passive">PASSIVE</span>
+                <span className="skill-tree-node-name">{cls.passive}</span>
+              </div>
+              <div className="skill-tree-node-desc">{cls.passiveDesc}</div>
+              <div className="skill-tree-node-badge">INNATE</div>
             </div>
-            <div className="skill-tree-node-desc">{cls.passiveDesc}</div>
-          </div>
-          <div className="skill-tree-connector">|</div>
-          <div className="skill-tree-node skill-tree-node-innate" style={{ borderColor: cls.color }}>
-            <div className="skill-tree-node-header">
-              <span className="skill-tree-node-type active">ACTIVE</span>
-              <span className="skill-tree-node-name" style={{ color: cls.color }}>{cls.skillName}</span>
+            <div className="skill-tree-node skill-tree-node-selected" style={{ borderColor: cls.color }}>
+              <div className="skill-tree-node-header">
+                <span className="skill-tree-node-type active">ACTIVE</span>
+                <span className="skill-tree-node-name">{cls.skillName}</span>
+              </div>
+              <div className="skill-tree-node-desc">{cls.skillDesc}</div>
+              <div className="skill-tree-node-mana">{cls.skillManaCost} Mana</div>
+              <div className="skill-tree-node-badge">INNATE</div>
             </div>
-            <div className="skill-tree-node-desc">{cls.skillDesc}</div>
-            <div className="skill-tree-node-mana">{cls.skillManaCost} Mana</div>
           </div>
         </div>
 
