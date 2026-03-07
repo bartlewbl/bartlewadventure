@@ -19,6 +19,7 @@ import RegionsScreen from './components/screens/RegionsScreen';
 import JournalScreen from './components/screens/JournalScreen';
 import MarketScreen from './components/screens/MarketScreen';
 import BaseScreen from './components/screens/BaseScreen';
+import StatSelectScreen from './components/screens/StatSelectScreen';
 import SidePanel from './components/SidePanel';
 import RightPanel from './components/RightPanel';
 
@@ -168,7 +169,7 @@ export default function App() {
     );
   }
 
-  const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm';
+  const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select';
   const hidePanels = navLocked;
   const canRest = !navLocked && (state.screen === 'town' || state.screen === 'locations' || state.screen === 'regions');
 
@@ -293,6 +294,14 @@ export default function App() {
               <BattleResultScreen
                 result={state.battleResult}
                 onContinue={actions.continueAfterBattle}
+              />
+            )}
+
+            {state.screen === 'stat-select' && state.pendingLevelUps?.length > 0 && (
+              <StatSelectScreen
+                pendingLevel={state.pendingLevelUps[0]}
+                maxPicks={state.pendingLevelUps[0].picks}
+                onConfirm={actions.applyStatChoices}
               />
             )}
 
