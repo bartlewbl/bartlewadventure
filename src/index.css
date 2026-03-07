@@ -2930,8 +2930,7 @@ body {
 }
 
 .skill-tree-node-innate {
-  width: 100%;
-  max-width: 400px;
+  max-width: 320px;
   border-width: 2px;
 }
 
