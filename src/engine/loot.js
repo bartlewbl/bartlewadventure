@@ -5,6 +5,12 @@ import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem } from '../data/baseData';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
 
+// Sell price is roughly half of a reference price, with ±10% variance
+function sellVariance(base) {
+  const factor = 0.4 + Math.random() * 0.2; // 0.4–0.6
+  return Math.max(1, Math.floor(base * factor));
+}
+
 function pickFromLibrary(pool, targetLevel) {
   if (!pool || pool.length === 0) return null;
   const weighted = pool.map(item => {
@@ -45,7 +51,7 @@ function buildGearDrop(template, monsterLevel, dropType) {
     atk,
     def,
     icon: template.icon,
-    sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
+    sellPrice: Math.max(10, sellVariance((atk + def) * 8 + effectiveLevel * 6 + rarityData.multiplier * 20)),
   };
 }
 
@@ -66,7 +72,7 @@ export function generateItem(dropType, monsterLevel) {
       rarityColor: rarity.color,
       healAmount,
       icon: 'potion',
-      sellPrice: Math.floor(healAmount * 0.6),
+      sellPrice: sellVariance(Math.floor(healAmount * 1.4 + monsterLevel * 5)),
     };
   }
 
@@ -86,7 +92,7 @@ export function generateItem(dropType, monsterLevel) {
       rarityColor: rarity.color,
       energyAmount,
       icon: 'energy-drink',
-      sellPrice: Math.floor(energyAmount * 0.8),
+      sellPrice: sellVariance(Math.floor(energyAmount * 2 + monsterLevel * 2)),
     };
   }
 
@@ -125,7 +131,7 @@ export function generateRewardItem(spec, playerLevel) {
       rarityColor: rarityData.color,
       healAmount,
       icon: 'potion',
-      sellPrice: Math.floor(healAmount * 0.6),
+      sellPrice: sellVariance(Math.floor(healAmount * 1.4 + effectiveLevel * 5)),
     };
   }
 
@@ -169,7 +175,7 @@ export function getShopItems(playerLevel) {
       healAmount,
       icon: 'potion',
       buyPrice,
-      sellPrice: Math.floor(healAmount * 0.6),
+      sellPrice: sellVariance(buyPrice),
     };
   });
 }
@@ -199,7 +205,7 @@ export function getShopEnergyDrinks(playerLevel) {
       energyAmount,
       icon: 'energy-drink',
       buyPrice,
-      sellPrice: Math.floor(energyAmount * 0.8),
+      sellPrice: sellVariance(buyPrice),
     };
   });
 }
@@ -253,7 +259,7 @@ export function getDailyFeaturedItems(playerLevel) {
       def,
       icon: template.icon,
       buyPrice,
-      sellPrice: Math.max(10, Math.floor((atk + def) * 4 + template.level * 3 + rarityData.multiplier * 10)),
+      sellPrice: Math.max(10, sellVariance(buyPrice)),
     });
   }
 
@@ -306,7 +312,7 @@ export function generateCraftedItem(templateId, playerLevel) {
     atk,
     def,
     icon: template.slot,
-    sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
+    sellPrice: Math.max(10, sellVariance((atk + def) * 8 + effectiveLevel * 6 + rarityData.multiplier * 20)),
   };
 }
 
