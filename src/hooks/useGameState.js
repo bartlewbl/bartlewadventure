@@ -61,6 +61,7 @@ function createInitialState() {
     energy: ENERGY_MAX,
     lastEnergyUpdate: Date.now(),
     pendingBoss: null,
+    pendingLevelUps: [],
     stats: createInitialStats(),
     tasks: createInitialTaskProgress(),
     base: createInitialBase(),
@@ -117,34 +118,50 @@ function incrementTaskProgress(tasks, statKey, amount = 1) {
 }
 
 // ---- HELPERS ----
+const STAT_PICKS_PER_LEVEL = 3;
+
 function processLevelUps(player) {
   const p = { ...player };
-  const gains = [];
+  const pendingLevels = [];
   const cls = getClassData(p);
   const growth = cls?.growth;
   while (p.exp >= p.expToLevel) {
     p.exp -= p.expToLevel;
     p.level++;
     p.expToLevel = expForLevel(p.level);
-    const hpGain = (growth?.hp ?? 8) + Math.floor(Math.random() * (growth?.hpRand ?? 5));
-    const atkGain = (growth?.atk ?? 1) + Math.floor(Math.random() * (growth?.atkRand ?? 2));
-    const defGain = (growth?.def ?? 1) + Math.floor(Math.random() * (growth?.defRand ?? 2));
-    const manaGain = (growth?.mana ?? 4) + Math.floor(Math.random() * (growth?.manaRand ?? 3));
-    const charismaGain = (growth?.charisma ?? 0) + Math.floor(Math.random() * (growth?.charismaRand ?? 1));
-    const wisdomGain = (growth?.wisdom ?? 0) + Math.floor(Math.random() * (growth?.wisdomRand ?? 1));
-    const athleticsGain = (growth?.athletics ?? 0) + Math.floor(Math.random() * (growth?.athleticsRand ?? 1));
-    p.maxHp += hpGain;
-    p.hp = p.maxHp;
-    p.maxMana += manaGain;
-    p.mana = p.maxMana;
-    p.baseAtk += atkGain;
-    p.baseDef += defGain;
-    p.charisma = (p.charisma || 0) + charismaGain;
-    p.wisdom = (p.wisdom || 0) + wisdomGain;
-    p.athletics = (p.athletics || 0) + athleticsGain;
-    gains.push({ hpGain, atkGain, defGain, manaGain, charismaGain, wisdomGain, athleticsGain });
+    const offers = {
+      hpGain: (growth?.hp ?? 8) + Math.floor(Math.random() * (growth?.hpRand ?? 5)),
+      atkGain: (growth?.atk ?? 1) + Math.floor(Math.random() * (growth?.atkRand ?? 2)),
+      defGain: (growth?.def ?? 1) + Math.floor(Math.random() * (growth?.defRand ?? 2)),
+      manaGain: (growth?.mana ?? 4) + Math.floor(Math.random() * (growth?.manaRand ?? 3)),
+      charismaGain: (growth?.charisma ?? 0) + Math.floor(Math.random() * (growth?.charismaRand ?? 1)),
+      wisdomGain: (growth?.wisdom ?? 0) + Math.floor(Math.random() * (growth?.wisdomRand ?? 1)),
+      athleticsGain: (growth?.athletics ?? 0) + Math.floor(Math.random() * (growth?.athleticsRand ?? 1)),
+    };
+    pendingLevels.push({ level: p.level, offers, picks: STAT_PICKS_PER_LEVEL });
   }
-  return { player: p, gains };
+  // Restore HP/mana on level up (even before stat choices are made)
+  if (pendingLevels.length > 0) {
+    p.hp = p.maxHp;
+    p.mana = p.maxMana;
+  }
+  return { player: p, pendingLevels };
+}
+
+function applyStatChoices(player, offers, selectedStats) {
+  const p = { ...player };
+  for (const stat of selectedStats) {
+    switch (stat) {
+      case 'hp': p.maxHp += offers.hpGain; p.hp = p.maxHp; break;
+      case 'atk': p.baseAtk += offers.atkGain; break;
+      case 'def': p.baseDef += offers.defGain; break;
+      case 'mana': p.maxMana += offers.manaGain; p.mana = p.maxMana; break;
+      case 'charisma': p.charisma = (p.charisma || 0) + offers.charismaGain; break;
+      case 'wisdom': p.wisdom = (p.wisdom || 0) + offers.wisdomGain; break;
+      case 'athletics': p.athletics = (p.athletics || 0) + offers.athleticsGain; break;
+    }
+  }
+  return p;
 }
 
 function regenEnergy(currentEnergy, lastEnergyUpdate, now = Date.now()) {
@@ -178,6 +195,7 @@ function extractSaveData(state) {
   return {
     player: state.player,
     screen: (state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm') ? 'town' : state.screen,
+    pendingLevelUps: state.pendingLevelUps || [],
     energy: state.energy,
     lastEnergyUpdate: state.lastEnergyUpdate,
     currentRegionId: state.currentRegion?.id || null,
@@ -191,7 +209,7 @@ function extractSaveData(state) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -207,6 +225,11 @@ function gameReducer(state, action) {
       const mergedStats = { ...createInitialStats(), ...stats };
       const mergedTasks = refreshTaskCycles({ ...createInitialTaskProgress(), ...tasks });
       const mergedBase = { ...createInitialBase(), ...savedBase };
+      const mergedPending = savedPending || [];
+      // If there are pending level-ups, redirect to stat selection
+      if (mergedPending.length > 0 && resolvedScreen !== 'class-select' && resolvedScreen !== 'username-entry') {
+        resolvedScreen = 'stat-select';
+      }
       return {
         ...baseState,
         screen: resolvedScreen,
@@ -217,6 +240,7 @@ function gameReducer(state, action) {
         stats: mergedStats,
         tasks: mergedTasks,
         base: mergedBase,
+        pendingLevelUps: mergedPending,
       };
     }
 
@@ -828,8 +852,33 @@ function gameReducer(state, action) {
       if (state.battleResult?.defeated) {
         return { ...state, screen: 'town', battle: null, battleResult: null, battleLog: [], currentLocation: null, currentRegion: null };
       }
+      // If there are pending level-ups, go to stat selection
+      if (state.pendingLevelUps?.length > 0) {
+        return { ...state, screen: 'stat-select', battle: null, battleResult: null, battleLog: [] };
+      }
       return {
         ...state, screen: 'explore', battle: null, battleResult: null, battleLog: [],
+        exploreText: 'You continue exploring ' + (state.currentLocation?.name || '') + '...',
+      };
+    }
+
+    case 'APPLY_STAT_CHOICES': {
+      const { selectedStats } = action;
+      const pending = state.pendingLevelUps || [];
+      if (pending.length === 0) return state;
+      const current = pending[0];
+      const updatedPlayer = applyStatChoices(state.player, current.offers, selectedStats);
+      const remaining = pending.slice(1);
+      // If more pending level-ups, stay on stat-select screen
+      if (remaining.length > 0) {
+        return { ...state, player: updatedPlayer, pendingLevelUps: remaining };
+      }
+      // All level-ups processed, continue exploring
+      return {
+        ...state,
+        player: updatedPlayer,
+        pendingLevelUps: [],
+        screen: 'explore',
         exploreText: 'You continue exploring ' + (state.currentLocation?.name || '') + '...',
       };
     }
@@ -1743,7 +1792,7 @@ function handleVictory(state) {
   }
 
   const prevLevel = state.player.level;
-  const { player: leveledPlayer, gains } = processLevelUps(p);
+  const { player: leveledPlayer, pendingLevels } = processLevelUps(p);
 
   // Track stats
   let newStats = state.stats || createInitialStats();
@@ -1767,18 +1816,22 @@ function handleVictory(state) {
     newTasks = incrementTaskProgress(newTasks, 'levelsGained', leveledPlayer.level - prevLevel);
   }
 
+  // Merge any existing pending level-ups (from previous battles) with new ones
+  const existingPending = state.pendingLevelUps || [];
+
   return {
     ...state,
     screen: 'battle-result',
     player: leveledPlayer,
     stats: newStats,
     tasks: newTasks,
+    pendingLevelUps: [...existingPending, ...pendingLevels],
     battleResult: {
       victory: true, expGain, goldGain,
       droppedItem: lootAdded ? droppedItem : null,
       materialDrop: materialDrop || null,
       lostItemName,
-      levelUps: gains,
+      levelUps: pendingLevels,
       newLevel: leveledPlayer.level,
       isBoss: !!m.isBoss,
       bossName: m.isBoss ? m.name : null,
@@ -1846,7 +1899,7 @@ export function useGameState(isLoggedIn) {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, isLoggedIn]);
+  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pendingLevelUps, isLoggedIn]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1877,6 +1930,7 @@ export function useGameState(isLoggedIn) {
     bossDecline: () => dispatch({ type: 'BOSS_DECLINE' }),
     monsterTurn: () => dispatch({ type: 'MONSTER_TURN' }),
     continueAfterBattle: () => dispatch({ type: 'CONTINUE_AFTER_BATTLE' }),
+    applyStatChoices: (selectedStats) => dispatch({ type: 'APPLY_STAT_CHOICES', selectedStats }),
     restAtInn: () => dispatch({ type: 'REST_AT_INN' }),
     equipItem: (item) => dispatch({ type: 'EQUIP_ITEM', item }),
     unequipItem: (slot) => dispatch({ type: 'UNEQUIP_ITEM', slot }),
