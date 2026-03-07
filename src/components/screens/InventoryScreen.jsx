@@ -1,9 +1,33 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 const SLOT_NAMES = {
   weapon: 'Weapon', shield: 'Shield', helmet: 'Helmet',
   armor: 'Armor', boots: 'Boots', accessory: 'Accessory',
 };
+
+const INV_CATEGORIES = [
+  { id: 'all', label: 'All', icon: '\u2606' },
+  { id: 'weapons', label: 'Weapons', icon: '\u2694' },
+  { id: 'shields', label: 'Shields', icon: '\u26E8' },
+  { id: 'helmets', label: 'Helmets', icon: '\u2229' },
+  { id: 'armor', label: 'Armor', icon: '\u26CA' },
+  { id: 'boots', label: 'Boots', icon: '\u2319' },
+  { id: 'accessories', label: 'Rings', icon: '\u25C7' },
+  { id: 'potions', label: 'Potions', icon: '\u2661' },
+  { id: 'energy-drinks', label: 'Energy', icon: '\u26A1' },
+];
+
+function getItemCategory(item) {
+  if (item.type === 'potion') return 'potions';
+  if (item.type === 'energy-drink') return 'energy-drinks';
+  if (item.slot === 'weapon') return 'weapons';
+  if (item.slot === 'shield') return 'shields';
+  if (item.slot === 'helmet') return 'helmets';
+  if (item.slot === 'armor') return 'armor';
+  if (item.slot === 'boots') return 'boots';
+  if (item.slot === 'accessory') return 'accessories';
+  return 'misc';
+}
 
 function itemMetaTag(item) {
   if (!item) return '';
@@ -28,9 +52,15 @@ function itemStatLine(item) {
 export default function InventoryScreen({
   player, playerAtk, playerDef, onEquip, onUnequip, onUse, onSell, onReorder, onBack,
 }) {
+  const [category, setCategory] = useState('all');
   const [dragInfo, setDragInfo] = useState(null);
   const [hoverState, setHoverState] = useState(null);
   const [slotHover, setSlotHover] = useState(null);
+
+  const filteredInventory = useMemo(() => {
+    if (category === 'all') return player.inventory;
+    return player.inventory.filter(item => getItemCategory(item) === category);
+  }, [player.inventory, category]);
 
   const dragIndex = dragInfo?.source === 'inventory' ? dragInfo.index : null;
   const getDraggedItem = () => {
@@ -174,6 +204,18 @@ export default function InventoryScreen({
         </div>
 
         <div className="section-title">Items ({player.inventory.length}/{player.maxInventory})</div>
+        <div className="inv-categories">
+          {INV_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              className={`inv-cat-btn ${category === cat.id ? 'active' : ''}`}
+              onClick={() => setCategory(cat.id)}
+            >
+              <span className="inv-cat-icon">{cat.icon}</span>
+              <span className="inv-cat-label">{cat.label}</span>
+            </button>
+          ))}
+        </div>
         <div
           className="inventory-list"
           onDragOver={handleListDragOver}
@@ -183,7 +225,11 @@ export default function InventoryScreen({
           {player.inventory.length === 0 && (
             <div className="empty-text">No items</div>
           )}
-          {player.inventory.map((item, index) => {
+          {player.inventory.length > 0 && filteredInventory.length === 0 && (
+            <div className="empty-text">No items in this category</div>
+          )}
+          {filteredInventory.map((item) => {
+            const index = player.inventory.indexOf(item);
             const isDragging = dragIndex === index;
             const isHoverBefore = hoverState && hoverState.index === index && hoverState.position === 'before';
             const isHoverAfter = hoverState && hoverState.index === index && hoverState.position === 'after';

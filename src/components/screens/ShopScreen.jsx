@@ -10,6 +10,30 @@ const SLOT_LABELS = {
   accessory: 'Ring',
 };
 
+const SHOP_CATEGORIES = [
+  { id: 'all', label: 'All', icon: '\u2606' },
+  { id: 'weapons', label: 'Weapons', icon: '\u2694' },
+  { id: 'shields', label: 'Shields', icon: '\u26E8' },
+  { id: 'helmets', label: 'Helmets', icon: '\u2229' },
+  { id: 'armor', label: 'Armor', icon: '\u26CA' },
+  { id: 'boots', label: 'Boots', icon: '\u2319' },
+  { id: 'accessories', label: 'Rings', icon: '\u25C7' },
+  { id: 'potions', label: 'Potions', icon: '\u2661' },
+  { id: 'energy-drinks', label: 'Energy', icon: '\u26A1' },
+];
+
+function getItemCategory(item) {
+  if (item.type === 'potion') return 'potions';
+  if (item.type === 'energy-drink') return 'energy-drinks';
+  if (item.slot === 'weapon') return 'weapons';
+  if (item.slot === 'shield') return 'shields';
+  if (item.slot === 'helmet') return 'helmets';
+  if (item.slot === 'armor') return 'armor';
+  if (item.slot === 'boots') return 'boots';
+  if (item.slot === 'accessory') return 'accessories';
+  return 'misc';
+}
+
 const statLine = (item) => {
   if (!item) return '';
   if (item.slot) {
@@ -31,7 +55,18 @@ const typeLabel = (item) => {
 
 export default function ShopScreen({ player, onBuy, onSell, onBack }) {
   const [tab, setTab] = useState('buy');
+  const [category, setCategory] = useState('all');
   const stock = useMemo(() => [...getShopItems(player.level), ...getShopEnergyDrinks(player.level)], [player.level]);
+
+  const filteredStock = useMemo(() => {
+    if (category === 'all') return stock;
+    return stock.filter(item => getItemCategory(item) === category);
+  }, [stock, category]);
+
+  const filteredInventory = useMemo(() => {
+    if (category === 'all') return player.inventory;
+    return player.inventory.filter(item => getItemCategory(item) === category);
+  }, [player.inventory, category]);
 
   return (
     <div className="screen screen-shop">
@@ -58,10 +93,28 @@ export default function ShopScreen({ player, onBuy, onSell, onBack }) {
         </button>
       </div>
 
+      <div className="shop-categories">
+        {SHOP_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            className={`shop-cat-btn ${category === cat.id ? 'active' : ''}`}
+            onClick={() => setCategory(cat.id)}
+          >
+            <span className="shop-cat-icon">{cat.icon}</span>
+            <span className="shop-cat-label">{cat.label}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="shop-content">
         {tab === 'buy' && (
           <div className="shop-list">
-            {stock.map(item => {
+            {filteredStock.length === 0 && (
+              <div className="shop-empty">
+                <div className="shop-empty-text">No items in this category</div>
+              </div>
+            )}
+            {filteredStock.map(item => {
               const canAfford = player.gold >= item.buyPrice;
               const invFull = player.inventory.length >= player.maxInventory;
               return (
@@ -104,7 +157,12 @@ export default function ShopScreen({ player, onBuy, onSell, onBack }) {
                 <div className="shop-empty-hint">Loot items from exploring to sell here</div>
               </div>
             )}
-            {player.inventory.map(item => (
+            {player.inventory.length > 0 && filteredInventory.length === 0 && (
+              <div className="shop-empty">
+                <div className="shop-empty-text">No items in this category</div>
+              </div>
+            )}
+            {filteredInventory.map(item => (
               <div
                 key={item.id}
                 className={`shop-card ${item.rarityClass || ''}`}
