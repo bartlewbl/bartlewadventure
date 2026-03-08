@@ -1928,4 +1928,165 @@ export const RANDOM_EVENTS = [
       },
     ],
   },
+  {
+    id: 'crumbling-bridge',
+    title: 'Crumbling Bridge',
+    description: 'A narrow bridge spans a dark chasm. It looks like it could collapse at any moment, but something glints on the other side.',
+    choices: [
+      {
+        label: 'Cross It',
+        outcomes: [
+          { weight: 0.35, type: 'gold_big', text: 'You make it across! A forgotten stash of treasure awaits you.' },
+          { weight: 0.25, type: 'item_rare', text: 'On the far side, a pristine weapon leans against the wall.' },
+          { weight: 0.25, type: 'damage', amount: 0.30, text: 'The bridge gives way! You barely grab the edge, scraping yourself badly on the fall.' },
+          { weight: 0.15, type: 'energy_drain', amount: 6, text: 'The bridge holds but the crossing is exhausting. You arrive winded and empty-handed.' },
+        ],
+      },
+      {
+        label: 'Find Another Way',
+        outcomes: [
+          { weight: 0.60, type: 'nothing', text: 'You take the long way around. Safe, but nothing to show for it.' },
+          { weight: 0.40, type: 'gold', text: 'The detour leads past a hidden coin stash tucked in a wall crack.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'rival-adventurer',
+    title: 'Rival Adventurer',
+    description: 'Another adventurer blocks your path, arms crossed. "This area is mine. Pay the toll or fight for passage."',
+    choices: [
+      {
+        label: 'Pay the Toll',
+        outcomes: [
+          { weight: 0.40, type: 'gold_lose', text: 'You hand over some coins. They step aside with a smirk.' },
+          { weight: 0.30, type: 'item', text: '"Respect," they nod, and toss you a spare piece of gear as thanks.' },
+          { weight: 0.30, type: 'scam', text: 'You pay up and they demand more. When you refuse, they shove you and run off with your gold!' },
+        ],
+      },
+      {
+        label: 'Fight Them',
+        outcomes: [
+          { weight: 0.50, type: 'battle_hard', text: 'They draw their weapon. It\'s a fight!' },
+          { weight: 0.30, type: 'gold_big', text: 'You step forward aggressively. They flinch, drop their coin purse, and bolt!' },
+          { weight: 0.20, type: 'nothing', text: 'You square up but they back down. "Fine, not worth it." They walk away.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'strange-noise',
+    title: 'Strange Noise',
+    description: 'An eerie sound echoes from a dark passage. It could be a creature in distress... or something luring prey.',
+    choices: [
+      {
+        label: 'Investigate',
+        outcomes: [
+          { weight: 0.25, type: 'item', text: 'You find a wounded animal guarding a stash of dropped supplies.' },
+          { weight: 0.25, type: 'gold', text: 'The sound leads to a hidden alcove with scattered coins.' },
+          { weight: 0.30, type: 'ambush', text: 'It was a lure! Creatures swarm you from the shadows!' },
+          { weight: 0.20, type: 'energy_drain', amount: 4, text: 'You explore the passage but find nothing. Just the wind playing tricks.' },
+        ],
+      },
+      {
+        label: 'Keep Moving',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'You ignore the sound and press on. Some mysteries are best left unsolved.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ancient-inscription',
+    title: 'Ancient Inscription',
+    description: 'Strange symbols are carved into the wall, faintly pulsing with light. You feel compelled to trace them with your finger.',
+    choices: [
+      {
+        label: 'Trace the Symbols',
+        outcomes: [
+          { weight: 0.30, type: 'heal', amount: 0.35, text: 'The symbols flash bright and warmth floods your body. Ancient healing magic!' },
+          { weight: 0.20, type: 'energy_restore', amount: 12, text: 'Knowledge flows into your mind. You feel invigorated and focused!' },
+          { weight: 0.25, type: 'damage', amount: 0.25, text: 'The symbols burn red-hot! Pain sears through your hand and up your arm!' },
+          { weight: 0.25, type: 'battle_hard', text: 'The wall cracks open and a guardian construct awakens to punish the intruder!' },
+        ],
+      },
+      {
+        label: 'Read Without Touching',
+        outcomes: [
+          { weight: 0.50, type: 'nothing', text: 'The symbols are indecipherable. Interesting, but useless to you.' },
+          { weight: 0.50, type: 'gold', text: 'You recognize a symbol — it\'s a marker for a nearby cache! You find some coins.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'fallen-crate',
+    title: 'Fallen Supply Crate',
+    description: 'A supply crate has fallen from somewhere above, its contents spilling out. But it landed near unstable ground.',
+    choices: [
+      {
+        label: 'Grab What You Can',
+        outcomes: [
+          { weight: 0.35, type: 'item', text: 'You snatch up usable gear before the ground shifts!' },
+          { weight: 0.25, type: 'gold', text: 'Coins and valuables scatter — you pocket a handful.' },
+          { weight: 0.20, type: 'damage', amount: 0.20, text: 'The ground gives way and debris rains down on you!' },
+          { weight: 0.20, type: 'energy_drain', amount: 5, text: 'You dig through the crate frantically but it\'s all junk. Exhausting waste of time.' },
+        ],
+      },
+      {
+        label: 'Leave It',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'Not worth the risk. You step around the wreckage and move on.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dying-campfire',
+    title: 'Dying Campfire',
+    description: 'Embers still glow in an abandoned fire pit. A pot of something bubbles over the coals, and a satchel sits nearby.',
+    choices: [
+      {
+        label: 'Eat from the Pot',
+        outcomes: [
+          { weight: 0.40, type: 'heal', amount: 0.30, text: 'A hearty stew! It warms you up and mends some aches.' },
+          { weight: 0.30, type: 'energy_restore', amount: 8, text: 'Whatever was in that stew, it fills you with vigor!' },
+          { weight: 0.30, type: 'damage', amount: 0.20, text: 'The food has gone bad. Your stomach cramps violently!' },
+        ],
+      },
+      {
+        label: 'Search the Satchel',
+        outcomes: [
+          { weight: 0.30, type: 'gold', text: 'A few coins and trinkets — someone\'s emergency fund.' },
+          { weight: 0.25, type: 'item', text: 'Useful gear tucked inside. Finders keepers.' },
+          { weight: 0.25, type: 'ambush', text: 'The satchel\'s owner returns with friends. "That\'s MINE!"' },
+          { weight: 0.20, type: 'nothing', text: 'Nothing but old rags and a broken compass.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'mysterious-fog',
+    title: 'Mysterious Fog',
+    description: 'A thick, unnatural fog rolls in suddenly. You can barely see your own hands. Something whispers your name.',
+    choices: [
+      {
+        label: 'Follow the Voice',
+        outcomes: [
+          { weight: 0.25, type: 'item_rare', text: 'The voice leads you to a hidden treasure, then fades away.' },
+          { weight: 0.25, type: 'gold_big', text: 'You stumble into a forgotten vault obscured by the fog!' },
+          { weight: 0.25, type: 'battle_hard', text: 'The voice belongs to something hungry. It lunges from the mist!' },
+          { weight: 0.25, type: 'damage', amount: 0.25, text: 'You wander blindly and walk straight into a wall. The fog lifts, revealing nothing.' },
+        ],
+      },
+      {
+        label: 'Wait It Out',
+        outcomes: [
+          { weight: 0.50, type: 'nothing', text: 'The fog clears after a while. Nothing happened. Your nerves are shot though.' },
+          { weight: 0.30, type: 'energy_drain', amount: 4, text: 'You wait for what feels like an eternity. The fog saps your will.' },
+          { weight: 0.20, type: 'heal', amount: 0.15, text: 'The mist carries a faint restorative quality. You feel slightly better.' },
+        ],
+      },
+    ],
+  },
 ];

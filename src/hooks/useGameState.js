@@ -360,8 +360,8 @@ function gameReducer(state, action) {
         }
       }
 
-      // Random event check (15% chance, before normal encounters)
-      if (Math.random() < 0.15) {
+      // Random event check (5% chance, before normal encounters)
+      if (Math.random() < 0.05) {
         const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
         return {
           ...state, screen: 'random-event',
