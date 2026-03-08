@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS } from '../data/gameData';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
 import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
@@ -360,6 +360,18 @@ function gameReducer(state, action) {
         }
       }
 
+      // Random event check (5% chance, before normal encounters)
+      if (Math.random() < 0.05) {
+        const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+        return {
+          ...state, screen: 'random-event',
+          exploreText: text,
+          energy: exploreEnergy,
+          lastEnergyUpdate: exploreLastUpdate,
+          randomEvent: event,
+        };
+      }
+
       if (Math.random() < loc.encounterRate) {
         const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
         const monster = scaleMonster(monsterId, loc.levelReq);
@@ -417,6 +429,210 @@ function gameReducer(state, action) {
         newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldFound);
       }
       return { ...state, exploreText: newText, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate };
+    }
+
+    case 'RANDOM_EVENT_CHOOSE': {
+      const { choiceIndex } = action;
+      const event = state.randomEvent;
+      if (!event) return { ...state, screen: 'explore' };
+
+      const choice = event.choices[choiceIndex];
+      if (!choice) return { ...state, screen: 'explore' };
+
+      // Roll weighted outcome
+      const roll = Math.random();
+      let cumulative = 0;
+      let outcome = choice.outcomes[choice.outcomes.length - 1];
+      for (const o of choice.outcomes) {
+        cumulative += o.weight;
+        if (roll < cumulative) { outcome = o; break; }
+      }
+
+      const loc = state.currentLocation;
+      const lvl = Math.max(loc?.levelReq || 1, state.player.level);
+      let p = { ...state.player };
+      let newEnergy = state.energy;
+      let resultText = outcome.text;
+      let resultType = 'neutral';
+
+      const nowEvent = Date.now();
+      const eventRegen = regenEnergy(newEnergy, state.lastEnergyUpdate, nowEvent);
+      newEnergy = eventRegen.energy;
+      const eventLastUpdate = eventRegen.lastEnergyUpdate;
+
+      switch (outcome.type) {
+        case 'gold': {
+          const amount = Math.floor(5 + Math.random() * Math.max(3, lvl * 2));
+          p = { ...p, gold: p.gold + amount };
+          resultText += ` (+${amount} gold)`;
+          resultType = 'good';
+          break;
+        }
+        case 'gold_big': {
+          const amount = Math.floor(10 + Math.random() * Math.max(5, lvl * 4));
+          p = { ...p, gold: p.gold + amount };
+          resultText += ` (+${amount} gold)`;
+          resultType = 'great';
+          break;
+        }
+        case 'gold_double': {
+          const wager = Math.floor(Math.min(p.gold, Math.max(5, lvl * 2)));
+          p = { ...p, gold: p.gold + wager };
+          resultText += ` (+${wager} gold)`;
+          resultType = 'great';
+          break;
+        }
+        case 'gold_jackpot': {
+          const wager = Math.floor(Math.min(p.gold, Math.max(5, lvl * 3)));
+          p = { ...p, gold: p.gold + wager * 2 };
+          resultText += ` (+${wager * 2} gold)`;
+          resultType = 'great';
+          break;
+        }
+        case 'gold_lose': {
+          const loss = Math.floor(Math.min(p.gold, Math.max(3, lvl)));
+          p = { ...p, gold: Math.max(0, p.gold - loss) };
+          resultText += ` (-${loss} gold)`;
+          resultType = 'bad';
+          break;
+        }
+        case 'guilt_gold': {
+          const loss = Math.floor(Math.min(p.gold, Math.max(1, Math.floor(lvl * 0.5))));
+          p = { ...p, gold: Math.max(0, p.gold - loss) };
+          resultText += ` (-${loss} gold)`;
+          resultType = 'bad';
+          break;
+        }
+        case 'scam': {
+          const loss = Math.floor(Math.min(p.gold, Math.max(5, lvl * 2)));
+          p = { ...p, gold: Math.max(0, p.gold - loss) };
+          resultText += ` (-${loss} gold)`;
+          resultType = 'bad';
+          break;
+        }
+        case 'item': {
+          if (p.inventory.length < p.maxInventory) {
+            const lootTypes = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield'];
+            const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+            const foundItem = generateItem(dropType, lvl);
+            p = { ...p, inventory: [...p.inventory, foundItem] };
+            resultText += ` (Found: ${foundItem.name})`;
+            resultType = 'good';
+          } else {
+            resultText += ' But your inventory is full!';
+            resultType = 'neutral';
+          }
+          break;
+        }
+        case 'item_rare': {
+          if (p.inventory.length < p.maxInventory) {
+            const lootTypes = ['ring', 'boots', 'helmet', 'armor', 'sword', 'shield'];
+            const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+            const foundItem = generateItem(dropType, lvl + 3);
+            p = { ...p, inventory: [...p.inventory, foundItem] };
+            resultText += ` (Found: ${foundItem.name})`;
+            resultType = 'great';
+          } else {
+            resultText += ' But your inventory is full!';
+            resultType = 'neutral';
+          }
+          break;
+        }
+        case 'item_great': {
+          if (p.inventory.length < p.maxInventory) {
+            const lootTypes = ['ring', 'sword', 'armor', 'shield'];
+            const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+            const foundItem = generateItem(dropType, lvl + 6);
+            p = { ...p, inventory: [...p.inventory, foundItem] };
+            resultText += ` (Found: ${foundItem.name})`;
+            resultType = 'great';
+          } else {
+            resultText += ' But your inventory is full!';
+            resultType = 'neutral';
+          }
+          break;
+        }
+        case 'damage': {
+          const dmg = Math.max(1, Math.floor(p.maxHp * (outcome.amount || 0.25)));
+          p = { ...p, hp: Math.max(1, p.hp - dmg) };
+          resultText += ` (-${dmg} HP)`;
+          resultType = 'bad';
+          break;
+        }
+        case 'heal': {
+          const healAmt = Math.max(1, Math.floor(p.maxHp * (outcome.amount || 0.20)));
+          p = { ...p, hp: Math.min(p.maxHp, p.hp + healAmt) };
+          resultText += ` (+${healAmt} HP)`;
+          resultType = 'good';
+          break;
+        }
+        case 'energy_drain': {
+          const drain = outcome.amount || 4;
+          newEnergy = Math.max(0, newEnergy - drain);
+          resultText += ` (-${drain} energy)`;
+          resultType = 'bad';
+          break;
+        }
+        case 'energy_restore': {
+          const restore = outcome.amount || 10;
+          newEnergy = Math.min(ENERGY_MAX, newEnergy + restore);
+          resultText += ` (+${restore} energy)`;
+          resultType = 'good';
+          break;
+        }
+        case 'battle_hard':
+        case 'ambush': {
+          // Start a battle with a scaled monster from current location
+          const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
+          const monster = scaleMonster(monsterId, loc.levelReq);
+          // Ambush: monster gets slight stat boost
+          monster.hp = Math.floor(monster.hp * 1.15);
+          monster.maxHp = monster.hp;
+          monster.atk = Math.floor(monster.atk * 1.1);
+          const ambushText = outcome.type === 'ambush' ? 'AMBUSH! ' : '';
+          return {
+            ...state, screen: 'battle',
+            exploreText: resultText,
+            energy: newEnergy,
+            lastEnergyUpdate: eventLastUpdate,
+            player: p,
+            randomEvent: null,
+            battle: {
+              monster, isPlayerTurn: true, defending: false,
+              poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
+              monsterPoisonTurns: 0, monsterDoomTurns: 0,
+              undyingWillUsed: false, deathsEmbraceUsed: false,
+              defendedLastTurn: false, dodgeNextTurn: false, dodgeCharges: 0,
+              showSkillMenu: false, spellweaverActive: false,
+              avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
+            },
+            battleLog: [{ text: `${ambushText}A ${monster.name} attacks!`, type: 'info' }],
+            battleResult: null,
+          };
+        }
+        case 'nothing':
+        default:
+          resultType = 'neutral';
+          break;
+      }
+
+      return {
+        ...state,
+        screen: 'event-result',
+        player: p,
+        energy: newEnergy,
+        lastEnergyUpdate: eventLastUpdate,
+        eventResult: { text: resultText, type: resultType, eventTitle: event.title },
+      };
+    }
+
+    case 'EVENT_RESULT_CONTINUE': {
+      return {
+        ...state,
+        screen: 'explore',
+        randomEvent: null,
+        eventResult: null,
+      };
     }
 
     case 'BATTLE_PLAYER_ATTACK': {
@@ -1918,6 +2134,8 @@ export function useGameState(isLoggedIn) {
     backToRegions: () => dispatch({ type: 'BACK_TO_REGIONS' }),
     enterLocation: (loc) => dispatch({ type: 'ENTER_LOCATION', location: loc }),
     exploreStep: () => dispatch({ type: 'EXPLORE_STEP' }),
+    randomEventChoose: (choiceIndex) => dispatch({ type: 'RANDOM_EVENT_CHOOSE', choiceIndex }),
+    eventResultContinue: () => dispatch({ type: 'EVENT_RESULT_CONTINUE' }),
     battleAttack: () => dispatch({ type: 'BATTLE_PLAYER_ATTACK' }),
     battleSkill: () => dispatch({ type: 'BATTLE_PLAYER_SKILL' }),
     battleTreeSkill: (skillId) => dispatch({ type: 'BATTLE_USE_TREE_SKILL', skillId }),
