@@ -5,7 +5,7 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss } from '../engine/scaling';
-import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot } from '../engine/loot';
+import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem } from '../engine/loot';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
 import { saveGame } from '../api';
 import {
@@ -65,6 +65,7 @@ function createInitialState() {
     stats: createInitialStats(),
     tasks: createInitialTaskProgress(),
     base: createInitialBase(),
+    discoveredItemLocations: {}, // { itemName: [locationId, ...] }
   };
 }
 
@@ -202,6 +203,7 @@ function extractSaveData(state) {
     stats: state.stats,
     tasks: state.tasks,
     base: state.base,
+    discoveredItemLocations: state.discoveredItemLocations,
   };
 }
 
@@ -209,7 +211,7 @@ function extractSaveData(state) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -241,6 +243,7 @@ function gameReducer(state, action) {
         tasks: mergedTasks,
         base: mergedBase,
         pendingLevelUps: mergedPending,
+        discoveredItemLocations: savedDiscovered || {},
       };
     }
 
@@ -398,12 +401,27 @@ function gameReducer(state, action) {
       const lootChance = loc.lootRate ?? 0.3;
       let newText = text;
       let newPlayer = state.player;
+      let newDiscovered = state.discoveredItemLocations;
       const lootTable = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'energy-drink'];
 
       if (Math.random() < lootChance) {
         if (state.player.inventory.length < state.player.maxInventory) {
-          const dropType = lootTable[Math.floor(Math.random() * lootTable.length)];
-          const foundItem = generateItem(dropType, Math.max(loc.levelReq, state.player.level));
+          let foundItem;
+          // 40% chance to find a location-specific item
+          if (Math.random() < 0.4) {
+            foundItem = generateLocationItem(loc.id, Math.max(loc.levelReq, state.player.level));
+          }
+          if (!foundItem) {
+            const dropType = lootTable[Math.floor(Math.random() * lootTable.length)];
+            foundItem = generateItem(dropType, Math.max(loc.levelReq, state.player.level));
+          }
+          // Track discovery if the item has a foundLocation
+          if (foundItem.foundLocation) {
+            const existing = newDiscovered[foundItem.name] || [];
+            if (!existing.includes(foundItem.foundLocation)) {
+              newDiscovered = { ...newDiscovered, [foundItem.name]: [...existing, foundItem.foundLocation] };
+            }
+          }
           newPlayer = { ...state.player, inventory: [...state.player.inventory, foundItem] };
           newText = text + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
         } else {
@@ -428,7 +446,7 @@ function gameReducer(state, action) {
         newStats = addStat(newStats, 'goldEarned', goldFound);
         newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldFound);
       }
-      return { ...state, exploreText: newText, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate };
+      return { ...state, exploreText: newText, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered };
     }
 
     case 'RANDOM_EVENT_CHOOSE': {
@@ -2115,7 +2133,7 @@ export function useGameState(isLoggedIn) {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pendingLevelUps, isLoggedIn]);
+  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pendingLevelUps, state.discoveredItemLocations, isLoggedIn]);
 
   useEffect(() => {
     const interval = setInterval(() => {

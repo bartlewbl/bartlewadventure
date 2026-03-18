@@ -2505,6 +2505,13 @@ body {
   font-size: 7px;
 }
 
+.inv-item-location,
+.equip-location {
+  color: #a0a0ff;
+  font-size: 7px;
+  font-style: italic;
+}
+
 .inv-item-actions {
   display: flex;
   gap: 2px;

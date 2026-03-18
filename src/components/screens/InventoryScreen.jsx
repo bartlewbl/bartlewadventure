@@ -1,4 +1,13 @@
 import { useState, useMemo } from 'react';
+import { REGIONS } from '../../data/gameData';
+
+// Build a lookup from location id to location name
+const LOCATION_NAME_MAP = {};
+for (const region of REGIONS) {
+  for (const loc of region.locations) {
+    LOCATION_NAME_MAP[loc.id] = loc.name;
+  }
+}
 
 const SLOT_NAMES = {
   weapon: 'Weapon', shield: 'Shield', helmet: 'Helmet',
@@ -49,8 +58,15 @@ function itemStatLine(item) {
   return `Heal ${item.healAmount} HP`;
 }
 
+function getItemLocationText(itemName, discoveredItemLocations) {
+  const locations = discoveredItemLocations?.[itemName];
+  if (!locations || locations.length === 0) return null;
+  const names = locations.map(id => LOCATION_NAME_MAP[id] || id);
+  return `Found in: ${names.join(', ')}`;
+}
+
 export default function InventoryScreen({
-  player, playerAtk, playerDef, onEquip, onUnequip, onUse, onSell, onReorder, onBack,
+  player, playerAtk, playerDef, discoveredItemLocations, onEquip, onUnequip, onUse, onSell, onReorder, onBack,
 }) {
   const [category, setCategory] = useState('all');
   const [dragInfo, setDragInfo] = useState(null);
@@ -195,6 +211,9 @@ export default function InventoryScreen({
                       {item.level ? `Lv${item.level} · ` : ''}
                       {itemStatLine(item)}
                     </div>
+                    {getItemLocationText(item.name, discoveredItemLocations) && (
+                      <div className="equip-location">{getItemLocationText(item.name, discoveredItemLocations)}</div>
+                    )}
                     <button className="btn btn-sm" onClick={() => onUnequip(slot)}>Unequip</button>
                   </>
                 )}
@@ -250,13 +269,25 @@ export default function InventoryScreen({
                 onDrop={handleDropOnItem(index)}
                 onDragEnd={handleDragEnd}
               >
-                <div className="inv-item-info">
+                <div
+                  className="inv-item-info"
+                  title={[
+                    `${item.name} ${itemMetaTag(item)}`,
+                    itemStatLine(item),
+                    getItemLocationText(item.name, discoveredItemLocations),
+                  ].filter(Boolean).join('\n')}
+                >
                   <span className={`inv-item-name ${item.rarityClass}`}>
                     {item.name} {itemMetaTag(item)}
                   </span>
                   <span className="inv-item-stats">
                     {itemStatLine(item)}
                   </span>
+                  {getItemLocationText(item.name, discoveredItemLocations) && (
+                    <span className="inv-item-location">
+                      {getItemLocationText(item.name, discoveredItemLocations)}
+                    </span>
+                  )}
                 </div>
                 <div className="inv-item-actions">
                   {item.slot ? (
