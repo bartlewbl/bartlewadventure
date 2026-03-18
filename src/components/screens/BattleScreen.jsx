@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
 import { getBattleMaxMana } from '../../engine/combat';
+import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
 
 // Animation durations (must match GameCanvas.jsx)
 const ANIM_MS = {
@@ -15,7 +16,7 @@ const ANIM_MS = {
 let floatIdCounter = 0;
 
 export default function BattleScreen({
-  battle, battleLog, player,
+  battle, battleLog, player, pets,
   onAttack, onSkill, onDefend, onPotion, onRun, onMonsterTurn,
   onTreeSkill, onToggleSkillMenu,
   setBattleAnim, animTick,
@@ -257,6 +258,15 @@ export default function BattleScreen({
   const activeSkills = getPlayerActiveSkills(player);
   const treeActives = activeSkills.filter(s => !s.isClassSkill);
 
+  // Equipped pets
+  const equippedPets = useMemo(() => {
+    const equippedIds = pets?.equippedPets || [];
+    const owned = pets?.ownedPets || [];
+    return equippedIds.map(id => owned.find(p => p.instanceId === id)).filter(Boolean);
+  }, [pets]);
+
+  const ROLE_ICONS = { attacker: '\u2694', defender: '\u26E8', healer: '\u2661', buffer: '\u2606', hybrid: '\u269B' };
+
   return (
     <div className="screen screen-battle">
       {/* Floating damage numbers */}
@@ -287,6 +297,19 @@ export default function BattleScreen({
             <span className="bar-text">{player.hp}/{player.maxHp}</span>
           </div>
         </div>
+
+        {/* Pet companions */}
+        {equippedPets.length > 0 && (
+          <div className="battle-pets">
+            {equippedPets.map(pet => (
+              <div key={pet.instanceId} className={`battle-pet-tag ${pet.energy <= 0 ? 'exhausted' : ''} ${pet.bond < 30 ? 'low-bond' : ''}`}>
+                <span className="battle-pet-icon">{ROLE_ICONS[pet.role] || ''}</span>
+                <span className="battle-pet-name">{pet.name}</span>
+                <span className="battle-pet-stats">B:{pet.bond} E:{pet.energy}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* VS indicator */}
         <div className="battle-vs">VS</div>

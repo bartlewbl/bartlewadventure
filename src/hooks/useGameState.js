@@ -7,6 +7,7 @@ import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, t
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem } from '../engine/loot';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
+import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import {
   createInitialStats, createInitialTaskProgress,
@@ -65,6 +66,7 @@ function createInitialState() {
     stats: createInitialStats(),
     tasks: createInitialTaskProgress(),
     base: createInitialBase(),
+    pets: createInitialPetState(),
     discoveredItemLocations: {}, // { itemName: [locationId, ...] }
   };
 }
@@ -203,15 +205,213 @@ function extractSaveData(state) {
     stats: state.stats,
     tasks: state.tasks,
     base: state.base,
+    pets: state.pets,
     discoveredItemLocations: state.discoveredItemLocations,
   };
+}
+
+// ---- PET BATTLE HELPERS ----
+function createBattleState(monster) {
+  return {
+    monster, isPlayerTurn: true, defending: false,
+    poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
+    monsterPoisonTurns: 0, monsterDoomTurns: 0,
+    undyingWillUsed: false, deathsEmbraceUsed: false,
+    defendedLastTurn: false, dodgeNextTurn: false, dodgeCharges: 0,
+    showSkillMenu: false, spellweaverActive: false,
+    avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
+    petActions: [], // log of pet actions this turn
+    petReviveUsed: false, // track phoenix revive
+  };
+}
+
+function getActiveBattlePets(state) {
+  const equippedIds = state.pets?.equippedPets || [];
+  const ownedPets = state.pets?.ownedPets || [];
+  return equippedIds.map(id => ownedPets.find(p => p.instanceId === id)).filter(Boolean);
+}
+
+function processPetTurnActions(state, log) {
+  const activePets = getActiveBattlePets(state);
+  if (activePets.length === 0) return { state, log };
+
+  const buffs = getPetBuildingBuffs(state.pets);
+  let p = { ...state.player };
+  let m = { ...state.battle.monster };
+  let b = { ...state.battle };
+  let newLog = [...log];
+  let petsThatFought = [];
+
+  for (const pet of activePets) {
+    const fightCheck = willPetFight(pet);
+    if (!fightCheck.fights) {
+      newLog.push({ text: `${pet.name} refuses to fight! (${fightCheck.reason})`, type: 'info' });
+      continue;
+    }
+
+    petsThatFought.push(pet.instanceId);
+
+    switch (pet.ability?.type) {
+      case 'damage': {
+        const dmg = calcPetDamage(pet, m.def, buffs);
+        m.hp = Math.max(0, m.hp - dmg);
+        newLog.push({ text: `${pet.name} uses ${pet.ability.name} for ${dmg} damage!`, type: 'dmg-monster' });
+        break;
+      }
+      case 'hybrid': {
+        const dmg = calcPetDamage(pet, m.def, buffs);
+        m.hp = Math.max(0, m.hp - dmg);
+        newLog.push({ text: `${pet.name} uses ${pet.ability.name} for ${dmg} damage!`, type: 'dmg-monster' });
+        // buff fallthrough handled by combat.js pet buff check
+        break;
+      }
+      case 'heal': {
+        const { heal, manaRestore } = calcPetHeal(pet, p.maxHp, buffs);
+        if (heal > 0) {
+          const healed = Math.min(heal, p.maxHp - p.hp);
+          p.hp = Math.min(p.maxHp, p.hp + heal);
+          if (healed > 0) newLog.push({ text: `${pet.name} heals you for ${healed} HP!`, type: 'heal' });
+        }
+        if (manaRestore > 0) {
+          const maxMana = getBattleMaxMana(p);
+          const restored = Math.min(manaRestore, maxMana - p.mana);
+          p.mana = Math.min(maxMana, p.mana + manaRestore);
+          if (restored > 0) newLog.push({ text: `${pet.name} restores ${restored} mana!`, type: 'info' });
+        }
+        break;
+      }
+      case 'buff': {
+        const petBuffs = calcPetBuffs(pet, buffs);
+        if (petBuffs.manaRegen > 0) {
+          const maxMana = getBattleMaxMana(p);
+          p.mana = Math.min(maxMana, p.mana + petBuffs.manaRegen);
+        }
+        newLog.push({ text: `${pet.name} uses ${pet.ability.name}!`, type: 'info' });
+        break;
+      }
+      case 'defend': {
+        // Defend happens during monster turn, just log presence
+        newLog.push({ text: `${pet.name} stands guard.`, type: 'info' });
+        break;
+      }
+    }
+  }
+
+  b.monster = m;
+
+  // Deduct bond and energy from pets that fought
+  const bondDecayMult = 1 - (buffs.bondDecayReduction || 0);
+  const energyDecayMult = 1 - (buffs.energyDecayReduction || 0);
+  const updatedPets = state.pets.ownedPets.map(pet => {
+    if (petsThatFought.includes(pet.instanceId)) {
+      return {
+        ...pet,
+        bond: Math.max(0, pet.bond - Math.ceil(PET_BOND_DECAY_PER_BATTLE * bondDecayMult)),
+        energy: Math.max(0, pet.energy - Math.ceil(PET_ENERGY_COST_PER_BATTLE * energyDecayMult)),
+      };
+    }
+    return pet;
+  });
+
+  return {
+    state: {
+      ...state,
+      player: p,
+      battle: b,
+      pets: { ...state.pets, ownedPets: updatedPets },
+    },
+    log: newLog,
+  };
+}
+
+function applyPetDefense(state, incomingDmg) {
+  const activePets = getActiveBattlePets(state);
+  const buffs = getPetBuildingBuffs(state.pets);
+  let totalAbsorbed = 0;
+  let totalReflected = 0;
+
+  for (const pet of activePets) {
+    if (pet.ability?.type === 'defend' && pet.energy > 0) {
+      const fightCheck = willPetFight(pet);
+      if (!fightCheck.fights) continue;
+      const { absorbed, reflected } = calcPetAbsorb(pet, incomingDmg, buffs);
+      totalAbsorbed += absorbed;
+      totalReflected += reflected;
+    }
+  }
+  return { absorbed: totalAbsorbed, reflected: totalReflected };
+}
+
+function getPetAtkBuff(state) {
+  const activePets = getActiveBattlePets(state);
+  const buffs = getPetBuildingBuffs(state.pets);
+  let totalAtkBuff = 0;
+  let totalDefBuff = 0;
+  for (const pet of activePets) {
+    if (pet.energy > 0 && (pet.ability?.type === 'buff' || pet.ability?.type === 'hybrid')) {
+      const petBuffs = calcPetBuffs(pet, buffs);
+      totalAtkBuff += petBuffs.atkBuff;
+      totalDefBuff += petBuffs.defBuff;
+    }
+  }
+  return { atkBuff: totalAtkBuff, defBuff: totalDefBuff };
+}
+
+// ---- PET QUEST HELPERS ----
+function progressPetQuests(pets, questType, amount = 1, regionId = null) {
+  // Progress quests of matching type on all equipped pets
+  const equippedIds = new Set(pets.equippedPets || []);
+  if (equippedIds.size === 0) return pets;
+
+  let changed = false;
+  const updatedPets = pets.ownedPets.map(pet => {
+    if (!equippedIds.has(pet.instanceId)) return pet;
+    const quests = pet.activeQuests || [];
+    if (quests.length === 0) return pet;
+
+    let questChanged = false;
+    const updatedQuests = quests.map(q => {
+      if (q.type !== questType) return q;
+      // If quest requires a specific region, check it
+      if (q.region && q.region !== regionId) return q;
+      if (q.progress >= q.target) return q; // already complete
+      questChanged = true;
+      return { ...q, progress: Math.min(q.target, q.progress + amount) };
+    });
+
+    if (!questChanged) return pet;
+    changed = true;
+    return { ...pet, activeQuests: updatedQuests };
+  });
+
+  if (!changed) return pets;
+  return { ...pets, ownedPets: updatedPets };
+}
+
+function progressSinglePetQuest(pets, petInstanceId, questType, amount = 1) {
+  // Progress quests on a specific pet (for feed/give actions)
+  const updatedPets = pets.ownedPets.map(pet => {
+    if (pet.instanceId !== petInstanceId) return pet;
+    const quests = pet.activeQuests || [];
+    if (quests.length === 0) return pet;
+
+    const updatedQuests = quests.map(q => {
+      if (q.type !== questType) return q;
+      if (q.progress >= q.target) return q;
+      return { ...q, progress: Math.min(q.target, q.progress + amount) };
+    });
+
+    return { ...pet, activeQuests: updatedQuests };
+  });
+
+  return { ...pets, ownedPets: updatedPets };
 }
 
 // ---- REDUCER ----
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -227,6 +427,7 @@ function gameReducer(state, action) {
       const mergedStats = { ...createInitialStats(), ...stats };
       const mergedTasks = refreshTaskCycles({ ...createInitialTaskProgress(), ...tasks });
       const mergedBase = { ...createInitialBase(), ...savedBase };
+      const mergedPets = { ...createInitialPetState(), ...savedPets };
       const mergedPending = savedPending || [];
       // If there are pending level-ups, redirect to stat selection
       if (mergedPending.length > 0 && resolvedScreen !== 'class-select' && resolvedScreen !== 'username-entry') {
@@ -242,6 +443,7 @@ function gameReducer(state, action) {
         stats: mergedStats,
         tasks: mergedTasks,
         base: mergedBase,
+        pets: mergedPets,
         pendingLevelUps: mergedPending,
         discoveredItemLocations: savedDiscovered || {},
       };
@@ -349,6 +551,10 @@ function gameReducer(state, action) {
       const texts = EXPLORE_TEXTS[loc.bgKey] || EXPLORE_TEXTS.street;
       const text = texts[Math.floor(Math.random() * texts.length)];
 
+      // Progress pet explore quests
+      const exploreRegionId = state.currentRegion?.id || null;
+      const petsAfterExplore = progressPetQuests(state.pets || createInitialPetState(), 'explore', 1, exploreRegionId);
+
       // Boss encounter check (0.5% chance when location has a boss)
       if (loc.boss && Math.random() < (loc.bossRate || 0.005)) {
         const boss = scaleBoss(loc.boss, loc.levelReq);
@@ -359,6 +565,7 @@ function gameReducer(state, action) {
             pendingBoss: boss,
             energy: exploreEnergy,
             lastEnergyUpdate: exploreLastUpdate,
+            pets: petsAfterExplore,
           };
         }
       }
@@ -372,6 +579,7 @@ function gameReducer(state, action) {
           energy: exploreEnergy,
           lastEnergyUpdate: exploreLastUpdate,
           randomEvent: event,
+          pets: petsAfterExplore,
         };
       }
 
@@ -383,15 +591,8 @@ function gameReducer(state, action) {
           exploreText: text,
           energy: exploreEnergy,
           lastEnergyUpdate: exploreLastUpdate,
-          battle: {
-            monster, isPlayerTurn: true, defending: false,
-            poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
-            monsterPoisonTurns: 0, monsterDoomTurns: 0,
-            undyingWillUsed: false, deathsEmbraceUsed: false,
-            defendedLastTurn: false, dodgeNextTurn: false, dodgeCharges: 0,
-            showSkillMenu: false, spellweaverActive: false,
-            avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
-          },
+          pets: petsAfterExplore,
+          battle: createBattleState(monster),
           battleLog: [{ text: `A ${monster.name} appears!`, type: 'info' }],
           battleResult: null,
         };
@@ -446,7 +647,7 @@ function gameReducer(state, action) {
         newStats = addStat(newStats, 'goldEarned', goldFound);
         newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldFound);
       }
-      return { ...state, exploreText: newText, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered };
+      return { ...state, exploreText: newText, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered, pets: petsAfterExplore };
     }
 
     case 'RANDOM_EVENT_CHOOSE': {
@@ -615,15 +816,7 @@ function gameReducer(state, action) {
             lastEnergyUpdate: eventLastUpdate,
             player: p,
             randomEvent: null,
-            battle: {
-              monster, isPlayerTurn: true, defending: false,
-              poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
-              monsterPoisonTurns: 0, monsterDoomTurns: 0,
-              undyingWillUsed: false, deathsEmbraceUsed: false,
-              defendedLastTurn: false, dodgeNextTurn: false, dodgeCharges: 0,
-              showSkillMenu: false, spellweaverActive: false,
-              avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
-            },
+            battle: createBattleState(monster),
             battleLog: [{ text: `${ambushText}A ${monster.name} attacks!`, type: 'info' }],
             battleResult: null,
           };
@@ -695,7 +888,19 @@ function gameReducer(state, action) {
       if (m.hp <= 0) {
         return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks });
       }
-      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks };
+
+      // Pet turn actions (after player attack, before monster turn)
+      const petResult = processPetTurnActions({ ...state, player: p, battle: { ...b, monster: m }, pets: state.pets }, log);
+      p = petResult.state.player;
+      m = petResult.state.battle.monster;
+      b = { ...petResult.state.battle };
+      log = petResult.log;
+      const updatedPetsAtk = petResult.state.pets;
+
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: updatedPetsAtk });
+      }
+      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: updatedPetsAtk };
     }
 
     case 'BATTLE_PLAYER_SKILL': {
@@ -756,7 +961,18 @@ function gameReducer(state, action) {
       if (m.hp <= 0) {
         return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks });
       }
-      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks };
+
+      // Pet turn actions
+      const petResultSkill = processPetTurnActions({ ...state, player: p, battle: { ...b, monster: m }, pets: state.pets }, log);
+      p = petResultSkill.state.player;
+      m = petResultSkill.state.battle.monster;
+      b = { ...petResultSkill.state.battle };
+      log = petResultSkill.log;
+
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResultSkill.state.pets });
+      }
+      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResultSkill.state.pets };
     }
 
     case 'BATTLE_USE_TREE_SKILL': {
@@ -822,7 +1038,18 @@ function gameReducer(state, action) {
       if (m.hp <= 0) {
         return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks });
       }
-      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks };
+
+      // Pet turn actions
+      const petResultTree = processPetTurnActions({ ...state, player: p, battle: { ...b, monster: m }, pets: state.pets }, log);
+      p = petResultTree.state.player;
+      m = petResultTree.state.battle.monster;
+      b = { ...petResultTree.state.battle };
+      log = petResultTree.log;
+
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResultTree.state.pets });
+      }
+      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResultTree.state.pets };
     }
 
     case 'TOGGLE_SKILL_MENU': {
@@ -907,15 +1134,7 @@ function gameReducer(state, action) {
       return {
         ...state, screen: 'battle',
         pendingBoss: null,
-        battle: {
-          monster: boss, isPlayerTurn: true, defending: false,
-          poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
-          monsterPoisonTurns: 0, monsterDoomTurns: 0,
-          undyingWillUsed: false, deathsEmbraceUsed: false,
-          defendedLastTurn: false, dodgeNextTurn: false, dodgeCharges: 0,
-          showSkillMenu: false, spellweaverActive: false,
-          avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
-        },
+        battle: createBattleState(boss),
         battleLog: [
           { text: `BOSS BATTLE!`, type: 'info' },
           { text: `${boss.name} - ${boss.title} appears!`, type: 'info' },
@@ -1013,6 +1232,17 @@ function gameReducer(state, action) {
           log.push({ text: `Mana Shield absorbs ${shield.manaUsed} damage!`, type: 'info' });
         }
 
+        // Pet defense absorption
+        const petDef = applyPetDefense(state, dmg);
+        if (petDef.absorbed > 0) {
+          dmg = Math.max(1, dmg - petDef.absorbed);
+          log.push({ text: `Pet absorbs ${petDef.absorbed} damage!`, type: 'info' });
+        }
+        if (petDef.reflected > 0) {
+          m = { ...m, hp: Math.max(0, m.hp - petDef.reflected) };
+          log.push({ text: `Pet reflects ${petDef.reflected} damage back!`, type: 'dmg-monster' });
+        }
+
         dmg = Math.max(1, dmg);
         p = { ...p, hp: Math.max(0, p.hp - dmg) };
 
@@ -1074,6 +1304,20 @@ function gameReducer(state, action) {
       // Track damage taken (difference from start hp)
       const hpLost = Math.max(0, state.player.hp - p.hp);
       const newStats = hpLost > 0 ? addStat(state.stats, 'damageTaken', hpLost) : state.stats;
+
+      if (p.hp <= 0) {
+        // Phoenix pet revive check
+        if (!b.petReviveUsed) {
+          const activePets = getActiveBattlePets(state);
+          const phoenix = activePets.find(pet => pet.ability?.reviveOnce && pet.energy > 0);
+          if (phoenix) {
+            const reviveHp = Math.floor(p.maxHp * 0.25);
+            p = { ...p, hp: reviveHp };
+            b.petReviveUsed = true;
+            log.push({ text: `${phoenix.name} uses Rebirth Flame! You are revived with ${reviveHp} HP!`, type: 'heal' });
+          }
+        }
+      }
 
       if (p.hp <= 0) {
         return handleDefeat({ ...state, player: p, battle: b, battleLog: log, stats: newStats });
@@ -1988,6 +2232,303 @@ function gameReducer(state, action) {
       };
     }
 
+    // ========== PET SYSTEM ==========
+
+    case 'BUY_PET': {
+      const petId = action.petId;
+      const template = PET_CATALOG.find(p => p.id === petId);
+      if (!template) return state;
+      if (state.pets.ownedPets.some(p => p.id === petId)) return { ...state, message: 'You already own this pet!' };
+      if (state.player.gold < template.buyPrice) return { ...state, message: 'Not enough gold!' };
+
+      const petInstance = createPetInstance(petId);
+      if (!petInstance) return state;
+
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - template.buyPrice },
+        pets: {
+          ...state.pets,
+          ownedPets: [...state.pets.ownedPets, petInstance],
+        },
+        message: `Adopted ${template.name}!`,
+      };
+    }
+
+    case 'BUY_PET_ITEM': {
+      const item = action.item;
+      if (!item || !item.buyPrice) return state;
+      if (state.player.gold < item.buyPrice) return { ...state, message: 'Not enough gold!' };
+      if (state.player.inventory.length >= state.player.maxInventory) return { ...state, message: 'Inventory full!' };
+
+      const newItem = { ...item, id: 'petitem_' + Date.now() + '_' + Math.random() };
+      delete newItem.buyPrice;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          gold: state.player.gold - item.buyPrice,
+          inventory: [...state.player.inventory, newItem],
+        },
+        message: `Purchased ${item.name}!`,
+      };
+    }
+
+    case 'EQUIP_PET': {
+      const petInstanceId = action.petInstanceId;
+      const equipped = state.pets.equippedPets || [];
+      if (equipped.length >= PET_MAX_SLOTS) return { ...state, message: `Max ${PET_MAX_SLOTS} pets can be equipped!` };
+      if (equipped.includes(petInstanceId)) return { ...state, message: 'Pet already equipped!' };
+      const pet = state.pets.ownedPets.find(p => p.instanceId === petInstanceId);
+      if (!pet) return state;
+
+      return {
+        ...state,
+        pets: { ...state.pets, equippedPets: [...equipped, petInstanceId] },
+        message: `${pet.name} is now your companion!`,
+      };
+    }
+
+    case 'UNEQUIP_PET': {
+      const petInstanceId = action.petInstanceId;
+      const equipped = state.pets.equippedPets || [];
+      if (!equipped.includes(petInstanceId)) return state;
+      const pet = state.pets.ownedPets.find(p => p.instanceId === petInstanceId);
+
+      return {
+        ...state,
+        pets: { ...state.pets, equippedPets: equipped.filter(id => id !== petInstanceId) },
+        message: pet ? `${pet.name} unequipped.` : 'Pet unequipped.',
+      };
+    }
+
+    case 'FEED_PET': {
+      const { petInstanceId, item } = action;
+      if (!item || item.type !== 'pet-snack') return state;
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      const pet = { ...pets.ownedPets[idx] };
+      if (pet.bond >= PET_MAX_BOND) return { ...state, message: 'Bond is already full!' };
+      pet.bond = Math.min(PET_MAX_BOND, pet.bond + (item.bondRestore || 10));
+      pets.ownedPets[idx] = pet;
+
+      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      // Progress feed_snack quests
+      const feedPets = progressSinglePetQuest(pets, petInstanceId, 'feed_snack', 1);
+      return { ...state, player: p, pets: feedPets, message: `Fed ${pet.name}! Bond +${item.bondRestore}` };
+    }
+
+    case 'ENERGY_PET': {
+      const { petInstanceId, item } = action;
+      if (!item || item.type !== 'pet-energy') return state;
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      const pet = { ...pets.ownedPets[idx] };
+      if (pet.energy >= PET_MAX_ENERGY) return { ...state, message: 'Energy is already full!' };
+      pet.energy = Math.min(PET_MAX_ENERGY, pet.energy + (item.energyRestore || 15));
+      pets.ownedPets[idx] = pet;
+
+      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      // Progress give_potion quests
+      const energyPets = progressSinglePetQuest(pets, petInstanceId, 'give_potion', 1);
+      return { ...state, player: p, pets: energyPets, message: `${pet.name} energy +${item.energyRestore}!` };
+    }
+
+    case 'PET_BUILD': {
+      const buildingDef = PET_BUILDINGS[action.buildingId];
+      if (!buildingDef) return state;
+      if (state.pets.petBuildings?.[action.buildingId]?.built) return { ...state, message: 'Already built!' };
+      if (state.player.level < buildingDef.levelReq) return { ...state, message: `Requires level ${buildingDef.levelReq}!` };
+
+      const cost = buildingDef.buildCost;
+      if (state.player.gold < cost.gold) return { ...state, message: `Need ${cost.gold}g!` };
+
+      const mats = { ...state.base.materials };
+      for (const [matId, qty] of Object.entries(cost.materials || {})) {
+        if ((mats[matId] || 0) < qty) {
+          const matName = BUILDING_MATERIALS[matId]?.name || matId;
+          return { ...state, message: `Need ${qty}x ${matName}!` };
+        }
+      }
+      for (const [matId, qty] of Object.entries(cost.materials || {})) {
+        mats[matId] = (mats[matId] || 0) - qty;
+      }
+
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - cost.gold },
+        base: { ...state.base, materials: mats },
+        pets: {
+          ...state.pets,
+          petBuildings: { ...state.pets.petBuildings, [action.buildingId]: { built: true, level: 1 } },
+        },
+        message: `${buildingDef.name} constructed!`,
+      };
+    }
+
+    case 'PET_UPGRADE_BUILDING': {
+      const buildingDef = PET_BUILDINGS[action.buildingId];
+      if (!buildingDef) return state;
+      const bState = state.pets.petBuildings?.[action.buildingId];
+      if (!bState?.built) return { ...state, message: 'Build it first!' };
+
+      const currentLevel = bState.level || 1;
+      const nextUpgrade = buildingDef.upgrades.find(u => u.level === currentLevel + 1);
+      if (!nextUpgrade) return { ...state, message: 'Already at max level!' };
+      if (!nextUpgrade.upgradeCost) return state;
+
+      if (state.player.gold < nextUpgrade.upgradeCost.gold) return { ...state, message: `Need ${nextUpgrade.upgradeCost.gold}g!` };
+
+      const mats = { ...state.base.materials };
+      for (const [matId, qty] of Object.entries(nextUpgrade.upgradeCost.materials || {})) {
+        if ((mats[matId] || 0) < qty) {
+          const matName = BUILDING_MATERIALS[matId]?.name || matId;
+          return { ...state, message: `Need ${qty}x ${matName}!` };
+        }
+      }
+      for (const [matId, qty] of Object.entries(nextUpgrade.upgradeCost.materials || {})) {
+        mats[matId] -= qty;
+      }
+
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - nextUpgrade.upgradeCost.gold },
+        base: { ...state.base, materials: mats },
+        pets: {
+          ...state.pets,
+          petBuildings: {
+            ...state.pets.petBuildings,
+            [action.buildingId]: { ...bState, level: currentLevel + 1 },
+          },
+        },
+        message: `${buildingDef.name} upgraded to ${nextUpgrade.name}!`,
+      };
+    }
+
+    // ========== PET QUEST SYSTEM ==========
+
+    case 'ACCEPT_PET_QUEST': {
+      const { petInstanceId, questId } = action;
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      const pet = { ...pets.ownedPets[idx] };
+      const activeQuests = pet.activeQuests || [];
+      if (activeQuests.length >= PET_MAX_ACTIVE_QUESTS) return { ...state, message: `Max ${PET_MAX_ACTIVE_QUESTS} active quests per pet!` };
+      if (activeQuests.some(q => q.id === questId)) return { ...state, message: 'Quest already active!' };
+
+      // Find quest definition
+      const allQuests = [...(PET_QUEST_POOL.generic || []), ...(PET_QUEST_POOL[pet.id] || [])];
+      const questDef = allQuests.find(q => q.id === questId);
+      if (!questDef) return state;
+      if ((pet.completedQuests || []).includes(questId)) return { ...state, message: 'Quest already completed!' };
+
+      pet.activeQuests = [...activeQuests, { ...questDef, progress: 0 }];
+      pets.ownedPets[idx] = pet;
+
+      return { ...state, pets, message: `Quest accepted: ${questDef.name}!` };
+    }
+
+    case 'ABANDON_PET_QUEST': {
+      const { petInstanceId, questId } = action;
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      const pet = { ...pets.ownedPets[idx] };
+      pet.activeQuests = (pet.activeQuests || []).filter(q => q.id !== questId);
+      pets.ownedPets[idx] = pet;
+
+      return { ...state, pets, message: 'Quest abandoned.' };
+    }
+
+    case 'COMPLETE_PET_QUEST': {
+      const { petInstanceId, questId } = action;
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      const pet = { ...pets.ownedPets[idx] };
+      const quest = (pet.activeQuests || []).find(q => q.id === questId);
+      if (!quest) return state;
+      if (quest.progress < quest.target) return { ...state, message: 'Quest not yet complete!' };
+
+      // Apply rewards
+      pet.bond = Math.min(PET_MAX_BOND, pet.bond + (quest.bondReward || 0));
+      pet.activeQuests = (pet.activeQuests || []).filter(q => q.id !== questId);
+      pet.completedQuests = [...(pet.completedQuests || []), questId];
+      pets.ownedPets[idx] = pet;
+
+      const goldReward = quest.goldReward || 0;
+      const p = goldReward > 0
+        ? { ...state.player, gold: state.player.gold + goldReward }
+        : state.player;
+
+      const bondMsg = quest.bondReward ? ` Bond +${quest.bondReward}` : '';
+      const goldMsg = goldReward > 0 ? ` +${goldReward}g` : '';
+      return { ...state, player: p, pets, message: `Quest complete: ${quest.name}!${bondMsg}${goldMsg}` };
+    }
+
+    case 'PET_QUEST_GIVE_ITEM': {
+      const { petInstanceId, item } = action;
+      if (!item || !item.slot) return { ...state, message: 'Must be an equipment item!' };
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      // Check this pet has an active give_item quest
+      const pet = { ...pets.ownedPets[idx] };
+      const hasQuest = (pet.activeQuests || []).some(q => q.type === 'give_item' && q.progress < q.target);
+      if (!hasQuest) return { ...state, message: 'No active item quest for this pet!' };
+
+      // Remove item from inventory
+      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+
+      // Progress quest
+      const updatedQuests = (pet.activeQuests || []).map(q => {
+        if (q.type === 'give_item' && q.progress < q.target) {
+          return { ...q, progress: Math.min(q.target, q.progress + 1) };
+        }
+        return q;
+      });
+      pet.activeQuests = updatedQuests;
+      pets.ownedPets[idx] = pet;
+
+      return { ...state, player: p, pets, message: `Gave ${item.name} to ${pet.name}!` };
+    }
+
+    case 'PET_QUEST_GIVE_GOLD': {
+      const { petInstanceId, amount } = action;
+      const goldAmount = Math.floor(amount || 0);
+      if (goldAmount <= 0) return state;
+      if (state.player.gold < goldAmount) return { ...state, message: 'Not enough gold!' };
+
+      const pets = { ...state.pets, ownedPets: [...state.pets.ownedPets] };
+      const idx = pets.ownedPets.findIndex(p => p.instanceId === petInstanceId);
+      if (idx === -1) return state;
+
+      const pet = { ...pets.ownedPets[idx] };
+      const hasQuest = (pet.activeQuests || []).some(q => q.type === 'give_gold' && q.progress < q.target);
+      if (!hasQuest) return { ...state, message: 'No active gold quest for this pet!' };
+
+      const p = { ...state.player, gold: state.player.gold - goldAmount };
+      const updatedQuests = (pet.activeQuests || []).map(q => {
+        if (q.type === 'give_gold' && q.progress < q.target) {
+          return { ...q, progress: Math.min(q.target, q.progress + goldAmount) };
+        }
+        return q;
+      });
+      pet.activeQuests = updatedQuests;
+      pets.ownedPets[idx] = pet;
+
+      return { ...state, player: p, pets, message: `Donated ${goldAmount}g to ${pet.name}!` };
+    }
+
     default:
       return state;
   }
@@ -2057,12 +2598,21 @@ function handleVictory(state) {
   // Merge any existing pending level-ups (from previous battles) with new ones
   const existingPending = state.pendingLevelUps || [];
 
+  // Progress pet quests (slay, win_battles, slay_boss)
+  let updatedPets = state.pets || createInitialPetState();
+  updatedPets = progressPetQuests(updatedPets, 'slay', 1, regionId);
+  updatedPets = progressPetQuests(updatedPets, 'win_battles', 1, regionId);
+  if (m.isBoss) {
+    updatedPets = progressPetQuests(updatedPets, 'slay_boss', 1, regionId);
+  }
+
   return {
     ...state,
     screen: 'battle-result',
     player: leveledPlayer,
     stats: newStats,
     tasks: newTasks,
+    pets: updatedPets,
     pendingLevelUps: [...existingPending, ...pendingLevels],
     battleResult: {
       victory: true, expGain, goldGain,
@@ -2137,7 +2687,7 @@ export function useGameState(isLoggedIn) {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pendingLevelUps, state.discoveredItemLocations, isLoggedIn]);
+  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pets, state.pendingLevelUps, state.discoveredItemLocations, isLoggedIn]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -2208,6 +2758,21 @@ export function useGameState(isLoggedIn) {
     baseSparAttack: () => dispatch({ type: 'BASE_SPAR_ATTACK' }),
     baseSparSkill: () => dispatch({ type: 'BASE_SPAR_SKILL' }),
     baseResetSpar: () => dispatch({ type: 'BASE_RESET_SPAR' }),
+    // Pet actions
+    buyPet: (petId) => dispatch({ type: 'BUY_PET', petId }),
+    buyPetItem: (item) => dispatch({ type: 'BUY_PET_ITEM', item }),
+    equipPet: (petInstanceId) => dispatch({ type: 'EQUIP_PET', petInstanceId }),
+    unequipPet: (petInstanceId) => dispatch({ type: 'UNEQUIP_PET', petInstanceId }),
+    feedPet: (petInstanceId, item) => dispatch({ type: 'FEED_PET', petInstanceId, item }),
+    energyPet: (petInstanceId, item) => dispatch({ type: 'ENERGY_PET', petInstanceId, item }),
+    petBuild: (buildingId) => dispatch({ type: 'PET_BUILD', buildingId }),
+    petUpgradeBuilding: (buildingId) => dispatch({ type: 'PET_UPGRADE_BUILDING', buildingId }),
+    // Pet quest actions
+    acceptPetQuest: (petInstanceId, questId) => dispatch({ type: 'ACCEPT_PET_QUEST', petInstanceId, questId }),
+    abandonPetQuest: (petInstanceId, questId) => dispatch({ type: 'ABANDON_PET_QUEST', petInstanceId, questId }),
+    completePetQuest: (petInstanceId, questId) => dispatch({ type: 'COMPLETE_PET_QUEST', petInstanceId, questId }),
+    petQuestGiveItem: (petInstanceId, item) => dispatch({ type: 'PET_QUEST_GIVE_ITEM', petInstanceId, item }),
+    petQuestGiveGold: (petInstanceId, amount) => dispatch({ type: 'PET_QUEST_GIVE_GOLD', petInstanceId, amount }),
   }), []);
 
   return { state, actions, playerAtk, playerDef };

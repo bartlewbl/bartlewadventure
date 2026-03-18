@@ -23,6 +23,7 @@ export default function SidePanel({
   onShop,
   onMarket,
   onBase,
+  onPets,
   onJournal,
   onRest,
   navLocked,
@@ -77,6 +78,14 @@ export default function SidePanel({
       description: 'Build and manage your base',
       onClick: onBase,
       active: screen === 'base',
+      disabled: navLocked,
+    },
+    {
+      id: 'pets',
+      label: 'Pets',
+      description: 'Manage your pet companions',
+      onClick: onPets,
+      active: screen === 'pets',
       disabled: navLocked,
     },
     {
