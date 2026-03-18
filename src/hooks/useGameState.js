@@ -8,7 +8,7 @@ import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem } from '../engine/loot';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import {
@@ -1855,10 +1855,23 @@ function gameReducer(state, action) {
         buildings: { ...state.base.buildings, [action.buildingId]: { built: true, level: 1 } },
       };
 
+      // Farm: initialize empty plots
+      if (action.buildingId === 'farm') {
+        newBase.farmPlots = Array(buildingDef.plots).fill(null);
+      }
+
+      // Warehouse: set initial level and increase maxInventory
+      const newPlayer = { ...state.player, gold: state.player.gold - cost.gold };
+      if (action.buildingId === 'warehouse') {
+        newBase.warehouseLevel = 1;
+        const bonus = BUILDINGS.warehouse.upgrades[0].inventoryBonus;
+        newPlayer.maxInventory = (state.player.maxInventory || 20) + bonus;
+      }
+
       return {
         ...state,
         base: newBase,
-        player: { ...state.player, gold: state.player.gold - cost.gold },
+        player: newPlayer,
         message: `${buildingDef.name} constructed!`,
       };
     }
@@ -2196,6 +2209,104 @@ function gameReducer(state, action) {
         player: { ...state.player, gold: state.player.gold - cost.gold },
         base: { ...state.base, materials: mats, chamberUpgrades },
         message: `${nextLevel.name} installed! ${nextLevel.desc}`,
+      };
+    }
+
+    // ---- FARM ----
+    case 'BASE_FARM_PLANT': {
+      if (!state.base.buildings.farm?.built) return { ...state, message: 'Build a Farm first!' };
+      const plotIndex = action.plotIndex;
+      const cropId = action.cropId;
+      const cropDef = BUILDINGS.farm.crops.find(c => c.id === cropId);
+      if (!cropDef) return state;
+      const plots = [...(state.base.farmPlots || [])];
+      if (plotIndex < 0 || plotIndex >= plots.length) return state;
+      if (plots[plotIndex] !== null) return { ...state, message: 'Plot already planted!' };
+      if (state.player.gold < cropDef.cost.gold) return { ...state, message: `Need ${cropDef.cost.gold}g to plant!` };
+
+      plots[plotIndex] = { cropId, plantedAt: Date.now() };
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - cropDef.cost.gold },
+        base: { ...state.base, farmPlots: plots },
+        message: `Planted ${cropDef.name}!`,
+      };
+    }
+
+    case 'BASE_FARM_HARVEST': {
+      if (!state.base.buildings.farm?.built) return { ...state, message: 'Build a Farm first!' };
+      const hPlotIndex = action.plotIndex;
+      const plots = [...(state.base.farmPlots || [])];
+      const plot = plots[hPlotIndex];
+      if (!plot) return { ...state, message: 'Nothing planted here!' };
+      const hCropDef = BUILDINGS.farm.crops.find(c => c.id === plot.cropId);
+      if (!hCropDef) return state;
+      const elapsed = Date.now() - plot.plantedAt;
+      if (elapsed < hCropDef.growTime) return { ...state, message: 'Not ready yet!' };
+
+      // Clear the plot
+      plots[hPlotIndex] = null;
+      const newMats = { ...state.base.materials };
+      let harvestMsg = '';
+
+      if (hCropDef.yield.gold) {
+        const [minG, maxG] = hCropDef.yield.gold;
+        const goldYield = minG + Math.floor(Math.random() * (maxG - minG + 1));
+        return {
+          ...state,
+          player: { ...state.player, gold: state.player.gold + goldYield },
+          base: { ...state.base, farmPlots: plots },
+          message: `Harvested ${hCropDef.name}! +${goldYield}g`,
+        };
+      }
+
+      const [minQ, maxQ] = hCropDef.yield.qty;
+      const qty = minQ + Math.floor(Math.random() * (maxQ - minQ + 1));
+      const matId = hCropDef.yield.materialId;
+      newMats[matId] = (newMats[matId] || 0) + qty;
+      harvestMsg = `Harvested ${hCropDef.name}! +${qty}x ${BUILDING_MATERIALS[matId]?.name || matId}`;
+
+      return {
+        ...state,
+        base: { ...state.base, farmPlots: plots, materials: newMats },
+        message: harvestMsg,
+      };
+    }
+
+    // ---- WAREHOUSE ----
+    case 'BASE_UPGRADE_WAREHOUSE': {
+      if (!state.base.buildings.warehouse?.built) return { ...state, message: 'Build a Warehouse first!' };
+      const currentWLevel = state.base.warehouseLevel || 1;
+      const nextWUpgrade = BUILDINGS.warehouse.upgrades.find(u => u.level === currentWLevel + 1);
+      if (!nextWUpgrade) return { ...state, message: 'Warehouse is at max level!' };
+      const wCost = nextWUpgrade.upgradeCost;
+      if (!wCost) return state;
+      if (state.player.gold < wCost.gold) return { ...state, message: `Need ${wCost.gold}g!` };
+
+      const wMats = { ...state.base.materials };
+      for (const [matId, qty] of Object.entries(wCost.materials || {})) {
+        if ((wMats[matId] || 0) < qty) {
+          const matName = BUILDING_MATERIALS[matId]?.name || matId;
+          return { ...state, message: `Need ${qty}x ${matName}!` };
+        }
+      }
+      for (const [matId, qty] of Object.entries(wCost.materials || {})) {
+        wMats[matId] -= qty;
+      }
+
+      const prevBonus = BUILDINGS.warehouse.upgrades.find(u => u.level === currentWLevel)?.inventoryBonus || 0;
+      const newBonus = nextWUpgrade.inventoryBonus;
+      const inventoryIncrease = newBonus - prevBonus;
+
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          gold: state.player.gold - wCost.gold,
+          maxInventory: (state.player.maxInventory || 20) + inventoryIncrease,
+        },
+        base: { ...state.base, materials: wMats, warehouseLevel: currentWLevel + 1 },
+        message: `${nextWUpgrade.name}! ${nextWUpgrade.desc}`,
       };
     }
 
@@ -2956,6 +3067,9 @@ export function useGameState(isLoggedIn) {
     baseSparAttack: () => dispatch({ type: 'BASE_SPAR_ATTACK' }),
     baseSparSkill: () => dispatch({ type: 'BASE_SPAR_SKILL' }),
     baseResetSpar: () => dispatch({ type: 'BASE_RESET_SPAR' }),
+    baseFarmPlant: (plotIndex, cropId) => dispatch({ type: 'BASE_FARM_PLANT', plotIndex, cropId }),
+    baseFarmHarvest: (plotIndex) => dispatch({ type: 'BASE_FARM_HARVEST', plotIndex }),
+    baseUpgradeWarehouse: () => dispatch({ type: 'BASE_UPGRADE_WAREHOUSE' }),
     // Pet actions
     buyPet: (petId) => dispatch({ type: 'BUY_PET', petId }),
     buyPetItem: (item) => dispatch({ type: 'BUY_PET_ITEM', item }),

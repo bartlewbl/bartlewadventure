@@ -317,6 +317,38 @@ export const BUILDINGS = {
     maxLoanAmount: 1000,
     levelReq: 15,
   },
+  farm: {
+    id: 'farm',
+    name: 'Farm',
+    description: 'Plant and harvest crops for gold, materials, and consumables over time.',
+    buildCost: { gold: 800, materials: { 'scrap-wood': 20, 'stone-block': 10, 'herb-bundle': 8, 'iron-ore': 5, 'glass-vial': 3 } },
+    icon: 'farm',
+    plots: 3,
+    crops: [
+      { id: 'herb-patch', name: 'Herb Patch', growTime: 30 * 60 * 1000, desc: '30 min - Herb Bundles', cost: { gold: 20 }, yield: { materialId: 'herb-bundle', qty: [2, 4] } },
+      { id: 'crystal-bloom', name: 'Crystal Bloom', growTime: 2 * 60 * 60 * 1000, desc: '2 hours - Crystal Shards', cost: { gold: 80 }, yield: { materialId: 'crystal-shard', qty: [1, 2] } },
+      { id: 'toxic-vine', name: 'Toxic Vine', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Toxic Resin', cost: { gold: 40 }, yield: { materialId: 'toxic-resin', qty: [1, 3] } },
+      { id: 'iron-root', name: 'Iron Root', growTime: 45 * 60 * 1000, desc: '45 min - Iron Ore', cost: { gold: 30 }, yield: { materialId: 'iron-ore', qty: [2, 4] } },
+      { id: 'gold-grain', name: 'Gold Grain', growTime: 4 * 60 * 60 * 1000, desc: '4 hours - Gold harvest', cost: { gold: 100 }, yield: { gold: [150, 300] } },
+      { id: 'starlight-flower', name: 'Starlight Flower', growTime: 8 * 60 * 60 * 1000, desc: '8 hours - Starlight Dust', cost: { gold: 200 }, yield: { materialId: 'starlight-dust', qty: [1, 2] } },
+    ],
+    levelReq: 4,
+  },
+  warehouse: {
+    id: 'warehouse',
+    name: 'Warehouse',
+    description: 'Expand your inventory capacity. Upgrade for even more storage space.',
+    buildCost: { gold: 1000, materials: { 'scrap-wood': 22, 'stone-block': 15, 'iron-ore': 10, 'copper-wire': 6, 'charcoal': 4 } },
+    icon: 'warehouse',
+    upgrades: [
+      { level: 1, name: 'Basic Warehouse', inventoryBonus: 5, desc: '+5 inventory slots (25 total)' },
+      { level: 2, name: 'Expanded Warehouse', inventoryBonus: 10, desc: '+10 inventory slots (30 total)', upgradeCost: { gold: 1500, materials: { 'scrap-wood': 15, 'stone-block': 10, 'iron-ore': 8, 'copper-wire': 4 } } },
+      { level: 3, name: 'Reinforced Warehouse', inventoryBonus: 15, desc: '+15 inventory slots (35 total)', upgradeCost: { gold: 2500, materials: { 'iron-ingot': 5, 'stone-block': 15, 'crystal-shard': 3, 'copper-wire': 6 } } },
+      { level: 4, name: 'Grand Warehouse', inventoryBonus: 20, desc: '+20 inventory slots (40 total)', upgradeCost: { gold: 4000, materials: { 'iron-ingot': 8, 'crystal-shard': 5, 'deep-coral': 3, 'starlight-dust': 2 } } },
+      { level: 5, name: 'Legendary Vault', inventoryBonus: 30, desc: '+30 inventory slots (50 total)', upgradeCost: { gold: 7000, materials: { 'iron-ingot': 12, 'crystal-shard': 8, 'starlight-dust': 4, 'void-essence': 2 } } },
+    ],
+    levelReq: 5,
+  },
 };
 
 // ---- BREWERY RECIPES ----
@@ -686,6 +718,10 @@ export function createInitialBase() {
     innBoost: null,  // { expBonus, startTime, duration, boostName }
     // Crafting
     craftingQueue: null, // { recipeId, building, startTime, craftTime }
+    // Farm
+    farmPlots: [],       // [{ cropId, plantedAt } | null, ...]
+    // Warehouse
+    warehouseLevel: 0,
   };
 }
 
@@ -720,6 +756,14 @@ export function getInnExpBonus(base) {
   const now = Date.now();
   if (now - boost.startTime >= boost.duration) return 0; // expired
   return boost.expBonus || 0;
+}
+
+// ---- HELPER: Get warehouse inventory bonus ----
+export function getWarehouseBonus(base) {
+  if (!base?.buildings?.warehouse?.built) return 0;
+  const level = base.warehouseLevel || 1;
+  const upgradeDef = BUILDINGS.warehouse.upgrades.find(u => u.level === level);
+  return upgradeDef?.inventoryBonus || 0;
 }
 
 // Generate a material item for inventory/drops
