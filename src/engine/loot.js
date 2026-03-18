@@ -260,6 +260,49 @@ export function getDailyFeaturedItems(playerLevel) {
   return featured;
 }
 
+// ---- LOCATION-SPECIFIC ITEM DROPS ----
+
+// Generate an item that is specifically findable at the given location
+export function generateLocationItem(locationId, playerLevel) {
+  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
+  const candidates = [];
+
+  for (const type of gearTypes) {
+    const pool = ITEM_LIBRARY[type];
+    if (!pool) continue;
+    for (const template of pool) {
+      if (template.findableAt && template.findableAt.includes(locationId)) {
+        candidates.push({ template, type });
+      }
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  // Weight by level proximity
+  const weighted = candidates.map(({ template, type }) => {
+    const levelDiff = Math.abs(template.level - playerLevel);
+    const weight = Math.max(1, 18 - levelDiff * 2);
+    return { template, type, weight };
+  });
+
+  const total = weighted.reduce((sum, entry) => sum + entry.weight, 0);
+  let roll = Math.random() * total;
+  for (const entry of weighted) {
+    roll -= entry.weight;
+    if (roll <= 0) {
+      const item = buildGearDrop(entry.template, playerLevel, entry.type);
+      item.foundLocation = locationId;
+      return item;
+    }
+  }
+
+  const last = weighted[weighted.length - 1];
+  const item = buildGearDrop(last.template, playerLevel, last.type);
+  item.foundLocation = locationId;
+  return item;
+}
+
 // ---- BASE BUILDING: Material drops ----
 
 // Roll for a material drop based on the region the player is in
