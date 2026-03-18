@@ -30,6 +30,17 @@ export const TASK_TYPES = {
   STORY: 'story',
   TUTORIAL: 'tutorial',
   MISSION: 'mission',
+  SIDEQUEST: 'sidequest',
+};
+
+// Max active quest lines (tutorial, story missions, side quest chains)
+export const MAX_ACTIVE_QUEST_LINES = 2;
+
+// Quest line type identifiers
+export const QUEST_LINE_TYPES = {
+  TUTORIAL: 'tutorial',
+  MISSION: 'mission',
+  SIDEQUEST: 'sidequest', // side quest chains use 'side_<chainId>'
 };
 
 // ---- DAILY TASKS ----
@@ -920,6 +931,148 @@ export const STORY_MISSIONS = [
   },
 ];
 
+// ---- SIDE QUEST CHAINS ----
+// Optional quest chains that provide variety and extra rewards.
+// Each chain has a unique chainId. Quests within a chain are sequential.
+// Players must activate a chain to work on it (uses a quest line slot).
+export const SIDE_QUEST_CHAINS = [
+  // Chain: Bounty Hunter - kill-focused challenges
+  {
+    chainId: 'bounty_hunter',
+    chainName: 'Bounty Hunter',
+    chainDescription: 'Take on increasingly dangerous bounties for the Hunter\'s Guild.',
+    chainIcon: 'skull',
+    quests: [
+      { id: 'side_bh_1', name: 'Rat Catcher', description: 'The guild needs someone to handle the vermin problem. Kill 20 monsters.', stat: 'monstersKilled', target: 20, reward: { gold: 60 }, order: 1 },
+      { id: 'side_bh_2', name: 'Pest Exterminator', description: 'Bigger pests have emerged. Eliminate 50 monsters.', stat: 'monstersKilled', target: 50, reward: { gold: 150 }, order: 2 },
+      { id: 'side_bh_3', name: 'Hunter\'s Mark', description: 'Target high-value prey. Deal 3,000 total damage.', stat: 'damageDealt', target: 3000, reward: { gold: 200 }, order: 3 },
+      { id: 'side_bh_4', name: 'Big Game', description: 'The guild has a special contract. Defeat 2 bosses.', stat: 'bossesKilled', target: 2, reward: { gold: 350 }, order: 4 },
+      { id: 'side_bh_5', name: 'Legendary Bounty', description: 'Only the finest bounty hunters reach this rank. Kill 150 monsters.', stat: 'monstersKilled', target: 150, reward: { gold: 500 }, order: 5 },
+      { id: 'side_bh_6', name: 'Death Dealer', description: 'Your reputation precedes you. Deal 15,000 total damage.', stat: 'damageDealt', target: 15000, reward: { gold: 600 }, order: 6 },
+      { id: 'side_bh_7', name: 'Apex Hunter', description: 'Become the ultimate predator. Defeat 10 bosses.', stat: 'bossesKilled', target: 10, reward: { gold: 1000 }, order: 7 },
+    ],
+  },
+
+  // Chain: Treasure Seeker - exploration and loot focused
+  {
+    chainId: 'treasure_seeker',
+    chainName: 'Treasure Seeker',
+    chainDescription: 'Search every corner of the world for hidden riches.',
+    chainIcon: 'chest',
+    quests: [
+      { id: 'side_ts_1', name: 'Curious Wanderer', description: 'Start your treasure-hunting career. Complete 5 explorations.', stat: 'explorationsCompleted', target: 5, reward: { gold: 40 }, order: 1 },
+      { id: 'side_ts_2', name: 'Lucky Find', description: 'Fortune favors the bold. Loot 5 items.', stat: 'itemsLooted', target: 5, reward: { gold: 80 }, order: 2 },
+      { id: 'side_ts_3', name: 'Dungeon Diver', description: 'Go deeper into the unknown. Complete 15 explorations.', stat: 'explorationsCompleted', target: 15, reward: { gold: 120 }, order: 3 },
+      { id: 'side_ts_4', name: 'Hoarder\'s Delight', description: 'Collect everything you can find. Loot 15 items.', stat: 'itemsLooted', target: 15, reward: { gold: 200 }, order: 4 },
+      { id: 'side_ts_5', name: 'Cartographer\'s Dream', description: 'Leave no stone unturned. Complete 40 explorations.', stat: 'explorationsCompleted', target: 40, reward: { gold: 350 }, order: 5 },
+      { id: 'side_ts_6', name: 'Treasure Vault', description: 'Your collection grows legendary. Loot 40 items.', stat: 'itemsLooted', target: 40, reward: { gold: 500 }, order: 6 },
+      { id: 'side_ts_7', name: 'World Explorer', description: 'You have seen it all. Complete 100 explorations.', stat: 'explorationsCompleted', target: 100, reward: { gold: 800 }, order: 7 },
+    ],
+  },
+
+  // Chain: Merchant Prince - economy focused
+  {
+    chainId: 'merchant_prince',
+    chainName: 'Merchant Prince',
+    chainDescription: 'Build a trading empire from nothing.',
+    chainIcon: 'coin',
+    quests: [
+      { id: 'side_mp_1', name: 'First Sale', description: 'Every empire starts with a single sale. Sell 2 items.', stat: 'itemsSold', target: 2, reward: { gold: 30 }, order: 1 },
+      { id: 'side_mp_2', name: 'Pocket Change', description: 'Start building your wealth. Earn 200 gold.', stat: 'goldEarned', target: 200, reward: { gold: 60 }, order: 2 },
+      { id: 'side_mp_3', name: 'Shopkeeper', description: 'Move more inventory through your stall. Sell 10 items.', stat: 'itemsSold', target: 10, reward: { gold: 120 }, order: 3 },
+      { id: 'side_mp_4', name: 'Trade Baron', description: 'Your wealth grows. Earn 1,000 gold total.', stat: 'goldEarned', target: 1000, reward: { gold: 250 }, order: 4 },
+      { id: 'side_mp_5', name: 'Market Dominator', description: 'Corner the market. Sell 30 items.', stat: 'itemsSold', target: 30, reward: { gold: 400 }, order: 5 },
+      { id: 'side_mp_6', name: 'Gold Magnate', description: 'Your fortune is the talk of the town. Earn 5,000 gold.', stat: 'goldEarned', target: 5000, reward: { gold: 700 }, order: 6 },
+      { id: 'side_mp_7', name: 'Merchant Prince', description: 'You rule the markets. Sell 75 items.', stat: 'itemsSold', target: 75, reward: { gold: 1200 }, order: 7 },
+    ],
+  },
+
+  // Chain: Iron Will - survival/defense focused
+  {
+    chainId: 'iron_will',
+    chainName: 'Iron Will',
+    chainDescription: 'Endure the worst the world throws at you and come back stronger.',
+    chainIcon: 'shield',
+    quests: [
+      { id: 'side_iw_1', name: 'Tough Skin', description: 'Take hits and keep going. Absorb 500 total damage.', stat: 'damageTaken', target: 500, reward: { gold: 50 }, order: 1 },
+      { id: 'side_iw_2', name: 'Battle Scarred', description: 'Win 10 battles through sheer determination.', stat: 'battlesWon', target: 10, reward: { gold: 100 }, order: 2 },
+      { id: 'side_iw_3', name: 'Potion Master', description: 'Learn the value of preparation. Use 5 potions.', stat: 'potionsUsed', target: 5, reward: { gold: 80 }, order: 3 },
+      { id: 'side_iw_4', name: 'Unbreakable', description: 'Endure 2,000 total damage taken.', stat: 'damageTaken', target: 2000, reward: { gold: 200 }, order: 4 },
+      { id: 'side_iw_5', name: 'War Machine', description: 'Win 40 battles to prove your resilience.', stat: 'battlesWon', target: 40, reward: { gold: 350 }, order: 5 },
+      { id: 'side_iw_6', name: 'Alchemist\'s Best Friend', description: 'Use 20 potions to sustain your fight.', stat: 'potionsUsed', target: 20, reward: { gold: 300 }, order: 6 },
+      { id: 'side_iw_7', name: 'Immortal', description: 'Absorb 10,000 damage. Nothing can stop you.', stat: 'damageTaken', target: 10000, reward: { gold: 900 }, order: 7 },
+    ],
+  },
+
+  // Chain: Skill Master - progression and skill focused
+  {
+    chainId: 'skill_master',
+    chainName: 'Skill Master',
+    chainDescription: 'Seek mastery over every technique and ability.',
+    chainIcon: 'star',
+    quests: [
+      { id: 'side_sm_1', name: 'Quick Study', description: 'Level up twice to start your journey of mastery.', stat: 'levelsGained', target: 2, reward: { gold: 50 }, order: 1 },
+      { id: 'side_sm_2', name: 'Talent Scout', description: 'Unlock 2 skills from your skill tree.', stat: 'skillsUnlocked', target: 2, reward: { gold: 100 }, order: 2 },
+      { id: 'side_sm_3', name: 'Rising Power', description: 'Reach level 8 to access new abilities.', stat: 'levelsGained', target: 7, reward: { gold: 150 }, order: 3 },
+      { id: 'side_sm_4', name: 'Technique Collector', description: 'Unlock 5 skills to broaden your arsenal.', stat: 'skillsUnlocked', target: 5, reward: { gold: 250 }, order: 4 },
+      { id: 'side_sm_5', name: 'Power Spike', description: 'Reach level 20 for true power.', stat: 'levelsGained', target: 19, reward: { gold: 400 }, order: 5 },
+      { id: 'side_sm_6', name: 'Grand Master', description: 'Master 8 skills to become a legend.', stat: 'skillsUnlocked', target: 8, reward: { gold: 600 }, order: 6 },
+      { id: 'side_sm_7', name: 'Transcendent', description: 'Reach level 40 and unlock your true potential.', stat: 'levelsGained', target: 39, reward: { gold: 1000 }, order: 7 },
+    ],
+  },
+
+  // Chain: Arena Champion - pure combat wins
+  {
+    chainId: 'arena_champion',
+    chainName: 'Arena Champion',
+    chainDescription: 'Fight your way to the top of the arena rankings.',
+    chainIcon: 'sword',
+    quests: [
+      { id: 'side_ac_1', name: 'Arena Debut', description: 'Win your first 5 battles in the arena.', stat: 'battlesWon', target: 5, reward: { gold: 40 }, order: 1 },
+      { id: 'side_ac_2', name: 'Crowd Pleaser', description: 'Deal 1,500 damage to excite the crowd.', stat: 'damageDealt', target: 1500, reward: { gold: 80 }, order: 2 },
+      { id: 'side_ac_3', name: 'Win Streak', description: 'Rack up 15 total victories.', stat: 'battlesWon', target: 15, reward: { gold: 150 }, order: 3 },
+      { id: 'side_ac_4', name: 'Devastating Blow', description: 'Land a hit of at least 50 damage in a single strike.', stat: 'highestDamage', target: 50, reward: { gold: 200 }, order: 4 },
+      { id: 'side_ac_5', name: 'Arena Veteran', description: 'Win 50 battles to earn veteran status.', stat: 'battlesWon', target: 50, reward: { gold: 400 }, order: 5 },
+      { id: 'side_ac_6', name: 'One-Hit Wonder', description: 'Land a devastating 150+ damage single hit.', stat: 'highestDamage', target: 150, reward: { gold: 600 }, order: 6 },
+      { id: 'side_ac_7', name: 'Arena Legend', description: 'Win 100 battles. You are the undisputed champion.', stat: 'battlesWon', target: 100, reward: { gold: 1500 }, order: 7 },
+    ],
+  },
+
+  // Chain: Healer's Path - healing focused
+  {
+    chainId: 'healers_path',
+    chainName: 'Healer\'s Path',
+    chainDescription: 'Master the art of staying alive through restoration.',
+    chainIcon: 'heart',
+    quests: [
+      { id: 'side_hp_1', name: 'First Aid Kit', description: 'Use 3 potions to patch yourself up.', stat: 'potionsUsed', target: 3, reward: { gold: 35 }, order: 1 },
+      { id: 'side_hp_2', name: 'Restoration', description: 'Heal 200 total HP through any means.', stat: 'totalHealing', target: 200, reward: { gold: 70 }, order: 2 },
+      { id: 'side_hp_3', name: 'Field Medic', description: 'Use 10 potions during your adventures.', stat: 'potionsUsed', target: 10, reward: { gold: 120 }, order: 3 },
+      { id: 'side_hp_4', name: 'Rejuvenation', description: 'Heal 1,000 total HP. You know how to survive.', stat: 'totalHealing', target: 1000, reward: { gold: 250 }, order: 4 },
+      { id: 'side_hp_5', name: 'Potion Addict', description: 'Use 30 potions. You always come prepared.', stat: 'potionsUsed', target: 30, reward: { gold: 400 }, order: 5 },
+      { id: 'side_hp_6', name: 'Miracle Worker', description: 'Heal 5,000 total HP across all your adventures.', stat: 'totalHealing', target: 5000, reward: { gold: 700 }, order: 6 },
+      { id: 'side_hp_7', name: 'Undying', description: 'Heal 15,000 total HP. Death cannot claim you.', stat: 'totalHealing', target: 15000, reward: { gold: 1200 }, order: 7 },
+    ],
+  },
+
+  // Chain: Completionist - mixed objectives
+  {
+    chainId: 'completionist',
+    chainName: 'The Completionist',
+    chainDescription: 'Do everything. See everything. Collect everything.',
+    chainIcon: 'trophy',
+    quests: [
+      { id: 'side_co_1', name: 'Jack of All Trades', description: 'Win 5 battles and complete 5 explorations.', stat: 'battlesWon', target: 5, reward: { gold: 50 }, order: 1 },
+      { id: 'side_co_2', name: 'Collector', description: 'Loot 10 items from your adventures.', stat: 'itemsLooted', target: 10, reward: { gold: 100 }, order: 2 },
+      { id: 'side_co_3', name: 'Well Rounded', description: 'Reach level 12 to prove your versatility.', stat: 'levelsGained', target: 11, reward: { gold: 180 }, order: 3 },
+      { id: 'side_co_4', name: 'Conqueror', description: 'Defeat 5 bosses across all regions.', stat: 'bossesKilled', target: 5, reward: { gold: 300 }, order: 4 },
+      { id: 'side_co_5', name: 'Wealthy Adventurer', description: 'Earn 3,000 gold through any means.', stat: 'goldEarned', target: 3000, reward: { gold: 500 }, order: 5 },
+      { id: 'side_co_6', name: 'Globetrotter', description: 'Complete 75 explorations across all regions.', stat: 'explorationsCompleted', target: 75, reward: { gold: 800 }, order: 6 },
+      { id: 'side_co_7', name: 'True Completionist', description: 'Deal 75,000 total damage. You have done it all.', stat: 'damageDealt', target: 75000, reward: { gold: 1500 }, order: 7 },
+    ],
+  },
+];
+
 // Get the total number of chapters
 export const MISSION_CHAPTER_COUNT = 7;
 
@@ -949,6 +1102,50 @@ export function getUnlockedChapter(missionClaimed) {
     if (!allDone) return ch;
   }
   return MISSION_CHAPTER_COUNT;
+}
+
+// Get a side quest chain by ID
+export function getSideQuestChain(chainId) {
+  return SIDE_QUEST_CHAINS.find(c => c.chainId === chainId) || null;
+}
+
+// Get the current quest in a side quest chain (first unclaimed)
+export function getCurrentSideQuest(chainId, sideQuestClaimed) {
+  const chain = getSideQuestChain(chainId);
+  if (!chain) return null;
+  const claimed = sideQuestClaimed || [];
+  return chain.quests.find(q => !claimed.includes(q.id)) || null;
+}
+
+// Check if a side quest chain is fully completed
+export function isSideChainComplete(chainId, sideQuestClaimed) {
+  const chain = getSideQuestChain(chainId);
+  if (!chain) return false;
+  const claimed = sideQuestClaimed || [];
+  return chain.quests.every(q => claimed.includes(q.id));
+}
+
+// Get quest line key for a given type
+export function getQuestLineKey(type, chainId) {
+  if (type === 'tutorial') return 'tutorial';
+  if (type === 'mission') return 'mission';
+  if (type === 'sidequest') return `side_${chainId}`;
+  return null;
+}
+
+// Count active quest lines
+export function countActiveQuestLines(activeQuestLines) {
+  return (activeQuestLines || []).length;
+}
+
+// Check if a quest line is active
+export function isQuestLineActive(activeQuestLines, lineKey) {
+  return (activeQuestLines || []).includes(lineKey);
+}
+
+// Check if we can activate another quest line
+export function canActivateQuestLine(activeQuestLines) {
+  return countActiveQuestLines(activeQuestLines) < MAX_ACTIVE_QUEST_LINES;
 }
 
 // ---- TASK HELPERS ----
@@ -1020,6 +1217,9 @@ export function createInitialTaskProgress() {
     storyClaimed: [],
     tutorialClaimed: [],
     missionClaimed: [],
+    sideQuestClaimed: [],
+    // Active quest line keys (max 2): 'tutorial', 'mission', 'side_<chainId>'
+    activeQuestLines: [],
     // Pinned quest IDs shown on location screen (max 3)
     pinnedQuests: [],
     // Seeds for cycle tracking

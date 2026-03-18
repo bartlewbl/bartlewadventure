@@ -12,8 +12,10 @@ import { saveGame } from '../api';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
-  STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS,
+  STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
   getCurrentTutorial, isTutorialComplete, getMissionsForChapter, getUnlockedChapter,
+  getSideQuestChain, getCurrentSideQuest, isSideChainComplete,
+  isQuestLineActive, canActivateQuestLine, getQuestLineKey, MAX_ACTIVE_QUEST_LINES,
   isDailyExpired, isWeeklyExpired, isMonthlyExpired,
   getDailySeed, getWeeklySeed, getMonthlySeed,
 } from '../data/tasks';
@@ -1579,8 +1581,19 @@ function gameReducer(state, action) {
     case 'CLAIM_TASK': {
       const { taskId, taskType } = action;
       const tasks = refreshTaskCycles(state.tasks);
-      const claimedKey = taskType + 'Claimed';
+      const claimedKey = taskType === 'sidequest' ? 'sideQuestClaimed' : taskType + 'Claimed';
       if (tasks[claimedKey]?.includes(taskId)) return state; // already claimed
+
+      // Quest line enforcement for tutorial, mission, sidequest
+      const activeLines = tasks.activeQuestLines || [];
+      if (taskType === 'tutorial') {
+        if (!isQuestLineActive(activeLines, 'tutorial')) return state;
+      } else if (taskType === 'mission') {
+        if (!isQuestLineActive(activeLines, 'mission')) return state;
+      } else if (taskType === 'sidequest') {
+        const chainId = action.chainId;
+        if (!chainId || !isQuestLineActive(activeLines, `side_${chainId}`)) return state;
+      }
 
       // Find the task definition and verify completion
       const now = Date.now();
@@ -1618,6 +1631,16 @@ function gameReducer(state, action) {
           if (prevMission && !(tasks.missionClaimed || []).includes(prevMission.id)) return state;
         }
         progress = state.stats[taskDef?.stat] || 0;
+      } else if (taskType === 'sidequest') {
+        const chainId = action.chainId;
+        const chain = getSideQuestChain(chainId);
+        if (!chain) return state;
+        taskDef = chain.quests.find(q => q.id === taskId);
+        if (!taskDef) return state;
+        // Must be the current quest in the chain (sequential)
+        const currentSQ = getCurrentSideQuest(chainId, tasks.sideQuestClaimed);
+        if (!currentSQ || currentSQ.id !== taskId) return state;
+        progress = state.stats[taskDef?.stat] || 0;
       }
 
       if (!taskDef || progress < taskDef.target) return state;
@@ -1641,6 +1664,22 @@ function gameReducer(state, action) {
       // Auto-remove from pinned if it was pinned
       if (newTasks.pinnedQuests?.includes(taskId)) {
         newTasks.pinnedQuests = newTasks.pinnedQuests.filter(id => id !== taskId);
+      }
+
+      // Auto-remove completed quest lines from active slots
+      if (taskType === 'tutorial' && isTutorialComplete(newTasks.tutorialClaimed)) {
+        newTasks.activeQuestLines = (newTasks.activeQuestLines || []).filter(k => k !== 'tutorial');
+      } else if (taskType === 'mission') {
+        // Check if all missions across all chapters are done
+        const allMissionsDone = STORY_MISSIONS.every(m => newTasks.missionClaimed.includes(m.id));
+        if (allMissionsDone) {
+          newTasks.activeQuestLines = (newTasks.activeQuestLines || []).filter(k => k !== 'mission');
+        }
+      } else if (taskType === 'sidequest') {
+        const chainId = action.chainId;
+        if (isSideChainComplete(chainId, newTasks.sideQuestClaimed)) {
+          newTasks.activeQuestLines = (newTasks.activeQuestLines || []).filter(k => k !== `side_${chainId}`);
+        }
       }
 
       return {
@@ -1672,6 +1711,68 @@ function gameReducer(state, action) {
         ...state,
         tasks: { ...state.tasks, pinnedQuests: pinned.filter(id => id !== questId) },
         message: 'Quest unpinned.',
+      };
+    }
+
+    case 'ACTIVATE_QUEST_LINE': {
+      const { lineKey } = action;
+      const active = state.tasks.activeQuestLines || [];
+      if (active.includes(lineKey)) return state;
+      if (active.length >= MAX_ACTIVE_QUEST_LINES) {
+        return { ...state, message: `Max ${MAX_ACTIVE_QUEST_LINES} quest lines active. Abandon one first.` };
+      }
+      // Validate the line key
+      if (lineKey === 'tutorial' && isTutorialComplete(state.tasks.tutorialClaimed)) {
+        return { ...state, message: 'Tutorial already completed.' };
+      }
+      if (lineKey === 'mission' && !isTutorialComplete(state.tasks.tutorialClaimed || [])) {
+        return { ...state, message: 'Complete the tutorial first.' };
+      }
+      if (lineKey === 'mission') {
+        const allDone = STORY_MISSIONS.every(m => (state.tasks.missionClaimed || []).includes(m.id));
+        if (allDone) return { ...state, message: 'All story missions completed.' };
+      }
+      if (lineKey.startsWith('side_')) {
+        const chainId = lineKey.replace('side_', '');
+        if (isSideChainComplete(chainId, state.tasks.sideQuestClaimed)) {
+          return { ...state, message: 'This quest chain is already completed.' };
+        }
+      }
+      return {
+        ...state,
+        tasks: { ...state.tasks, activeQuestLines: [...active, lineKey] },
+        message: 'Quest line activated!',
+      };
+    }
+
+    case 'ABANDON_QUEST_LINE': {
+      const { lineKey } = action;
+      const active = state.tasks.activeQuestLines || [];
+      if (!active.includes(lineKey)) return state;
+      // Also remove any pinned quests from this line
+      let newPinned = state.tasks.pinnedQuests || [];
+      if (lineKey === 'tutorial') {
+        const tutIds = TUTORIAL_QUESTS.map(q => q.id);
+        newPinned = newPinned.filter(id => !tutIds.includes(id));
+      } else if (lineKey === 'mission') {
+        const mIds = STORY_MISSIONS.map(q => q.id);
+        newPinned = newPinned.filter(id => !mIds.includes(id));
+      } else if (lineKey.startsWith('side_')) {
+        const chainId = lineKey.replace('side_', '');
+        const chain = getSideQuestChain(chainId);
+        if (chain) {
+          const sIds = chain.quests.map(q => q.id);
+          newPinned = newPinned.filter(id => !sIds.includes(id));
+        }
+      }
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          activeQuestLines: active.filter(k => k !== lineKey),
+          pinnedQuests: newPinned,
+        },
+        message: 'Quest line abandoned.',
       };
     }
 
@@ -2778,9 +2879,11 @@ export function useGameState(isLoggedIn) {
     reorderInventory: (fromIndex, toIndex) => dispatch({ type: 'REORDER_INVENTORY', fromIndex, toIndex }),
     buyItem: (item) => dispatch({ type: 'BUY_ITEM', item }),
     claimDailyReward: (rewards, label) => dispatch({ type: 'CLAIM_DAILY_REWARD', rewards, label }),
-    claimTask: (taskId, taskType) => dispatch({ type: 'CLAIM_TASK', taskId, taskType }),
+    claimTask: (taskId, taskType, chainId) => dispatch({ type: 'CLAIM_TASK', taskId, taskType, chainId }),
     pinQuest: (questId) => dispatch({ type: 'PIN_QUEST', questId }),
     unpinQuest: (questId) => dispatch({ type: 'UNPIN_QUEST', questId }),
+    activateQuestLine: (lineKey) => dispatch({ type: 'ACTIVATE_QUEST_LINE', lineKey }),
+    abandonQuestLine: (lineKey) => dispatch({ type: 'ABANDON_QUEST_LINE', lineKey }),
     applyTrade: (receivedItems, receivedGold, givenItems, givenGold) => dispatch({ type: 'APPLY_TRADE', receivedItems, receivedGold, givenItems, givenGold }),
     applyMarketTransaction: (transaction) => dispatch({ type: 'MARKET_TRANSACTION', transaction }),
     clearMessage: () => dispatch({ type: 'CLEAR_MESSAGE' }),

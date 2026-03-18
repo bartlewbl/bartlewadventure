@@ -4400,6 +4400,148 @@ body {
   opacity: 0.7;
 }
 
+/* ---- Quest Slot Cards ---- */
+.quest-slot-card {
+  background: rgba(15, 16, 36, 0.92);
+  border: 1px solid rgba(79, 195, 247, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.quest-slot-card.complete {
+  border-color: rgba(76, 175, 80, 0.3);
+  opacity: 0.7;
+}
+
+.quest-slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.quest-slot-name {
+  font-size: 9px;
+  color: #c8c8ff;
+  font-weight: 600;
+}
+
+.quest-slot-progress {
+  font-size: 7px;
+  color: #76ffdf;
+}
+
+.quest-slot-current {
+  background: rgba(30, 30, 60, 0.6);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.quest-slot-current-name {
+  font-size: 8px;
+  color: #f5f5ff;
+  margin-bottom: 2px;
+}
+
+.quest-slot-current-desc {
+  font-size: 7px;
+  color: #888ab0;
+  margin-bottom: 6px;
+}
+
+.quest-slot-complete-label {
+  font-size: 8px;
+  color: #4caf50;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.quest-slot-abandon {
+  margin-top: 4px;
+  background: rgba(80, 30, 30, 0.6);
+  border-color: rgba(255, 80, 80, 0.3);
+  color: #ff8080;
+  font-size: 7px;
+}
+
+.quest-slot-abandon:hover {
+  background: rgba(120, 30, 30, 0.8);
+}
+
+/* ---- Available Quest Lines ---- */
+.quest-available-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quest-available-card {
+  background: rgba(15, 16, 36, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quest-available-info {
+  flex: 1;
+}
+
+.quest-available-name {
+  font-size: 8px;
+  color: #c8c8ff;
+  font-weight: 600;
+}
+
+.quest-available-desc {
+  font-size: 7px;
+  color: #888ab0;
+}
+
+.quest-available-activate {
+  background: rgba(20, 60, 90, 0.7);
+  border-color: rgba(79, 195, 247, 0.4);
+  color: #4fc3f7;
+  font-size: 7px;
+  white-space: nowrap;
+}
+
+.quest-available-activate:hover:not(.disabled) {
+  background: rgba(30, 80, 120, 0.9);
+}
+
+.quest-available-activate.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---- Active Quest Line Indicators ---- */
+.quest-active-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4fc3f7;
+  margin-right: 6px;
+  box-shadow: 0 0 4px rgba(79, 195, 247, 0.5);
+}
+
+.quest-active-badge {
+  font-size: 7px;
+  color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.journal-chapter-card.active-line {
+  border-color: rgba(79, 195, 247, 0.3);
+}
+
 /* ---- Pinned Quest Tracker (on Locations screen) ---- */
 .pinned-quest-tracker {
   background: rgba(10, 10, 30, 0.85);

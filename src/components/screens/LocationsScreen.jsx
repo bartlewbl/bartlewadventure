@@ -1,5 +1,5 @@
 import {
-  TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS,
+  TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
   getActiveDailyTasks, getActiveWeeklyTasks,
 } from '../../data/tasks';
 
@@ -9,13 +9,14 @@ function formatNumber(n) {
   return String(n);
 }
 
-function findQuestById(id, tasks) {
+function findQuestById(id) {
   const allQuests = [
     ...TUTORIAL_QUESTS,
     ...STORY_MISSIONS,
     ...STORY_TASKS,
     ...getActiveDailyTasks(),
     ...getActiveWeeklyTasks(),
+    ...SIDE_QUEST_CHAINS.flatMap(c => c.quests),
   ];
   return allQuests.find(q => q.id === id) || null;
 }
@@ -25,7 +26,8 @@ function isQuestClaimed(id, tasks) {
     || (tasks.missionClaimed || []).includes(id)
     || (tasks.storyClaimed || []).includes(id)
     || (tasks.dailyClaimed || []).includes(id)
-    || (tasks.weeklyClaimed || []).includes(id);
+    || (tasks.weeklyClaimed || []).includes(id)
+    || (tasks.sideQuestClaimed || []).includes(id);
 }
 
 function PinnedQuestTracker({ pinnedQuests, stats, tasks }) {
@@ -33,7 +35,7 @@ function PinnedQuestTracker({ pinnedQuests, stats, tasks }) {
 
   const activeQuests = pinnedQuests
     .map(id => {
-      const quest = findQuestById(id, tasks);
+      const quest = findQuestById(id);
       if (!quest || isQuestClaimed(id, tasks)) return null;
       return quest;
     })

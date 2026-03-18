@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import {
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
-  STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS,
+  STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
   getCurrentTutorial, isTutorialComplete, getMissionsForChapter, getUnlockedChapter,
+  getCurrentSideQuest, isSideChainComplete,
+  isQuestLineActive, canActivateQuestLine, MAX_ACTIVE_QUEST_LINES,
   MISSION_CHAPTER_COUNT,
 } from '../../data/tasks';
 
-const TABS = ['Tutorial', 'Missions', 'Daily', 'Weekly', 'Monthly', 'Story', 'Stats'];
+const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Story', 'Stats'];
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -39,7 +41,7 @@ function PinButton({ questId, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQuests, onPin, onUnpin, showPin }) {
+function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQuests, onPin, onUnpin, showPin, chainId }) {
   const pct = Math.min(100, Math.floor((progress / target) * 100));
   const complete = progress >= target;
   const canClaim = complete && !claimed;
@@ -83,7 +85,7 @@ function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQu
       {canClaim && (
         <button
           className="btn btn-sm journal-task-claim"
-          onClick={() => onClaim(task.id, taskType)}
+          onClick={() => onClaim(task.id, taskType, chainId)}
         >
           Claim
         </button>
@@ -178,13 +180,176 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
   );
 }
 
+// Active Quest Lines overview tab
+function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
+  const activeLines = tasks.activeQuestLines || [];
+  const slotsUsed = activeLines.length;
+
+  // Build info for each active line
+  const lineInfos = activeLines.map(lineKey => {
+    if (lineKey === 'tutorial') {
+      const currentQ = getCurrentTutorial(tasks.tutorialClaimed || []);
+      const done = isTutorialComplete(tasks.tutorialClaimed || []);
+      return {
+        key: lineKey,
+        name: 'Tutorial',
+        type: 'tutorial',
+        currentQuest: currentQ,
+        isComplete: done,
+        progress: (tasks.tutorialClaimed || []).length,
+        total: TUTORIAL_QUESTS.length,
+      };
+    }
+    if (lineKey === 'mission') {
+      const mClaimed = tasks.missionClaimed || [];
+      const allDone = STORY_MISSIONS.every(m => mClaimed.includes(m.id));
+      const unlockedCh = getUnlockedChapter(mClaimed);
+      const chMissions = getMissionsForChapter(unlockedCh);
+      const currentQ = chMissions.find(m => !mClaimed.includes(m.id)) || null;
+      return {
+        key: lineKey,
+        name: `Story Missions - Ch.${unlockedCh}`,
+        type: 'mission',
+        currentQuest: currentQ,
+        isComplete: allDone,
+        progress: mClaimed.length,
+        total: STORY_MISSIONS.length,
+      };
+    }
+    if (lineKey.startsWith('side_')) {
+      const chainId = lineKey.replace('side_', '');
+      const chain = SIDE_QUEST_CHAINS.find(c => c.chainId === chainId);
+      const currentQ = getCurrentSideQuest(chainId, tasks.sideQuestClaimed || []);
+      const done = isSideChainComplete(chainId, tasks.sideQuestClaimed || []);
+      const completed = chain ? chain.quests.filter(q => (tasks.sideQuestClaimed || []).includes(q.id)).length : 0;
+      return {
+        key: lineKey,
+        name: chain?.chainName || chainId,
+        type: 'sidequest',
+        currentQuest: currentQ,
+        isComplete: done,
+        progress: completed,
+        total: chain?.quests.length || 0,
+      };
+    }
+    return null;
+  }).filter(Boolean);
+
+  // Available quest lines to activate
+  const availableLines = [];
+  if (!activeLines.includes('tutorial') && !isTutorialComplete(tasks.tutorialClaimed || [])) {
+    availableLines.push({ key: 'tutorial', name: 'Tutorial', desc: 'Learn the basics' });
+  }
+  if (!activeLines.includes('mission') && isTutorialComplete(tasks.tutorialClaimed || [])
+    && !STORY_MISSIONS.every(m => (tasks.missionClaimed || []).includes(m.id))) {
+    availableLines.push({ key: 'mission', name: 'Story Missions', desc: 'Follow the main storyline' });
+  }
+  for (const chain of SIDE_QUEST_CHAINS) {
+    const lineKey = `side_${chain.chainId}`;
+    if (!activeLines.includes(lineKey) && !isSideChainComplete(chain.chainId, tasks.sideQuestClaimed || [])) {
+      availableLines.push({ key: lineKey, name: chain.chainName, desc: chain.chainDescription });
+    }
+  }
+
+  const canAdd = slotsUsed < MAX_ACTIVE_QUEST_LINES;
+
+  return (
+    <div className="journal-tasks-tab">
+      <div className="journal-section-header">
+        <div className="journal-section-title">Active Quest Lines</div>
+        <div className="journal-section-progress">{slotsUsed}/{MAX_ACTIVE_QUEST_LINES} slots</div>
+      </div>
+
+      {lineInfos.length === 0 && (
+        <div className="journal-empty">No active quest lines. Choose up to {MAX_ACTIVE_QUEST_LINES} below.</div>
+      )}
+
+      {lineInfos.map(info => {
+        const prog = info.currentQuest ? (stats[info.currentQuest.stat] || 0) : 0;
+        const target = info.currentQuest?.target || 1;
+        const pct = Math.min(100, Math.floor((prog / target) * 100));
+        return (
+          <div key={info.key} className={`quest-slot-card ${info.isComplete ? 'complete' : ''}`}>
+            <div className="quest-slot-header">
+              <span className="quest-slot-name">{info.name}</span>
+              <span className="quest-slot-progress">{info.progress}/{info.total}</span>
+            </div>
+            {info.currentQuest && !info.isComplete && (
+              <div className="quest-slot-current">
+                <div className="quest-slot-current-name">Current: {info.currentQuest.name}</div>
+                <div className="quest-slot-current-desc">{info.currentQuest.description}</div>
+                <div className="journal-task-progress-row">
+                  <div className="journal-task-bar">
+                    <div className="journal-task-bar-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="journal-task-count">
+                    {formatNumber(Math.min(prog, target))}/{formatNumber(target)}
+                  </span>
+                </div>
+              </div>
+            )}
+            {info.isComplete && (
+              <div className="quest-slot-complete-label">Completed!</div>
+            )}
+            {!info.isComplete && (
+              <button
+                className="btn btn-sm quest-slot-abandon"
+                onClick={() => onAbandon(info.key)}
+              >
+                Abandon
+              </button>
+            )}
+          </div>
+        );
+      })}
+
+      {availableLines.length > 0 && (
+        <>
+          <div className="journal-section-header" style={{ marginTop: '12px' }}>
+            <div className="journal-section-title">Available Quest Lines</div>
+          </div>
+          <div className="quest-available-list">
+            {availableLines.map(line => (
+              <div key={line.key} className="quest-available-card">
+                <div className="quest-available-info">
+                  <div className="quest-available-name">{line.name}</div>
+                  <div className="quest-available-desc">{line.desc}</div>
+                </div>
+                <button
+                  className={`btn btn-sm quest-available-activate ${!canAdd ? 'disabled' : ''}`}
+                  onClick={() => canAdd && onActivate(line.key)}
+                  disabled={!canAdd}
+                >
+                  {canAdd ? 'Activate' : 'Full'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
   const tutClaimed = tasks.tutorialClaimed || [];
+  const activeLines = tasks.activeQuestLines || [];
+  const isActive = isQuestLineActive(activeLines, 'tutorial');
   const currentTut = getCurrentTutorial(tutClaimed);
   const allDone = isTutorialComplete(tutClaimed);
 
   const completedCount = tutClaimed.length;
   const totalCount = TUTORIAL_QUESTS.length;
+
+  if (!isActive && !allDone) {
+    return (
+      <div className="journal-tasks-tab">
+        <div className="journal-locked-banner">
+          Activate the Tutorial quest line from the Quests tab to begin.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="journal-tasks-tab">
@@ -199,7 +364,7 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
         </div>
       )}
 
-      {TUTORIAL_QUESTS.map((quest, idx) => {
+      {TUTORIAL_QUESTS.map((quest) => {
         const claimed = tutClaimed.includes(quest.id);
         const isCurrent = currentTut && currentTut.id === quest.id;
         const isLocked = !claimed && !isCurrent;
@@ -239,14 +404,27 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
 function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const missionClaimed = tasks.missionClaimed || [];
+  const activeLines = tasks.activeQuestLines || [];
+  const isActive = isQuestLineActive(activeLines, 'mission');
   const tutDone = isTutorialComplete(tasks.tutorialClaimed || []);
   const unlockedChapter = getUnlockedChapter(missionClaimed);
+  const allMissionsDone = STORY_MISSIONS.every(m => missionClaimed.includes(m.id));
 
   if (!tutDone) {
     return (
       <div className="journal-tasks-tab">
         <div className="journal-locked-banner">
           Complete the Tutorial to unlock Story Missions.
+        </div>
+      </div>
+    );
+  }
+
+  if (!isActive && !allMissionsDone) {
+    return (
+      <div className="journal-tasks-tab">
+        <div className="journal-locked-banner">
+          Activate the Story Missions quest line from the Quests tab to progress.
         </div>
       </div>
     );
@@ -305,7 +483,6 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
 
       {missions.map(mission => {
         const claimed = missionClaimed.includes(mission.id);
-        // Check if this mission is accessible (previous in order must be claimed)
         const prevMission = mission.order > 1
           ? missions.find(m => m.order === mission.order - 1)
           : null;
@@ -344,8 +521,117 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, onBack }) {
-  const [activeTab, setActiveTab] = useState('Tutorial');
+function SideQuestsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
+  const [selectedChain, setSelectedChain] = useState(null);
+  const sideQuestClaimed = tasks.sideQuestClaimed || [];
+  const activeLines = tasks.activeQuestLines || [];
+
+  // Chain list view
+  if (selectedChain === null) {
+    return (
+      <div className="journal-tasks-tab">
+        <div className="journal-section-header">
+          <div className="journal-section-title">Side Quest Chains</div>
+        </div>
+        <div className="journal-chapter-list">
+          {SIDE_QUEST_CHAINS.map(chain => {
+            const completed = chain.quests.filter(q => sideQuestClaimed.includes(q.id)).length;
+            const total = chain.quests.length;
+            const lineKey = `side_${chain.chainId}`;
+            const isActive = activeLines.includes(lineKey);
+            const isDone = completed === total;
+
+            return (
+              <button
+                key={chain.chainId}
+                className={`journal-chapter-card ${isDone ? 'complete' : ''} ${isActive ? 'active-line' : ''}`}
+                onClick={() => setSelectedChain(chain.chainId)}
+              >
+                <div className="journal-chapter-number">
+                  {isActive && <span className="quest-active-dot" />}
+                  {chain.chainName}
+                </div>
+                <div className="journal-chapter-name">{chain.chainDescription}</div>
+                <div className="journal-chapter-progress">
+                  {isDone ? '' : `${completed}/${total}`}
+                </div>
+                {isDone && <div className="journal-chapter-done-badge">Complete</div>}
+                {isActive && !isDone && <div className="quest-active-badge">Active</div>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Side quest chain detail
+  const chain = SIDE_QUEST_CHAINS.find(c => c.chainId === selectedChain);
+  if (!chain) {
+    setSelectedChain(null);
+    return null;
+  }
+
+  const lineKey = `side_${chain.chainId}`;
+  const isActive = activeLines.includes(lineKey);
+  const currentSQ = getCurrentSideQuest(chain.chainId, sideQuestClaimed);
+
+  return (
+    <div className="journal-tasks-tab">
+      <div className="journal-section-header">
+        <button className="btn btn-sm journal-chapter-back" onClick={() => setSelectedChain(null)}>
+          Back
+        </button>
+        <div className="journal-section-title">{chain.chainName}</div>
+        {isActive && <div className="quest-active-badge">Active</div>}
+      </div>
+
+      {!isActive && !isSideChainComplete(chain.chainId, sideQuestClaimed) && (
+        <div className="journal-locked-banner">
+          Activate this quest chain from the Quests tab to claim rewards.
+        </div>
+      )}
+
+      {chain.quests.map(quest => {
+        const claimed = sideQuestClaimed.includes(quest.id);
+        const isCurrent = currentSQ && currentSQ.id === quest.id;
+        const isLocked = !claimed && !isCurrent;
+
+        if (isLocked) {
+          return (
+            <div key={quest.id} className="journal-task-card locked">
+              <div className="journal-task-header">
+                <span className="journal-task-name">{quest.order}. ???</span>
+              </div>
+              <div className="journal-task-desc">Complete previous quests to unlock.</div>
+            </div>
+          );
+        }
+
+        const progress = stats[quest.stat] || 0;
+        return (
+          <TaskCard
+            key={quest.id}
+            task={quest}
+            progress={progress}
+            target={quest.target}
+            claimed={claimed}
+            onClaim={(id, type) => onClaim(id, type, chain.chainId)}
+            taskType="sidequest"
+            pinnedQuests={pinnedQuests}
+            onPin={onPin}
+            onUnpin={onUnpin}
+            showPin={!claimed && isActive}
+            chainId={chain.chainId}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
+  const [activeTab, setActiveTab] = useState('Quests');
   const now = Date.now();
 
   const dailyTasks = getActiveDailyTasks(now);
@@ -361,15 +647,16 @@ export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, o
     }).length;
   };
 
-  // Tutorial badge: count current tutorial if claimable
+  // Tutorial badge: count current tutorial if claimable and active
+  const activeLines = tasks.activeQuestLines || [];
   const currentTut = getCurrentTutorial(tasks.tutorialClaimed || []);
-  const tutBadge = currentTut && (stats[currentTut.stat] || 0) >= currentTut.target ? 1 : 0;
+  const tutBadge = isQuestLineActive(activeLines, 'tutorial') && currentTut && (stats[currentTut.stat] || 0) >= currentTut.target ? 1 : 0;
 
-  // Mission badge: count all claimable missions in unlocked chapters
+  // Mission badge: count all claimable missions in unlocked chapters (if active)
   const missionClaimed = tasks.missionClaimed || [];
   const tutDone = isTutorialComplete(tasks.tutorialClaimed || []);
   let missionBadge = 0;
-  if (tutDone) {
+  if (tutDone && isQuestLineActive(activeLines, 'mission')) {
     const unlockedCh = getUnlockedChapter(missionClaimed);
     for (let ch = 1; ch <= unlockedCh; ch++) {
       const chMissions = getMissionsForChapter(ch);
@@ -382,9 +669,23 @@ export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, o
     }
   }
 
+  // Side quest badge
+  let sideBadge = 0;
+  for (const chain of SIDE_QUEST_CHAINS) {
+    const lineKey = `side_${chain.chainId}`;
+    if (!isQuestLineActive(activeLines, lineKey)) continue;
+    const currentQ = getCurrentSideQuest(chain.chainId, tasks.sideQuestClaimed || []);
+    if (currentQ && (stats[currentQ.stat] || 0) >= currentQ.target) sideBadge++;
+  }
+
+  // Quests tab badge = sum of quest line badges
+  const questsBadge = tutBadge + missionBadge + sideBadge;
+
   const badges = {
+    Quests: questsBadge,
     Tutorial: tutBadge,
     Missions: missionBadge,
+    'Side Quests': sideBadge,
     Daily: countReady(dailyTasks, tasks.dailyProgress, tasks.dailyClaimed, false),
     Weekly: countReady(weeklyTasks, tasks.weeklyProgress, tasks.weeklyClaimed, false),
     Monthly: countReady(monthlyTasks, tasks.monthlyProgress, tasks.monthlyClaimed, false),
@@ -411,6 +712,14 @@ export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, o
       </div>
 
       <div className="journal-content">
+        {activeTab === 'Quests' && (
+          <QuestSlotsTab
+            tasks={tasks}
+            stats={stats}
+            onActivate={onActivate}
+            onAbandon={onAbandon}
+          />
+        )}
         {activeTab === 'Tutorial' && (
           <TutorialTab
             stats={stats}
@@ -423,6 +732,16 @@ export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, o
         )}
         {activeTab === 'Missions' && (
           <MissionsTab
+            stats={stats}
+            tasks={tasks}
+            onClaim={onClaim}
+            pinnedQuests={pinnedQuests}
+            onPin={onPin}
+            onUnpin={onUnpin}
+          />
+        )}
+        {activeTab === 'Side Quests' && (
+          <SideQuestsTab
             stats={stats}
             tasks={tasks}
             onClaim={onClaim}
