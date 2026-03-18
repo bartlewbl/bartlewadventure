@@ -2105,6 +2105,87 @@ body {
   to { box-shadow: 0 0 12px rgba(76, 175, 80, 0.3); }
 }
 
+/* Battle weather spell buff bar */
+.battle-weather-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(10, 10, 30, 0.8);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 4px;
+  width: 90%;
+  max-width: 460px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.battle-weather-icon {
+  font-size: 10px;
+}
+
+.battle-weather-buff {
+  font-size: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.battle-weather-buff.buff {
+  color: #7cfc00;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.25);
+}
+
+.battle-weather-buff.debuff {
+  color: #ff6b81;
+  background: rgba(255, 107, 129, 0.12);
+  border: 1px solid rgba(255, 107, 129, 0.25);
+}
+
+/* Skill element indicators */
+.skill-element-icon {
+  margin-right: 3px;
+  font-size: 8px;
+}
+
+.skill-btn-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.skill-weather-mod {
+  font-size: 6px;
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+.skill-weather-mod.buff {
+  color: #7cfc00;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.skill-weather-mod.debuff {
+  color: #ff6b81;
+  background: rgba(255, 107, 129, 0.2);
+}
+
+.btn-skill.weather-boosted {
+  border-color: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.15);
+}
+
+.btn-skill.weather-weakened {
+  border-color: rgba(255, 107, 129, 0.3);
+  opacity: 0.85;
+}
+
+/* Spell buff tags in town effects */
+.town-effect-tag.spell-buff {
+  font-weight: normal;
+}
+
 /* Battle combatants layout */
 .battle-combatants {
   display: flex;

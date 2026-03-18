@@ -3,6 +3,7 @@ import { CHARACTER_CLASSES, REGIONS } from '../../data/gameData';
 import { getDailyFeaturedItems } from '../../engine/loot';
 import DailyRewardPanel from '../DailyRewardPanel';
 import useGameClock, { getEventWindow, getDaySeed } from '../../hooks/useGameClock';
+import { getWeatherSpellBuffList } from '../../engine/elements';
 
 const TOWN_EVENTS = [
   // Active events - rotate every 4 hours
@@ -129,6 +130,11 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
     [clock.effects]
   );
 
+  const spellBuffs = useMemo(
+    () => getWeatherSpellBuffList(clock.weather.id),
+    [clock.weather.id]
+  );
+
   return (
     <div className="screen screen-town">
       <div className="town-layout">
@@ -163,13 +169,18 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
         </section>
 
         {/* Active Effects Panel */}
-        {effectLabels.length > 0 && (
+        {(effectLabels.length > 0 || spellBuffs.length > 0) && (
           <section className="town-effects-bar">
             <span className="town-effects-title">Active Modifiers</span>
             <div className="town-effects-list">
               {effectLabels.map((lbl, i) => (
-                <span key={i} className={`town-effect-tag ${lbl.startsWith('-') ? 'negative' : 'positive'}`}>
+                <span key={`e-${i}`} className={`town-effect-tag ${lbl.startsWith('-') ? 'negative' : 'positive'}`}>
                   {lbl}
+                </span>
+              ))}
+              {spellBuffs.map((sb, i) => (
+                <span key={`s-${i}`} className={`town-effect-tag spell-buff ${sb.positive ? 'positive' : 'negative'}`}>
+                  {sb.element.icon} {sb.label} spells
                 </span>
               ))}
             </div>

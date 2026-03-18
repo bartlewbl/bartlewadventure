@@ -33,14 +33,19 @@ const WEATHER_TYPES = [
 ];
 
 // Gameplay effects per weather condition
+// Fog: hard to find enemies, easy to stumble into events
+// Rain: fewer fights, coins wash up, slippery (less ATK)
+// Storm: dangerous, creatures flushed out, rewarding
+// Heatwave: draining, creatures desperate, deals available
+// Wind: swift travel, energy efficient
 const WEATHER_EFFECTS = {
   clear:    { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 1.00, label: 'No modifiers' },
-  cloudy:   { xpMult: 1.00, goldMult: 1.05, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 1.00, label: '+5% gold find' },
-  rain:     { xpMult: 1.00, goldMult: 1.15, lootMult: 1.00, encounterMult: 0.90, defMult: 1.00, atkMult: 0.95, shopDiscount: 0.05, energyRegenMult: 1.00, eventChanceMult: 1.20, label: '+15% gold, -5% ATK, -10% encounters, +20% events' },
-  storm:    { xpMult: 1.25, goldMult: 1.00, lootMult: 1.20, encounterMult: 1.30, defMult: 0.90, atkMult: 1.15, shopDiscount: 0, energyRegenMult: 0.80, eventChanceMult: 1.50, label: '+25% XP, +20% loot, +30% encounters, -10% DEF, +15% ATK' },
-  fog:      { xpMult: 1.00, goldMult: 1.00, lootMult: 1.10, encounterMult: 1.10, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 2.00, label: '+10% loot, +10% encounters, 2x event chance' },
-  wind:     { xpMult: 1.05, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.15, eventChanceMult: 1.00, label: '+5% XP, +15% energy regen' },
-  heatwave: { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.15, defMult: 1.00, atkMult: 1.10, shopDiscount: 0.10, energyRegenMult: 0.85, eventChanceMult: 1.00, label: '+10% ATK, +15% encounters, -15% energy regen, -10% shop prices' },
+  cloudy:   { xpMult: 1.00, goldMult: 1.05, lootMult: 1.00, encounterMult: 0.95, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 1.10, label: 'Overcast skies, slightly fewer monsters' },
+  rain:     { xpMult: 1.00, goldMult: 1.15, lootMult: 1.00, encounterMult: 0.75, defMult: 1.00, atkMult: 0.95, shopDiscount: 0.05, energyRegenMult: 1.00, eventChanceMult: 1.30, label: 'Monsters hiding from rain, coins wash up' },
+  storm:    { xpMult: 1.25, goldMult: 1.00, lootMult: 1.20, encounterMult: 1.30, defMult: 0.90, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 0.80, eventChanceMult: 1.50, label: 'Dangerous! Creatures flushed out, better rewards' },
+  fog:      { xpMult: 1.10, goldMult: 1.00, lootMult: 1.10, encounterMult: 0.60, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 2.50, label: 'Hard to find enemies, easy to stumble into events' },
+  wind:     { xpMult: 1.05, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.20, eventChanceMult: 1.00, label: 'Swift winds, faster energy recovery' },
+  heatwave: { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.15, defMult: 1.00, atkMult: 1.10, shopDiscount: 0.10, energyRegenMult: 0.80, eventChanceMult: 1.00, label: 'Brutal heat drains energy, desperate creatures attack' },
 };
 
 const WEATHER_WINDOW_HOURS = 3;

@@ -1,6 +1,7 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
+import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
 import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
@@ -945,7 +946,11 @@ function gameReducer(state, action) {
       let passiveBonus = getSkillPassiveBonus(p);
       const echoProc = rollSpellEcho(p);
       if (echoProc) passiveBonus *= 2;
-      const atkValue = Math.floor(getPlayerAtk(p, b) * skillMult * passiveBonus);
+
+      // Weather spell buff for class skill
+      const classElement = getSkillElement(null, p.characterClass);
+      const classWeatherBuff = getWeatherSpellBuff(getCurrentWeatherId(), classElement);
+      const atkValue = Math.floor(getPlayerAtk(p, b) * skillMult * passiveBonus * classWeatherBuff);
 
       p = applyLifeTap(p, manaCost);
 
@@ -957,10 +962,13 @@ function gameReducer(state, action) {
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       let log = [...state.battleLog];
+      const classWeatherLabel = classWeatherBuff !== 1.0
+        ? ` (${classWeatherBuff > 1 ? '+' : ''}${Math.round((classWeatherBuff - 1) * 100)}% weather)`
+        : '';
       if (echoProc) {
-        log.push({ text: `Spell Echo! ${skillName} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `Spell Echo! ${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       } else {
-        log.push({ text: `${skillName} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       }
 
       // Apply class skill effect (recoil, weaken, drain, etc.)
@@ -1014,7 +1022,11 @@ function gameReducer(state, action) {
       let passiveBonus = getSkillPassiveBonus(p);
       const echoProc = rollSpellEcho(p);
       if (echoProc) passiveBonus *= 2;
-      const atkValue = Math.floor(getPlayerAtk(p, b) * skill.multiplier * passiveBonus);
+
+      // Weather spell buff: element-based damage modifier
+      const skillElement = getSkillElement(action.skillId, p.characterClass);
+      const weatherSpellBuff = getWeatherSpellBuff(getCurrentWeatherId(), skillElement);
+      const atkValue = Math.floor(getPlayerAtk(p, b) * skill.multiplier * passiveBonus * weatherSpellBuff);
       const battleMaxHp = getBattleMaxHp(p);
 
       p = applyLifeTap(p, manaCost);
@@ -1030,10 +1042,13 @@ function gameReducer(state, action) {
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       let log = [...state.battleLog];
+      const weatherBuffLabel = weatherSpellBuff !== 1.0
+        ? ` (${weatherSpellBuff > 1 ? '+' : ''}${Math.round((weatherSpellBuff - 1) * 100)}% weather)`
+        : '';
       if (echoProc) {
-        log.push({ text: `Spell Echo! ${skill.name} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `Spell Echo! ${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       } else {
-        log.push({ text: `${skill.name} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       }
 
       // Apply skill effect via data-driven registry
