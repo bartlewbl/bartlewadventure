@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS,
   PET_BUILDINGS, getPetBuildingBuffs, getPetRarityClass,
+  PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer,
 } from '../../data/petData';
 import { BUILDING_MATERIALS } from '../../data/baseData';
 
@@ -23,10 +24,14 @@ export default function PetScreen({
   player, pets, base,
   onEquipPet, onUnequipPet, onFeedPet, onEnergyPet,
   onBuildPetBuilding, onUpgradePetBuilding,
+  onAcceptQuest, onAbandonQuest, onCompleteQuest,
+  onQuestGiveItem, onQuestGiveGold,
   onBack,
 }) {
   const [tab, setTab] = useState('roster');
   const [selectedPet, setSelectedPet] = useState(null);
+  const [showGiveItem, setShowGiveItem] = useState(false);
+  const [goldInput, setGoldInput] = useState('');
 
   const ownedPets = pets?.ownedPets || [];
   const equippedIds = new Set(pets?.equippedPets || []);
@@ -218,6 +223,141 @@ export default function PetScreen({
                   </button>
                 </div>
               ))}
+            </div>
+
+            {/* ===== PET QUESTS ===== */}
+            <div className="pet-quest-section">
+              <div className="pet-section-title">Quests (Bond +)</div>
+
+              {/* Active quests */}
+              {(activePet.activeQuests || []).length > 0 && (
+                <div className="pet-quest-list">
+                  <div className="pet-quest-subtitle">Active Quests</div>
+                  {(activePet.activeQuests || []).map(quest => {
+                    const done = quest.progress >= quest.target;
+                    const pct = Math.min(100, Math.floor((quest.progress / quest.target) * 100));
+                    return (
+                      <div key={quest.id} className={`pet-quest-card ${done ? 'complete' : ''}`}>
+                        <div className="pet-quest-header">
+                          <span className="pet-quest-name">{quest.name}</span>
+                          <span className="pet-quest-reward">+{quest.bondReward} bond{quest.goldReward > 0 ? ` +${quest.goldReward}g` : ''}</span>
+                        </div>
+                        <div className="pet-quest-desc">{quest.desc}</div>
+                        <div className="pet-quest-progress-row">
+                          <div className="bar pet-quest-bar">
+                            <div className="bar-fill" style={{ width: pct + '%' }} />
+                          </div>
+                          <span className="pet-quest-progress-text">{quest.progress}/{quest.target}</span>
+                        </div>
+
+                        {/* Give item / give gold controls for those quest types */}
+                        {quest.type === 'give_item' && !done && (
+                          <div className="pet-quest-action">
+                            {!showGiveItem ? (
+                              <button className="btn btn-sm btn-quest-action" onClick={() => setShowGiveItem(true)}>
+                                Give Equipment
+                              </button>
+                            ) : (
+                              <div className="pet-quest-give-list">
+                                {player.inventory.filter(i => i.slot).length === 0 && (
+                                  <div className="pet-no-items">No equipment to give.</div>
+                                )}
+                                {player.inventory.filter(i => i.slot).map(item => (
+                                  <div key={item.id} className="pet-quest-give-row">
+                                    <span className={`pet-quest-give-name ${item.rarityClass || ''}`}>{item.name}</span>
+                                    <button className="btn btn-sm btn-feed" onClick={() => { onQuestGiveItem(activePet.instanceId, item); setShowGiveItem(false); }}>
+                                      Give
+                                    </button>
+                                  </div>
+                                ))}
+                                <button className="btn btn-sm btn-back" onClick={() => setShowGiveItem(false)}>Cancel</button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {quest.type === 'give_gold' && !done && (
+                          <div className="pet-quest-action">
+                            <div className="pet-quest-gold-row">
+                              <input
+                                type="number"
+                                className="pet-quest-gold-input"
+                                placeholder="Gold..."
+                                value={goldInput}
+                                onChange={e => setGoldInput(e.target.value)}
+                                min={1}
+                                max={player.gold}
+                              />
+                              <button
+                                className="btn btn-sm btn-quest-action"
+                                onClick={() => { onQuestGiveGold(activePet.instanceId, parseInt(goldInput) || 0); setGoldInput(''); }}
+                                disabled={!goldInput || parseInt(goldInput) <= 0 || parseInt(goldInput) > player.gold}
+                              >
+                                Donate
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="pet-quest-buttons">
+                          {done && (
+                            <button className="btn btn-sm btn-quest-complete" onClick={() => onCompleteQuest(activePet.instanceId, quest.id)}>
+                              Claim Reward
+                            </button>
+                          )}
+                          {!done && (
+                            <button className="btn btn-sm btn-quest-abandon" onClick={() => onAbandonQuest(activePet.instanceId, quest.id)}>
+                              Abandon
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Available quests to accept */}
+              {(() => {
+                const activeIds = (activePet.activeQuests || []).map(q => q.id);
+                const completedIds = activePet.completedQuests || [];
+                const available = pickQuestsToOffer(activePet.id, activeIds, completedIds, 4);
+                const canAccept = (activePet.activeQuests || []).length < PET_MAX_ACTIVE_QUESTS;
+
+                if (available.length === 0 && (activePet.activeQuests || []).length === 0) {
+                  return <div className="pet-no-items">All quests completed! Great bond with {activePet.name}!</div>;
+                }
+                if (available.length === 0) return null;
+
+                return (
+                  <div className="pet-quest-list">
+                    <div className="pet-quest-subtitle">Available Quests {!canAccept && <span className="pet-quest-full">(Full - {PET_MAX_ACTIVE_QUESTS} max)</span>}</div>
+                    {available.map(quest => (
+                      <div key={quest.id} className="pet-quest-card available">
+                        <div className="pet-quest-header">
+                          <span className="pet-quest-name">{quest.name}</span>
+                          <span className="pet-quest-reward">+{quest.bondReward} bond{quest.goldReward > 0 ? ` +${quest.goldReward}g` : ''}</span>
+                        </div>
+                        <div className="pet-quest-desc">{quest.desc}</div>
+                        <button
+                          className="btn btn-sm btn-quest-accept"
+                          onClick={() => onAcceptQuest(activePet.instanceId, quest.id)}
+                          disabled={!canAccept}
+                        >
+                          Accept Quest
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* Completed count */}
+              {(activePet.completedQuests || []).length > 0 && (
+                <div className="pet-quest-completed-count">
+                  {(activePet.completedQuests || []).length} quest(s) completed
+                </div>
+              )}
             </div>
           </div>
         )}

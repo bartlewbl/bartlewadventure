@@ -418,6 +418,11 @@ export default function App() {
                 onEnergyPet={actions.energyPet}
                 onBuildPetBuilding={actions.petBuild}
                 onUpgradePetBuilding={actions.petUpgradeBuilding}
+                onAcceptQuest={actions.acceptPetQuest}
+                onAbandonQuest={actions.abandonPetQuest}
+                onCompleteQuest={actions.completePetQuest}
+                onQuestGiveItem={actions.petQuestGiveItem}
+                onQuestGiveGold={actions.petQuestGiveGold}
                 onBack={actions.goToTown}
               />
             )}

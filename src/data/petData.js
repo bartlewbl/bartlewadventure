@@ -356,6 +356,8 @@ export function createPetInstance(catalogId) {
     bond: PET_MAX_BOND,
     energy: PET_MAX_ENERGY,
     hp: template.baseHp,
+    activeQuests: [],    // [{ ...questDef, progress: 0 }]
+    completedQuests: [], // [questId, ...]
   };
 }
 
@@ -470,4 +472,251 @@ export function getPetRarityClass(rarity) {
     case 'Legendary': return 'legendary';
     default: return '';
   }
+}
+
+// ============================================================
+// PET QUESTS - Bond-raising quests for each pet
+// ============================================================
+
+// Quest types:
+//   slay        - Kill X monsters (optionally in a region)
+//   slay_boss   - Kill X bosses
+//   explore     - Explore X times (optionally in a region)
+//   feed_snack  - Feed this pet X snacks
+//   give_item   - Give (sacrifice) an equipment item to pet
+//   win_battles - Win X battles with this pet equipped
+//   give_gold   - Donate gold to your pet
+//   give_potion - Give this pet X energy potions
+
+export const PET_QUEST_POOL = {
+  // ---- GENERIC QUESTS (available to all pets) ----
+  generic: [
+    {
+      id: 'q-slay-5',
+      name: 'Monster Hunt',
+      desc: 'Slay 5 monsters together.',
+      type: 'slay',
+      target: 5,
+      bondReward: 8,
+      goldReward: 20,
+    },
+    {
+      id: 'q-slay-15',
+      name: 'Extended Hunt',
+      desc: 'Slay 15 monsters together.',
+      type: 'slay',
+      target: 15,
+      bondReward: 18,
+      goldReward: 50,
+    },
+    {
+      id: 'q-slay-30',
+      name: 'Grand Expedition',
+      desc: 'Slay 30 monsters together.',
+      type: 'slay',
+      target: 30,
+      bondReward: 30,
+      goldReward: 100,
+    },
+    {
+      id: 'q-win-3',
+      name: 'Battle Buddies',
+      desc: 'Win 3 battles with this pet equipped.',
+      type: 'win_battles',
+      target: 3,
+      bondReward: 10,
+      goldReward: 15,
+    },
+    {
+      id: 'q-win-10',
+      name: 'Veteran Duo',
+      desc: 'Win 10 battles with this pet equipped.',
+      type: 'win_battles',
+      target: 10,
+      bondReward: 22,
+      goldReward: 60,
+    },
+    {
+      id: 'q-win-25',
+      name: 'Unbreakable Bond',
+      desc: 'Win 25 battles with this pet equipped.',
+      type: 'win_battles',
+      target: 25,
+      bondReward: 40,
+      goldReward: 120,
+    },
+    {
+      id: 'q-feed-3',
+      name: 'Snack Time',
+      desc: 'Feed this pet 3 snacks.',
+      type: 'feed_snack',
+      target: 3,
+      bondReward: 12,
+      goldReward: 0,
+    },
+    {
+      id: 'q-feed-8',
+      name: 'Feast Day',
+      desc: 'Feed this pet 8 snacks.',
+      type: 'feed_snack',
+      target: 8,
+      bondReward: 25,
+      goldReward: 30,
+    },
+    {
+      id: 'q-give-item',
+      name: 'A Gift For You',
+      desc: 'Give an equipment item to this pet as a gift.',
+      type: 'give_item',
+      target: 1,
+      bondReward: 15,
+      goldReward: 0,
+    },
+    {
+      id: 'q-give-3-items',
+      name: 'Generous Master',
+      desc: 'Give 3 equipment items to this pet.',
+      type: 'give_item',
+      target: 3,
+      bondReward: 30,
+      goldReward: 40,
+    },
+    {
+      id: 'q-give-gold-50',
+      name: 'Pocket Money',
+      desc: 'Donate 50 gold to your pet.',
+      type: 'give_gold',
+      target: 50,
+      bondReward: 10,
+      goldReward: 0,
+    },
+    {
+      id: 'q-give-gold-200',
+      name: 'Trust Fund',
+      desc: 'Donate 200 gold to your pet.',
+      type: 'give_gold',
+      target: 200,
+      bondReward: 25,
+      goldReward: 0,
+    },
+    {
+      id: 'q-give-potion-3',
+      name: 'Energy Boost',
+      desc: 'Give 3 energy potions to this pet.',
+      type: 'give_potion',
+      target: 3,
+      bondReward: 12,
+      goldReward: 0,
+    },
+    {
+      id: 'q-explore-5',
+      name: 'Walk Together',
+      desc: 'Explore 5 times with this pet equipped.',
+      type: 'explore',
+      target: 5,
+      bondReward: 8,
+      goldReward: 15,
+    },
+    {
+      id: 'q-explore-15',
+      name: 'Long Journey',
+      desc: 'Explore 15 times with this pet equipped.',
+      type: 'explore',
+      target: 15,
+      bondReward: 20,
+      goldReward: 45,
+    },
+    {
+      id: 'q-slay-boss',
+      name: 'Boss Slayer',
+      desc: 'Defeat a boss with this pet equipped.',
+      type: 'slay_boss',
+      target: 1,
+      bondReward: 20,
+      goldReward: 50,
+    },
+    {
+      id: 'q-slay-3-bosses',
+      name: 'Champion Duo',
+      desc: 'Defeat 3 bosses with this pet equipped.',
+      type: 'slay_boss',
+      target: 3,
+      bondReward: 40,
+      goldReward: 150,
+    },
+  ],
+
+  // ---- PET-SPECIFIC QUESTS ----
+  'fire-imp': [
+    { id: 'q-fimp-scorch', name: 'Scorched Earth', desc: 'Slay 8 monsters in the Scorched Badlands.', type: 'slay', region: 'scorched-badlands', target: 8, bondReward: 15, goldReward: 40 },
+    { id: 'q-fimp-explore', name: 'Fire Walk', desc: 'Explore the Scorched Badlands 5 times.', type: 'explore', region: 'scorched-badlands', target: 5, bondReward: 12, goldReward: 25 },
+  ],
+  'shadow-cat': [
+    { id: 'q-scat-neon', name: 'Shadow Prowl', desc: 'Slay 10 monsters in the Neon District.', type: 'slay', region: 'neon-district', target: 10, bondReward: 15, goldReward: 35 },
+    { id: 'q-scat-stealth', name: 'Night Stalker', desc: 'Win 8 battles at night (with this pet).', type: 'win_battles', target: 8, bondReward: 18, goldReward: 45 },
+  ],
+  'thunder-hawk': [
+    { id: 'q-thawk-sky', name: 'Highland Soar', desc: 'Slay 10 monsters in the Celestial Highlands.', type: 'slay', region: 'celestial-highlands', target: 10, bondReward: 18, goldReward: 50 },
+    { id: 'q-thawk-explore', name: 'Sky Survey', desc: 'Explore the Celestial Highlands 8 times.', type: 'explore', region: 'celestial-highlands', target: 8, bondReward: 15, goldReward: 40 },
+  ],
+  'void-serpent': [
+    { id: 'q-vserp-void', name: 'Void Harvest', desc: 'Slay 12 monsters in the Void Nexus.', type: 'slay', region: 'void-nexus', target: 12, bondReward: 25, goldReward: 80 },
+    { id: 'q-vserp-boss', name: 'Apex Predator', desc: 'Defeat 2 bosses in the Void Nexus.', type: 'slay_boss', region: 'void-nexus', target: 2, bondReward: 35, goldReward: 120 },
+  ],
+  'stone-turtle': [
+    { id: 'q-sturt-frozen', name: 'Frozen March', desc: 'Slay 8 monsters in the Frozen Wastes.', type: 'slay', region: 'frozen-wastes', target: 8, bondReward: 14, goldReward: 35 },
+    { id: 'q-sturt-feed', name: 'Leafy Treats', desc: 'Feed this pet 5 snacks.', type: 'feed_snack', target: 5, bondReward: 15, goldReward: 10 },
+  ],
+  'iron-golem': [
+    { id: 'q-igol-badlands', name: 'Forge in Fire', desc: 'Slay 10 monsters in the Scorched Badlands.', type: 'slay', region: 'scorched-badlands', target: 10, bondReward: 16, goldReward: 45 },
+    { id: 'q-igol-gift', name: 'Iron Offering', desc: 'Give 2 equipment items to this golem.', type: 'give_item', target: 2, bondReward: 20, goldReward: 30 },
+  ],
+  'crystal-guardian': [
+    { id: 'q-cguard-abyss', name: 'Crystal Depths', desc: 'Slay 10 monsters in the Abyssal Depths.', type: 'slay', region: 'abyssal-depths', target: 10, bondReward: 18, goldReward: 50 },
+    { id: 'q-cguard-explore', name: 'Deep Dive', desc: 'Explore the Abyssal Depths 6 times.', type: 'explore', region: 'abyssal-depths', target: 6, bondReward: 14, goldReward: 35 },
+  ],
+  'forest-sprite': [
+    { id: 'q-fsprite-marsh', name: 'Herb Gathering', desc: 'Explore the Toxic Marshlands 6 times.', type: 'explore', region: 'toxic-marshlands', target: 6, bondReward: 12, goldReward: 30 },
+    { id: 'q-fsprite-heal', name: 'Nurture Bond', desc: 'Feed this sprite 6 snacks.', type: 'feed_snack', target: 6, bondReward: 18, goldReward: 15 },
+  ],
+  'moon-fox': [
+    { id: 'q-mfox-frozen', name: 'Moonlit Hunt', desc: 'Slay 10 monsters in the Frozen Wastes.', type: 'slay', region: 'frozen-wastes', target: 10, bondReward: 16, goldReward: 45 },
+    { id: 'q-mfox-explore', name: 'Night Wander', desc: 'Explore 10 times with this pet.', type: 'explore', target: 10, bondReward: 15, goldReward: 35 },
+  ],
+  'celestial-phoenix': [
+    { id: 'q-cphx-celestial', name: 'Heavenly Ascent', desc: 'Slay 12 monsters in the Celestial Highlands.', type: 'slay', region: 'celestial-highlands', target: 12, bondReward: 22, goldReward: 70 },
+    { id: 'q-cphx-boss', name: 'Trial by Fire', desc: 'Defeat 2 bosses with this phoenix.', type: 'slay_boss', target: 2, bondReward: 35, goldReward: 100 },
+  ],
+  'war-pup': [
+    { id: 'q-wpup-neon', name: 'Street Patrol', desc: 'Slay 8 monsters in the Neon District.', type: 'slay', region: 'neon-district', target: 8, bondReward: 12, goldReward: 30 },
+    { id: 'q-wpup-play', name: 'Playtime', desc: 'Feed this pup 4 snacks.', type: 'feed_snack', target: 4, bondReward: 14, goldReward: 10 },
+  ],
+  'mystic-owl': [
+    { id: 'q-mowl-highlands', name: 'Wisdom Seeking', desc: 'Explore the Celestial Highlands 5 times.', type: 'explore', region: 'celestial-highlands', target: 5, bondReward: 14, goldReward: 35 },
+    { id: 'q-mowl-gold', name: 'Knowledge Tax', desc: 'Donate 100 gold to this owl.', type: 'give_gold', target: 100, bondReward: 18, goldReward: 0 },
+  ],
+  'dragon-whelp': [
+    { id: 'q-dwhelp-void', name: 'Dragon\'s Trial', desc: 'Slay 15 monsters in the Void Nexus.', type: 'slay', region: 'void-nexus', target: 15, bondReward: 30, goldReward: 100 },
+    { id: 'q-dwhelp-boss', name: 'Dragon\'s Challenge', desc: 'Defeat 3 bosses with this dragon.', type: 'slay_boss', target: 3, bondReward: 45, goldReward: 200 },
+    { id: 'q-dwhelp-feast', name: 'Royal Feast', desc: 'Feed this dragon 10 snacks.', type: 'feed_snack', target: 10, bondReward: 35, goldReward: 50 },
+  ],
+};
+
+// Max active quests per pet at a time
+export const PET_MAX_ACTIVE_QUESTS = 3;
+
+// Get available quests for a specific pet (combining generic + pet-specific)
+export function getAvailableQuests(petCatalogId, completedQuestIds) {
+  const completed = new Set(completedQuestIds || []);
+  const generic = PET_QUEST_POOL.generic.filter(q => !completed.has(q.id));
+  const specific = (PET_QUEST_POOL[petCatalogId] || []).filter(q => !completed.has(q.id));
+  // Prioritize pet-specific quests first, then generic
+  return [...specific, ...generic];
+}
+
+// Pick quests to offer (up to count, mixing specific + generic)
+export function pickQuestsToOffer(petCatalogId, activeQuestIds, completedQuestIds, count = 3) {
+  const active = new Set(activeQuestIds || []);
+  const available = getAvailableQuests(petCatalogId, completedQuestIds).filter(q => !active.has(q.id));
+  return available.slice(0, count);
 }
