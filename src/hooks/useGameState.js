@@ -7,8 +7,8 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
-import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem } from '../engine/loot';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
+import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, generateBuffPotion, generateSpecificBuffPotion } from '../engine/loot';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, BUFF_POTION_TYPES, getActiveBuffs, pruneExpiredBuffs } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import {
@@ -73,6 +73,7 @@ function createInitialState() {
     base: createInitialBase(),
     pets: createInitialPetState(),
     discoveredItemLocations: {}, // { itemName: [locationId, ...] }
+    activeBuffs: [], // [{ buffPotionId, startTime, duration }]
   };
 }
 
@@ -226,6 +227,7 @@ function extractSaveData(state) {
     base: state.base,
     pets: state.pets,
     discoveredItemLocations: state.discoveredItemLocations,
+    activeBuffs: state.activeBuffs || [],
   };
 }
 
@@ -430,7 +432,7 @@ function progressSinglePetQuest(pets, petInstanceId, questType, amount = 1) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, activeBuffs: savedBuffs } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -465,6 +467,7 @@ function gameReducer(state, action) {
         pets: mergedPets,
         pendingLevelUps: mergedPending,
         discoveredItemLocations: savedDiscovered || {},
+        activeBuffs: pruneExpiredBuffs(savedBuffs || []),
       };
     }
 
@@ -876,10 +879,18 @@ function gameReducer(state, action) {
       let m = { ...b.monster };
       let p = { ...state.player };
       const cls = getClassData(p);
-      let dmg = calcDamage(getPlayerAtk(p, b), m.def);
+      let dmg = calcDamage(getPlayerAtk(p, b, state.activeBuffs), m.def);
 
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
+
+      // Buff potion crit chance
+      const buffBonuses = getActiveBuffs(state.activeBuffs);
+      let buffCrit = false;
+      if (buffBonuses.crit > 0 && !lucky.procced && Math.random() < buffBonuses.crit) {
+        dmg = dmg * 2;
+        buffCrit = true;
+      }
 
       m.hp = Math.max(0, m.hp - dmg);
       b.monster = m;
@@ -887,7 +898,9 @@ function gameReducer(state, action) {
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       let log = [...state.battleLog];
-      if (lucky.procced) {
+      if (buffCrit) {
+        log.push({ text: `Critical Hit! ${dmg} damage!`, type: 'dmg-monster' });
+      } else if (lucky.procced) {
         log.push({ text: `Lucky Strike! Double damage for ${dmg}!`, type: 'dmg-monster' });
       } else {
         log.push({ text: `You attack for ${dmg} damage!`, type: 'dmg-monster' });
@@ -950,7 +963,7 @@ function gameReducer(state, action) {
       // Weather spell buff for class skill
       const classElement = getSkillElement(null, p.characterClass);
       const classWeatherBuff = getWeatherSpellBuff(getCurrentWeatherId(), classElement);
-      const atkValue = Math.floor(getPlayerAtk(p, b) * skillMult * passiveBonus * classWeatherBuff);
+      const atkValue = Math.floor(getPlayerAtk(p, b, state.activeBuffs) * skillMult * passiveBonus * classWeatherBuff);
 
       p = applyLifeTap(p, manaCost);
 
@@ -1026,7 +1039,7 @@ function gameReducer(state, action) {
       // Weather spell buff: element-based damage modifier
       const skillElement = getSkillElement(action.skillId, p.characterClass);
       const weatherSpellBuff = getWeatherSpellBuff(getCurrentWeatherId(), skillElement);
-      const atkValue = Math.floor(getPlayerAtk(p, b) * skill.multiplier * passiveBonus * weatherSpellBuff);
+      const atkValue = Math.floor(getPlayerAtk(p, b, state.activeBuffs) * skill.multiplier * passiveBonus * weatherSpellBuff);
       const battleMaxHp = getBattleMaxHp(p);
 
       p = applyLifeTap(p, manaCost);
@@ -1255,9 +1268,9 @@ function gameReducer(state, action) {
         let dmg;
         if (mSkill) {
           const rawAtk = Math.floor(m.atk * mSkill.multiplier);
-          dmg = calcDamage(rawAtk, getPlayerDef(p, b));
+          dmg = calcDamage(rawAtk, getPlayerDef(p, b, state.activeBuffs));
         } else {
-          dmg = calcDamage(m.atk, getPlayerDef(p, b));
+          dmg = calcDamage(m.atk, getPlayerDef(p, b, state.activeBuffs));
         }
 
         // Damage reduction passives (defend, iron skin, thick skin, fortress)
@@ -1473,6 +1486,27 @@ function gameReducer(state, action) {
           energy: currentEnergy + restored,
           lastEnergyUpdate: now,
           message: `Restored ${restored} energy!`,
+        };
+      }
+      // Buff potions: activate a timed buff
+      if (item.type === 'buff-potion') {
+        const bType = BUFF_POTION_TYPES[item.buffPotionId];
+        if (!bType) return state;
+        // Check if this buff type is already active
+        const currentBuffs = pruneExpiredBuffs(state.activeBuffs || []);
+        const alreadyActive = currentBuffs.some(b => b.buffPotionId === item.buffPotionId);
+        if (alreadyActive) return { ...state, message: `${bType.name} is already active!` };
+        const p = {
+          ...state.player,
+          inventory: state.player.inventory.filter(i => i.id !== item.id),
+        };
+        const newBuff = { buffPotionId: item.buffPotionId, startTime: Date.now(), duration: bType.duration };
+        const mins = Math.round(bType.duration / 60000);
+        return {
+          ...state,
+          player: p,
+          activeBuffs: [...currentBuffs, newBuff],
+          message: `${bType.name} activated for ${mins} min!`,
         };
       }
       // Material items: "use" stores them in base
@@ -2082,7 +2116,12 @@ function gameReducer(state, action) {
       if (queue.building === 'brewery') {
         const recipe = BREWERY_RECIPES.find(r => r.id === queue.recipeId);
         if (recipe) {
-          const item = generateItem(recipe.result.type, Math.max(1, state.player.level));
+          let item;
+          if (recipe.result.type === 'buff-potion') {
+            item = generateSpecificBuffPotion(recipe.result.buffPotionId);
+          } else {
+            item = generateItem(recipe.result.type, Math.max(1, state.player.level));
+          }
           if (item && p.inventory.length < p.maxInventory) {
             p.inventory.push(item);
             msg = `Brewed ${item.name}!`;
@@ -2841,12 +2880,14 @@ function handleVictory(state) {
   const m = state.battle.monster;
   const innBonus = getInnExpBonus(state.base);
   const worldEffects = getCurrentEffects();
-  const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult);
+  const buffBonuses = getActiveBuffs(state.activeBuffs);
+  const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult * (1 + buffBonuses.xp));
   const cls = getClassData(state.player);
   let goldMult = 1.0;
   if (cls?.passive === 'Greed') goldMult *= 1.25;
   if (playerHasSkill(state.player, 'thf_t2a')) goldMult *= 1.50;
   goldMult *= worldEffects.goldMult;
+  goldMult *= (1 + buffBonuses.gold);
   const goldGain = Math.floor(m.gold * goldMult);
 
   let p = { ...state.player, exp: state.player.exp + expGain, gold: state.player.gold + goldGain };
@@ -2860,6 +2901,17 @@ function handleVictory(state) {
       p.inventory = [...p.inventory, materialDrop];
     } else if (materialDrop) {
       materialDrop = null; // inventory full
+    }
+  }
+
+  // Roll for rare buff potion drop (3% chance)
+  let buffPotionDrop = null;
+  if (Math.random() < 0.03) {
+    buffPotionDrop = generateBuffPotion();
+    if (buffPotionDrop && p.inventory.length < p.maxInventory) {
+      p.inventory = [...p.inventory, buffPotionDrop];
+    } else {
+      buffPotionDrop = null;
     }
   }
 
@@ -2923,6 +2975,7 @@ function handleVictory(state) {
       victory: true, expGain, goldGain,
       droppedItem: lootAdded ? droppedItem : null,
       materialDrop: materialDrop || null,
+      buffPotionDrop: buffPotionDrop || null,
       lostItemName,
       levelUps: pendingLevels,
       newLevel: leveledPlayer.level,
@@ -2964,8 +3017,8 @@ export function useGameState(isLoggedIn) {
   const saveTimerRef = useRef(null);
   const lastSaveRef = useRef(null);
 
-  const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle), [state.player, state.battle]);
-  const playerDef = useMemo(() => getPlayerDef(state.player, state.battle), [state.player, state.battle]);
+  const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle, state.activeBuffs), [state.player, state.battle, state.activeBuffs]);
+  const playerDef = useMemo(() => getPlayerDef(state.player, state.battle, state.activeBuffs), [state.player, state.battle, state.activeBuffs]);
 
   // Auto-save to server on every meaningful state change (debounced)
   useEffect(() => {

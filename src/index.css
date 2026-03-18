@@ -183,6 +183,30 @@ body {
   color: #f3f3ff;
 }
 
+.side-panel-buffs {
+  padding: 8px 10px;
+  background: rgba(10, 10, 30, 0.8);
+  border: 1px solid rgba(100, 200, 100, 0.2);
+  border-radius: 4px;
+}
+
+.side-buff-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 8px;
+}
+
+.side-buff-name {
+  color: #5fff5f;
+}
+
+.side-buff-timer {
+  color: #ffd700;
+  font-variant-numeric: tabular-nums;
+}
+
 .side-panel-clock {
   padding: 8px 10px;
   background: rgba(10, 10, 30, 0.8);

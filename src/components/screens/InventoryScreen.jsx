@@ -24,11 +24,13 @@ const INV_CATEGORIES = [
   { id: 'accessories', label: 'Rings', icon: '\u25C7' },
   { id: 'potions', label: 'Potions', icon: '\u2661' },
   { id: 'energy-drinks', label: 'Energy', icon: '\u26A1' },
+  { id: 'buff-potions', label: 'Buffs', icon: '\u2B06' },
 ];
 
 function getItemCategory(item) {
   if (item.type === 'potion') return 'potions';
   if (item.type === 'energy-drink') return 'energy-drinks';
+  if (item.type === 'buff-potion') return 'buff-potions';
   if (item.slot === 'weapon') return 'weapons';
   if (item.slot === 'shield') return 'shields';
   if (item.slot === 'helmet') return 'helmets';
@@ -55,6 +57,10 @@ function itemStatLine(item) {
     return stats.length ? stats.join(' ') : 'No bonuses';
   }
   if (item.type === 'energy-drink') return `Energy +${item.energyAmount}`;
+  if (item.type === 'buff-potion') {
+    const mins = Math.round((item.duration || 0) / 60000);
+    return `${item.description || 'Buff'} (${mins} min)`;
+  }
   return `Heal ${item.healAmount} HP`;
 }
 
