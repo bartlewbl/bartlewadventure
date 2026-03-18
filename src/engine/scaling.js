@@ -3,9 +3,9 @@
 import { MONSTERS, BOSSES } from '../data/gameData';
 
 // Scale a gold reward by player level.
-// Each level adds 5% more gold (e.g. level 10 = +45% gold).
+// Each level adds 2% more gold (e.g. level 10 = +18% gold).
 export function scaleRewardByLevel(baseGold, playerLevel) {
-  return Math.floor(baseGold * (1 + (playerLevel - 1) * 0.05));
+  return Math.floor(baseGold * (1 + (playerLevel - 1) * 0.02));
 }
 
 export function scaleMonster(monsterId, areaLevel) {
