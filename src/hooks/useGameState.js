@@ -25,8 +25,8 @@ import {
 export const ENERGY_MAX = 100;
 export const ENERGY_COST_PER_TRIP = 10;
 const ENERGY_COST_PER_STEP = 2;
-const ENERGY_REGEN_PERCENT = 0.1;
-const ENERGY_REGEN_INTERVAL_MS = 15 * 60 * 1000;
+export const ENERGY_REGEN_PERCENT = 0.1;
+export const ENERGY_REGEN_INTERVAL_MS = 15 * 60 * 1000;
 
 // ---- INITIAL STATE ----
 function createInitialPlayer() {
