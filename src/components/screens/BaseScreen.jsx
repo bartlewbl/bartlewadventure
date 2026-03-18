@@ -27,7 +27,7 @@ function getBuildingBenefits(buildingId, def) {
     case 'farm':
       return ['Plant crops in 3 plots for passive resource gathering', 'Grow herbs, ores, crystals, and even gold', 'Crops take 30 min to 8 hours to mature', 'Great for stockpiling crafting materials'];
     case 'warehouse':
-      return ['Increases your inventory capacity by +5 slots', 'Upgrade through 5 tiers for up to +30 total slots', 'Base: 20 slots, Max: 50 slots at Legendary Vault', 'Essential for hoarding loot and materials'];
+      return ['Increases your inventory capacity by +20 slots', 'Upgrade through 5 tiers for +10 more each level', 'Base: 20 slots, Max: 80 slots at Legendary Vault', 'Essential for hoarding loot and materials'];
     default:
       return [def.description];
   }
