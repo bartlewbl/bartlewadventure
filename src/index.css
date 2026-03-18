@@ -4542,6 +4542,42 @@ body {
   border-color: rgba(79, 195, 247, 0.3);
 }
 
+.journal-chapter-card.level-locked {
+  opacity: 0.45;
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ---- Level Requirement Badges ---- */
+.quest-level-req {
+  font-size: 6px;
+  margin-left: 6px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 400;
+}
+
+.quest-level-req.locked {
+  color: #ff6b6b;
+  background: rgba(255, 80, 80, 0.12);
+}
+
+.quest-level-req.met {
+  color: #76ffdf;
+  background: rgba(118, 255, 223, 0.1);
+}
+
+.quest-level-locked-badge {
+  font-size: 7px;
+  color: #ff6b6b;
+  background: rgba(255, 80, 80, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.quest-available-card-wrapper.level-locked {
+  opacity: 0.5;
+}
+
 /* ---- Quest Preview List ---- */
 .quest-available-card-wrapper {
   display: flex;

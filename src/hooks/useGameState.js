@@ -1734,6 +1734,11 @@ function gameReducer(state, action) {
       }
       if (lineKey.startsWith('side_')) {
         const chainId = lineKey.replace('side_', '');
+        const chain = getSideQuestChain(chainId);
+        if (!chain) return state;
+        if (chain.levelReq && state.player.level < chain.levelReq) {
+          return { ...state, message: `Requires level ${chain.levelReq} to activate.` };
+        }
         if (isSideChainComplete(chainId, state.tasks.sideQuestClaimed)) {
           return { ...state, message: 'This quest chain is already completed.' };
         }

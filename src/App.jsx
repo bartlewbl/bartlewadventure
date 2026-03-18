@@ -374,6 +374,7 @@ export default function App() {
               <JournalScreen
                 stats={state.stats}
                 tasks={state.tasks}
+                playerLevel={state.player.level}
                 onClaim={(taskId, taskType, chainId) => actions.claimTask(taskId, taskType, chainId)}
                 onPin={actions.pinQuest}
                 onUnpin={actions.unpinQuest}

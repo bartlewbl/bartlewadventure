@@ -181,7 +181,7 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
 }
 
 // Active Quest Lines overview tab
-function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
+function QuestSlotsTab({ tasks, stats, playerLevel, onActivate, onAbandon }) {
   const [previewKey, setPreviewKey] = useState(null);
   const activeLines = tasks.activeQuestLines || [];
   const slotsUsed = activeLines.length;
@@ -248,7 +248,9 @@ function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
   for (const chain of SIDE_QUEST_CHAINS) {
     const lineKey = `side_${chain.chainId}`;
     if (!activeLines.includes(lineKey) && !isSideChainComplete(chain.chainId, tasks.sideQuestClaimed || [])) {
-      availableLines.push({ key: lineKey, name: chain.chainName, desc: chain.chainDescription, quests: chain.quests, claimed: tasks.sideQuestClaimed || [] });
+      const lvlReq = chain.levelReq || 1;
+      const levelLocked = playerLevel < lvlReq;
+      availableLines.push({ key: lineKey, name: chain.chainName, desc: chain.chainDescription, quests: chain.quests, claimed: tasks.sideQuestClaimed || [], levelReq: lvlReq, levelLocked });
     }
   }
 
@@ -312,23 +314,30 @@ function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
           <div className="quest-available-list">
             {availableLines.map(line => {
               const isExpanded = previewKey === line.key;
+              const isLevelLocked = line.levelLocked;
+              const canActivate = canAdd && !isLevelLocked;
               return (
-                <div key={line.key} className="quest-available-card-wrapper">
+                <div key={line.key} className={`quest-available-card-wrapper ${isLevelLocked ? 'level-locked' : ''}`}>
                   <div className="quest-available-card">
                     <div className="quest-available-info" onClick={() => setPreviewKey(isExpanded ? null : line.key)} style={{ cursor: 'pointer' }}>
                       <div className="quest-available-name">
                         <span className="quest-preview-toggle">{isExpanded ? '\u25BC' : '\u25B6'}</span>
                         {line.name}
                         <span className="quest-available-count">{line.quests.length} quests</span>
+                        {line.levelReq > 1 && (
+                          <span className={`quest-level-req ${isLevelLocked ? 'locked' : 'met'}`}>
+                            Lv.{line.levelReq}
+                          </span>
+                        )}
                       </div>
                       <div className="quest-available-desc">{line.desc}</div>
                     </div>
                     <button
-                      className={`btn btn-sm quest-available-activate ${!canAdd ? 'disabled' : ''}`}
-                      onClick={() => canAdd && onActivate(line.key)}
-                      disabled={!canAdd}
+                      className={`btn btn-sm quest-available-activate ${!canActivate ? 'disabled' : ''}`}
+                      onClick={() => canActivate && onActivate(line.key)}
+                      disabled={!canActivate}
                     >
-                      {canAdd ? 'Activate' : 'Full'}
+                      {isLevelLocked ? `Lv.${line.levelReq}` : canAdd ? 'Activate' : 'Full'}
                     </button>
                   </div>
                   {isExpanded && (
@@ -558,7 +567,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-function SideQuestsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
+function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin, onUnpin }) {
   const [selectedChain, setSelectedChain] = useState(null);
   const sideQuestClaimed = tasks.sideQuestClaimed || [];
   const activeLines = tasks.activeQuestLines || [];
@@ -577,12 +586,15 @@ function SideQuestsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) 
             const lineKey = `side_${chain.chainId}`;
             const isActive = activeLines.includes(lineKey);
             const isDone = completed === total;
+            const lvlReq = chain.levelReq || 1;
+            const isLevelLocked = playerLevel < lvlReq;
 
             return (
               <button
                 key={chain.chainId}
-                className={`journal-chapter-card ${isDone ? 'complete' : ''} ${isActive ? 'active-line' : ''}`}
-                onClick={() => setSelectedChain(chain.chainId)}
+                className={`journal-chapter-card ${isDone ? 'complete' : ''} ${isActive ? 'active-line' : ''} ${isLevelLocked ? 'level-locked' : ''}`}
+                onClick={() => !isLevelLocked && setSelectedChain(chain.chainId)}
+                disabled={isLevelLocked}
               >
                 <div className="journal-chapter-number">
                   {isActive && <span className="quest-active-dot" />}
@@ -590,10 +602,11 @@ function SideQuestsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) 
                 </div>
                 <div className="journal-chapter-name">{chain.chainDescription}</div>
                 <div className="journal-chapter-progress">
-                  {isDone ? '' : `${completed}/${total}`}
+                  {isLevelLocked ? `Lv.${lvlReq}` : isDone ? '' : `${completed}/${total}`}
                 </div>
                 {isDone && <div className="journal-chapter-done-badge">Complete</div>}
                 {isActive && !isDone && <div className="quest-active-badge">Active</div>}
+                {isLevelLocked && <div className="quest-level-locked-badge">Lv.{lvlReq}</div>}
               </button>
             );
           })}
@@ -671,7 +684,7 @@ function SideQuestsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) 
   );
 }
 
-export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
+export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
   const [activeTab, setActiveTab] = useState('Quests');
   const now = Date.now();
 
@@ -757,6 +770,7 @@ export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, o
           <QuestSlotsTab
             tasks={tasks}
             stats={stats}
+            playerLevel={playerLevel}
             onActivate={onActivate}
             onAbandon={onAbandon}
           />
@@ -785,6 +799,7 @@ export default function JournalScreen({ stats, tasks, onClaim, onPin, onUnpin, o
           <SideQuestsTab
             stats={stats}
             tasks={tasks}
+            playerLevel={playerLevel}
             onClaim={onClaim}
             pinnedQuests={pinnedQuests}
             onPin={onPin}
