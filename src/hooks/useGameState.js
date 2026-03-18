@@ -911,7 +911,7 @@ function gameReducer(state, action) {
       const skillName = cls?.skillName || 'Power Strike';
       const skillMult = cls?.skillMultiplier || 1.5;
       const skillEffect = cls?.skillEffect || null;
-      const manaCost = getEffectiveManaCost(p, cls?.skillManaCost || 0);
+      const manaCost = getEffectiveManaCost(p, cls?.skillManaCost || 0, b);
 
       if (manaCost > 0 && p.mana < manaCost) {
         return { ...state, message: `Not enough mana! (${manaCost} needed)` };
@@ -981,7 +981,7 @@ function gameReducer(state, action) {
       let p = { ...state.player };
       const skill = getTreeSkill(action.skillId);
       if (!skill || skill.type !== 'active') return state;
-      const manaCost = getEffectiveManaCost(p, skill.manaCost || 0);
+      const manaCost = getEffectiveManaCost(p, skill.manaCost || 0, b);
       if (manaCost > 0 && p.mana < manaCost) {
         return { ...state, message: `Not enough mana! (${manaCost} needed)` };
       }
@@ -1202,7 +1202,7 @@ function gameReducer(state, action) {
       if (b.armorBreakTurns > 0) b.armorBreakTurns--;
 
       // Turn-start passives (regeneration, meditation, mana regen, dark pact)
-      ({ player: p, log } = applyTurnStartPassives({ player: p, battle: b, log }));
+      ({ player: p, battle: b, log } = applyTurnStartPassives({ player: p, battle: b, log }));
 
       // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
       let dodged;
