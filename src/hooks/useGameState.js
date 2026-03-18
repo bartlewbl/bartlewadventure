@@ -12,7 +12,8 @@ import { saveGame } from '../api';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
-  STORY_TASKS,
+  STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS,
+  getCurrentTutorial, isTutorialComplete, getMissionsForChapter, getUnlockedChapter,
   isDailyExpired, isWeeklyExpired, isMonthlyExpired,
   getDailySeed, getWeeklySeed, getMonthlySeed,
 } from '../data/tasks';
@@ -1597,6 +1598,26 @@ function gameReducer(state, action) {
       } else if (taskType === 'story') {
         taskDef = STORY_TASKS.find(t => t.id === taskId);
         progress = state.stats[taskDef?.stat] || 0;
+      } else if (taskType === 'tutorial') {
+        taskDef = TUTORIAL_QUESTS.find(t => t.id === taskId);
+        // Tutorial must be the current one (sequential)
+        const currentTut = getCurrentTutorial(tasks.tutorialClaimed);
+        if (!currentTut || currentTut.id !== taskId) return state;
+        progress = state.stats[taskDef?.stat] || 0;
+      } else if (taskType === 'mission') {
+        taskDef = STORY_MISSIONS.find(t => t.id === taskId);
+        if (!taskDef) return state;
+        // Must have completed tutorial first
+        if (!isTutorialComplete(tasks.tutorialClaimed)) return state;
+        // Check chapter is unlocked (all prior chapter missions claimed)
+        const unlockedCh = getUnlockedChapter(tasks.missionClaimed);
+        if (taskDef.chapter > unlockedCh) return state;
+        // Check order within chapter (previous missions must be claimed)
+        if (taskDef.order > 1) {
+          const prevMission = STORY_MISSIONS.find(m => m.chapter === taskDef.chapter && m.order === taskDef.order - 1);
+          if (prevMission && !(tasks.missionClaimed || []).includes(prevMission.id)) return state;
+        }
+        progress = state.stats[taskDef?.stat] || 0;
       }
 
       if (!taskDef || progress < taskDef.target) return state;
@@ -1617,12 +1638,40 @@ function gameReducer(state, action) {
         [claimedKey]: [...(tasks[claimedKey] || []), taskId],
       };
 
+      // Auto-remove from pinned if it was pinned
+      if (newTasks.pinnedQuests?.includes(taskId)) {
+        newTasks.pinnedQuests = newTasks.pinnedQuests.filter(id => id !== taskId);
+      }
+
       return {
         ...state,
         player: p,
         stats: newStats,
         tasks: newTasks,
         message: `Task complete: ${taskDef.name}! +${goldAmount}g`,
+      };
+    }
+
+    case 'PIN_QUEST': {
+      const { questId } = action;
+      const pinned = state.tasks.pinnedQuests || [];
+      if (pinned.includes(questId)) return state;
+      if (pinned.length >= 3) return { ...state, message: 'Max 3 pinned quests. Unpin one first.' };
+      return {
+        ...state,
+        tasks: { ...state.tasks, pinnedQuests: [...pinned, questId] },
+        message: 'Quest pinned!',
+      };
+    }
+
+    case 'UNPIN_QUEST': {
+      const { questId } = action;
+      const pinned = state.tasks.pinnedQuests || [];
+      if (!pinned.includes(questId)) return state;
+      return {
+        ...state,
+        tasks: { ...state.tasks, pinnedQuests: pinned.filter(id => id !== questId) },
+        message: 'Quest unpinned.',
       };
     }
 
@@ -2730,6 +2779,8 @@ export function useGameState(isLoggedIn) {
     buyItem: (item) => dispatch({ type: 'BUY_ITEM', item }),
     claimDailyReward: (rewards, label) => dispatch({ type: 'CLAIM_DAILY_REWARD', rewards, label }),
     claimTask: (taskId, taskType) => dispatch({ type: 'CLAIM_TASK', taskId, taskType }),
+    pinQuest: (questId) => dispatch({ type: 'PIN_QUEST', questId }),
+    unpinQuest: (questId) => dispatch({ type: 'UNPIN_QUEST', questId }),
     applyTrade: (receivedItems, receivedGold, givenItems, givenGold) => dispatch({ type: 'APPLY_TRADE', receivedItems, receivedGold, givenItems, givenGold }),
     applyMarketTransaction: (transaction) => dispatch({ type: 'MARKET_TRANSACTION', transaction }),
     clearMessage: () => dispatch({ type: 'CLEAR_MESSAGE' }),

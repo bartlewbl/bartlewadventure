@@ -256,6 +256,9 @@ export default function App() {
                 regionName={state.currentRegion.name}
                 onSelect={actions.enterLocation}
                 onBack={actions.backToRegions}
+                pinnedQuests={state.tasks.pinnedQuests}
+                stats={state.stats}
+                tasks={state.tasks}
               />
             )}
 
@@ -372,6 +375,8 @@ export default function App() {
                 stats={state.stats}
                 tasks={state.tasks}
                 onClaim={actions.claimTask}
+                onPin={actions.pinQuest}
+                onUnpin={actions.unpinQuest}
                 onBack={actions.goToTown}
               />
             )}
