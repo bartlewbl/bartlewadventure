@@ -5383,10 +5383,137 @@ body {
   color: #8888aa;
 }
 
+.base-building-card.clickable {
+  cursor: pointer;
+}
+
+.base-building-card.clickable:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(35, 35, 70, 0.9);
+}
+
+.base-building-card-hint {
+  font-size: 5px;
+  color: #666688;
+  margin-top: 2px;
+}
+
 .base-building-card .btn {
   margin-top: 4px;
   font-size: 6px;
   padding: 4px 8px;
+}
+
+/* ---- Building Info Modal ---- */
+.base-info-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.base-info-modal {
+  background: linear-gradient(135deg, rgba(20, 18, 40, 0.98), rgba(30, 28, 60, 0.98));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 14px;
+  max-width: 320px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+.base-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.base-info-name {
+  font-size: 12px;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.base-info-close {
+  font-size: 8px;
+  padding: 2px 6px;
+  background: rgba(255, 60, 60, 0.3);
+  border-color: rgba(255, 60, 60, 0.5);
+}
+
+.base-info-desc {
+  font-size: 7px;
+  color: #aaaacc;
+  line-height: 1.8;
+  margin-bottom: 10px;
+}
+
+.base-info-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.base-info-section-title {
+  font-size: 8px;
+  color: #ffd700;
+  margin-bottom: 5px;
+}
+
+.base-info-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.base-info-benefits li {
+  font-size: 7px;
+  color: #88cc88;
+  padding: 2px 0;
+  line-height: 1.6;
+}
+
+.base-info-benefits li::before {
+  content: '+ ';
+  color: #44dd44;
+}
+
+.base-info-req {
+  font-size: 7px;
+  padding: 2px 0;
+}
+
+.base-info-req.met {
+  color: #44dd44;
+}
+
+.base-info-req.unmet {
+  color: #ff6666;
+}
+
+.base-info-costs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.base-info-built-badge {
+  font-size: 8px;
+  color: #44dd44;
+  margin-bottom: 8px;
+}
+
+.base-info-enter {
+  width: 100%;
+  padding: 6px;
+  font-size: 8px;
 }
 
 /* ---- Build Panel (Construct) ---- */

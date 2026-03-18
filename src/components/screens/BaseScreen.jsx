@@ -4,6 +4,99 @@ import {
   WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus,
 } from '../../data/baseData';
 
+// ---- Building Info Modal ----
+
+function getBuildingBenefits(buildingId, def) {
+  switch (buildingId) {
+    case 'brewery':
+      return ['Craft healing potions (Small, Standard, Combat Stim)', 'Brew energy drinks to restore stamina', 'Uses herb bundles, glass vials, and toxic resin'];
+    case 'smelter':
+      return ['Smelt Iron Ore into Iron Ingots', 'Refine and multiply Crystal Shards & Copper Wire', 'Salvage unwanted gear into raw materials', 'Requires fuel to operate'];
+    case 'workshop':
+      return ['Forge weapons: daggers, swords, staves, plasma & void blades', 'Craft shields, helmets, armor, and boots', 'Create accessories: bracelets, rings, charms, pendants', '21 recipes across 6 gear categories'];
+    case 'inn':
+      return ['Purchase timed EXP boost buffs', 'Upgrade through 3 tiers for stronger boosts', 'Tier 1: +10% EXP | Tier 2: +20% EXP | Tier 3: +35% EXP', 'Boosts last 30 min up to 24 hours'];
+    case 'chamber':
+      return ['Upgrade Bed: bonus healing (+10% to +50%)', 'Upgrade Kitchen: passive ATK/DEF/HP buffs', 'Upgrade Study: passive Wisdom & Max Mana buffs', 'All buffs are permanent while upgrades are active'];
+    case 'adventureCamp':
+      return ['Send squads on timed missions for passive loot', 'Quick Raid (1h) to Full Campaign (24h)', 'Earn gold, materials, and gear while offline', 'Longer missions yield rarer rewards'];
+    case 'sparringRange':
+      return ['Fight training dummies with no HP or energy cost', '4 dummy tiers from Straw to Boss-level', 'Test your damage, skills, and gear setups', 'Great for optimizing your build'];
+    case 'bank':
+      return ['Safely deposit gold (10% fee, no loss on death)', 'Freeze gold for interest (1% to 5% return)', 'Borrow up to 1,000g with 15% interest', 'Manage your finances strategically'];
+    default:
+      return [def.description];
+  }
+}
+
+function BuildingInfoModal({ buildingId, buildingDef, player, base, onClose, onBuild, onNavigate }) {
+  const built = base.buildings?.[buildingId]?.built;
+  const cost = buildingDef.buildCost;
+  const meetsLevel = player.level >= buildingDef.levelReq;
+  const benefits = getBuildingBenefits(buildingId, buildingDef);
+
+  const canAffordGold = player.gold >= cost.gold;
+  const matChecks = Object.entries(cost.materials || {}).map(([matId, qty]) => ({
+    id: matId, name: BUILDING_MATERIALS[matId]?.name || matId, needed: qty, have: base.materials?.[matId] || 0,
+  }));
+  const canAffordMats = matChecks.every(m => m.have >= m.needed);
+
+  return (
+    <div className="base-info-overlay" onClick={onClose}>
+      <div className="base-info-modal" onClick={e => e.stopPropagation()}>
+        <div className="base-info-header">
+          <div className="base-info-name">{buildingDef.name}</div>
+          <button className="btn btn-sm base-info-close" onClick={onClose}>X</button>
+        </div>
+        <div className="base-info-desc">{buildingDef.description}</div>
+
+        <div className="base-info-section">
+          <div className="base-info-section-title">Benefits</div>
+          <ul className="base-info-benefits">
+            {benefits.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        </div>
+
+        {!built && (
+          <div className="base-info-section">
+            <div className="base-info-section-title">Requirements</div>
+            <div className={`base-info-req ${meetsLevel ? 'met' : 'unmet'}`}>
+              Level {buildingDef.levelReq} {meetsLevel ? '(met)' : `(you are Lv.${player.level})`}
+            </div>
+            <div className="base-info-section-title" style={{ marginTop: '6px' }}>Build Cost</div>
+            <div className="base-info-costs">
+              <div className={`base-cost-item ${canAffordGold ? 'met' : 'unmet'}`}>
+                {cost.gold}g {!canAffordGold && `(have ${player.gold}g)`}
+              </div>
+              {matChecks.map(m => (
+                <div key={m.id} className={`base-cost-item ${m.have >= m.needed ? 'met' : 'unmet'}`}>
+                  {m.needed}x {m.name} {m.have < m.needed ? `(have ${m.have})` : ''}
+                </div>
+              ))}
+            </div>
+            <button
+              className="btn base-build-btn"
+              disabled={!canAffordGold || !canAffordMats || !meetsLevel}
+              onClick={() => { onBuild(buildingId); onClose(); }}
+            >
+              {!meetsLevel ? `Unlock at Lv.${buildingDef.levelReq}` : 'Construct'}
+            </button>
+          </div>
+        )}
+
+        {built && (
+          <div className="base-info-section">
+            <div className="base-info-built-badge">Constructed</div>
+            <button className="btn btn-sm base-info-enter" onClick={() => { onNavigate(buildingId); onClose(); }}>
+              Enter Building
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- Sub-panels ----
 
 function FuelPanel({ base, player, onAddFuel, onAddFuelFromStorage }) {
@@ -659,6 +752,7 @@ export default function BaseScreen({
   onStartSpar, onSparAttack, onSparSkill, onResetSpar,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
   const buildings = base.buildings || {};
 
   const builtTabs = useMemo(() => {
@@ -701,22 +795,16 @@ export default function BaseScreen({
               {Object.entries(BUILDINGS).map(([id, def]) => {
                 const built = buildings[id]?.built;
                 return (
-                  <div key={id} className={`base-building-card ${built ? 'built' : 'locked'}`}>
+                  <div
+                    key={id}
+                    className={`base-building-card ${built ? 'built' : 'locked'} clickable`}
+                    onClick={() => setSelectedBuilding(id)}
+                  >
                     <div className="base-building-card-name">{def.name}</div>
                     <div className="base-building-card-status">
                       {built ? 'Active' : `Lv.${def.levelReq} | ${def.buildCost.gold}g`}
                     </div>
-                    {built ? (
-                      <button className="btn btn-sm" onClick={() => setActiveTab(id)}>Enter</button>
-                    ) : (
-                      <button
-                        className="btn btn-sm"
-                        disabled={player.level < def.levelReq}
-                        onClick={() => onBuild(id)}
-                      >
-                        {player.level < def.levelReq ? 'Locked' : 'Build'}
-                      </button>
-                    )}
+                    <div className="base-building-card-hint">Tap for info</div>
                   </div>
                 );
               })}
@@ -796,6 +884,18 @@ export default function BaseScreen({
       <div className="base-content">
         {renderActiveTab()}
       </div>
+
+      {selectedBuilding && BUILDINGS[selectedBuilding] && (
+        <BuildingInfoModal
+          buildingId={selectedBuilding}
+          buildingDef={BUILDINGS[selectedBuilding]}
+          player={player}
+          base={base}
+          onClose={() => setSelectedBuilding(null)}
+          onBuild={onBuild}
+          onNavigate={setActiveTab}
+        />
+      )}
     </div>
   );
 }
