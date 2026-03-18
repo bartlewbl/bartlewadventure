@@ -4,7 +4,7 @@ import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
 import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
-import { scaleMonster, scaleBoss } from '../engine/scaling';
+import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem } from '../engine/loot';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
 import { saveGame } from '../api';
@@ -1307,7 +1307,7 @@ function gameReducer(state, action) {
       for (const r of rewards) {
         switch (r.kind) {
           case 'gold':
-            p.gold += r.amount;
+            p.gold += scaleRewardByLevel(r.amount, p.level);
             break;
           case 'energy':
             newEnergy = Math.min(ENERGY_MAX, newEnergy + r.amount);
@@ -1357,13 +1357,17 @@ function gameReducer(state, action) {
 
       if (!taskDef || progress < taskDef.target) return state;
 
-      // Apply reward
+      // Apply reward — daily and weekly gold scales with player level
       let p = { ...state.player };
-      if (taskDef.reward.gold) {
-        p.gold += taskDef.reward.gold;
+      const scaleGold = taskType === 'daily' || taskType === 'weekly';
+      const goldAmount = taskDef.reward.gold
+        ? (scaleGold ? scaleRewardByLevel(taskDef.reward.gold, p.level) : taskDef.reward.gold)
+        : 0;
+      if (goldAmount) {
+        p.gold += goldAmount;
       }
 
-      const newStats = taskDef.reward.gold ? addStat(state.stats, 'goldEarned', taskDef.reward.gold) : state.stats;
+      const newStats = goldAmount ? addStat(state.stats, 'goldEarned', goldAmount) : state.stats;
       const newTasks = {
         ...tasks,
         [claimedKey]: [...(tasks[claimedKey] || []), taskId],
@@ -1374,7 +1378,7 @@ function gameReducer(state, action) {
         player: p,
         stats: newStats,
         tasks: newTasks,
-        message: `Task complete: ${taskDef.name}! +${taskDef.reward.gold || 0}g`,
+        message: `Task complete: ${taskDef.name}! +${goldAmount}g`,
       };
     }
 
