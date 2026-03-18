@@ -21,6 +21,7 @@ import RegionsScreen from './components/screens/RegionsScreen';
 import JournalScreen from './components/screens/JournalScreen';
 import MarketScreen from './components/screens/MarketScreen';
 import BaseScreen from './components/screens/BaseScreen';
+import PetScreen from './components/screens/PetScreen';
 import StatSelectScreen from './components/screens/StatSelectScreen';
 import SidePanel from './components/SidePanel';
 import RightPanel from './components/RightPanel';
@@ -210,6 +211,7 @@ export default function App() {
               onShop={() => actions.showScreen('shop')}
               onMarket={() => actions.showScreen('market')}
               onBase={() => actions.showScreen('base')}
+              onPets={() => actions.showScreen('pets')}
               onJournal={() => actions.showScreen('journal')}
               onRest={actions.restAtInn}
               navLocked={navLocked}
@@ -294,6 +296,7 @@ export default function App() {
                 battle={state.battle}
                 battleLog={state.battleLog}
                 player={state.player}
+                pets={state.pets}
                 onAttack={actions.battleAttack}
                 onSkill={actions.battleSkill}
                 onDefend={actions.battleDefend}
@@ -355,8 +358,11 @@ export default function App() {
             {state.screen === 'shop' && (
               <ShopScreen
                 player={state.player}
+                pets={state.pets}
                 onBuy={actions.buyItem}
                 onSell={actions.sellItem}
+                onBuyPet={actions.buyPet}
+                onBuyPetItem={actions.buyPetItem}
                 onBack={actions.goToTown}
               />
             )}
@@ -398,6 +404,21 @@ export default function App() {
                 onSparAttack={actions.baseSparAttack}
                 onSparSkill={actions.baseSparSkill}
                 onResetSpar={actions.baseResetSpar}
+              />
+            )}
+
+            {state.screen === 'pets' && (
+              <PetScreen
+                player={state.player}
+                pets={state.pets}
+                base={state.base}
+                onEquipPet={actions.equipPet}
+                onUnequipPet={actions.unequipPet}
+                onFeedPet={actions.feedPet}
+                onEnergyPet={actions.energyPet}
+                onBuildPetBuilding={actions.petBuild}
+                onUpgradePetBuilding={actions.petUpgradeBuilding}
+                onBack={actions.goToTown}
               />
             )}
 

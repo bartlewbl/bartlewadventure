@@ -260,6 +260,58 @@ export function getDailyFeaturedItems(playerLevel) {
   return featured;
 }
 
+// ---- ARMOURER SHOP: gear items for buy ----
+export function getArmourerStock(playerLevel) {
+  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
+  const items = [];
+  const usedNames = new Set();
+
+  for (const type of gearTypes) {
+    const pool = ITEM_LIBRARY[type];
+    if (!pool) continue;
+    // Pick items near player level
+    const candidates = pool.filter(t => t.level <= playerLevel + 3 && t.level >= Math.max(1, playerLevel - 5));
+    const source = candidates.length > 0 ? candidates : pool.filter(t => t.level <= playerLevel + 5);
+    // Pick up to 2 per type
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    let count = 0;
+    for (const template of shuffled) {
+      if (count >= 2 || usedNames.has(template.name)) continue;
+      usedNames.add(template.name);
+      const rarityData = RARITY_LOOKUP[template.rarity] || RARITIES[0];
+      const baseLevelFactor = 1 + template.level * 0.05;
+      const adaptFactor = 1 + Math.max(0, playerLevel - template.level) * 0.03;
+      const atk = template.baseAtk > 0
+        ? Math.max(0, Math.round(template.baseAtk * baseLevelFactor * adaptFactor * rarityData.multiplier))
+        : 0;
+      const def = template.baseDef > 0
+        ? Math.max(0, Math.round(template.baseDef * baseLevelFactor * adaptFactor * rarityData.multiplier))
+        : 0;
+      const effectiveLevel = Math.max(template.level, playerLevel);
+      const buyPrice = Math.floor((atk + def) * 6 + effectiveLevel * 4 + rarityData.multiplier * 15);
+
+      items.push({
+        id: uid(),
+        name: template.name,
+        type,
+        slot: template.slot,
+        level: effectiveLevel,
+        rarity: template.rarity,
+        rarityClass: rarityData.cssClass,
+        rarityColor: rarityData.color,
+        atk,
+        def,
+        icon: template.icon,
+        buyPrice,
+        sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
+      });
+      count++;
+    }
+  }
+
+  return items;
+}
+
 // ---- LOCATION-SPECIFIC ITEM DROPS ----
 
 // Generate an item that is specifically findable at the given location
