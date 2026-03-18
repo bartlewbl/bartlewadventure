@@ -701,13 +701,14 @@ body {
 
 .town-layout {
   width: 100%;
+  max-width: 100%;
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
   padding-right: 6px;
+  box-sizing: border-box;
 }
 
 .town-hero-card {
@@ -717,6 +718,9 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
   padding: 20px;
   border-radius: 6px;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .town-hero-header {
@@ -784,6 +788,9 @@ body {
 .town-stat-value {
   font-size: 11px;
   color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .town-gold-value {
@@ -829,6 +836,10 @@ body {
 .town-xp-numbers {
   font-size: 7px;
   color: #8e8eb2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .town-bar-track {
@@ -869,6 +880,10 @@ body {
   border-radius: 3px;
   background: rgba(10, 10, 24, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .town-gear-empty {
@@ -886,6 +901,9 @@ body {
   flex-direction: column;
   gap: 10px;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .town-panel-title {
@@ -974,16 +992,24 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .town-quick-label {
   font-size: 9px;
   color: #f0f0ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .town-quick-desc {
   font-size: 7px;
   color: #8e8eb2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Events Board */
@@ -1026,12 +1052,17 @@ body {
   font-size: 9px;
   color: #fff;
   margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .town-event-desc {
   font-size: 7px;
   color: #a0a0d4;
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Featured Shop Items */
@@ -1050,6 +1081,7 @@ body {
   background: rgba(10, 10, 24, 0.6);
   border: 1px solid rgba(255, 215, 0, 0.1);
   gap: 8px;
+  overflow: hidden;
 }
 
 .town-featured-info {
@@ -1069,11 +1101,16 @@ body {
 .town-featured-meta {
   font-size: 7px;
   color: #8e8eb2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---- DAILY REWARDS PANEL ---- */
 .town-daily-panel {
   grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .town-daily-panel .town-panel-title {
@@ -1101,6 +1138,8 @@ body {
   border-radius: 6px;
   padding: 12px 14px;
   margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .daily-claim-info {
@@ -1247,6 +1286,8 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   gap: 4px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .daily-cell {
