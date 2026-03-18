@@ -418,6 +418,9 @@ export default function App() {
                 onSparAttack={actions.baseSparAttack}
                 onSparSkill={actions.baseSparSkill}
                 onResetSpar={actions.baseResetSpar}
+                onFarmPlant={actions.baseFarmPlant}
+                onFarmHarvest={actions.baseFarmHarvest}
+                onUpgradeWarehouse={actions.baseUpgradeWarehouse}
               />
             )}
 

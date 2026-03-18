@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   BUILDINGS, BUILDING_MATERIALS, FUEL_ITEMS, BREWERY_RECIPES, SMELTER_RECIPES,
-  WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus,
+  WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus, getWarehouseBonus,
 } from '../../data/baseData';
 
 // ---- Building Info Modal ----
@@ -24,6 +24,10 @@ function getBuildingBenefits(buildingId, def) {
       return ['Fight training dummies with no HP or energy cost', '4 dummy tiers from Straw to Boss-level', 'Test your damage, skills, and gear setups', 'Great for optimizing your build'];
     case 'bank':
       return ['Safely deposit gold (10% fee, no loss on death)', 'Freeze gold for interest (1% to 5% return)', 'Borrow up to 1,000g with 15% interest', 'Manage your finances strategically'];
+    case 'farm':
+      return ['Plant crops in 3 plots for passive resource gathering', 'Grow herbs, ores, crystals, and even gold', 'Crops take 30 min to 8 hours to mature', 'Great for stockpiling crafting materials'];
+    case 'warehouse':
+      return ['Increases your inventory capacity by +20 slots', 'Upgrade through 5 tiers for +10 more each level', 'Base: 20 slots, Max: 80 slots at Legendary Vault', 'Essential for hoarding loot and materials'];
     default:
       return [def.description];
   }
@@ -602,6 +606,134 @@ function SparringPanel({ base, onStart, onAttack, onSkill, onReset }) {
   );
 }
 
+function FarmPanel({ base, player, onPlant, onHarvest }) {
+  const [selectedCrop, setSelectedCrop] = useState(null);
+  const plots = base.farmPlots || [];
+  const crops = BUILDINGS.farm.crops;
+  const now = Date.now();
+
+  return (
+    <div className="base-building-content">
+      <div className="base-section-title">Farm</div>
+      <div className="base-section-desc">Plant crops and harvest materials or gold over time.</div>
+
+      <div className="base-farm-plots">
+        <div className="base-sub-label">Farm Plots</div>
+        {plots.map((plot, i) => {
+          if (!plot) {
+            return (
+              <div key={i} className="base-farm-plot empty">
+                <div className="base-farm-plot-label">Plot {i + 1} - Empty</div>
+                <div className="base-farm-crop-select">
+                  <select
+                    className="base-bank-input"
+                    value={selectedCrop || ''}
+                    onChange={e => setSelectedCrop(e.target.value || null)}
+                  >
+                    <option value="">Select crop...</option>
+                    {crops.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.cost.gold}g) - {c.desc}</option>
+                    ))}
+                  </select>
+                  <button
+                    className="btn btn-sm"
+                    disabled={!selectedCrop || player.gold < (crops.find(c => c.id === selectedCrop)?.cost.gold || 999999)}
+                    onClick={() => { onPlant(i, selectedCrop); setSelectedCrop(null); }}
+                  >
+                    Plant
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          const cropDef = crops.find(c => c.id === plot.cropId);
+          if (!cropDef) return null;
+          const elapsed = now - plot.plantedAt;
+          const done = elapsed >= cropDef.growTime;
+          const progress = Math.min(100, (elapsed / cropDef.growTime) * 100);
+          const remaining = Math.max(0, cropDef.growTime - elapsed);
+          const mins = Math.ceil(remaining / 60000);
+          const hours = Math.floor(mins / 60);
+          const minsLeft = mins % 60;
+
+          return (
+            <div key={i} className={`base-farm-plot ${done ? 'ready' : 'growing'}`}>
+              <div className="base-farm-plot-label">Plot {i + 1} - {cropDef.name}</div>
+              <div className="base-craft-bar-track">
+                <div className="base-craft-bar-fill" style={{ width: `${progress}%` }} />
+              </div>
+              {done ? (
+                <button className="btn btn-sm base-collect-btn" onClick={() => onHarvest(i)}>Harvest!</button>
+              ) : (
+                <div className="base-craft-time">{hours > 0 ? `${hours}h ` : ''}{minsLeft}m remaining</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="base-farm-crops">
+        <div className="base-sub-label">Available Crops</div>
+        <div className="base-recipe-list">
+          {crops.map(c => (
+            <div key={c.id} className="base-recipe-item">
+              <div className="base-recipe-info">
+                <div className="base-recipe-name">{c.name}</div>
+                <div className="base-recipe-desc">{c.desc}</div>
+                <div className="base-recipe-mats">
+                  <span className={`base-recipe-mat ${player.gold >= c.cost.gold ? 'met' : 'unmet'}`}>
+                    Cost: {c.cost.gold}g
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WarehousePanel({ base, player, onUpgrade }) {
+  const currentLevel = base.warehouseLevel || 1;
+  const currentDef = BUILDINGS.warehouse.upgrades.find(u => u.level === currentLevel);
+  const nextDef = BUILDINGS.warehouse.upgrades.find(u => u.level === currentLevel + 1);
+  const mats = base.materials || {};
+
+  return (
+    <div className="base-building-content">
+      <div className="base-section-title">Warehouse</div>
+      <div className="base-section-desc">Expand your inventory capacity with upgrades.</div>
+
+      <div className="base-inn-current">
+        <div className="base-inn-level">{currentDef?.name || 'Basic Warehouse'} (Level {currentLevel})</div>
+        <div className="base-inn-bonus">Inventory: {player.maxInventory} slots (+{currentDef?.inventoryBonus || 0} from warehouse)</div>
+      </div>
+
+      {nextDef ? (
+        <div className="base-upgrade-section">
+          <div className="base-sub-label">Upgrade to: {nextDef.name}</div>
+          <div className="base-upgrade-desc">{nextDef.desc}</div>
+          <div className="base-build-costs">
+            <div className={`base-cost-item ${player.gold >= nextDef.upgradeCost.gold ? 'met' : 'unmet'}`}>
+              {nextDef.upgradeCost.gold}g {player.gold < nextDef.upgradeCost.gold ? `(have ${player.gold}g)` : ''}
+            </div>
+            {Object.entries(nextDef.upgradeCost.materials || {}).map(([id, qty]) => (
+              <div key={id} className={`base-cost-item ${(mats[id] || 0) >= qty ? 'met' : 'unmet'}`}>
+                {qty}x {BUILDING_MATERIALS[id]?.name || id} ({mats[id] || 0})
+              </div>
+            ))}
+          </div>
+          <button className="btn btn-sm" onClick={onUpgrade}>Upgrade</button>
+        </div>
+      ) : (
+        <div className="base-max-level">Warehouse at max level!</div>
+      )}
+    </div>
+  );
+}
+
 function BankPanel({ base, player, onDeposit, onWithdraw, onFreeze, onCollectFrozen, onLoan, onRepay }) {
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -740,6 +872,8 @@ const TABS = [
   { id: 'adventureCamp', label: 'Camp' },
   { id: 'sparringRange', label: 'Spar' },
   { id: 'bank', label: 'Bank' },
+  { id: 'farm', label: 'Farm' },
+  { id: 'warehouse', label: 'Storage' },
 ];
 
 export default function BaseScreen({
@@ -750,6 +884,7 @@ export default function BaseScreen({
   onSendMission, onCollectMission,
   onBankDeposit, onBankWithdraw, onBankFreeze, onBankCollectFrozen, onBankLoan, onBankRepay,
   onStartSpar, onSparAttack, onSparSkill, onResetSpar,
+  onFarmPlant, onFarmHarvest, onUpgradeWarehouse,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -855,6 +990,14 @@ export default function BaseScreen({
             onLoan={onBankLoan} onRepay={onBankRepay}
           />
         );
+
+      case 'farm':
+        if (!buildings.farm?.built) return renderBuildingOrConstruct('farm');
+        return <FarmPanel base={base} player={player} onPlant={onFarmPlant} onHarvest={onFarmHarvest} />;
+
+      case 'warehouse':
+        if (!buildings.warehouse?.built) return renderBuildingOrConstruct('warehouse');
+        return <WarehousePanel base={base} player={player} onUpgrade={onUpgradeWarehouse} />;
 
       default:
         return null;
