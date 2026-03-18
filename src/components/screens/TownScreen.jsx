@@ -65,6 +65,36 @@ const statLine = (item) => {
   return stats.length ? stats.join(' ') : 'No bonuses';
 };
 
+// Format a multiplier as a +/-% label
+function fmtMult(val, label) {
+  if (val === 1) return null;
+  const pct = Math.round((val - 1) * 100);
+  const sign = pct > 0 ? '+' : '';
+  return `${sign}${pct}% ${label}`;
+}
+
+function getActiveEffectLabels(effects, shopDiscount) {
+  const labels = [];
+  const xp = fmtMult(effects.xpMult, 'XP');
+  const gold = fmtMult(effects.goldMult, 'Gold');
+  const loot = fmtMult(effects.lootMult, 'Loot');
+  const enc = fmtMult(effects.encounterMult, 'Encounters');
+  const atk = fmtMult(effects.atkMult, 'ATK');
+  const def = fmtMult(effects.defMult, 'DEF');
+  const evtC = fmtMult(effects.eventChanceMult, 'Events');
+  const eRegen = fmtMult(effects.energyRegenMult, 'Energy Regen');
+  if (xp) labels.push(xp);
+  if (gold) labels.push(gold);
+  if (loot) labels.push(loot);
+  if (enc) labels.push(enc);
+  if (atk) labels.push(atk);
+  if (def) labels.push(def);
+  if (evtC) labels.push(evtC);
+  if (eRegen) labels.push(eRegen);
+  if (shopDiscount > 0) labels.push(`-${Math.round(shopDiscount * 100)}% Shop Prices`);
+  return labels;
+}
+
 export default function TownScreen({ player, energy, energyCost, onRest, onEnterLocation, onBuy, canRest, onClaimDailyReward, onGoToBase }) {
   const equipment = player?.equipment || {};
   const atkBonus = Object.values(equipment).reduce((sum, item) => sum + (item?.atk || 0), 0);
@@ -94,16 +124,32 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
   const hpPercent = player?.maxHp ? Math.min(100, (player.hp / player.maxHp) * 100) : 100;
   const needsHealing = player?.hp < player?.maxHp;
 
+  const effectLabels = useMemo(
+    () => getActiveEffectLabels(clock.effects, clock.effects.shopDiscount),
+    [clock.effects]
+  );
+
   return (
     <div className="screen screen-town">
       <div className="town-layout">
-        {/* Real-Time Clock Bar */}
+        {/* Real-Time Clock & Weather Bar */}
         <section className="town-clock-bar">
-          <div className="town-clock-time">
-            <span className="town-clock-icon">{clock.period.icon}</span>
-            <span className="town-clock-digits">{clock.time}</span>
+          <div className="town-clock-left">
+            <div className="town-clock-time">
+              <span className="town-clock-icon">{clock.period.icon}</span>
+              <span className="town-clock-digits">{clock.time}</span>
+            </div>
+            <div className="town-clock-period">{clock.period.label}</div>
           </div>
-          <div className="town-clock-period">{clock.period.label}</div>
+          <div className="town-weather-display">
+            <span className="town-weather-icon">{clock.weather.icon}</span>
+            <div className="town-weather-info">
+              <div className="town-weather-label">{clock.weather.label}</div>
+              <div className="town-weather-next">
+                Next: {clock.nextWeather.icon} {clock.nextWeather.label} in {clock.weatherChangeIn}
+              </div>
+            </div>
+          </div>
           <div className="town-clock-timers">
             <div className="town-clock-timer">
               <span className="town-timer-label">Daily Reset</span>
@@ -115,6 +161,20 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
             </div>
           </div>
         </section>
+
+        {/* Active Effects Panel */}
+        {effectLabels.length > 0 && (
+          <section className="town-effects-bar">
+            <span className="town-effects-title">Active Modifiers</span>
+            <div className="town-effects-list">
+              {effectLabels.map((lbl, i) => (
+                <span key={i} className={`town-effect-tag ${lbl.startsWith('-') ? 'negative' : 'positive'}`}>
+                  {lbl}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Character Info Card */}
         <section className="town-hero-card">

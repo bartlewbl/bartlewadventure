@@ -2459,4 +2459,249 @@ export const RANDOM_EVENTS = [
       },
     ],
   },
+  // ---- WEATHER-SPECIFIC EVENTS ----
+  // These only appear during matching weather conditions (weather field)
+  {
+    id: 'rain-flooded-path',
+    title: 'Flooded Path',
+    weather: 'rain',
+    description: 'Heavy rain has flooded the path ahead. Water rushes through the corridor, carrying debris — and possibly treasure.',
+    choices: [
+      {
+        label: 'Wade Through',
+        outcomes: [
+          { weight: 0.30, type: 'item', text: 'You spot something caught in the current and grab it — usable gear!' },
+          { weight: 0.25, type: 'gold', text: 'Coins washed from upstream glint beneath the water. You scoop them up.' },
+          { weight: 0.25, type: 'damage', amount: 0.20, text: 'The current is stronger than expected! You\'re slammed against the wall.' },
+          { weight: 0.20, type: 'energy_drain', amount: 5, text: 'Fighting the water exhausts you completely, and you find nothing for your trouble.' },
+        ],
+      },
+      {
+        label: 'Wait It Out',
+        outcomes: [
+          { weight: 0.50, type: 'heal', amount: 0.10, text: 'The rain is oddly soothing. You rest and let the water subside.' },
+          { weight: 0.50, type: 'nothing', text: 'You wait until the flood recedes. Safe, but time-consuming.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'rain-slippery-merchant',
+    title: 'Drenched Merchant',
+    weather: 'rain',
+    description: 'A soaked merchant huddles under a collapsed awning, desperately trying to protect their wares. "Please, buy something before it\'s all ruined!"',
+    choices: [
+      {
+        label: 'Browse Discounted Wares',
+        outcomes: [
+          { weight: 0.40, type: 'item_rare', text: 'Desperate prices! You snag a fantastic piece of gear for a steal.' },
+          { weight: 0.30, type: 'item', text: 'Decent gear at a fair price — the rain hasn\'t ruined everything.' },
+          { weight: 0.30, type: 'gold_lose', text: 'The goods are waterlogged and useless. You wasted your gold.' },
+        ],
+      },
+      {
+        label: 'Help Them Move Stock',
+        outcomes: [
+          { weight: 0.40, type: 'gold', text: 'Grateful, they pay you for the help and toss in a bonus.' },
+          { weight: 0.30, type: 'item', text: '"Keep this," they say, handing you a piece they can\'t sell wet.' },
+          { weight: 0.30, type: 'energy_drain', amount: 4, text: 'Moving crates in the rain drains you. They nod thanks but offer nothing.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'storm-lightning-strike',
+    title: 'Lightning Field',
+    weather: 'storm',
+    description: 'Lightning crashes around you, striking the ground repeatedly. One bolt illuminates something metallic in a crater.',
+    choices: [
+      {
+        label: 'Dash to the Crater',
+        outcomes: [
+          { weight: 0.25, type: 'item_great', text: 'A weapon fused with lightning energy! It crackles with power in your hands!' },
+          { weight: 0.25, type: 'gold_big', text: 'A vein of electrum exposed by the strike — worth a fortune!' },
+          { weight: 0.30, type: 'damage', amount: 0.35, text: 'Lightning strikes nearby! The shockwave throws you off your feet!' },
+          { weight: 0.20, type: 'battle_hard', text: 'A creature made of pure electricity forms from the strike and attacks!' },
+        ],
+      },
+      {
+        label: 'Take Shelter',
+        outcomes: [
+          { weight: 0.40, type: 'heal', amount: 0.15, text: 'You find shelter and rest while the storm passes.' },
+          { weight: 0.30, type: 'energy_restore', amount: 6, text: 'The charged atmosphere fills you with energy.' },
+          { weight: 0.30, type: 'nothing', text: 'You hunker down until it passes. Nothing gained, nothing lost.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'storm-power-surge',
+    title: 'Power Conduit Overload',
+    weather: 'storm',
+    description: 'A nearby power conduit is sparking violently in the storm. Energy arcs wildly — it could supercharge your gear or fry you.',
+    choices: [
+      {
+        label: 'Touch the Conduit',
+        outcomes: [
+          { weight: 0.30, type: 'energy_restore', amount: 20, text: 'RAW POWER surges through you! Your energy is fully supercharged!' },
+          { weight: 0.25, type: 'heal', amount: 0.50, text: 'The energy surge repairs your body at a cellular level!' },
+          { weight: 0.25, type: 'damage', amount: 0.40, text: 'ZAPPED! Electricity courses through your body painfully!' },
+          { weight: 0.20, type: 'battle_hard', text: 'The conduit explodes and a surge elemental manifests from the wreckage!' },
+        ],
+      },
+      {
+        label: 'Salvage the Wiring',
+        outcomes: [
+          { weight: 0.50, type: 'gold', text: 'You carefully strip valuable components from the damaged conduit.' },
+          { weight: 0.50, type: 'item', text: 'A still-functional component pops free — this could be useful.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'fog-shadow-figure',
+    title: 'Figure in the Fog',
+    weather: 'fog',
+    description: 'A silhouette stands motionless in the thick fog ahead. You can\'t tell if it\'s friend, foe, or just a signpost.',
+    choices: [
+      {
+        label: 'Approach Cautiously',
+        outcomes: [
+          { weight: 0.25, type: 'item_rare', text: 'It\'s an old scarecrow dressed in amazing gear. Finders keepers!' },
+          { weight: 0.25, type: 'gold', text: 'A forgotten statue with coins piled at its base. You help yourself.' },
+          { weight: 0.25, type: 'ambush', text: 'It moves! You\'ve walked right into a trap!' },
+          { weight: 0.25, type: 'nothing', text: 'Just a dead tree. The fog made it look humanoid.' },
+        ],
+      },
+      {
+        label: 'Call Out to It',
+        outcomes: [
+          { weight: 0.30, type: 'heal', amount: 0.20, text: '"Lost traveler?" A healer emerges from the fog and tends to your wounds.' },
+          { weight: 0.30, type: 'item', text: 'A fellow adventurer appears. "Take this, you\'ll need it more than me."' },
+          { weight: 0.40, type: 'battle_hard', text: 'Your voice draws something hostile out of the mist!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'fog-hidden-cache',
+    title: 'Fog-Veiled Ruins',
+    weather: 'fog',
+    description: 'The dense fog reveals crumbling ruins you\'ve never noticed before. They seem to appear and vanish with the mist.',
+    choices: [
+      {
+        label: 'Explore the Ruins',
+        outcomes: [
+          { weight: 0.30, type: 'item_rare', text: 'Ancient artifacts preserved perfectly in the fog-sealed chambers!' },
+          { weight: 0.25, type: 'gold_big', text: 'A treasure vault hidden for centuries, revealed by today\'s fog!' },
+          { weight: 0.25, type: 'battle_hard', text: 'Guardian spirits awaken to defend their forgotten domain!' },
+          { weight: 0.20, type: 'energy_drain', amount: 7, text: 'The ruins are a maze. You wander lost until the fog lifts, drained.' },
+        ],
+      },
+      {
+        label: 'Mark the Location',
+        outcomes: [
+          { weight: 0.50, type: 'gold', text: 'You grab a few loose coins near the entrance and mark the spot.' },
+          { weight: 0.50, type: 'nothing', text: 'By the time you turn around, the ruins have vanished into the fog.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'wind-blown-treasure',
+    title: 'Wind-Scattered Loot',
+    weather: 'wind',
+    description: 'Strong gusts have torn apart a traveling merchant\'s cart. Goods are scattered everywhere, blowing across the landscape.',
+    choices: [
+      {
+        label: 'Chase the Loot',
+        outcomes: [
+          { weight: 0.35, type: 'item', text: 'You snatch a piece of gear from the air before it blows away!' },
+          { weight: 0.25, type: 'gold', text: 'Coins scatter across the ground — you pocket everything you can grab!' },
+          { weight: 0.20, type: 'energy_drain', amount: 6, text: 'You sprint after the goods but the wind is too strong. Exhausting!' },
+          { weight: 0.20, type: 'item_rare', text: 'A rare item lodges against a wall. Lucky catch!' },
+        ],
+      },
+      {
+        label: 'Help the Merchant',
+        outcomes: [
+          { weight: 0.50, type: 'gold', text: 'The merchant rewards your kindness with a generous payment.' },
+          { weight: 0.30, type: 'item', text: '"You\'ve earned this," they say, giving you something from their stock.' },
+          { weight: 0.20, type: 'heal', amount: 0.15, text: 'The merchant shares a restorative drink with you. "For your trouble."' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'wind-sail-glider',
+    title: 'Abandoned Glider',
+    weather: 'wind',
+    description: 'A makeshift glider is wedged between buildings, its sail still intact. The wind could carry you over the danger zone ahead.',
+    choices: [
+      {
+        label: 'Ride the Wind',
+        outcomes: [
+          { weight: 0.30, type: 'energy_restore', amount: 12, text: 'The glider carries you effortlessly! You arrive refreshed and energized!' },
+          { weight: 0.25, type: 'gold_big', text: 'You soar over a hidden rooftop stash and swoop down to claim it!' },
+          { weight: 0.25, type: 'damage', amount: 0.25, text: 'A gust catches the glider wrong! You crash-land painfully!' },
+          { weight: 0.20, type: 'item', text: 'You spot something shiny mid-flight and grab it on the way down.' },
+        ],
+      },
+      {
+        label: 'Salvage the Materials',
+        outcomes: [
+          { weight: 0.60, type: 'gold', text: 'The sail fabric and frame materials are worth a few coins.' },
+          { weight: 0.40, type: 'nothing', text: 'The materials are too damaged to be useful.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'heatwave-mirage',
+    title: 'Shimmering Mirage',
+    weather: 'heatwave',
+    description: 'The brutal heat creates shimmering mirages. One seems more solid than the others — an oasis? A treasure? A trap?',
+    choices: [
+      {
+        label: 'Investigate the Mirage',
+        outcomes: [
+          { weight: 0.25, type: 'heal', amount: 0.40, text: 'It\'s real! A hidden spring of cool, restorative water!' },
+          { weight: 0.25, type: 'item_rare', text: 'Not a mirage — a heat-warped cache of perfectly preserved gear!' },
+          { weight: 0.25, type: 'energy_drain', amount: 8, text: 'Just a mirage. You waste precious energy chasing nothing in the heat.' },
+          { weight: 0.25, type: 'damage', amount: 0.30, text: 'The "oasis" is a heat vent! Scalding air blasts you!' },
+        ],
+      },
+      {
+        label: 'Conserve Energy',
+        outcomes: [
+          { weight: 0.50, type: 'energy_restore', amount: 3, text: 'Smart choice. You rest in the shade and conserve your strength.' },
+          { weight: 0.50, type: 'nothing', text: 'You press on carefully, avoiding the heat traps.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'heatwave-forge',
+    title: 'Overheated Forge',
+    weather: 'heatwave',
+    description: 'An abandoned forge is radiating extreme heat, its embers reignited by the heatwave. Tools and materials still lie inside.',
+    choices: [
+      {
+        label: 'Brave the Heat',
+        outcomes: [
+          { weight: 0.30, type: 'item_great', text: 'You grab a weapon from the forge — the heat tempered it to perfection!' },
+          { weight: 0.25, type: 'item_rare', text: 'Quality gear left behind by the blacksmith. Still usable!' },
+          { weight: 0.25, type: 'damage', amount: 0.30, text: 'The heat is unbearable! You burn yourself grabbing at red-hot metal!' },
+          { weight: 0.20, type: 'energy_drain', amount: 7, text: 'You can barely breathe in the scorching forge. You retreat empty-handed.' },
+        ],
+      },
+      {
+        label: 'Fan the Coals and Sell',
+        outcomes: [
+          { weight: 0.50, type: 'gold_big', text: 'You stoke the forge and attract a passing smith who pays well for the setup.' },
+          { weight: 0.50, type: 'gold', text: 'You sell the leftover materials to a passing scavenger.' },
+        ],
+      },
+    ],
+  },
 ];

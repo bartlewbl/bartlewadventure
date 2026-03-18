@@ -107,9 +107,14 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
           <span className="shop-wallet-inv">{player.inventory.length}/{player.maxInventory} items</span>
         </div>
         <div className="shop-refresh-bar">
-          <span className="shop-clock">{clock.period.icon} {clock.time}</span>
+          <span className="shop-clock">{clock.period.icon} {clock.time} {clock.weather.icon} {clock.weather.label}</span>
           <span className="shop-refresh-timer">Stock refreshes in {clock.shopRefreshIn}</span>
         </div>
+        {clock.effects.shopDiscount > 0 && (
+          <div className="shop-weather-discount">
+            {clock.weather.icon} Weather Bonus: -{Math.round(clock.effects.shopDiscount * 100)}% off all purchases!
+          </div>
+        )}
       </div>
 
       {/* Shop selector tabs */}

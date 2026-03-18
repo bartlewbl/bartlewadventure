@@ -125,6 +125,10 @@ export default function SidePanel({
               <span className="side-clock-time">{clock.time}</span>
             </div>
             <div className="side-clock-period">{clock.period.label}</div>
+            <div className="side-clock-weather">
+              <span className="side-weather-icon">{clock.weather.icon}</span>
+              <span className="side-weather-label">{clock.weather.label}</span>
+            </div>
             <div className="side-clock-reset">Daily reset: {clock.dailyResetIn}</div>
           </div>
 

@@ -1,16 +1,60 @@
 import { useState, useEffect, useMemo } from 'react';
 
-// Time periods for the game world
+// ---- TIME PERIODS ----
 const TIME_PERIODS = [
-  { id: 'dawn', label: 'Dawn', icon: '\u{1F305}', start: 5, end: 8 },
-  { id: 'morning', label: 'Morning', icon: '\u2600', start: 8, end: 12 },
+  { id: 'dawn',      label: 'Dawn',      icon: '\u{1F305}', start: 5,  end: 8  },
+  { id: 'morning',   label: 'Morning',   icon: '\u2600',    start: 8,  end: 12 },
   { id: 'afternoon', label: 'Afternoon', icon: '\u{1F324}', start: 12, end: 17 },
-  { id: 'evening', label: 'Evening', icon: '\u{1F307}', start: 17, end: 20 },
-  { id: 'night', label: 'Night', icon: '\u{1F319}', start: 20, end: 24 },
-  { id: 'midnight', label: 'Midnight', icon: '\u{1F30C}', start: 0, end: 5 },
+  { id: 'evening',   label: 'Evening',   icon: '\u{1F307}', start: 17, end: 20 },
+  { id: 'night',     label: 'Night',     icon: '\u{1F319}', start: 20, end: 24 },
+  { id: 'midnight',  label: 'Midnight',  icon: '\u{1F30C}', start: 0,  end: 5  },
 ];
 
+// Gameplay effects per time period
+const TIME_EFFECTS = {
+  dawn:      { xpMult: 1.10, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, eventChanceMult: 1.00, label: '+10% XP (early bird bonus)' },
+  morning:   { xpMult: 1.00, goldMult: 1.10, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, eventChanceMult: 1.00, label: '+10% gold find' },
+  afternoon: { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, eventChanceMult: 1.00, label: 'Standard conditions' },
+  evening:   { xpMult: 1.00, goldMult: 1.00, lootMult: 1.15, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, eventChanceMult: 1.00, label: '+15% loot quality' },
+  night:     { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.20, defMult: 1.00, atkMult: 1.10, eventChanceMult: 1.00, label: '+20% encounters, +10% ATK' },
+  midnight:  { xpMult: 1.25, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 0.90, atkMult: 1.00, eventChanceMult: 2.00, label: '+25% XP, -10% DEF, 2x events' },
+};
+
+// ---- WEATHER SYSTEM ----
+// Weather changes every 3 hours, seeded by day + window
+const WEATHER_TYPES = [
+  { id: 'clear',     label: 'Clear',     icon: '\u2728', weight: 30 },
+  { id: 'cloudy',    label: 'Cloudy',    icon: '\u2601', weight: 20 },
+  { id: 'rain',      label: 'Rain',      icon: '\u{1F327}', weight: 15 },
+  { id: 'storm',     label: 'Storm',     icon: '\u26A1', weight: 8  },
+  { id: 'fog',       label: 'Fog',       icon: '\u{1F32B}', weight: 12 },
+  { id: 'wind',      label: 'Windy',     icon: '\u{1F4A8}', weight: 10 },
+  { id: 'heatwave',  label: 'Heatwave',  icon: '\u{1F525}', weight: 5  },
+];
+
+// Gameplay effects per weather condition
+const WEATHER_EFFECTS = {
+  clear:    { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 1.00, label: 'No modifiers' },
+  cloudy:   { xpMult: 1.00, goldMult: 1.05, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 1.00, label: '+5% gold find' },
+  rain:     { xpMult: 1.00, goldMult: 1.15, lootMult: 1.00, encounterMult: 0.90, defMult: 1.00, atkMult: 0.95, shopDiscount: 0.05, energyRegenMult: 1.00, eventChanceMult: 1.20, label: '+15% gold, -5% ATK, -10% encounters, +20% events' },
+  storm:    { xpMult: 1.25, goldMult: 1.00, lootMult: 1.20, encounterMult: 1.30, defMult: 0.90, atkMult: 1.15, shopDiscount: 0, energyRegenMult: 0.80, eventChanceMult: 1.50, label: '+25% XP, +20% loot, +30% encounters, -10% DEF, +15% ATK' },
+  fog:      { xpMult: 1.00, goldMult: 1.00, lootMult: 1.10, encounterMult: 1.10, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.00, eventChanceMult: 2.00, label: '+10% loot, +10% encounters, 2x event chance' },
+  wind:     { xpMult: 1.05, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.00, defMult: 1.00, atkMult: 1.00, shopDiscount: 0, energyRegenMult: 1.15, eventChanceMult: 1.00, label: '+5% XP, +15% energy regen' },
+  heatwave: { xpMult: 1.00, goldMult: 1.00, lootMult: 1.00, encounterMult: 1.15, defMult: 1.00, atkMult: 1.10, shopDiscount: 0.10, energyRegenMult: 0.85, eventChanceMult: 1.00, label: '+10% ATK, +15% encounters, -15% energy regen, -10% shop prices' },
+};
+
+const WEATHER_WINDOW_HOURS = 3;
+
 const SHOP_REFRESH_HOURS = 10;
+
+// ---- UTILITY ----
+function seededRng(seed) {
+  let s = seed;
+  return function () {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
 
 function getTimePeriod(hour) {
   for (const period of TIME_PERIODS) {
@@ -55,7 +99,7 @@ function getHourSeed(date) {
   return getDaySeed(date) * 100 + date.getHours();
 }
 
-// Get the current 4-hour event window (0-3, 4-7, 8-11, 12-15, 16-19, 20-23)
+// 4-hour event window
 function getEventWindow(date) {
   return Math.floor(date.getHours() / 4);
 }
@@ -74,7 +118,7 @@ function getTimeUntilNextWindow() {
   return next - now;
 }
 
-// Shop refreshes every 10 hours from midnight (0:00, 10:00, 20:00, then 6:00 next day...)
+// ---- SHOP REFRESH (10 hours) ----
 function getShopCycleIndex(date) {
   const hoursSinceMidnight = date.getHours() + date.getMinutes() / 60;
   return Math.floor(hoursSinceMidnight / SHOP_REFRESH_HOURS);
@@ -90,7 +134,6 @@ function getTimeUntilShopRefresh() {
   const nextCycleHour = (currentCycle + 1) * SHOP_REFRESH_HOURS;
   const next = new Date(now);
   if (nextCycleHour >= 24) {
-    // Next refresh is after midnight
     next.setDate(next.getDate() + 1);
     next.setHours(nextCycleHour - 24, 0, 0, 0);
   } else {
@@ -99,6 +142,54 @@ function getTimeUntilShopRefresh() {
   return next - now;
 }
 
+// ---- WEATHER (3-hour windows) ----
+function getWeatherWindow(date) {
+  return Math.floor(date.getHours() / WEATHER_WINDOW_HOURS);
+}
+
+function getWeather(date) {
+  const seed = getDaySeed(date) * 100 + getWeatherWindow(date);
+  const rng = seededRng(seed);
+  const totalWeight = WEATHER_TYPES.reduce((sum, w) => sum + w.weight, 0);
+  let roll = rng() * totalWeight;
+  for (const w of WEATHER_TYPES) {
+    roll -= w.weight;
+    if (roll <= 0) return w;
+  }
+  return WEATHER_TYPES[0];
+}
+
+function getNextWeather(date) {
+  const currentWindow = getWeatherWindow(date);
+  const nextWindowHour = (currentWindow + 1) * WEATHER_WINDOW_HOURS;
+  const nextDate = new Date(date);
+  if (nextWindowHour >= 24) {
+    nextDate.setDate(nextDate.getDate() + 1);
+    nextDate.setHours(nextWindowHour - 24, 0, 0, 0);
+  } else {
+    nextDate.setHours(nextWindowHour, 0, 0, 0);
+  }
+  return { weather: getWeather(nextDate), changeIn: nextDate - date };
+}
+
+// Combine time + weather effects into a single multiplier set
+function getCombinedEffects(periodId, weatherId) {
+  const time = TIME_EFFECTS[periodId] || TIME_EFFECTS.afternoon;
+  const weather = WEATHER_EFFECTS[weatherId] || WEATHER_EFFECTS.clear;
+  return {
+    xpMult: time.xpMult * weather.xpMult,
+    goldMult: time.goldMult * weather.goldMult,
+    lootMult: time.lootMult * weather.lootMult,
+    encounterMult: time.encounterMult * weather.encounterMult,
+    defMult: time.defMult * weather.defMult,
+    atkMult: time.atkMult * weather.atkMult,
+    shopDiscount: weather.shopDiscount || 0,
+    energyRegenMult: weather.energyRegenMult || 1.0,
+    eventChanceMult: time.eventChanceMult * weather.eventChanceMult,
+  };
+}
+
+// ---- HOOK ----
 export default function useGameClock() {
   const [now, setNow] = useState(() => new Date());
 
@@ -114,6 +205,11 @@ export default function useGameClock() {
     const hourSeed = getHourSeed(now);
     const eventWindow = getEventWindow(now);
     const shopSeed = getShopSeed(now);
+    const weather = getWeather(now);
+    const weatherEffects = WEATHER_EFFECTS[weather.id];
+    const timeEffects = TIME_EFFECTS[period.id];
+    const combined = getCombinedEffects(period.id, weather.id);
+    const next = getNextWeather(now);
 
     return {
       now,
@@ -124,6 +220,12 @@ export default function useGameClock() {
       hourSeed,
       eventWindow,
       shopSeed,
+      weather,
+      weatherEffects,
+      timeEffects,
+      effects: combined,
+      nextWeather: next.weather,
+      weatherChangeIn: formatCountdown(next.changeIn),
       dailyResetIn: formatCountdown(getTimeUntilMidnight()),
       eventRefreshIn: formatCountdown(getTimeUntilNextWindow()),
       shopRefreshIn: formatCountdown(getTimeUntilShopRefresh()),
@@ -131,4 +233,12 @@ export default function useGameClock() {
   }, [now]);
 }
 
-export { TIME_PERIODS, getTimePeriod, getDaySeed, getHourSeed, getEventWindow, getShopSeed, SHOP_REFRESH_HOURS, formatCountdown, formatTime };
+export {
+  TIME_PERIODS, TIME_EFFECTS,
+  WEATHER_TYPES, WEATHER_EFFECTS,
+  getTimePeriod, getDaySeed, getHourSeed,
+  getEventWindow, getShopSeed, getWeather, getWeatherWindow, getNextWeather,
+  getCombinedEffects,
+  SHOP_REFRESH_HOURS, WEATHER_WINDOW_HOURS,
+  formatCountdown, formatTime,
+};
