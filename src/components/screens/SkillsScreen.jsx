@@ -96,10 +96,11 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
           const isAvailable = tierInfo.state === 'available';
 
           return (
-            <div key={tier.label} className="skill-tree-tier">
-              <div className="skill-tree-connector">|</div>
-              <div className={`skill-tree-tier-label ${isLocked ? 'locked' : ''}`}>
+            <div key={tier.label} className={`skill-tree-tier ${tier.milestone ? 'skill-tree-tier-milestone' : ''}`}>
+              <div className="skill-tree-connector">{tier.milestone ? '★' : '|'}</div>
+              <div className={`skill-tree-tier-label ${isLocked ? 'locked' : ''} ${tier.milestone ? 'milestone' : ''}`}>
                 {tier.label} — Lv.{tier.level}
+                {tier.milestone && <span className="skill-tree-milestone-badge"> FATE CHOICE</span>}
                 {isLocked && player.level < tier.level && (
                   <span className="skill-tree-tier-req"> (Requires Lv.{tier.level})</span>
                 )}
@@ -121,9 +122,9 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
                         isOtherSelected ? 'skill-tree-node-rejected' :
                         isLocked ? 'skill-tree-node-locked' :
                         canSelect ? 'skill-tree-node-available' : ''
-                      }`}
+                      } ${choice.milestone ? 'skill-tree-node-milestone' : ''}`}
                       onClick={() => canSelect ? handleSelect(choice) : null}
-                      style={isSelected ? { borderColor: cls.color } : undefined}
+                      style={isSelected ? { borderColor: cls.color } : (choice.milestone && !isLocked ? { borderColor: '#ffaa00' } : undefined)}
                     >
                       <div className="skill-tree-node-header">
                         <span className={`skill-tree-node-type ${choice.type}`}>
@@ -158,8 +159,10 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
             {confirmSkill.type === 'active' && (
               <div className="skill-confirm-cost">{confirmSkill.manaCost} Mana • {confirmSkill.multiplier}x DMG</div>
             )}
-            <div className="skill-confirm-warning">
-              This choice is permanent! You cannot undo this decision.
+            <div className={`skill-confirm-warning ${confirmSkill.milestone ? 'milestone-warning' : ''}`}>
+              {confirmSkill.milestone
+                ? '⚠ FATE CHOICE — This skill has MAJOR consequences! Read carefully. This choice is permanent and will fundamentally alter your character!'
+                : 'This choice is permanent! You cannot undo this decision.'}
             </div>
             <div className="skill-confirm-actions">
               <button className="btn btn-primary" onClick={handleConfirm}>Confirm</button>
