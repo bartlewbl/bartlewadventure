@@ -204,10 +204,12 @@ export function getShopEnergyDrinks(playerLevel) {
   });
 }
 
-export function getDailyFeaturedItems(playerLevel) {
-  const today = new Date();
-  const daySeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  const rng = seededRandom(daySeed + playerLevel);
+export function getDailyFeaturedItems(playerLevel, shopSeed) {
+  const seed = shopSeed != null ? shopSeed : (() => {
+    const today = new Date();
+    return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  })();
+  const rng = seededRandom(seed + playerLevel);
 
   // Only Uncommon and Epic gear available in the featured store — Rare and Legendary must be earned through drops
   const extraordinaryRarities = RARITIES.filter(r => r.name === 'Uncommon' || r.name === 'Epic');
@@ -262,10 +264,11 @@ export function getDailyFeaturedItems(playerLevel) {
 }
 
 // ---- ARMOURER SHOP: gear items for buy ----
-export function getArmourerStock(playerLevel) {
+export function getArmourerStock(playerLevel, shopSeed) {
   const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
   const items = [];
   const usedNames = new Set();
+  const rng = shopSeed != null ? seededRandom(shopSeed + playerLevel * 7) : null;
 
   for (const type of gearTypes) {
     const pool = ITEM_LIBRARY[type];
@@ -273,8 +276,8 @@ export function getArmourerStock(playerLevel) {
     // Pick items near player level
     const candidates = pool.filter(t => t.level <= playerLevel + 3 && t.level >= Math.max(1, playerLevel - 5));
     const source = candidates.length > 0 ? candidates : pool.filter(t => t.level <= playerLevel + 5);
-    // Pick up to 2 per type
-    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    // Pick up to 2 per type — use seeded sort when seed provided
+    const shuffled = [...source].sort(() => (rng ? rng() - 0.5 : Math.random() - 0.5));
     let count = 0;
     for (const template of shuffled) {
       if (count >= 2 || usedNames.has(template.name)) continue;

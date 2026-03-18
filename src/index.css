@@ -183,6 +183,64 @@ body {
   color: #f3f3ff;
 }
 
+.side-panel-clock {
+  padding: 8px 10px;
+  background: rgba(10, 10, 30, 0.8);
+  border: 1px solid rgba(100, 100, 200, 0.2);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.side-clock-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.side-clock-icon {
+  font-size: 12px;
+}
+
+.side-clock-time {
+  font-size: 10px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px rgba(200, 200, 255, 0.3);
+}
+
+.side-clock-period {
+  font-size: 6px;
+  color: #a0a0d4;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+
+.side-clock-weather {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.side-weather-icon {
+  font-size: 10px;
+}
+
+.side-weather-label {
+  font-size: 7px;
+  color: #c0c0ff;
+}
+
+.side-clock-reset {
+  font-size: 5px;
+  color: #4fc3f7;
+  font-variant-numeric: tabular-nums;
+}
+
 .side-menu-buttons {
   display: flex;
   flex-direction: column;
@@ -1059,6 +1117,183 @@ body {
   word-break: break-word;
 }
 
+.town-event-bonus {
+  font-size: 7px;
+  color: #7cfc00;
+  margin-top: 3px;
+  padding: 2px 6px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.town-events-refresh-timer {
+  font-size: 6px;
+  color: #4fc3f7;
+  margin-left: 8px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.town-shop-refresh-timer {
+  font-size: 6px;
+  color: #ffd700;
+  margin-left: 8px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+/* Real-Time Clock Bar */
+.town-clock-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(10, 10, 30, 0.95), rgba(20, 15, 40, 0.9));
+  border: 1px solid rgba(100, 100, 200, 0.25);
+  border-radius: 6px;
+  box-shadow: 0 0 15px rgba(100, 100, 255, 0.1);
+}
+
+.town-clock-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.town-clock-icon {
+  font-size: 14px;
+}
+
+.town-clock-digits {
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(200, 200, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+.town-clock-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.town-clock-period {
+  font-size: 8px;
+  color: #a0a0d4;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Weather Display */
+.town-weather-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.town-weather-icon {
+  font-size: 18px;
+}
+
+.town-weather-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.town-weather-label {
+  font-size: 9px;
+  color: #e0e0ff;
+}
+
+.town-weather-next {
+  font-size: 6px;
+  color: #7171a4;
+  font-variant-numeric: tabular-nums;
+}
+
+.town-clock-timers {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.town-clock-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.town-timer-label {
+  font-size: 5px;
+  color: #7171a4;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.town-timer-value {
+  font-size: 7px;
+  color: #4fc3f7;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Active Effects Bar */
+.town-effects-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(10, 10, 30, 0.85);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 5px;
+  flex-wrap: wrap;
+}
+
+.town-effects-title {
+  font-size: 7px;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.town-effects-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.town-effect-tag {
+  font-size: 6px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.town-effect-tag.positive {
+  color: #7cfc00;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.25);
+}
+
+.town-effect-tag.negative {
+  color: #ff6b81;
+  background: rgba(255, 107, 129, 0.12);
+  border: 1px solid rgba(255, 107, 129, 0.25);
+}
+
 /* Featured Shop Items */
 .town-featured-list {
   display: flex;
@@ -1870,6 +2105,87 @@ body {
   to { box-shadow: 0 0 12px rgba(76, 175, 80, 0.3); }
 }
 
+/* Battle weather spell buff bar */
+.battle-weather-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(10, 10, 30, 0.8);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 4px;
+  width: 90%;
+  max-width: 460px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.battle-weather-icon {
+  font-size: 10px;
+}
+
+.battle-weather-buff {
+  font-size: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.battle-weather-buff.buff {
+  color: #7cfc00;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.25);
+}
+
+.battle-weather-buff.debuff {
+  color: #ff6b81;
+  background: rgba(255, 107, 129, 0.12);
+  border: 1px solid rgba(255, 107, 129, 0.25);
+}
+
+/* Skill element indicators */
+.skill-element-icon {
+  margin-right: 3px;
+  font-size: 8px;
+}
+
+.skill-btn-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.skill-weather-mod {
+  font-size: 6px;
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+.skill-weather-mod.buff {
+  color: #7cfc00;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.skill-weather-mod.debuff {
+  color: #ff6b81;
+  background: rgba(255, 107, 129, 0.2);
+}
+
+.btn-skill.weather-boosted {
+  border-color: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.15);
+}
+
+.btn-skill.weather-weakened {
+  border-color: rgba(255, 107, 129, 0.3);
+  opacity: 0.85;
+}
+
+/* Spell buff tags in town effects */
+.town-effect-tag.spell-buff {
+  font-weight: normal;
+}
+
 /* Battle combatants layout */
 .battle-combatants {
   display: flex;
@@ -2582,6 +2898,7 @@ body {
 
 .shop-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -2610,6 +2927,50 @@ body {
 .shop-wallet-inv {
   font-size: 7px;
   color: #8e8eb2;
+}
+
+.shop-refresh-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(10, 10, 30, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.shop-clock {
+  font-size: 8px;
+  color: #c0c0ff;
+}
+
+.shop-refresh-timer {
+  font-size: 7px;
+  color: #4fc3f7;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-featured-timer {
+  font-size: 7px;
+  color: #4fc3f7;
+  margin-left: 8px;
+  font-weight: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-weather-discount {
+  width: 100%;
+  text-align: center;
+  font-size: 7px;
+  color: #7cfc00;
+  padding: 5px 10px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.25);
+  border-radius: 4px;
+  margin-top: 4px;
 }
 
 /* Tabs */

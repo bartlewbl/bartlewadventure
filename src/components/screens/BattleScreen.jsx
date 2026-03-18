@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
 import { getBattleMaxMana } from '../../engine/combat';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
+import useGameClock from '../../hooks/useGameClock';
+import { ELEMENTS, getSkillElement, getWeatherSpellBuff, getWeatherSpellBuffList } from '../../engine/elements';
 
 // Animation durations (must match GameCanvas.jsx)
 const ANIM_MS = {
@@ -258,6 +260,9 @@ export default function BattleScreen({
   const activeSkills = getPlayerActiveSkills(player);
   const treeActives = activeSkills.filter(s => !s.isClassSkill);
 
+  const clock = useGameClock();
+  const weatherBuffs = useMemo(() => getWeatherSpellBuffList(clock.weather.id), [clock.weather.id]);
+
   // Equipped pets
   const equippedPets = useMemo(() => {
     const equippedIds = pets?.equippedPets || [];
@@ -284,6 +289,18 @@ export default function BattleScreen({
       <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
         {battle.isPlayerTurn && !pendingTurnRef.current ? 'YOUR TURN' : 'ENEMY TURN'}
       </div>
+
+      {/* Weather spell buff bar */}
+      {weatherBuffs.length > 0 && (
+        <div className="battle-weather-bar">
+          <span className="battle-weather-icon">{clock.weather.icon}</span>
+          {weatherBuffs.map((wb, i) => (
+            <span key={i} className={`battle-weather-buff ${wb.positive ? 'buff' : 'debuff'}`}>
+              {wb.element.icon} {wb.label}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="battle-combatants">
         {/* Player side */}
@@ -393,24 +410,40 @@ export default function BattleScreen({
       {/* Skill submenu */}
       {showSkillMenu ? (
         <div className="battle-actions battle-skill-menu">
-          {activeSkills.map(skill => (
-            <button
-              key={skill.id}
-              className="btn btn-skill"
-              disabled={disabled || player.mana < (skill.manaCost || 0)}
-              onClick={() => {
-                if (skill.isClassSkill) {
-                  handleClassSkill();
-                } else {
-                  handleTreeSkill(skill.id);
-                }
-              }}
-              title={skill.desc}
-            >
-              <span className="skill-btn-name">{skill.name}</span>
-              <span className="skill-btn-cost">{skill.manaCost || 0}mp</span>
-            </button>
-          ))}
+          {activeSkills.map(skill => {
+            const elemId = getSkillElement(skill.isClassSkill ? null : skill.id, player.characterClass);
+            const elem = ELEMENTS[elemId];
+            const wb = getWeatherSpellBuff(clock.weather.id, elemId);
+            const buffPct = wb !== 1.0 ? Math.round((wb - 1) * 100) : 0;
+            return (
+              <button
+                key={skill.id}
+                className={`btn btn-skill ${buffPct > 0 ? 'weather-boosted' : buffPct < 0 ? 'weather-weakened' : ''}`}
+                disabled={disabled || player.mana < (skill.manaCost || 0)}
+                onClick={() => {
+                  if (skill.isClassSkill) {
+                    handleClassSkill();
+                  } else {
+                    handleTreeSkill(skill.id);
+                  }
+                }}
+                title={`${skill.desc}${buffPct ? ` [${buffPct > 0 ? '+' : ''}${buffPct}% weather]` : ''}`}
+              >
+                <span className="skill-btn-name">
+                  {elem && elemId !== 'physical' && <span className="skill-element-icon">{elem.icon}</span>}
+                  {skill.name}
+                </span>
+                <span className="skill-btn-meta">
+                  <span className="skill-btn-cost">{skill.manaCost || 0}mp</span>
+                  {buffPct !== 0 && (
+                    <span className={`skill-weather-mod ${buffPct > 0 ? 'buff' : 'debuff'}`}>
+                      {buffPct > 0 ? '+' : ''}{buffPct}%
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
           <button className="btn btn-back btn-sm" disabled={disabled} onClick={onToggleSkillMenu}>
             Back
           </button>

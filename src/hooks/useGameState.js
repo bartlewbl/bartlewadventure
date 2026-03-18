@@ -1,5 +1,7 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS } from '../data/gameData';
+import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
+import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
 import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
@@ -189,6 +191,20 @@ function regenEnergy(currentEnergy, lastEnergyUpdate, now = Date.now()) {
     return { energy: ENERGY_MAX, lastEnergyUpdate: now };
   }
   return { energy: nextEnergy, lastEnergyUpdate: last + consumed };
+}
+
+// Get the current combined time + weather gameplay effects
+function getCurrentEffects() {
+  const now = new Date();
+  const period = getTimePeriod(now.getHours());
+  const weather = getWeather(now);
+  return getCombinedEffects(period.id, weather.id);
+}
+
+// Get current weather id for weather-specific event filtering
+function getCurrentWeatherId() {
+  const now = new Date();
+  return getWeather(now).id;
 }
 
 // Extract the saveable portion of state (no transient battle data)
@@ -573,9 +589,14 @@ function gameReducer(state, action) {
         }
       }
 
-      // Random event check (5% chance, before normal encounters)
-      if (Math.random() < 0.05) {
-        const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+      // Random event check (5% base chance, modified by time/weather)
+      const effects = getCurrentEffects();
+      const weatherId = getCurrentWeatherId();
+      const eventChance = 0.05 * effects.eventChanceMult;
+      if (Math.random() < eventChance) {
+        // Filter events: include universal events + weather-matching events
+        const eligibleEvents = RANDOM_EVENTS.filter(e => !e.weather || e.weather === weatherId);
+        const event = eligibleEvents[Math.floor(Math.random() * eligibleEvents.length)];
         return {
           ...state, screen: 'random-event',
           exploreText: text,
@@ -586,7 +607,8 @@ function gameReducer(state, action) {
         };
       }
 
-      if (Math.random() < loc.encounterRate) {
+      const adjustedEncounterRate = loc.encounterRate * effects.encounterMult;
+      if (Math.random() < adjustedEncounterRate) {
         const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
         const monster = scaleMonster(monsterId, loc.levelReq);
         return {
@@ -601,8 +623,8 @@ function gameReducer(state, action) {
         };
       }
 
-      // No encounter - chance to find loot, gold, or nothing
-      const lootChance = loc.lootRate ?? 0.3;
+      // No encounter - chance to find loot, gold, or nothing (modified by time/weather)
+      const lootChance = (loc.lootRate ?? 0.3) * effects.lootMult;
       let newText = text;
       let newPlayer = state.player;
       let newDiscovered = state.discoveredItemLocations;
@@ -924,7 +946,11 @@ function gameReducer(state, action) {
       let passiveBonus = getSkillPassiveBonus(p);
       const echoProc = rollSpellEcho(p);
       if (echoProc) passiveBonus *= 2;
-      const atkValue = Math.floor(getPlayerAtk(p, b) * skillMult * passiveBonus);
+
+      // Weather spell buff for class skill
+      const classElement = getSkillElement(null, p.characterClass);
+      const classWeatherBuff = getWeatherSpellBuff(getCurrentWeatherId(), classElement);
+      const atkValue = Math.floor(getPlayerAtk(p, b) * skillMult * passiveBonus * classWeatherBuff);
 
       p = applyLifeTap(p, manaCost);
 
@@ -936,10 +962,13 @@ function gameReducer(state, action) {
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       let log = [...state.battleLog];
+      const classWeatherLabel = classWeatherBuff !== 1.0
+        ? ` (${classWeatherBuff > 1 ? '+' : ''}${Math.round((classWeatherBuff - 1) * 100)}% weather)`
+        : '';
       if (echoProc) {
-        log.push({ text: `Spell Echo! ${skillName} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `Spell Echo! ${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       } else {
-        log.push({ text: `${skillName} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       }
 
       // Apply class skill effect (recoil, weaken, drain, etc.)
@@ -993,7 +1022,11 @@ function gameReducer(state, action) {
       let passiveBonus = getSkillPassiveBonus(p);
       const echoProc = rollSpellEcho(p);
       if (echoProc) passiveBonus *= 2;
-      const atkValue = Math.floor(getPlayerAtk(p, b) * skill.multiplier * passiveBonus);
+
+      // Weather spell buff: element-based damage modifier
+      const skillElement = getSkillElement(action.skillId, p.characterClass);
+      const weatherSpellBuff = getWeatherSpellBuff(getCurrentWeatherId(), skillElement);
+      const atkValue = Math.floor(getPlayerAtk(p, b) * skill.multiplier * passiveBonus * weatherSpellBuff);
       const battleMaxHp = getBattleMaxHp(p);
 
       p = applyLifeTap(p, manaCost);
@@ -1009,10 +1042,13 @@ function gameReducer(state, action) {
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       let log = [...state.battleLog];
+      const weatherBuffLabel = weatherSpellBuff !== 1.0
+        ? ` (${weatherSpellBuff > 1 ? '+' : ''}${Math.round((weatherSpellBuff - 1) * 100)}% weather)`
+        : '';
       if (echoProc) {
-        log.push({ text: `Spell Echo! ${skill.name} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `Spell Echo! ${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       } else {
-        log.push({ text: `${skill.name} for ${dmg} damage!`, type: 'dmg-monster' });
+        log.push({ text: `${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       }
 
       // Apply skill effect via data-driven registry
@@ -1492,7 +1528,8 @@ function gameReducer(state, action) {
     case 'BUY_ITEM': {
       const item = action.item;
       const charismaBuyBonus = getCharismaPriceBonus(state.player);
-      const adjustedBuyPrice = Math.max(1, Math.floor(item.buyPrice * (1 - charismaBuyBonus)));
+      const weatherDiscount = getCurrentEffects().shopDiscount || 0;
+      const adjustedBuyPrice = Math.max(1, Math.floor(item.buyPrice * (1 - charismaBuyBonus - weatherDiscount)));
       if (state.player.gold < adjustedBuyPrice) return { ...state, message: 'Not enough gold!' };
       if (state.player.inventory.length >= state.player.maxInventory) return { ...state, message: 'Inventory full!' };
       const newItem = { ...item, id: 'item_' + Date.now() + '_' + Math.random() };
@@ -2692,11 +2729,13 @@ function gameReducer(state, action) {
 function handleVictory(state) {
   const m = state.battle.monster;
   const innBonus = getInnExpBonus(state.base);
-  const expGain = Math.floor(m.exp * (1 + innBonus));
+  const worldEffects = getCurrentEffects();
+  const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult);
   const cls = getClassData(state.player);
   let goldMult = 1.0;
   if (cls?.passive === 'Greed') goldMult *= 1.25;
   if (playerHasSkill(state.player, 'thf_t2a')) goldMult *= 1.50;
+  goldMult *= worldEffects.goldMult;
   const goldGain = Math.floor(m.gold * goldMult);
 
   let p = { ...state.player, exp: state.player.exp + expGain, gold: state.player.gold + goldGain };

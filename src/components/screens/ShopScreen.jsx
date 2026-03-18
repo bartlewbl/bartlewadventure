@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { getShopItems, getShopEnergyDrinks, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
+import useGameClock from '../../hooks/useGameClock';
 
 const SLOT_LABELS = {
   weapon: 'Weapon',
@@ -71,16 +72,17 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
+  const clock = useGameClock();
 
-  // Armourer stock
-  const armourerStock = useMemo(() => getArmourerStock(player.level), [player.level]);
+  // Armourer stock — refreshes every 10 hours
+  const armourerStock = useMemo(() => getArmourerStock(player.level, clock.shopSeed), [player.level, clock.shopSeed]);
   // Brewer stock
   const brewerStock = useMemo(() => [...getShopItems(player.level), ...getShopEnergyDrinks(player.level)], [player.level]);
   // Pet shop stock
   const petStock = useMemo(() => getPetShopStock(player.level), [player.level]);
   const petItemStock = useMemo(() => getPetItemShop(player.level), [player.level]);
-  // Featured daily
-  const featuredStock = useMemo(() => getDailyFeaturedItems(player.level), [player.level]);
+  // Featured — refreshes every 10 hours
+  const featuredStock = useMemo(() => getDailyFeaturedItems(player.level, clock.shopSeed), [player.level, clock.shopSeed]);
 
   const ownedPetIds = new Set((pets?.ownedPets || []).map(p => p.id));
 
@@ -104,6 +106,15 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
           <span className="shop-wallet-gold">{player.gold}g</span>
           <span className="shop-wallet-inv">{player.inventory.length}/{player.maxInventory} items</span>
         </div>
+        <div className="shop-refresh-bar">
+          <span className="shop-clock">{clock.period.icon} {clock.time} {clock.weather.icon} {clock.weather.label}</span>
+          <span className="shop-refresh-timer">Stock refreshes in {clock.shopRefreshIn}</span>
+        </div>
+        {clock.effects.shopDiscount > 0 && (
+          <div className="shop-weather-discount">
+            {clock.weather.icon} Weather Bonus: -{Math.round(clock.effects.shopDiscount * 100)}% off all purchases!
+          </div>
+        )}
       </div>
 
       {/* Shop selector tabs */}
@@ -288,7 +299,7 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
       {/* ===== FEATURED ===== */}
       {activeShop === 'featured' && (
         <div className="shop-content">
-          <div className="shop-featured-banner">Daily Featured Deals</div>
+          <div className="shop-featured-banner">Daily Featured Deals <span className="shop-featured-timer">Refreshes in {clock.shopRefreshIn}</span></div>
           <div className="shop-list">
             {featuredStock.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No featured items today</div></div>}
             {featuredStock.map(item => {
