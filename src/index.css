@@ -124,6 +124,7 @@ body {
   flex-direction: column;
   gap: 14px;
   flex: 1;
+  min-height: 0;
   transition: opacity 0.2s ease;
 }
 
@@ -131,6 +132,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .side-panel-footer {
