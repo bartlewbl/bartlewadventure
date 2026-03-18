@@ -298,18 +298,19 @@ export default function BattleScreen({
           </div>
         </div>
 
-        {/* Pet companions */}
-        {equippedPets.length > 0 && (
-          <div className="battle-pets">
-            {equippedPets.map(pet => (
-              <div key={pet.instanceId} className={`battle-pet-tag ${pet.energy <= 0 ? 'exhausted' : ''} ${pet.bond < 30 ? 'low-bond' : ''}`}>
+        {/* Active pet companion */}
+        {equippedPets.length > 0 && (() => {
+          const pet = equippedPets[0];
+          return (
+            <div className="battle-pets">
+              <div className={`battle-pet-tag active-pet ${pet.energy <= 0 ? 'exhausted' : ''} ${pet.bond < 30 ? 'low-bond' : ''}`}>
                 <span className="battle-pet-icon">{ROLE_ICONS[pet.role] || ''}</span>
                 <span className="battle-pet-name">{pet.name}</span>
                 <span className="battle-pet-stats">B:{pet.bond} E:{pet.energy}</span>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          );
+        })()}
 
         {/* VS indicator */}
         <div className="battle-vs">VS</div>

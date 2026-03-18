@@ -273,7 +273,7 @@ export const PET_BOND_DECAY_PER_BATTLE = 3;  // bond lost per battle
 export const PET_ENERGY_COST_PER_BATTLE = 8; // energy cost per battle
 export const PET_LOW_BOND_THRESHOLD = 30;     // below this, pet may refuse to fight
 export const PET_REFUSE_CHANCE_LOW_BOND = 0.4; // 40% chance to refuse if bond < 30
-export const PET_MAX_SLOTS = 3;               // max active/equipped pets
+export const PET_MAX_SLOTS = 1;               // max active/equipped pets (only one pet active at a time)
 
 // ---- PET BASE BUILDINGS ----
 export const PET_BUILDINGS = {

@@ -184,6 +184,12 @@ export default function App() {
         battle={state.battle}
         animTick={animTick}
         battleAnim={battleAnim}
+        activePet={(() => {
+          const eqIds = state.pets?.equippedPets || [];
+          const owned = state.pets?.ownedPets || [];
+          if (eqIds.length === 0) return null;
+          return owned.find(p => p.instanceId === eqIds[0]) || null;
+        })()}
       />
 
       <div className="ui-overlay">
