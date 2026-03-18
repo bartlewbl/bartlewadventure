@@ -183,6 +183,47 @@ body {
   color: #f3f3ff;
 }
 
+.side-panel-clock {
+  padding: 8px 10px;
+  background: rgba(10, 10, 30, 0.8);
+  border: 1px solid rgba(100, 100, 200, 0.2);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.side-clock-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.side-clock-icon {
+  font-size: 12px;
+}
+
+.side-clock-time {
+  font-size: 10px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px rgba(200, 200, 255, 0.3);
+}
+
+.side-clock-period {
+  font-size: 6px;
+  color: #a0a0d4;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+
+.side-clock-reset {
+  font-size: 5px;
+  color: #4fc3f7;
+  font-variant-numeric: tabular-nums;
+}
+
 .side-menu-buttons {
   display: flex;
   flex-direction: column;
@@ -1057,6 +1098,99 @@ body {
   line-height: 1.5;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+
+.town-event-bonus {
+  font-size: 7px;
+  color: #7cfc00;
+  margin-top: 3px;
+  padding: 2px 6px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.town-events-refresh-timer {
+  font-size: 6px;
+  color: #4fc3f7;
+  margin-left: 8px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.town-shop-refresh-timer {
+  font-size: 6px;
+  color: #ffd700;
+  margin-left: 8px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+/* Real-Time Clock Bar */
+.town-clock-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(10, 10, 30, 0.95), rgba(20, 15, 40, 0.9));
+  border: 1px solid rgba(100, 100, 200, 0.25);
+  border-radius: 6px;
+  box-shadow: 0 0 15px rgba(100, 100, 255, 0.1);
+}
+
+.town-clock-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.town-clock-icon {
+  font-size: 14px;
+}
+
+.town-clock-digits {
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(200, 200, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+.town-clock-period {
+  font-size: 8px;
+  color: #a0a0d4;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.town-clock-timers {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.town-clock-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.town-timer-label {
+  font-size: 5px;
+  color: #7171a4;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.town-timer-value {
+  font-size: 7px;
+  color: #4fc3f7;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Featured Shop Items */
@@ -2582,6 +2716,7 @@ body {
 
 .shop-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -2610,6 +2745,38 @@ body {
 .shop-wallet-inv {
   font-size: 7px;
   color: #8e8eb2;
+}
+
+.shop-refresh-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(10, 10, 30, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+.shop-clock {
+  font-size: 8px;
+  color: #c0c0ff;
+}
+
+.shop-refresh-timer {
+  font-size: 7px;
+  color: #4fc3f7;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-featured-timer {
+  font-size: 7px;
+  color: #4fc3f7;
+  margin-left: 8px;
+  font-weight: normal;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Tabs */

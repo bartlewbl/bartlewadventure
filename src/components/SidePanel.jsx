@@ -1,4 +1,5 @@
 import CharacterDock from './CharacterDock';
+import useGameClock from '../hooks/useGameClock';
 
 export default function SidePanel({
   collapsed,
@@ -31,6 +32,8 @@ export default function SidePanel({
   onSkills,
   canRest,
 }) {
+  const clock = useGameClock();
+
   const navItems = [
     {
       id: 'town',
@@ -114,6 +117,15 @@ export default function SidePanel({
           <div className="side-panel-heading">
             <div className="side-panel-title">Command Board</div>
             <div className="side-panel-subtitle">Plan your next step</div>
+          </div>
+
+          <div className="side-panel-clock">
+            <div className="side-clock-main">
+              <span className="side-clock-icon">{clock.period.icon}</span>
+              <span className="side-clock-time">{clock.time}</span>
+            </div>
+            <div className="side-clock-period">{clock.period.label}</div>
+            <div className="side-clock-reset">Daily reset: {clock.dailyResetIn}</div>
           </div>
 
           {currentLocation && (

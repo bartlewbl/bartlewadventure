@@ -2293,4 +2293,170 @@ export const RANDOM_EVENTS = [
       },
     ],
   },
+  {
+    id: 'haunted-well',
+    title: 'Haunted Well',
+    description: 'An old well pulses with eerie light. Ghostly whispers drift up from the darkness below. A rope still dangles inside.',
+    choices: [
+      {
+        label: 'Climb Down',
+        outcomes: [
+          { weight: 0.25, type: 'gold_big', text: 'At the bottom you find a skeleton clutching a bag of ancient gold coins!' },
+          { weight: 0.25, type: 'item_rare', text: 'A spectral hand offers you a gleaming weapon, then vanishes.' },
+          { weight: 0.25, type: 'damage', amount: 0.30, text: 'The rope snaps! You tumble into the darkness and hit the stones below.' },
+          { weight: 0.25, type: 'battle_hard', text: 'A restless spirit materializes and attacks with howling fury!' },
+        ],
+      },
+      {
+        label: 'Toss a Coin In',
+        outcomes: [
+          { weight: 0.40, type: 'heal', amount: 0.20, text: 'The spirits accept your offering. A warm glow surrounds you.' },
+          { weight: 0.30, type: 'gold_lose', text: 'The coin vanishes into the abyss. That\'s a few coins you won\'t see again.' },
+          { weight: 0.30, type: 'energy_restore', amount: 8, text: 'The well hums louder and fills you with supernatural energy!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'training-dummy',
+    title: 'Training Grounds',
+    description: 'A forgotten training area with battered dummies and scattered weapons. The equipment looks like it might still be usable.',
+    choices: [
+      {
+        label: 'Practice Combat',
+        outcomes: [
+          { weight: 0.40, type: 'energy_drain', amount: 5, text: 'You push yourself through drills until you\'re exhausted, but feel sharper.' },
+          { weight: 0.30, type: 'item', text: 'You find a usable weapon hidden among the training gear!' },
+          { weight: 0.30, type: 'heal', amount: 0.10, text: 'The rhythmic exercise clears your mind and eases your tensions.' },
+        ],
+      },
+      {
+        label: 'Search the Area',
+        outcomes: [
+          { weight: 0.40, type: 'gold', text: 'You find coins dropped by previous trainees.' },
+          { weight: 0.30, type: 'item', text: 'A stash of supplies under a bench — someone\'s forgotten kit.' },
+          { weight: 0.30, type: 'nothing', text: 'Nothing useful. Just rust and splinters.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'crystal-cave',
+    title: 'Crystal Cave',
+    description: 'A small cave entrance glitters with crystalline formations. The crystals hum with stored energy, but the cave looks unstable.',
+    choices: [
+      {
+        label: 'Harvest Crystals',
+        outcomes: [
+          { weight: 0.30, type: 'gold_big', text: 'You pry loose several valuable crystals worth a fortune!' },
+          { weight: 0.20, type: 'energy_restore', amount: 15, text: 'The crystals shatter and release pure energy that flows into you!' },
+          { weight: 0.25, type: 'damage', amount: 0.35, text: 'The cave collapses! Rocks and crystal shards rain down on you!' },
+          { weight: 0.25, type: 'battle_hard', text: 'A crystal golem forms from the walls and defends its domain!' },
+        ],
+      },
+      {
+        label: 'Meditate Inside',
+        outcomes: [
+          { weight: 0.40, type: 'heal', amount: 0.25, text: 'The crystal resonance soothes your body and mind.' },
+          { weight: 0.30, type: 'energy_restore', amount: 6, text: 'The ambient energy recharges your spirit.' },
+          { weight: 0.30, type: 'nothing', text: 'It\'s peaceful but nothing special happens. At least you got to rest.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'bounty-board-random',
+    title: 'Roadside Bounty Board',
+    description: 'A weathered bounty board stands at a crossroads. One notice catches your eye — a monster nearby with a price on its head.',
+    choices: [
+      {
+        label: 'Hunt the Bounty',
+        outcomes: [
+          { weight: 0.35, type: 'battle_hard', text: 'You track down the target. It spots you and charges!' },
+          { weight: 0.25, type: 'gold_big', text: 'You find the beast already dead. Someone else got it, but the bounty gold is unclaimed!' },
+          { weight: 0.20, type: 'item_rare', text: 'You ambush the target and claim both the bounty and its rare gear!' },
+          { weight: 0.20, type: 'energy_drain', amount: 6, text: 'Hours of tracking lead nowhere. The trail has gone cold.' },
+        ],
+      },
+      {
+        label: 'Read Other Notices',
+        outcomes: [
+          { weight: 0.50, type: 'gold', text: 'A smaller notice mentions a reward for information. You happen to know the answer!' },
+          { weight: 0.50, type: 'nothing', text: 'Old postings and expired bounties. Nothing useful remains.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'rusted-automaton',
+    title: 'Rusted Automaton',
+    description: 'A mechanical construct lies half-buried in rubble, sparking weakly. Its chest compartment appears accessible.',
+    choices: [
+      {
+        label: 'Open the Compartment',
+        outcomes: [
+          { weight: 0.30, type: 'item_rare', text: 'Inside lies a perfectly preserved piece of ancient tech — still functional!' },
+          { weight: 0.25, type: 'gold', text: 'Salvageable parts and precious metal components. Not bad!' },
+          { weight: 0.25, type: 'damage', amount: 0.25, text: 'A defense mechanism triggers! Electric shock courses through you!' },
+          { weight: 0.20, type: 'battle_hard', text: 'Your tampering reactivates it. The automaton lurches to life and attacks!' },
+        ],
+      },
+      {
+        label: 'Salvage Externally',
+        outcomes: [
+          { weight: 0.50, type: 'gold', text: 'You strip some external plating worth a few coins.' },
+          { weight: 0.30, type: 'item', text: 'A detachable component turns out to be useful gear.' },
+          { weight: 0.20, type: 'nothing', text: 'Everything on the outside is too corroded to be valuable.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ghostly-merchant',
+    title: 'Phantom Peddler',
+    description: 'A translucent figure hovers before you, ghostly wares floating around them. "Trade with the dead," they whisper.',
+    choices: [
+      {
+        label: 'Browse Their Wares',
+        outcomes: [
+          { weight: 0.30, type: 'item_great', text: 'A spectral blade materializes into solid form in your hands. Extraordinary!' },
+          { weight: 0.30, type: 'item_rare', text: 'You select an ethereal piece that solidifies when you grasp it. Quality gear!' },
+          { weight: 0.20, type: 'gold_lose', text: 'You hand over gold but the item dissolves. The phantom cackles and vanishes!' },
+          { weight: 0.20, type: 'energy_drain', amount: 5, text: 'The phantom\'s presence drains your life force just by being near it.' },
+        ],
+      },
+      {
+        label: 'Banish the Spirit',
+        outcomes: [
+          { weight: 0.40, type: 'gold_big', text: 'The phantom shrieks and disperses, dropping solidified coins!' },
+          { weight: 0.30, type: 'damage', amount: 0.20, text: 'The spirit curses you as it fades. Spectral wounds appear on your body!' },
+          { weight: 0.30, type: 'nothing', text: 'The phantom fades peacefully. "Perhaps another time..." it whispers.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'mirror-pool',
+    title: 'Mirror Pool',
+    description: 'A perfectly still pool reflects not the sky above, but visions of other places. Your reflection seems to move independently.',
+    choices: [
+      {
+        label: 'Reach Into the Water',
+        outcomes: [
+          { weight: 0.25, type: 'item_rare', text: 'Your reflection hands you something from the other side. It\'s real!' },
+          { weight: 0.25, type: 'heal', amount: 0.40, text: 'The water heals all wounds on contact. Ancient magic at work.' },
+          { weight: 0.25, type: 'damage', amount: 0.30, text: 'Your reflection grabs your arm and tries to pull you in! You wrench free, injured.' },
+          { weight: 0.25, type: 'energy_drain', amount: 7, text: 'The pool absorbs your energy. Your reflection grows stronger as you weaken.' },
+        ],
+      },
+      {
+        label: 'Study the Visions',
+        outcomes: [
+          { weight: 0.40, type: 'gold', text: 'The visions reveal a nearby hidden cache. You go find it!' },
+          { weight: 0.30, type: 'energy_restore', amount: 5, text: 'The mesmerizing visions are oddly refreshing. You feel centered.' },
+          { weight: 0.30, type: 'nothing', text: 'Beautiful but meaningless. The visions fade as clouds pass overhead.' },
+        ],
+      },
+    ],
+  },
 ];
