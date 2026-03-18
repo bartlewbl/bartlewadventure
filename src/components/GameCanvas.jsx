@@ -14,7 +14,7 @@ const ANIM_DURATIONS = {
 function easeOut(t) { return 1 - (1 - t) * (1 - t); }
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
 
-export default function GameCanvas({ screen, location, battle, animTick, battleAnim }) {
+export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -45,16 +45,24 @@ export default function GameCanvas({ screen, location, battle, animTick, battleA
           drawBackground(ctx, location.bgKey, w, h);
           const bobY = Math.sin(animTick * 0.1) * 2;
           drawSpriteCentered(ctx, SPRITES.player.idle, w * 0.25, h * 0.55 + bobY, 3);
+          // Draw active pet following player during exploration
+          if (activePet) {
+            const petSprite = SPRITES.pets?.[activePet.icon || activePet.id];
+            if (petSprite) {
+              const petBobY = Math.sin(animTick * 0.13 + 1.5) * 2.5;
+              drawSpriteCentered(ctx, petSprite, w * 0.15, h * 0.62 + petBobY, 2);
+            }
+          }
         }
         break;
       case 'battle':
-        renderBattle(ctx, w, h, location, battle, animTick, battleAnim);
+        renderBattle(ctx, w, h, location, battle, animTick, battleAnim, activePet);
         break;
       case 'battle-result':
         if (location) drawBackground(ctx, location.bgKey, w, h);
         break;
     }
-  }, [screen, location, battle, animTick, battleAnim]);
+  }, [screen, location, battle, animTick, battleAnim, activePet]);
 
   return <canvas ref={canvasRef} width={640} height={480} className="game-canvas" />;
 }
@@ -75,7 +83,7 @@ function renderMenu(ctx, w, h, tick) {
   drawSpriteCentered(ctx, SPRITES.monsters.rat, w * 0.35, h * 0.35, 2);
 }
 
-function renderBattle(ctx, w, h, location, battle, tick, battleAnim) {
+function renderBattle(ctx, w, h, location, battle, tick, battleAnim, activePet) {
   if (!location || !battle?.monster) return;
 
   // Get animation state
@@ -211,6 +219,19 @@ function renderBattle(ctx, w, h, location, battle, tick, battleAnim) {
   const playerSprite = useAttackSprite ? SPRITES.player.attack : SPRITES.player.idle;
   drawSpriteCentered(ctx, playerSprite, playerX, playerY + pBob, 4);
   ctx.globalAlpha = 1;
+
+  // Draw active pet beside the player
+  if (activePet) {
+    const petSprite = SPRITES.pets?.[activePet.icon || activePet.id];
+    if (petSprite) {
+      const petBob = animType ? 0 : Math.sin(tick * 0.12 + 2) * 3;
+      const petX = playerX - 55;
+      const petY = playerY + 18 + petBob;
+      ctx.globalAlpha = playerAlpha * 0.95;
+      drawSpriteCentered(ctx, petSprite, petX, petY, 2.5);
+      ctx.globalAlpha = 1;
+    }
+  }
 
   // Draw monster
   const monsterSprite = SPRITES.monsters[battle.monster.sprite];

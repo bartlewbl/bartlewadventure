@@ -48,7 +48,7 @@ export default function PetScreen({
       <div className="pet-header">
         <div className="pet-title">Pet Companion Hub</div>
         <div className="pet-summary">
-          Pets: {ownedPets.length} owned | {equippedIds.size}/{PET_MAX_SLOTS} equipped
+          Pets: {ownedPets.length} owned | {equippedIds.size > 0 ? '1 active' : 'None active'}
         </div>
       </div>
 
@@ -181,9 +181,9 @@ export default function PetScreen({
                   className="btn btn-equip"
                   onClick={() => onEquipPet(activePet.instanceId)}
                   disabled={equippedIds.size >= PET_MAX_SLOTS}
-                  title={equippedIds.size >= PET_MAX_SLOTS ? `Max ${PET_MAX_SLOTS} pets equipped` : ''}
+                  title={equippedIds.size >= PET_MAX_SLOTS ? 'Unequip current pet first' : ''}
                 >
-                  Equip Pet {equippedIds.size >= PET_MAX_SLOTS ? '(Full)' : ''}
+                  Set as Active {equippedIds.size >= PET_MAX_SLOTS ? '(Swap current first)' : ''}
                 </button>
               )}
             </div>
