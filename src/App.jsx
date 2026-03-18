@@ -262,6 +262,9 @@ export default function App() {
                 regionName={state.currentRegion.name}
                 onSelect={actions.enterLocation}
                 onBack={actions.backToRegions}
+                pinnedQuests={state.tasks.pinnedQuests}
+                stats={state.stats}
+                tasks={state.tasks}
               />
             )}
 
@@ -377,7 +380,11 @@ export default function App() {
               <JournalScreen
                 stats={state.stats}
                 tasks={state.tasks}
-                onClaim={actions.claimTask}
+                onClaim={(taskId, taskType, chainId) => actions.claimTask(taskId, taskType, chainId)}
+                onPin={actions.pinQuest}
+                onUnpin={actions.unpinQuest}
+                onActivate={actions.activateQuestLine}
+                onAbandon={actions.abandonQuestLine}
                 onBack={actions.goToTown}
               />
             )}

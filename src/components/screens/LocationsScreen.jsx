@@ -1,3 +1,72 @@
+import {
+  TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
+  getActiveDailyTasks, getActiveWeeklyTasks,
+} from '../../data/tasks';
+
+function formatNumber(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function findQuestById(id) {
+  const allQuests = [
+    ...TUTORIAL_QUESTS,
+    ...STORY_MISSIONS,
+    ...STORY_TASKS,
+    ...getActiveDailyTasks(),
+    ...getActiveWeeklyTasks(),
+    ...SIDE_QUEST_CHAINS.flatMap(c => c.quests),
+  ];
+  return allQuests.find(q => q.id === id) || null;
+}
+
+function isQuestClaimed(id, tasks) {
+  return (tasks.tutorialClaimed || []).includes(id)
+    || (tasks.missionClaimed || []).includes(id)
+    || (tasks.storyClaimed || []).includes(id)
+    || (tasks.dailyClaimed || []).includes(id)
+    || (tasks.weeklyClaimed || []).includes(id)
+    || (tasks.sideQuestClaimed || []).includes(id);
+}
+
+function PinnedQuestTracker({ pinnedQuests, stats, tasks }) {
+  if (!pinnedQuests || pinnedQuests.length === 0) return null;
+
+  const activeQuests = pinnedQuests
+    .map(id => {
+      const quest = findQuestById(id);
+      if (!quest || isQuestClaimed(id, tasks)) return null;
+      return quest;
+    })
+    .filter(Boolean);
+
+  if (activeQuests.length === 0) return null;
+
+  return (
+    <div className="pinned-quest-tracker">
+      <div className="pinned-quest-header">Tracked Quests</div>
+      {activeQuests.map(quest => {
+        const progress = stats[quest.stat] || 0;
+        const pct = Math.min(100, Math.floor((progress / quest.target) * 100));
+        const complete = progress >= quest.target;
+        return (
+          <div key={quest.id} className={`pinned-quest-item ${complete ? 'complete' : ''}`}>
+            <div className="pinned-quest-name">{quest.name}</div>
+            <div className="pinned-quest-bar">
+              <div className="pinned-quest-bar-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="pinned-quest-count">
+              {formatNumber(Math.min(progress, quest.target))}/{formatNumber(quest.target)}
+              {complete && ' \u2713'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function LocationsScreen({
   playerLevel,
   energy,
@@ -7,6 +76,9 @@ export default function LocationsScreen({
   regionName,
   onSelect,
   onBack,
+  pinnedQuests,
+  stats,
+  tasks,
 }) {
   const requiredEnergy = energyCost ?? 0;
   const availableEnergy = energy ?? requiredEnergy;
@@ -17,6 +89,11 @@ export default function LocationsScreen({
       <div className="location-energy-info">
         Energy {availableEnergy}/{maxEnergy} · -{requiredEnergy} per expedition
       </div>
+
+      {pinnedQuests && stats && tasks && (
+        <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} />
+      )}
+
       <div className="location-list">
         {locations.map(loc => {
           const needsLevel = playerLevel < loc.levelReq;
