@@ -212,10 +212,10 @@ export function getDailyFeaturedItems(playerLevel, shopSeed) {
   const rng = seededRandom(seed + playerLevel);
 
   // Only Uncommon and Epic gear available in the featured store — Rare and Legendary must be earned through drops
-  // Epic is very rare even in the featured store (weight reduced from 2.5 to 0.5)
+  // Epic is extremely rare in the featured store (weight reduced from 2.5 to 0.1)
   const extraordinaryRarities = RARITIES
     .filter(r => r.name === 'Uncommon' || r.name === 'Epic')
-    .map(r => r.name === 'Epic' ? { ...r, weight: 0.5 } : r);
+    .map(r => r.name === 'Epic' ? { ...r, weight: 0.1 } : r);
   const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
   const featured = [];
   const usedNames = new Set();
@@ -279,12 +279,12 @@ export function getArmourerStock(playerLevel, shopSeed) {
     // Pick items near player level
     const candidates = pool.filter(t => t.level <= playerLevel + 3 && t.level >= Math.max(1, playerLevel - 5));
     const source = candidates.length > 0 ? candidates : pool.filter(t => t.level <= playerLevel + 5);
-    // Pick up to 2 per type — use weighted selection so rare items are much less common in shops
-    // Apply extra shop penalty: Epic weight /5, Legendary weight /25
+    // Pick up to 2 per type — use weighted selection so rare items are extremely rare in shops
+    // Apply heavy shop penalty: Epic weight /50, Legendary weight /500
     const shopWeighted = source.map(t => {
       let w = t.weight || (RARITY_LOOKUP[t.rarity]?.weight ?? 1);
-      if (t.rarity === 'Epic') w *= 0.2;
-      if (t.rarity === 'Legendary') w *= 0.04;
+      if (t.rarity === 'Epic') w *= 0.02;
+      if (t.rarity === 'Legendary') w *= 0.002;
       return { template: t, weight: w };
     });
     let count = 0;
