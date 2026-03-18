@@ -209,7 +209,8 @@ export function getDailyFeaturedItems(playerLevel) {
   const daySeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
   const rng = seededRandom(daySeed + playerLevel);
 
-  const extraordinaryRarities = RARITIES.filter(r => r.name === 'Rare' || r.name === 'Epic' || r.name === 'Legendary');
+  // Only Uncommon and Epic gear available in the featured store — Rare and Legendary must be earned through drops
+  const extraordinaryRarities = RARITIES.filter(r => r.name === 'Uncommon' || r.name === 'Epic');
   const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
   const featured = [];
   const usedNames = new Set();
