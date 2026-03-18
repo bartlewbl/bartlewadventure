@@ -189,7 +189,7 @@ export const BUILDINGS = {
     id: 'brewery',
     name: 'Brewery',
     description: 'Craft potions and energy drinks from gathered herbs and materials.',
-    buildCost: { gold: 750, materials: { 'scrap-wood': 15, 'stone-block': 8, 'copper-wire': 5, 'glass-vial': 8, 'herb-bundle': 3 } },
+    buildCost: { gold: 750, materials: { 'scrap-wood': 15, 'stone-block': 8, 'copper-wire': 5, 'glass-vial': 8, 'herb-bundle': 6, 'toxic-resin': 3, 'oil-canister': 1 } },
     icon: 'brewery',
     levelReq: 5,
   },
@@ -197,7 +197,7 @@ export const BUILDINGS = {
     id: 'smelter',
     name: 'Smelter',
     description: 'Smelt raw ores and items into refined materials like iron ingots.',
-    buildCost: { gold: 900, materials: { 'stone-block': 15, 'iron-ore': 12, 'charcoal': 8, 'coal-chunk': 4 } },
+    buildCost: { gold: 900, materials: { 'stone-block': 15, 'iron-ore': 12, 'charcoal': 8, 'coal-chunk': 4, 'copper-wire': 6, 'oil-canister': 2, 'scrap-wood': 10 } },
     icon: 'smelter',
     levelReq: 8,
   },
@@ -205,7 +205,7 @@ export const BUILDINGS = {
     id: 'workshop',
     name: 'Workshop',
     description: 'Craft tools, gear, and medium-complexity items from refined materials.',
-    buildCost: { gold: 1200, materials: { 'scrap-wood': 20, 'iron-ore': 15, 'copper-wire': 12, 'stone-block': 5 } },
+    buildCost: { gold: 1200, materials: { 'scrap-wood': 20, 'iron-ore': 15, 'copper-wire': 12, 'stone-block': 8, 'charcoal': 6, 'glass-vial': 4, 'iron-ingot': 3 } },
     icon: 'workshop',
     levelReq: 10,
   },
@@ -213,7 +213,7 @@ export const BUILDINGS = {
     id: 'inn',
     name: 'Inn',
     description: 'Pay gold for timed EXP boosts. Upgrade the inn for stronger boosts.',
-    buildCost: { gold: 1000, materials: { 'scrap-wood': 25, 'stone-block': 15, 'glass-vial': 5 } },
+    buildCost: { gold: 1000, materials: { 'scrap-wood': 25, 'stone-block': 15, 'glass-vial': 8, 'iron-ore': 10, 'copper-wire': 4, 'herb-bundle': 5 } },
     icon: 'inn',
     upgrades: [
       {
@@ -249,7 +249,7 @@ export const BUILDINGS = {
     id: 'chamber',
     name: 'Chamber',
     description: 'Your personal quarters. Upgrades improve healing and provide passive buffs.',
-    buildCost: { gold: 600, materials: { 'scrap-wood': 18, 'stone-block': 12, 'iron-ore': 3 } },
+    buildCost: { gold: 600, materials: { 'scrap-wood': 18, 'stone-block': 12, 'iron-ore': 6, 'glass-vial': 4, 'charcoal': 3, 'copper-wire': 2 } },
     icon: 'chamber',
     subUpgrades: {
       bed: {
@@ -283,7 +283,7 @@ export const BUILDINGS = {
     id: 'adventureCamp',
     name: 'Adventure Camp',
     description: 'Send squads to pillage for you. Returns random items and gold after a set time.',
-    buildCost: { gold: 1500, materials: { 'scrap-wood': 25, 'stone-block': 20, 'iron-ore': 15, 'copper-wire': 5 } },
+    buildCost: { gold: 1500, materials: { 'scrap-wood': 25, 'stone-block': 20, 'iron-ore': 15, 'copper-wire': 8, 'charcoal': 6, 'glass-vial': 4, 'herb-bundle': 5 } },
     icon: 'camp',
     missions: [
       { id: 'quick-raid', name: 'Quick Raid', duration: 1 * 60 * 60 * 1000, desc: '1 hour - Small loot', lootTier: 1, goldRange: [10, 50] },
@@ -297,7 +297,7 @@ export const BUILDINGS = {
     id: 'sparringRange',
     name: 'Sparring Range',
     description: 'Test your kits, spells, and strategies against training dummies.',
-    buildCost: { gold: 900, materials: { 'scrap-wood': 20, 'iron-ore': 12, 'stone-block': 8, 'charcoal': 3 } },
+    buildCost: { gold: 900, materials: { 'scrap-wood': 20, 'iron-ore': 12, 'stone-block': 8, 'charcoal': 5, 'copper-wire': 4, 'glass-vial': 3, 'coal-chunk': 2 } },
     icon: 'spar',
     levelReq: 6,
   },
@@ -305,7 +305,7 @@ export const BUILDINGS = {
     id: 'bank',
     name: 'Bank',
     description: 'Deposit gold safely (10% fee), borrow funds, or freeze gold for interest.',
-    buildCost: { gold: 2500, materials: { 'stone-block': 25, 'iron-ore': 20, 'copper-wire': 15, 'crystal-shard': 5, 'deep-coral': 3 } },
+    buildCost: { gold: 2500, materials: { 'stone-block': 25, 'iron-ore': 20, 'copper-wire': 15, 'crystal-shard': 5, 'deep-coral': 3, 'charcoal': 8, 'glass-vial': 6, 'oil-canister': 3 } },
     icon: 'bank',
     depositFee: 0.10,
     freezeOptions: [
