@@ -936,12 +936,13 @@ export const STORY_MISSIONS = [
 // Each chain has a unique chainId. Quests within a chain are sequential.
 // Players must activate a chain to work on it (uses a quest line slot).
 export const SIDE_QUEST_CHAINS = [
-  // Chain: Bounty Hunter - kill-focused challenges
+  // Chain: Bounty Hunter - kill-focused challenges (Lv 1)
   {
     chainId: 'bounty_hunter',
     chainName: 'Bounty Hunter',
     chainDescription: 'Take on increasingly dangerous bounties for the Hunter\'s Guild.',
     chainIcon: 'skull',
+    levelReq: 1,
     quests: [
       { id: 'side_bh_1', name: 'Rat Catcher', description: 'The guild needs someone to handle the vermin problem. Kill 20 monsters.', stat: 'monstersKilled', target: 20, reward: { gold: 60 }, order: 1 },
       { id: 'side_bh_2', name: 'Pest Exterminator', description: 'Bigger pests have emerged. Eliminate 50 monsters.', stat: 'monstersKilled', target: 50, reward: { gold: 150 }, order: 2 },
@@ -953,12 +954,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Treasure Seeker - exploration and loot focused
+  // Chain: Treasure Seeker - exploration and loot focused (Lv 1)
   {
     chainId: 'treasure_seeker',
     chainName: 'Treasure Seeker',
     chainDescription: 'Search every corner of the world for hidden riches.',
     chainIcon: 'chest',
+    levelReq: 1,
     quests: [
       { id: 'side_ts_1', name: 'Curious Wanderer', description: 'Start your treasure-hunting career. Complete 5 explorations.', stat: 'explorationsCompleted', target: 5, reward: { gold: 40 }, order: 1 },
       { id: 'side_ts_2', name: 'Lucky Find', description: 'Fortune favors the bold. Loot 5 items.', stat: 'itemsLooted', target: 5, reward: { gold: 80 }, order: 2 },
@@ -970,12 +972,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Merchant Prince - economy focused
+  // Chain: Merchant Prince - economy focused (Lv 3)
   {
     chainId: 'merchant_prince',
     chainName: 'Merchant Prince',
     chainDescription: 'Build a trading empire from nothing.',
     chainIcon: 'coin',
+    levelReq: 3,
     quests: [
       { id: 'side_mp_1', name: 'First Sale', description: 'Every empire starts with a single sale. Sell 2 items.', stat: 'itemsSold', target: 2, reward: { gold: 30 }, order: 1 },
       { id: 'side_mp_2', name: 'Pocket Change', description: 'Start building your wealth. Earn 200 gold.', stat: 'goldEarned', target: 200, reward: { gold: 60 }, order: 2 },
@@ -987,12 +990,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Iron Will - survival/defense focused
+  // Chain: Iron Will - survival/defense focused (Lv 5)
   {
     chainId: 'iron_will',
     chainName: 'Iron Will',
     chainDescription: 'Endure the worst the world throws at you and come back stronger.',
     chainIcon: 'shield',
+    levelReq: 5,
     quests: [
       { id: 'side_iw_1', name: 'Tough Skin', description: 'Take hits and keep going. Absorb 500 total damage.', stat: 'damageTaken', target: 500, reward: { gold: 50 }, order: 1 },
       { id: 'side_iw_2', name: 'Battle Scarred', description: 'Win 10 battles through sheer determination.', stat: 'battlesWon', target: 10, reward: { gold: 100 }, order: 2 },
@@ -1004,12 +1008,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Skill Master - progression and skill focused
+  // Chain: Skill Master - progression and skill focused (Lv 5)
   {
     chainId: 'skill_master',
     chainName: 'Skill Master',
     chainDescription: 'Seek mastery over every technique and ability.',
     chainIcon: 'star',
+    levelReq: 5,
     quests: [
       { id: 'side_sm_1', name: 'Quick Study', description: 'Level up twice to start your journey of mastery.', stat: 'levelsGained', target: 2, reward: { gold: 50 }, order: 1 },
       { id: 'side_sm_2', name: 'Talent Scout', description: 'Unlock 2 skills from your skill tree.', stat: 'skillsUnlocked', target: 2, reward: { gold: 100 }, order: 2 },
@@ -1021,12 +1026,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Arena Champion - pure combat wins
+  // Chain: Arena Champion - pure combat wins (Lv 8)
   {
     chainId: 'arena_champion',
     chainName: 'Arena Champion',
     chainDescription: 'Fight your way to the top of the arena rankings.',
     chainIcon: 'sword',
+    levelReq: 8,
     quests: [
       { id: 'side_ac_1', name: 'Arena Debut', description: 'Win your first 5 battles in the arena.', stat: 'battlesWon', target: 5, reward: { gold: 40 }, order: 1 },
       { id: 'side_ac_2', name: 'Crowd Pleaser', description: 'Deal 1,500 damage to excite the crowd.', stat: 'damageDealt', target: 1500, reward: { gold: 80 }, order: 2 },
@@ -1038,12 +1044,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Healer's Path - healing focused
+  // Chain: Healer's Path - healing focused (Lv 8)
   {
     chainId: 'healers_path',
     chainName: 'Healer\'s Path',
     chainDescription: 'Master the art of staying alive through restoration.',
     chainIcon: 'heart',
+    levelReq: 8,
     quests: [
       { id: 'side_hp_1', name: 'First Aid Kit', description: 'Use 3 potions to patch yourself up.', stat: 'potionsUsed', target: 3, reward: { gold: 35 }, order: 1 },
       { id: 'side_hp_2', name: 'Restoration', description: 'Heal 200 total HP through any means.', stat: 'totalHealing', target: 200, reward: { gold: 70 }, order: 2 },
@@ -1055,12 +1062,13 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Completionist - mixed objectives
+  // Chain: Completionist - mixed objectives (Lv 10)
   {
     chainId: 'completionist',
     chainName: 'The Completionist',
     chainDescription: 'Do everything. See everything. Collect everything.',
     chainIcon: 'trophy',
+    levelReq: 10,
     quests: [
       { id: 'side_co_1', name: 'Jack of All Trades', description: 'Win 5 battles and complete 5 explorations.', stat: 'battlesWon', target: 5, reward: { gold: 50 }, order: 1 },
       { id: 'side_co_2', name: 'Collector', description: 'Loot 10 items from your adventures.', stat: 'itemsLooted', target: 10, reward: { gold: 100 }, order: 2 },
@@ -1069,6 +1077,132 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_co_5', name: 'Wealthy Adventurer', description: 'Earn 3,000 gold through any means.', stat: 'goldEarned', target: 3000, reward: { gold: 500 }, order: 5 },
       { id: 'side_co_6', name: 'Globetrotter', description: 'Complete 75 explorations across all regions.', stat: 'explorationsCompleted', target: 75, reward: { gold: 800 }, order: 6 },
       { id: 'side_co_7', name: 'True Completionist', description: 'Deal 75,000 total damage. You have done it all.', stat: 'damageDealt', target: 75000, reward: { gold: 1500 }, order: 7 },
+    ],
+  },
+
+  // Chain: Frost Warden - unlocks at Lv 12 (Frozen Wastes tier)
+  {
+    chainId: 'frost_warden',
+    chainName: 'Frost Warden',
+    chainDescription: 'Prove yourself against the bitter cold and its frozen inhabitants.',
+    chainIcon: 'snowflake',
+    levelReq: 12,
+    quests: [
+      { id: 'side_fw_1', name: 'Cold Blooded', description: 'The frost tests all newcomers. Defeat 60 monsters.', stat: 'monstersKilled', target: 60, reward: { gold: 150 }, order: 1 },
+      { id: 'side_fw_2', name: 'Frozen Fortitude', description: 'Endure the chill. Take 1,500 total damage and survive.', stat: 'damageTaken', target: 1500, reward: { gold: 200 }, order: 2 },
+      { id: 'side_fw_3', name: 'Blizzard Runner', description: 'Navigate the storms. Complete 25 explorations.', stat: 'explorationsCompleted', target: 25, reward: { gold: 250 }, order: 3 },
+      { id: 'side_fw_4', name: 'Ice Shard Collector', description: 'Scavenge the frozen ruins. Loot 20 items.', stat: 'itemsLooted', target: 20, reward: { gold: 300 }, order: 4 },
+      { id: 'side_fw_5', name: 'Permafrost Punisher', description: 'Crush the frozen elite. Deal 10,000 total damage.', stat: 'damageDealt', target: 10000, reward: { gold: 450 }, order: 5 },
+      { id: 'side_fw_6', name: 'Glacial Guardian', description: 'Challenge the frozen lords. Defeat 6 bosses.', stat: 'bossesKilled', target: 6, reward: { gold: 600 }, order: 6 },
+      { id: 'side_fw_7', name: 'Frost Warden', description: 'Master the frozen wastes. Win 60 battles.', stat: 'battlesWon', target: 60, reward: { gold: 900 }, order: 7 },
+    ],
+  },
+
+  // Chain: Flame Dancer - unlocks at Lv 18 (Scorched Badlands tier)
+  {
+    chainId: 'flame_dancer',
+    chainName: 'Flame Dancer',
+    chainDescription: 'Dance with fire and bend the scorching heat to your will.',
+    chainIcon: 'flame',
+    levelReq: 18,
+    quests: [
+      { id: 'side_fd_1', name: 'Ember Walker', description: 'Walk through the flames. Complete 35 explorations.', stat: 'explorationsCompleted', target: 35, reward: { gold: 250 }, order: 1 },
+      { id: 'side_fd_2', name: 'Burn Notice', description: 'Set the desert ablaze. Deal 12,000 total damage.', stat: 'damageDealt', target: 12000, reward: { gold: 350 }, order: 2 },
+      { id: 'side_fd_3', name: 'Scorched Earth', description: 'Leave nothing standing. Defeat 120 monsters.', stat: 'monstersKilled', target: 120, reward: { gold: 400 }, order: 3 },
+      { id: 'side_fd_4', name: 'Ashen Trader', description: 'Profit from the wastelands. Sell 20 items.', stat: 'itemsSold', target: 20, reward: { gold: 350 }, order: 4 },
+      { id: 'side_fd_5', name: 'Inferno Survivor', description: 'Endure the heat. Take 4,000 total damage.', stat: 'damageTaken', target: 4000, reward: { gold: 500 }, order: 5 },
+      { id: 'side_fd_6', name: 'Magma Lord Slayer', description: 'Topple the lords of fire. Defeat 8 bosses.', stat: 'bossesKilled', target: 8, reward: { gold: 700 }, order: 6 },
+      { id: 'side_fd_7', name: 'Flame Dancer', description: 'Become one with the fire. Win 80 battles.', stat: 'battlesWon', target: 80, reward: { gold: 1100 }, order: 7 },
+    ],
+  },
+
+  // Chain: Poison Brewer - unlocks at Lv 25 (Toxic Marshlands tier)
+  {
+    chainId: 'poison_brewer',
+    chainName: 'Poison Brewer',
+    chainDescription: 'Learn the secrets of the marshes and turn toxins into tools.',
+    chainIcon: 'flask',
+    levelReq: 25,
+    quests: [
+      { id: 'side_pb_1', name: 'Bog Wader', description: 'Trudge through the muck. Complete 50 explorations.', stat: 'explorationsCompleted', target: 50, reward: { gold: 400 }, order: 1 },
+      { id: 'side_pb_2', name: 'Antidote Expert', description: 'Build up resistance. Use 15 potions.', stat: 'potionsUsed', target: 15, reward: { gold: 350 }, order: 2 },
+      { id: 'side_pb_3', name: 'Marsh Slaughter', description: 'Purge the corrupted creatures. Defeat 200 monsters.', stat: 'monstersKilled', target: 200, reward: { gold: 550 }, order: 3 },
+      { id: 'side_pb_4', name: 'Toxic Fortune', description: 'The marsh pays well for the brave. Earn 4,000 gold.', stat: 'goldEarned', target: 4000, reward: { gold: 600 }, order: 4 },
+      { id: 'side_pb_5', name: 'Venomous Strike', description: 'Strike with lethal precision. Deal 35,000 total damage.', stat: 'damageDealt', target: 35000, reward: { gold: 700 }, order: 5 },
+      { id: 'side_pb_6', name: 'Swamp King Slayer', description: 'Defeat the marsh overlords. Defeat 12 bosses.', stat: 'bossesKilled', target: 12, reward: { gold: 900 }, order: 6 },
+      { id: 'side_pb_7', name: 'Poison Brewer', description: 'Master the toxic arts. Heal 8,000 total HP.', stat: 'totalHealing', target: 8000, reward: { gold: 1400 }, order: 7 },
+    ],
+  },
+
+  // Chain: Abyssal Diver - unlocks at Lv 32 (Abyssal Depths tier)
+  {
+    chainId: 'abyssal_diver',
+    chainName: 'Abyssal Diver',
+    chainDescription: 'Plunge into the lightless depths where sanity frays.',
+    chainIcon: 'anchor',
+    levelReq: 32,
+    quests: [
+      { id: 'side_ad_1', name: 'Pressure Test', description: 'Survive the crushing depths. Take 6,000 total damage.', stat: 'damageTaken', target: 6000, reward: { gold: 500 }, order: 1 },
+      { id: 'side_ad_2', name: 'Deep Sea Harvest', description: 'Scavenge the abyss. Loot 35 items.', stat: 'itemsLooted', target: 35, reward: { gold: 600 }, order: 2 },
+      { id: 'side_ad_3', name: 'Leviathan Hunter', description: 'Hunt the deep ones. Defeat 300 monsters.', stat: 'monstersKilled', target: 300, reward: { gold: 750 }, order: 3 },
+      { id: 'side_ad_4', name: 'Abyssal Cartography', description: 'Map the unmappable. Complete 80 explorations.', stat: 'explorationsCompleted', target: 80, reward: { gold: 800 }, order: 4 },
+      { id: 'side_ad_5', name: 'Crushing Force', description: 'Strike with the weight of the ocean. Deal 60,000 damage.', stat: 'damageDealt', target: 60000, reward: { gold: 1000 }, order: 5 },
+      { id: 'side_ad_6', name: 'Kraken Killer', description: 'Slay the terrors of the deep. Defeat 18 bosses.', stat: 'bossesKilled', target: 18, reward: { gold: 1300 }, order: 6 },
+      { id: 'side_ad_7', name: 'Abyssal Diver', description: 'You have conquered the void beneath the waves. Win 120 battles.', stat: 'battlesWon', target: 120, reward: { gold: 1800 }, order: 7 },
+    ],
+  },
+
+  // Chain: Star Chaser - unlocks at Lv 40 (Celestial tier)
+  {
+    chainId: 'star_chaser',
+    chainName: 'Star Chaser',
+    chainDescription: 'Reach for the heavens and claim the power of the stars.',
+    chainIcon: 'star',
+    levelReq: 40,
+    quests: [
+      { id: 'side_sc_1', name: 'Sky Bound', description: 'Ascend to the heights. Complete 100 explorations.', stat: 'explorationsCompleted', target: 100, reward: { gold: 800 }, order: 1 },
+      { id: 'side_sc_2', name: 'Celestial Harvest', description: 'Gather the riches of the heavens. Earn 8,000 gold.', stat: 'goldEarned', target: 8000, reward: { gold: 900 }, order: 2 },
+      { id: 'side_sc_3', name: 'Angel Slayer', description: 'Not all that is celestial is good. Defeat 400 monsters.', stat: 'monstersKilled', target: 400, reward: { gold: 1000 }, order: 3 },
+      { id: 'side_sc_4', name: 'Star Forged', description: 'Unleash cosmic power. Deal 120,000 total damage.', stat: 'damageDealt', target: 120000, reward: { gold: 1200 }, order: 4 },
+      { id: 'side_sc_5', name: 'Divine Resilience', description: 'Endure heavenly wrath. Take 12,000 total damage.', stat: 'damageTaken', target: 12000, reward: { gold: 1400 }, order: 5 },
+      { id: 'side_sc_6', name: 'Constellation Breaker', description: 'Shatter the celestial order. Defeat 25 bosses.', stat: 'bossesKilled', target: 25, reward: { gold: 1800 }, order: 6 },
+      { id: 'side_sc_7', name: 'Star Chaser', description: 'You have touched the stars. Sell 60 items for your celestial collection.', stat: 'itemsSold', target: 60, reward: { gold: 2500 }, order: 7 },
+    ],
+  },
+
+  // Chain: Void Walker - unlocks at Lv 50 (Void Nexus tier)
+  {
+    chainId: 'void_walker',
+    chainName: 'Void Walker',
+    chainDescription: 'Step between realities and command the power of nothingness.',
+    chainIcon: 'void',
+    levelReq: 50,
+    quests: [
+      { id: 'side_vw_1', name: 'Reality Tear', description: 'Pierce through reality. Complete 150 explorations.', stat: 'explorationsCompleted', target: 150, reward: { gold: 1200 }, order: 1 },
+      { id: 'side_vw_2', name: 'Void Consumption', description: 'Consume the void\'s power. Deal 200,000 total damage.', stat: 'damageDealt', target: 200000, reward: { gold: 1500 }, order: 2 },
+      { id: 'side_vw_3', name: 'Null and Void', description: 'Erase all opposition. Defeat 600 monsters.', stat: 'monstersKilled', target: 600, reward: { gold: 1800 }, order: 3 },
+      { id: 'side_vw_4', name: 'Event Horizon', description: 'Nothing escapes you. Win 150 battles.', stat: 'battlesWon', target: 150, reward: { gold: 2000 }, order: 4 },
+      { id: 'side_vw_5', name: 'Entropy\'s Embrace', description: 'Let chaos flow through you. Take 20,000 total damage.', stat: 'damageTaken', target: 20000, reward: { gold: 2200 }, order: 5 },
+      { id: 'side_vw_6', name: 'Reality Breaker', description: 'Shatter the foundations. Defeat 40 bosses.', stat: 'bossesKilled', target: 40, reward: { gold: 3000 }, order: 6 },
+      { id: 'side_vw_7', name: 'Void Walker', description: 'You exist between worlds. Earn 25,000 total gold.', stat: 'goldEarned', target: 25000, reward: { gold: 4000 }, order: 7 },
+    ],
+  },
+
+  // Chain: Eternal Grinder - unlocks at Lv 55 (endgame grind)
+  {
+    chainId: 'eternal_grinder',
+    chainName: 'Eternal Grinder',
+    chainDescription: 'The grind never ends. Push every stat to its absolute limit.',
+    chainIcon: 'infinity',
+    levelReq: 55,
+    quests: [
+      { id: 'side_eg_1', name: 'No Rest', description: 'The grind starts here. Complete 200 explorations.', stat: 'explorationsCompleted', target: 200, reward: { gold: 1500 }, order: 1 },
+      { id: 'side_eg_2', name: 'Mass Extinction', description: 'Eliminate everything in your path. Defeat 800 monsters.', stat: 'monstersKilled', target: 800, reward: { gold: 2000 }, order: 2 },
+      { id: 'side_eg_3', name: 'Damage Incarnate', description: 'Become damage itself. Deal 400,000 total damage.', stat: 'damageDealt', target: 400000, reward: { gold: 2500 }, order: 3 },
+      { id: 'side_eg_4', name: 'Market Emperor', description: 'Own every market in every region. Sell 100 items.', stat: 'itemsSold', target: 100, reward: { gold: 2000 }, order: 4 },
+      { id: 'side_eg_5', name: 'Boss Annihilator', description: 'No boss is safe from you. Defeat 60 bosses.', stat: 'bossesKilled', target: 60, reward: { gold: 3500 }, order: 5 },
+      { id: 'side_eg_6', name: 'Infinite Resilience', description: 'Absorb pain without end. Take 30,000 total damage.', stat: 'damageTaken', target: 30000, reward: { gold: 3000 }, order: 6 },
+      { id: 'side_eg_7', name: 'Eternal Legend', description: 'Win 200 battles. You have transcended the grind.', stat: 'battlesWon', target: 200, reward: { gold: 5000 }, order: 7 },
     ],
   },
 ];
