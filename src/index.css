@@ -4542,6 +4542,87 @@ body {
   border-color: rgba(79, 195, 247, 0.3);
 }
 
+/* ---- Quest Preview List ---- */
+.quest-available-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.quest-preview-toggle {
+  font-size: 6px;
+  margin-right: 5px;
+  color: #9d9dc5;
+}
+
+.quest-available-count {
+  font-size: 6px;
+  color: #888ab0;
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.quest-preview-list {
+  background: rgba(10, 10, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quest-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  font-size: 7px;
+}
+
+.quest-preview-item.done {
+  opacity: 0.5;
+}
+
+.quest-preview-order {
+  color: #9d9dc5;
+  min-width: 14px;
+}
+
+.quest-preview-name {
+  color: #c8c8ff;
+  font-weight: 600;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.quest-preview-desc {
+  color: #888ab0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-preview-reward {
+  color: #ffd700;
+  flex-shrink: 0;
+}
+
+.quest-preview-check {
+  color: #4caf50;
+  flex-shrink: 0;
+}
+
+/* ---- Locked Quest Label ---- */
+.journal-task-locked-label {
+  font-size: 7px;
+  color: #555a87;
+  font-style: italic;
+  margin-top: 4px;
+}
+
 /* ---- Pinned Quest Tracker (on Locations screen) ---- */
 .pinned-quest-tracker {
   background: rgba(10, 10, 30, 0.85);

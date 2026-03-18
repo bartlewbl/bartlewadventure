@@ -182,6 +182,7 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
 
 // Active Quest Lines overview tab
 function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
+  const [previewKey, setPreviewKey] = useState(null);
   const activeLines = tasks.activeQuestLines || [];
   const slotsUsed = activeLines.length;
 
@@ -238,16 +239,16 @@ function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
   // Available quest lines to activate
   const availableLines = [];
   if (!activeLines.includes('tutorial') && !isTutorialComplete(tasks.tutorialClaimed || [])) {
-    availableLines.push({ key: 'tutorial', name: 'Tutorial', desc: 'Learn the basics' });
+    availableLines.push({ key: 'tutorial', name: 'Tutorial', desc: 'Learn the basics', quests: TUTORIAL_QUESTS, claimed: tasks.tutorialClaimed || [] });
   }
   if (!activeLines.includes('mission') && isTutorialComplete(tasks.tutorialClaimed || [])
     && !STORY_MISSIONS.every(m => (tasks.missionClaimed || []).includes(m.id))) {
-    availableLines.push({ key: 'mission', name: 'Story Missions', desc: 'Follow the main storyline' });
+    availableLines.push({ key: 'mission', name: 'Story Missions', desc: 'Follow the main storyline', quests: STORY_MISSIONS, claimed: tasks.missionClaimed || [] });
   }
   for (const chain of SIDE_QUEST_CHAINS) {
     const lineKey = `side_${chain.chainId}`;
     if (!activeLines.includes(lineKey) && !isSideChainComplete(chain.chainId, tasks.sideQuestClaimed || [])) {
-      availableLines.push({ key: lineKey, name: chain.chainName, desc: chain.chainDescription });
+      availableLines.push({ key: lineKey, name: chain.chainName, desc: chain.chainDescription, quests: chain.quests, claimed: tasks.sideQuestClaimed || [] });
     }
   }
 
@@ -309,21 +310,46 @@ function QuestSlotsTab({ tasks, stats, onActivate, onAbandon }) {
             <div className="journal-section-title">Available Quest Lines</div>
           </div>
           <div className="quest-available-list">
-            {availableLines.map(line => (
-              <div key={line.key} className="quest-available-card">
-                <div className="quest-available-info">
-                  <div className="quest-available-name">{line.name}</div>
-                  <div className="quest-available-desc">{line.desc}</div>
+            {availableLines.map(line => {
+              const isExpanded = previewKey === line.key;
+              return (
+                <div key={line.key} className="quest-available-card-wrapper">
+                  <div className="quest-available-card">
+                    <div className="quest-available-info" onClick={() => setPreviewKey(isExpanded ? null : line.key)} style={{ cursor: 'pointer' }}>
+                      <div className="quest-available-name">
+                        <span className="quest-preview-toggle">{isExpanded ? '\u25BC' : '\u25B6'}</span>
+                        {line.name}
+                        <span className="quest-available-count">{line.quests.length} quests</span>
+                      </div>
+                      <div className="quest-available-desc">{line.desc}</div>
+                    </div>
+                    <button
+                      className={`btn btn-sm quest-available-activate ${!canAdd ? 'disabled' : ''}`}
+                      onClick={() => canAdd && onActivate(line.key)}
+                      disabled={!canAdd}
+                    >
+                      {canAdd ? 'Activate' : 'Full'}
+                    </button>
+                  </div>
+                  {isExpanded && (
+                    <div className="quest-preview-list">
+                      {line.quests.map(q => {
+                        const done = line.claimed.includes(q.id);
+                        return (
+                          <div key={q.id} className={`quest-preview-item ${done ? 'done' : ''}`}>
+                            <span className="quest-preview-order">{q.order}.</span>
+                            <span className="quest-preview-name">{q.name}</span>
+                            <span className="quest-preview-desc">{q.description}</span>
+                            <span className="quest-preview-reward">+{q.reward.gold}g</span>
+                            {done && <span className="quest-preview-check">{'\u2713'}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <button
-                  className={`btn btn-sm quest-available-activate ${!canAdd ? 'disabled' : ''}`}
-                  onClick={() => canAdd && onActivate(line.key)}
-                  disabled={!canAdd}
-                >
-                  {canAdd ? 'Activate' : 'Full'}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -373,9 +399,13 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
           return (
             <div key={quest.id} className="journal-task-card locked">
               <div className="journal-task-header">
-                <span className="journal-task-name">Step {quest.order}: ???</span>
+                <span className="journal-task-name">Step {quest.order}: {quest.name}</span>
+                {quest.reward.gold && (
+                  <span className="journal-task-reward">+{quest.reward.gold}g</span>
+                )}
               </div>
-              <div className="journal-task-desc">Complete previous steps to unlock.</div>
+              <div className="journal-task-desc">{quest.description}</div>
+              <div className="journal-task-locked-label">Complete previous steps to unlock</div>
             </div>
           );
         }
@@ -493,9 +523,16 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
           return (
             <div key={mission.id} className="journal-task-card locked">
               <div className="journal-task-header">
-                <span className="journal-task-name">{mission.order}. ???</span>
+                <span className="journal-task-name">{mission.order}. {mission.name}</span>
+                {mission.reward.gold && (
+                  <span className="journal-task-reward">+{mission.reward.gold}g</span>
+                )}
               </div>
-              <div className="journal-task-desc">Complete previous missions to unlock.</div>
+              <div className="journal-task-desc">{mission.description}</div>
+              {mission.regionHint && (
+                <div className="journal-task-region">{mission.regionHint}</div>
+              )}
+              <div className="journal-task-locked-label">Complete previous missions to unlock</div>
             </div>
           );
         }
@@ -601,9 +638,13 @@ function SideQuestsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) 
           return (
             <div key={quest.id} className="journal-task-card locked">
               <div className="journal-task-header">
-                <span className="journal-task-name">{quest.order}. ???</span>
+                <span className="journal-task-name">{quest.order}. {quest.name}</span>
+                {quest.reward.gold && (
+                  <span className="journal-task-reward">+{quest.reward.gold}g</span>
+                )}
               </div>
-              <div className="journal-task-desc">Complete previous quests to unlock.</div>
+              <div className="journal-task-desc">{quest.description}</div>
+              <div className="journal-task-locked-label">Complete previous quests to unlock</div>
             </div>
           );
         }
