@@ -1219,16 +1219,93 @@ export const ENERGY_DRINK_TIERS = [
   { name: 'Hyperdrive Elixir', baseEnergy: 50 },
 ];
 
+// ---- CLASS-SPECIFIC ITEM RESTRICTIONS ----
+
+const ALL_CLASS_IDS = ['berserker', 'warrior', 'thief', 'mage', 'necromancer'];
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+// Weapon-specific class keywords (checked first for weapon slot)
+const WEAPON_CLASS_KEYWORDS = {
+  berserker: ['axe', 'club', 'maul', 'cleaver', 'bludgeon', 'hammer', 'buzzsaw', 'reaver', 'greatsword', 'guillotine', 'crusher', 'wrath'],
+  warrior: ['sword', 'halberd', 'falchion', 'pike', 'claymore', 'saber', 'longsword', 'warblade', 'flamberge', 'spear', 'baton'],
+  thief: ['dagger', 'shiv', 'knife', 'katana', 'stiletto', 'rapier', 'switchblade', 'machete', 'tanto', 'whip', 'lancet', 'scimitar'],
+  mage: ['staff', 'rod', 'wand', 'splicer', 'starblade'],
+  necromancer: ['scythe', 'glaive', 'trident'],
+};
+
+// Global thematic keywords (all slots, checked after weapon-specific)
+const GLOBAL_CLASS_KEYWORDS = {
+  berserker: ['berserker', 'frenzy', 'annihilat', 'havoc', 'doomsday', 'warhead', 'warcry', 'assault', 'titan'],
+  warrior: ['sentinel', 'vanguard', 'bastion', 'bulwark', 'rampart', 'ironclad', 'fortress', 'pavise', 'fortify'],
+  thief: ['phantom', 'assassin', 'pickpocket', 'nightstalk', 'catfoot', 'ghostweave', 'shadow', 'flicker'],
+  mage: ['arcane', 'oracle', 'mystic', 'celestial', 'prism', 'aurora', 'hologram', 'singularity', 'nebula', 'binary'],
+  necromancer: ['wraith', 'cursed', 'nightshade', 'blight', 'plague', 'rot ', 'drain', 'void', 'null', 'entropy', 'fungal', 'spectral', 'miasma'],
+};
+
+function getItemClasses(name, slot, level, rarity) {
+  // Class-agnostic: level 1 Common starter items
+  if (level <= 1 && rarity === 'Common') return null;
+
+  const lowerName = name.toLowerCase();
+
+  // Check weapon-specific keywords first
+  if (slot === 'weapon') {
+    for (const classId of ALL_CLASS_IDS) {
+      const keywords = WEAPON_CLASS_KEYWORDS[classId];
+      if (keywords && keywords.some(kw => lowerName.includes(kw))) {
+        return [classId];
+      }
+    }
+  }
+
+  // Check global keywords
+  for (const classId of ALL_CLASS_IDS) {
+    const keywords = GLOBAL_CLASS_KEYWORDS[classId];
+    if (keywords && keywords.some(kw => lowerName.includes(kw))) {
+      return [classId];
+    }
+  }
+
+  // Hash-based fallback for even distribution
+  return [ALL_CLASS_IDS[simpleHash(name) % 5]];
+}
+
+export function canClassEquip(item, playerClass) {
+  if (!item.classes) return true; // null/undefined = class-agnostic
+  return item.classes.includes(playerClass);
+}
+
+export function getClassName(classId) {
+  return CHARACTER_CLASSES[classId]?.name || classId;
+}
+
+export function getClassColor(classId) {
+  return CHARACTER_CLASSES[classId]?.color || '#ccc';
+}
+
 // ---- ITEM LIBRARY ----
 function createGearList(slot, icon, entries) {
-  return entries.map(entry => ({
-    ...entry,
-    slot,
-    icon,
-    baseAtk: entry.baseAtk ?? 0,
-    baseDef: entry.baseDef ?? 0,
-    weight: entry.weight ?? (RARITY_LOOKUP[entry.rarity]?.weight ?? 1),
-  }));
+  return entries.map(entry => {
+    const item = {
+      ...entry,
+      slot,
+      icon,
+      baseAtk: entry.baseAtk ?? 0,
+      baseDef: entry.baseDef ?? 0,
+      weight: entry.weight ?? (RARITY_LOOKUP[entry.rarity]?.weight ?? 1),
+    };
+    if (!item.classes) {
+      item.classes = getItemClasses(item.name, slot, item.level, item.rarity);
+    }
+    return item;
+  });
 }
 
 export const ITEM_LIBRARY = {

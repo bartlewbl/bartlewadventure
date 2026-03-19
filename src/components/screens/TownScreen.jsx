@@ -117,7 +117,7 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
 
   const canTravel = latestLocation && (energy ?? 0) >= (energyCost ?? 10);
 
-  const featuredItems = useMemo(() => getDailyFeaturedItems(player?.level ?? 1, clock.shopSeed), [player?.level, clock.shopSeed]);
+  const featuredItems = useMemo(() => getDailyFeaturedItems(player?.level ?? 1, clock.shopSeed, player?.characterClass), [player?.level, clock.shopSeed, player?.characterClass]);
 
   const equippedSlots = Object.entries(equipment).filter(([, item]) => item);
   const emptySlots = Object.entries(equipment).filter(([, item]) => !item);

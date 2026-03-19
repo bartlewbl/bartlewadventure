@@ -1491,6 +1491,10 @@ function gameReducer(state, action) {
       if (item.level && item.level > state.player.level) {
         return { ...state, message: `You need to be level ${item.level} to equip ${item.name}!` };
       }
+      if (item.classes && !item.classes.includes(state.player.characterClass)) {
+        const classNames = item.classes.map(c => CHARACTER_CLASSES[c]?.name || c).join(', ');
+        return { ...state, message: `${item.name} can only be equipped by: ${classNames}` };
+      }
       let slot = item.slot;
       const p = { ...state.player, equipment: { ...state.player.equipment } };
       // For accessories, support dual ring slots

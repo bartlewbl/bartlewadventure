@@ -59,6 +59,7 @@ function buildGearDrop(template, monsterLevel, dropType) {
     atk,
     def,
     icon: template.icon,
+    classes: template.classes || null,
     sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
   };
 }
@@ -259,7 +260,7 @@ export function getShopEnergyDrinks(playerLevel) {
   });
 }
 
-export function getDailyFeaturedItems(playerLevel, shopSeed) {
+export function getDailyFeaturedItems(playerLevel, shopSeed, playerClass) {
   const seed = shopSeed != null ? shopSeed : (() => {
     const today = new Date();
     return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
@@ -283,7 +284,8 @@ export function getDailyFeaturedItems(playerLevel, shopSeed) {
     if (!pool) continue;
 
     const rarity = seededPickWeighted(extraordinaryRarities, rng);
-    const candidates = pool.filter(item => item.rarity === rarity.name && item.level <= Math.max(playerLevel + 3, 5));
+    const classPool = playerClass ? pool.filter(t => !t.classes || t.classes.includes(playerClass)) : pool;
+    const candidates = classPool.filter(item => item.rarity === rarity.name && item.level <= Math.max(playerLevel + 3, 5));
     if (candidates.length === 0) continue;
 
     const template = candidates[Math.floor(rng() * candidates.length)];
@@ -313,6 +315,7 @@ export function getDailyFeaturedItems(playerLevel, shopSeed) {
       atk,
       def,
       icon: template.icon,
+      classes: template.classes || null,
       buyPrice,
       sellPrice: Math.max(10, Math.floor((atk + def) * 4 + template.level * 3 + rarityData.multiplier * 10)),
     });
@@ -322,15 +325,19 @@ export function getDailyFeaturedItems(playerLevel, shopSeed) {
 }
 
 // ---- ARMOURER SHOP: gear items for buy ----
-export function getArmourerStock(playerLevel, shopSeed) {
+export function getArmourerStock(playerLevel, shopSeed, playerClass) {
   const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring', 'gloves', 'amulet', 'belt', 'cape'];
   const items = [];
   const usedNames = new Set();
   const rng = shopSeed != null ? seededRandom(shopSeed + playerLevel * 7) : null;
 
   for (const type of gearTypes) {
-    const pool = ITEM_LIBRARY[type];
+    let pool = ITEM_LIBRARY[type];
     if (!pool) continue;
+    // Filter by player class
+    if (playerClass) {
+      pool = pool.filter(t => !t.classes || t.classes.includes(playerClass));
+    }
     // Pick items near player level
     const candidates = pool.filter(t => t.level <= playerLevel + 3 && t.level >= Math.max(1, playerLevel - 5));
     const source = candidates.length > 0 ? candidates : pool.filter(t => t.level <= playerLevel + 5);
@@ -372,6 +379,7 @@ export function getArmourerStock(playerLevel, shopSeed) {
         atk,
         def,
         icon: template.icon,
+        classes: template.classes || null,
         buyPrice,
         sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
       });
@@ -470,6 +478,7 @@ export function generateCraftedItem(templateId, playerLevel) {
     atk,
     def,
     icon: template.slot,
+    classes: template.classes || null,
     sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
   };
 }
