@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   BUILDINGS, BUILDING_MATERIALS, FUEL_ITEMS, BREWERY_RECIPES, SMELTER_RECIPES,
   WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus, getWarehouseBonus,
+  EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots,
 } from '../../data/baseData';
 
 const BUILDING_ICONS = {
@@ -15,6 +16,7 @@ const BUILDING_ICONS = {
   bank: '\uD83C\uDFE6',
   farm: '\uD83C\uDF3E',
   warehouse: '\uD83D\uDCE6',
+  incubator: '\uD83E\uDD5A',
   marketplace: '\uD83D\uDED2',
 };
 
@@ -30,6 +32,7 @@ const TAB_ICONS = {
   bank: '\uD83C\uDFE6',
   farm: '\uD83C\uDF3E',
   warehouse: '\uD83D\uDCE6',
+  incubator: '\uD83E\uDD5A',
 };
 
 // ---- Building Info Modal ----
@@ -54,6 +57,8 @@ function getBuildingBenefits(buildingId, def) {
       return ['Safely deposit gold (10% fee, no loss on death)', 'Freeze gold for interest (1% to 5% return)', 'Borrow up to 1,000g with 15% interest', 'Manage your finances strategically'];
     case 'farm':
       return ['Plant crops in 3 plots for passive resource gathering', 'Grow herbs, ores, crystals, and even gold', 'Crops take 30 min to 8 hours to mature', 'Great for stockpiling crafting materials'];
+    case 'incubator':
+      return ['Place rare eggs found from monsters to hatch them into pets', 'Eggs hatch over time into pets of varying rarity', 'Upgrade for more slots and faster hatching', 'Rarer eggs hatch into more powerful pets'];
     case 'warehouse':
       return ['Increases your inventory capacity by +20 slots', 'Upgrade through 5 tiers for +10 more each level', 'Base: 20 slots, Max: 80 slots at Legendary Vault', 'Essential for hoarding loot and materials'];
     default:
@@ -889,6 +894,122 @@ function BankPanel({ base, player, onDeposit, onWithdraw, onFreeze, onCollectFro
   );
 }
 
+function IncubatorPanel({ base, player, onPlaceEgg, onCollectHatch, onUpgrade }) {
+  const incubatorLevel = base.incubatorLevel || 1;
+  const current = BUILDINGS.incubator.upgrades.find(u => u.level === incubatorLevel);
+  const next = BUILDINGS.incubator.upgrades.find(u => u.level === incubatorLevel + 1);
+  const maxSlots = getIncubatorSlots(base);
+  const speedBonus = getIncubatorSpeedBonus(base);
+  const slots = base.incubatorSlots || [];
+  const now = Date.now();
+  const mats = base.materials || {};
+
+  // Find eggs in player inventory
+  const eggs = player.inventory.filter(i => i.type === 'egg');
+
+  return (
+    <div className="base-building-content">
+      <div className="base-section-title">Incubator</div>
+      <div className="base-section-desc">Place eggs found from monsters. They hatch into pets over time!</div>
+      <div className="base-inn-current">
+        <div className="base-inn-level">{current?.name || 'Basic Incubator'} (Tier {incubatorLevel})</div>
+        <div className="base-inn-bonus">{maxSlots} slot{maxSlots > 1 ? 's' : ''}{speedBonus > 0 ? ` | ${Math.round(speedBonus * 100)}% faster hatching` : ''}</div>
+      </div>
+
+      <div className="base-sub-label">Incubation Slots</div>
+      <div className="base-farm-plots">
+        {Array.from({ length: maxSlots }, (_, i) => {
+          const slot = slots[i];
+          if (!slot) {
+            return (
+              <div key={i} className="base-farm-plot empty">
+                <div className="base-farm-plot-label">Slot {i + 1} - Empty</div>
+                {eggs.length > 0 ? (
+                  <div className="base-recipe-list">
+                    {eggs.map(egg => (
+                      <div key={egg.id} className="base-recipe-item">
+                        <div className="base-recipe-info">
+                          <div className={`base-recipe-name rarity-${egg.rarityClass}`}>{egg.name}</div>
+                          <div className="base-recipe-desc">{egg.description}</div>
+                          <div className="base-recipe-mats">
+                            <span className="base-recipe-mat met">
+                              Hatch time: {formatIncubateTime(EGG_TYPES[egg.eggId]?.incubateTime, speedBonus)}
+                            </span>
+                          </div>
+                        </div>
+                        <button className="btn btn-sm" onClick={() => onPlaceEgg(egg.id)}>Place</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="base-empty-text">No eggs in inventory. Defeat monsters for a chance to find eggs!</div>
+                )}
+              </div>
+            );
+          }
+
+          const eggDef = EGG_TYPES[slot.eggId];
+          if (!eggDef) return null;
+          const effectiveTime = eggDef.incubateTime * (1 - speedBonus);
+          const elapsed = now - slot.placedAt;
+          const done = elapsed >= effectiveTime;
+          const progress = Math.min(100, (elapsed / effectiveTime) * 100);
+          const remaining = Math.max(0, effectiveTime - elapsed);
+          const mins = Math.ceil(remaining / 60000);
+          const hours = Math.floor(mins / 60);
+          const minsLeft = mins % 60;
+
+          return (
+            <div key={i} className={`base-farm-plot ${done ? 'ready' : 'growing'}`}>
+              <div className={`base-farm-plot-label rarity-${(slot.rarity || 'common').toLowerCase()}`}>
+                Slot {i + 1} - {slot.itemName}
+              </div>
+              <div className="base-craft-bar-track">
+                <div className="base-craft-bar-fill" style={{ width: `${progress}%` }} />
+              </div>
+              {done ? (
+                <button className="btn btn-sm base-collect-btn" onClick={() => onCollectHatch(i)}>Hatch!</button>
+              ) : (
+                <div className="base-craft-time">{hours > 0 ? `${hours}h ` : ''}{minsLeft}m remaining</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {next ? (
+        <div className="base-upgrade-section">
+          <div className="base-sub-label">Upgrade to: {next.name}</div>
+          <div className="base-upgrade-desc">{next.desc}</div>
+          <div className="base-build-costs">
+            <div className={`base-cost-item ${player.gold >= next.upgradeCost.gold ? 'met' : 'unmet'}`}>
+              {next.upgradeCost.gold}g {player.gold < next.upgradeCost.gold ? `(have ${player.gold}g)` : ''}
+            </div>
+            {Object.entries(next.upgradeCost.materials || {}).map(([id, qty]) => (
+              <div key={id} className={`base-cost-item ${(mats[id] || 0) >= qty ? 'met' : 'unmet'}`}>
+                {qty}x {BUILDING_MATERIALS[id]?.name || id} ({mats[id] || 0})
+              </div>
+            ))}
+          </div>
+          <button className="btn btn-sm" onClick={onUpgrade}>Upgrade</button>
+        </div>
+      ) : (
+        <div className="base-max-level">Incubator at max level!</div>
+      )}
+    </div>
+  );
+}
+
+function formatIncubateTime(ms, speedBonus) {
+  if (!ms) return '???';
+  const effective = ms * (1 - (speedBonus || 0));
+  const mins = Math.ceil(effective / 60000);
+  const hours = Math.floor(mins / 60);
+  const minsLeft = mins % 60;
+  if (hours > 0) return `${hours}h ${minsLeft}m`;
+  return `${minsLeft}m`;
+}
+
 // ---- Main Base Screen ----
 
 const TABS = [
@@ -903,6 +1024,7 @@ const TABS = [
   { id: 'bank', label: 'Bank' },
   { id: 'farm', label: 'Farm' },
   { id: 'warehouse', label: 'Storage' },
+  { id: 'incubator', label: 'Eggs' },
 ];
 
 export default function BaseScreen({
@@ -914,6 +1036,7 @@ export default function BaseScreen({
   onBankDeposit, onBankWithdraw, onBankFreeze, onBankCollectFrozen, onBankLoan, onBankRepay,
   onStartSpar, onSparAttack, onSparSkill, onResetSpar,
   onFarmPlant, onFarmHarvest, onUpgradeWarehouse,
+  onPlaceEgg, onCollectHatch, onUpgradeIncubator,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -1031,6 +1154,16 @@ export default function BaseScreen({
       case 'warehouse':
         if (!buildings.warehouse?.built) return renderBuildingOrConstruct('warehouse');
         return <WarehousePanel base={base} player={player} onUpgrade={onUpgradeWarehouse} />;
+
+      case 'incubator':
+        if (!buildings.incubator?.built) return renderBuildingOrConstruct('incubator');
+        return (
+          <IncubatorPanel
+            base={base} player={player}
+            onPlaceEgg={onPlaceEgg} onCollectHatch={onCollectHatch}
+            onUpgrade={onUpgradeIncubator}
+          />
+        );
 
       default:
         return null;

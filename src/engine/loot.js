@@ -2,7 +2,7 @@
 // All item creation logic extracted from gameData.js
 
 import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS } from '../data/gameData';
-import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem } from '../data/baseData';
+import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem } from '../data/baseData';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
 
 function pickFromLibrary(pool, targetLevel) {
@@ -450,4 +450,21 @@ export function generateCampLoot(lootTier, playerLevel) {
   }
 
   return results;
+}
+
+// Roll for a rare egg drop based on the region the player is in
+export function rollEggDrop(regionId) {
+  const config = EGG_DROP_CONFIG[regionId];
+  if (!config) return null;
+  if (Math.random() > config.dropRate) return null;
+
+  const totalWeight = config.eggs.reduce((s, e) => s + e.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const entry of config.eggs) {
+    roll -= entry.weight;
+    if (roll <= 0) {
+      return createEggItem(entry.id);
+    }
+  }
+  return createEggItem(config.eggs[config.eggs.length - 1].id);
 }

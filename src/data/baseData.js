@@ -334,6 +334,27 @@ export const BUILDINGS = {
     ],
     levelReq: 4,
   },
+  incubator: {
+    id: 'incubator',
+    name: 'Incubator',
+    description: 'Place rare eggs found from monsters to hatch them into pets over time.',
+    buildCost: { gold: 1200, materials: { 'stone-block': 12, 'crystal-shard': 4, 'copper-wire': 6, 'scrap-wood': 15, 'herb-bundle': 5 } },
+    icon: 'incubator',
+    levelReq: 8,
+    upgrades: [
+      { level: 1, name: 'Basic Incubator', slots: 1, desc: '1 egg slot' },
+      {
+        level: 2, name: 'Heated Incubator', slots: 2, desc: '2 egg slots, 15% faster hatching',
+        speedBonus: 0.15,
+        upgradeCost: { gold: 2000, materials: { 'crystal-shard': 5, 'charcoal': 8, 'copper-wire': 4, 'coal-chunk': 3 } },
+      },
+      {
+        level: 3, name: 'Arcane Incubator', slots: 3, desc: '3 egg slots, 30% faster hatching',
+        speedBonus: 0.30,
+        upgradeCost: { gold: 4000, materials: { 'crystal-shard': 8, 'starlight-dust': 3, 'void-essence': 1, 'plasma-core': 2 } },
+      },
+    ],
+  },
   warehouse: {
     id: 'warehouse',
     name: 'Warehouse',
@@ -710,6 +731,139 @@ export const CRAFTED_ITEMS = {
   'crafted-starlight-shroud': { name: 'Starlight Shroud', slot: 'cape', rarity: 'Epic', baseAtk: 7, baseDef: 12, baseLevel: 22 },
 };
 
+// ---- EGG ITEMS ----
+// Extremely rare drops from monsters. Can be placed in the Incubator to hatch into pets.
+export const EGG_TYPES = {
+  'common-egg': {
+    id: 'common-egg', name: 'Mysterious Egg', type: 'egg',
+    rarity: 'Common', sellPrice: 25,
+    description: 'A warm, slightly glowing egg. Something stirs inside.',
+    incubateTime: 30 * 60 * 1000, // 30 minutes
+    hatchTable: [
+      { petId: 'fire-imp', weight: 30 },
+      { petId: 'stone-turtle', weight: 30 },
+      { petId: 'forest-sprite', weight: 25 },
+      { petId: 'war-pup', weight: 25 },
+    ],
+  },
+  'uncommon-egg': {
+    id: 'uncommon-egg', name: 'Gleaming Egg', type: 'egg',
+    rarity: 'Uncommon', sellPrice: 80,
+    description: 'A polished egg that pulses with faint energy.',
+    incubateTime: 2 * 60 * 60 * 1000, // 2 hours
+    hatchTable: [
+      { petId: 'shadow-cat', weight: 25 },
+      { petId: 'iron-golem', weight: 25 },
+      { petId: 'moon-fox', weight: 25 },
+      { petId: 'mystic-owl', weight: 25 },
+    ],
+  },
+  'rare-egg': {
+    id: 'rare-egg', name: 'Radiant Egg', type: 'egg',
+    rarity: 'Rare', sellPrice: 200,
+    description: 'A brilliant egg humming with power. Rare indeed.',
+    incubateTime: 6 * 60 * 60 * 1000, // 6 hours
+    hatchTable: [
+      { petId: 'thunder-hawk', weight: 35 },
+      { petId: 'crystal-guardian', weight: 35 },
+      { petId: 'shadow-cat', weight: 15 },
+      { petId: 'moon-fox', weight: 15 },
+    ],
+  },
+  'epic-egg': {
+    id: 'epic-egg', name: 'Prismatic Egg', type: 'egg',
+    rarity: 'Epic', sellPrice: 500,
+    description: 'An egg that shifts through every color. Immense power sleeps within.',
+    incubateTime: 12 * 60 * 60 * 1000, // 12 hours
+    hatchTable: [
+      { petId: 'void-serpent', weight: 30 },
+      { petId: 'celestial-phoenix', weight: 30 },
+      { petId: 'thunder-hawk', weight: 20 },
+      { petId: 'crystal-guardian', weight: 20 },
+    ],
+  },
+  'legendary-egg': {
+    id: 'legendary-egg', name: 'Celestial Egg', type: 'egg',
+    rarity: 'Legendary', sellPrice: 1500,
+    description: 'An egg wreathed in starfire. Legends speak of what lies within.',
+    incubateTime: 24 * 60 * 60 * 1000, // 24 hours
+    hatchTable: [
+      { petId: 'dragon-whelp', weight: 40 },
+      { petId: 'celestial-phoenix', weight: 30 },
+      { petId: 'void-serpent', weight: 30 },
+    ],
+  },
+};
+
+// Egg drop chances per region (checked after battle victory)
+// Overall chance is very low; higher-tier regions can drop rarer eggs
+export const EGG_DROP_CONFIG = {
+  'neon-district': {
+    dropRate: 0.008, // 0.8% chance per kill
+    eggs: [
+      { id: 'common-egg', weight: 90 },
+      { id: 'uncommon-egg', weight: 10 },
+    ],
+  },
+  'frozen-wastes': {
+    dropRate: 0.010,
+    eggs: [
+      { id: 'common-egg', weight: 70 },
+      { id: 'uncommon-egg', weight: 25 },
+      { id: 'rare-egg', weight: 5 },
+    ],
+  },
+  'scorched-badlands': {
+    dropRate: 0.012,
+    eggs: [
+      { id: 'common-egg', weight: 55 },
+      { id: 'uncommon-egg', weight: 30 },
+      { id: 'rare-egg', weight: 12 },
+      { id: 'epic-egg', weight: 3 },
+    ],
+  },
+  'toxic-marshlands': {
+    dropRate: 0.012,
+    eggs: [
+      { id: 'common-egg', weight: 50 },
+      { id: 'uncommon-egg', weight: 30 },
+      { id: 'rare-egg', weight: 15 },
+      { id: 'epic-egg', weight: 5 },
+    ],
+  },
+  'abyssal-depths': {
+    dropRate: 0.015,
+    eggs: [
+      { id: 'common-egg', weight: 35 },
+      { id: 'uncommon-egg', weight: 30 },
+      { id: 'rare-egg', weight: 20 },
+      { id: 'epic-egg', weight: 12 },
+      { id: 'legendary-egg', weight: 3 },
+    ],
+  },
+  'celestial-highlands': {
+    dropRate: 0.018,
+    eggs: [
+      { id: 'uncommon-egg', weight: 30 },
+      { id: 'rare-egg', weight: 30 },
+      { id: 'epic-egg', weight: 25 },
+      { id: 'legendary-egg', weight: 15 },
+    ],
+  },
+  'void-nexus': {
+    dropRate: 0.020,
+    eggs: [
+      { id: 'uncommon-egg', weight: 20 },
+      { id: 'rare-egg', weight: 25 },
+      { id: 'epic-egg', weight: 30 },
+      { id: 'legendary-egg', weight: 25 },
+    ],
+  },
+};
+
+// Max incubator slots (upgradeable)
+export const INCUBATOR_MAX_SLOTS = [1, 2, 3];
+
 // ---- SHOP MATERIAL ITEMS (rarely available) ----
 export const SHOP_MATERIALS = [
   { id: 'scrap-wood', buyPrice: 12, weight: 30 },
@@ -814,6 +968,9 @@ export function createInitialBase() {
     farmPlots: [],       // [{ cropId, plantedAt } | null, ...]
     // Warehouse
     warehouseLevel: 0,
+    // Incubator
+    incubatorLevel: 0,
+    incubatorSlots: [], // [{ eggId, placedAt } | null, ...]
   };
 }
 
@@ -856,6 +1013,42 @@ export function getWarehouseBonus(base) {
   const level = base.warehouseLevel || 1;
   const upgradeDef = BUILDINGS.warehouse.upgrades.find(u => u.level === level);
   return upgradeDef?.inventoryBonus || 0;
+}
+
+// ---- HELPER: Get incubator speed bonus ----
+export function getIncubatorSpeedBonus(base) {
+  if (!base?.buildings?.incubator?.built) return 0;
+  const level = base.incubatorLevel || 1;
+  const upgradeDef = BUILDINGS.incubator.upgrades.find(u => u.level === level);
+  return upgradeDef?.speedBonus || 0;
+}
+
+// ---- HELPER: Get incubator slot count ----
+export function getIncubatorSlots(base) {
+  if (!base?.buildings?.incubator?.built) return 0;
+  const level = base.incubatorLevel || 1;
+  const upgradeDef = BUILDINGS.incubator.upgrades.find(u => u.level === level);
+  return upgradeDef?.slots || 1;
+}
+
+// Generate an egg item for inventory/drops
+export function createEggItem(eggId) {
+  const egg = EGG_TYPES[eggId];
+  if (!egg) return null;
+  return {
+    id: uid(),
+    eggId: eggId,
+    name: egg.name,
+    type: 'egg',
+    slot: null,
+    level: 1,
+    rarity: egg.rarity,
+    rarityClass: egg.rarity.toLowerCase(),
+    rarityColor: null,
+    icon: 'egg',
+    description: egg.description,
+    sellPrice: egg.sellPrice,
+  };
 }
 
 // Generate a material item for inventory/drops

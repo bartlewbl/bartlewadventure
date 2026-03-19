@@ -27,6 +27,11 @@ export default function BattleResultScreen({ result, onContinue }) {
                 Material: {result.materialDrop.name}
               </div>
             )}
+            {result.eggDrop && (
+              <div className={`rarity-${(result.eggDrop.rarity || 'common').toLowerCase()}`}>
+                {'\uD83E\uDD5A'} Rare Find: {result.eggDrop.name} [{result.eggDrop.rarity}]
+              </div>
+            )}
             {!result.droppedItem && result.lostItemName && (
               <div className="rarity-common">
                 Pack full: {result.lostItemName} slipped away.

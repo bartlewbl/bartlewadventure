@@ -7,8 +7,8 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
-import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem } from '../engine/loot';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES } from '../data/baseData';
+import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import {
@@ -1973,6 +1973,12 @@ function gameReducer(state, action) {
         newBase.farmPlots = Array(buildingDef.plots).fill(null);
       }
 
+      // Incubator: initialize empty slots
+      if (action.buildingId === 'incubator') {
+        newBase.incubatorLevel = 1;
+        newBase.incubatorSlots = Array(BUILDINGS.incubator.upgrades[0].slots).fill(null);
+      }
+
       // Warehouse: set initial level and increase maxInventory
       const newPlayer = { ...state.player, gold: state.player.gold - cost.gold };
       if (action.buildingId === 'warehouse') {
@@ -2420,6 +2426,106 @@ function gameReducer(state, action) {
         },
         base: { ...state.base, materials: wMats, warehouseLevel: currentWLevel + 1 },
         message: `${nextWUpgrade.name}! ${nextWUpgrade.desc}`,
+      };
+    }
+
+    // ---- INCUBATOR ----
+    case 'BASE_PLACE_EGG': {
+      if (!state.base.buildings.incubator?.built) return { ...state, message: 'Build an Incubator first!' };
+      const eggItem = state.player.inventory.find(i => i.id === action.itemId && i.type === 'egg');
+      if (!eggItem) return { ...state, message: 'Egg not found in inventory!' };
+
+      const maxSlots = getIncubatorSlots(state.base);
+      const slots = [...(state.base.incubatorSlots || [])];
+      // Find empty slot
+      let placed = false;
+      for (let i = 0; i < maxSlots; i++) {
+        if (!slots[i]) {
+          slots[i] = { eggId: eggItem.eggId, placedAt: Date.now(), itemName: eggItem.name, rarity: eggItem.rarity };
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) return { ...state, message: 'All incubator slots are full!' };
+
+      return {
+        ...state,
+        player: { ...state.player, inventory: state.player.inventory.filter(i => i.id !== action.itemId) },
+        base: { ...state.base, incubatorSlots: slots },
+        message: `Placed ${eggItem.name} in the incubator!`,
+      };
+    }
+
+    case 'BASE_COLLECT_HATCH': {
+      if (!state.base.buildings.incubator?.built) return { ...state, message: 'Build an Incubator first!' };
+      const slotIdx = action.slotIndex;
+      const slots = [...(state.base.incubatorSlots || [])];
+      const slot = slots[slotIdx];
+      if (!slot) return { ...state, message: 'Nothing in that slot!' };
+
+      const eggDef = EGG_TYPES[slot.eggId];
+      if (!eggDef) return { ...state, message: 'Unknown egg type!' };
+
+      const speedBonus = getIncubatorSpeedBonus(state.base);
+      const effectiveTime = eggDef.incubateTime * (1 - speedBonus);
+      const now = Date.now();
+      if (now - slot.placedAt < effectiveTime) return { ...state, message: 'Still incubating...' };
+
+      // Pick a pet from the hatch table
+      const totalWeight = eggDef.hatchTable.reduce((s, e) => s + e.weight, 0);
+      let roll = Math.random() * totalWeight;
+      let hatchedPetId = eggDef.hatchTable[eggDef.hatchTable.length - 1].petId;
+      for (const entry of eggDef.hatchTable) {
+        roll -= entry.weight;
+        if (roll <= 0) {
+          hatchedPetId = entry.petId;
+          break;
+        }
+      }
+
+      // Create pet instance
+      const newPet = createPetInstance(hatchedPetId);
+      if (!newPet) return { ...state, message: 'Failed to hatch pet!' };
+
+      const updatedPets = { ...state.pets, ownedPets: [...state.pets.ownedPets, newPet] };
+
+      // Clear the slot
+      slots[slotIdx] = null;
+
+      const petDef = PET_CATALOG.find(p => p.id === hatchedPetId);
+      return {
+        ...state,
+        pets: updatedPets,
+        base: { ...state.base, incubatorSlots: slots },
+        message: `The egg hatched into a ${petDef?.name || 'pet'}! [${petDef?.rarity || 'Unknown'}]`,
+      };
+    }
+
+    case 'BASE_UPGRADE_INCUBATOR': {
+      if (!state.base.buildings.incubator?.built) return { ...state, message: 'Build an Incubator first!' };
+      const curLevel = state.base.incubatorLevel || 1;
+      const nextUpgrade = BUILDINGS.incubator.upgrades.find(u => u.level === curLevel + 1);
+      if (!nextUpgrade) return { ...state, message: 'Incubator is at max level!' };
+      const iCost = nextUpgrade.upgradeCost;
+      if (!iCost) return state;
+      if (state.player.gold < iCost.gold) return { ...state, message: `Need ${iCost.gold}g!` };
+
+      const iMats = { ...state.base.materials };
+      for (const [matId, qty] of Object.entries(iCost.materials || {})) {
+        if ((iMats[matId] || 0) < qty) {
+          const matName = BUILDING_MATERIALS[matId]?.name || matId;
+          return { ...state, message: `Need ${qty}x ${matName}!` };
+        }
+      }
+      for (const [matId, qty] of Object.entries(iCost.materials || {})) {
+        iMats[matId] -= qty;
+      }
+
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - iCost.gold },
+        base: { ...state.base, materials: iMats, incubatorLevel: curLevel + 1 },
+        message: `${nextUpgrade.name}! ${nextUpgrade.desc}`,
       };
     }
 
@@ -2976,6 +3082,17 @@ function handleVictory(state) {
     }
   }
 
+  // Roll for rare egg drop
+  let eggDrop = null;
+  if (regionId) {
+    eggDrop = rollEggDrop(regionId);
+    if (eggDrop && p.inventory.length < p.maxInventory) {
+      p.inventory = [...p.inventory, eggDrop];
+    } else if (eggDrop) {
+      eggDrop = null; // inventory full
+    }
+  }
+
   const droppedItem = rollDrop(m.dropTable, m.level);
   let lootAdded = false;
   let lostItemName = null;
@@ -3036,6 +3153,7 @@ function handleVictory(state) {
       victory: true, expGain, goldGain,
       droppedItem: lootAdded ? droppedItem : null,
       materialDrop: materialDrop || null,
+      eggDrop: eggDrop || null,
       lostItemName,
       levelUps: pendingLevels,
       newLevel: leveledPlayer.level,
@@ -3184,6 +3302,9 @@ export function useGameState(isLoggedIn) {
     baseFarmPlant: (plotIndex, cropId) => dispatch({ type: 'BASE_FARM_PLANT', plotIndex, cropId }),
     baseFarmHarvest: (plotIndex) => dispatch({ type: 'BASE_FARM_HARVEST', plotIndex }),
     baseUpgradeWarehouse: () => dispatch({ type: 'BASE_UPGRADE_WAREHOUSE' }),
+    basePlaceEgg: (itemId) => dispatch({ type: 'BASE_PLACE_EGG', itemId }),
+    baseCollectHatch: (slotIndex) => dispatch({ type: 'BASE_COLLECT_HATCH', slotIndex }),
+    baseUpgradeIncubator: () => dispatch({ type: 'BASE_UPGRADE_INCUBATOR' }),
     // Pet actions
     buyPet: (petId) => dispatch({ type: 'BUY_PET', petId }),
     buyPetItem: (item) => dispatch({ type: 'BUY_PET_ITEM', item }),
