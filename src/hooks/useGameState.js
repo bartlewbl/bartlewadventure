@@ -2904,9 +2904,9 @@ function handleVictory(state) {
     }
   }
 
-  // Roll for rare buff potion drop (3% chance)
+  // Roll for rare buff potion drop (0.5% chance)
   let buffPotionDrop = null;
-  if (Math.random() < 0.03) {
+  if (Math.random() < 0.005) {
     buffPotionDrop = generateBuffPotion();
     if (buffPotionDrop && p.inventory.length < p.maxInventory) {
       p.inventory = [...p.inventory, buffPotionDrop];
