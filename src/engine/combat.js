@@ -326,14 +326,14 @@ export function getEffectiveDef(monsterDef, effect) {
   return monsterDef;
 }
 
-// Critical hit chance for player: base 5%, modified by athletics and luck
+// Critical hit chance for player: base 3%, modified by athletics and luck
 export function getPlayerCritChance(player) {
-  let chance = 0.05; // 5% base crit chance
-  // Athletics adds crit chance: +0.3% per point
-  chance += (player.athletics || 0) * 0.003;
-  // Wisdom adds minor crit chance: +0.2% per point
-  chance += (player.wisdom || 0) * 0.002;
-  return Math.min(0.35, chance); // cap at 35%
+  let chance = 0.03; // 3% base crit chance
+  // Athletics adds crit chance: +0.2% per point
+  chance += (player.athletics || 0) * 0.002;
+  // Wisdom adds minor crit chance: +0.1% per point
+  chance += (player.wisdom || 0) * 0.001;
+  return Math.min(0.20, chance); // cap at 20%
 }
 
 // Critical hit multiplier for player
@@ -342,12 +342,12 @@ export function getPlayerCritMultiplier(player) {
   return mult;
 }
 
-// Monster critical hit chance: base 5%, scales with level
+// Monster critical hit chance: base 3%, scales with level
 export function getMonsterCritChance(monster) {
-  let chance = 0.05; // 5% base
+  let chance = 0.03; // 3% base
   // Higher level monsters crit slightly more often
-  chance += Math.min(0.10, (monster.level || 1) * 0.001);
-  return Math.min(0.15, chance); // cap at 15%
+  chance += Math.min(0.05, (monster.level || 1) * 0.0005);
+  return Math.min(0.08, chance); // cap at 8%
 }
 
 // Monster critical hit multiplier
