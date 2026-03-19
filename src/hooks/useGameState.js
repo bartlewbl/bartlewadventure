@@ -655,6 +655,7 @@ function gameReducer(state, action) {
           }
           newPlayer = { ...state.player, inventory: [...state.player.inventory, foundItem] };
           newText = text + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
+          var exploreFoundItem = foundItem;
         } else {
           newText = text + '\n\nYou find loot but your pack is full.';
         }
@@ -677,7 +678,7 @@ function gameReducer(state, action) {
         newStats = addStat(newStats, 'goldEarned', goldFound);
         newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldFound);
       }
-      return { ...state, exploreText: newText, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered, pets: petsAfterExplore };
+      return { ...state, exploreText: newText, exploreFoundItem: exploreFoundItem || null, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered, pets: petsAfterExplore };
     }
 
     case 'RANDOM_EVENT_CHOOSE': {

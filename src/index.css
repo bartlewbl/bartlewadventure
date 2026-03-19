@@ -3371,6 +3371,84 @@ body {
 .rarity-epic { color: #ffa726; }
 .rarity-legendary { color: #ffd700; }
 
+/* ---- ITEM DROP WINDOW ---- */
+.item-drop-window {
+  margin: 10px auto;
+  padding: 2px;
+  border-radius: 6px;
+  max-width: 280px;
+  background: linear-gradient(135deg, rgba(40, 40, 70, 0.95), rgba(20, 20, 45, 0.98));
+  border: 2px solid #555;
+  animation: itemDropAppear 0.4s ease-out;
+}
+.item-drop-window.rarity-common  { border-color: #888; }
+.item-drop-window.rarity-uncommon { border-color: #4fc3f7; box-shadow: 0 0 12px rgba(79, 195, 247, 0.25); }
+.item-drop-window.rarity-rare { border-color: #ab47bc; box-shadow: 0 0 12px rgba(171, 71, 188, 0.3); }
+.item-drop-window.rarity-epic { border-color: #ffa726; box-shadow: 0 0 14px rgba(255, 167, 38, 0.3); }
+.item-drop-window.rarity-legendary { border-color: #ffd700; box-shadow: 0 0 18px rgba(255, 215, 0, 0.35), inset 0 0 20px rgba(255, 215, 0, 0.05); }
+
+.item-drop-label {
+  text-align: center;
+  font-size: 8px;
+  padding: 5px 0 3px;
+  letter-spacing: 1px;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+.item-drop-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 10px;
+}
+
+.item-drop-icon {
+  font-size: 24px;
+  min-width: 36px;
+  text-align: center;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.item-drop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-drop-name {
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 3px;
+  text-shadow: 0 0 6px currentColor;
+}
+
+.item-drop-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 7px;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.item-drop-rarity {
+  font-size: 7px;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.item-drop-stats {
+  font-size: 8px;
+  color: #8f8;
+  margin-top: 2px;
+}
+
+@keyframes itemDropAppear {
+  0% { opacity: 0; transform: scale(0.8) translateY(-10px); }
+  60% { transform: scale(1.03) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* ---- MESSAGE OVERLAY ---- */
 .message-overlay {
   position: absolute;
