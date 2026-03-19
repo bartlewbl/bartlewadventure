@@ -165,3 +165,26 @@ export async function buyMarketListing(listingId) {
 export async function cancelMarketListing(listingId) {
   return apiFetch(`/market/${listingId}/cancel`, { method: 'POST' });
 }
+
+// Probability Config API
+export async function getProbabilityConfig() {
+  return apiFetch('/probability-config');
+}
+
+export async function updateProbabilityConfig(key, value) {
+  return apiFetch(`/probability-config/${encodeURIComponent(key)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ value }),
+  });
+}
+
+export async function bulkUpdateProbabilityConfig(updates) {
+  return apiFetch('/probability-config/bulk', {
+    method: 'POST',
+    body: JSON.stringify({ updates }),
+  });
+}
+
+export async function resetProbabilityConfig() {
+  return apiFetch('/probability-config/reset', { method: 'POST' });
+}
