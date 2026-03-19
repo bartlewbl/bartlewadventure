@@ -6,6 +6,7 @@ import {
   getCurrentSideQuest, isSideChainComplete,
   isQuestLineActive, canActivateQuestLine, MAX_ACTIVE_QUEST_LINES,
   MISSION_CHAPTER_COUNT,
+  getQuestProgress,
 } from '../../data/tasks';
 
 const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Story', 'Stats'];
@@ -268,7 +269,7 @@ function QuestSlotsTab({ tasks, stats, playerLevel, onActivate, onAbandon }) {
       )}
 
       {lineInfos.map(info => {
-        const prog = info.currentQuest ? (stats[info.currentQuest.stat] || 0) : 0;
+        const prog = info.currentQuest ? getQuestProgress(stats, info.currentQuest.id, info.currentQuest.stat, tasks.questBaselines) : 0;
         const target = info.currentQuest?.target || 1;
         const pct = Math.min(100, Math.floor((prog / target) * 100));
         return (
@@ -419,7 +420,7 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
           );
         }
 
-        const progress = stats[quest.stat] || 0;
+        const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
         return (
           <TaskCard
             key={quest.id}
@@ -546,7 +547,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
           );
         }
 
-        const progress = stats[mission.stat] || 0;
+        const progress = getQuestProgress(stats, mission.id, mission.stat, tasks.questBaselines);
         return (
           <TaskCard
             key={mission.id}
@@ -662,7 +663,7 @@ function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin
           );
         }
 
-        const progress = stats[quest.stat] || 0;
+        const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
         return (
           <TaskCard
             key={quest.id}
@@ -704,7 +705,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
   // Tutorial badge: count current tutorial if claimable and active
   const activeLines = tasks.activeQuestLines || [];
   const currentTut = getCurrentTutorial(tasks.tutorialClaimed || []);
-  const tutBadge = isQuestLineActive(activeLines, 'tutorial') && currentTut && (stats[currentTut.stat] || 0) >= currentTut.target ? 1 : 0;
+  const tutBadge = isQuestLineActive(activeLines, 'tutorial') && currentTut && getQuestProgress(stats, currentTut.id, currentTut.stat, tasks.questBaselines) >= currentTut.target ? 1 : 0;
 
   // Mission badge: count all claimable missions in unlocked chapters (if active)
   const missionClaimed = tasks.missionClaimed || [];
@@ -718,7 +719,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
         if (missionClaimed.includes(m.id)) continue;
         const prevM = m.order > 1 ? chMissions.find(x => x.order === m.order - 1) : null;
         if (prevM && !missionClaimed.includes(prevM.id)) continue;
-        if ((stats[m.stat] || 0) >= m.target) missionBadge++;
+        if (getQuestProgress(stats, m.id, m.stat, tasks.questBaselines) >= m.target) missionBadge++;
       }
     }
   }
@@ -729,7 +730,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
     const lineKey = `side_${chain.chainId}`;
     if (!isQuestLineActive(activeLines, lineKey)) continue;
     const currentQ = getCurrentSideQuest(chain.chainId, tasks.sideQuestClaimed || []);
-    if (currentQ && (stats[currentQ.stat] || 0) >= currentQ.target) sideBadge++;
+    if (currentQ && getQuestProgress(stats, currentQ.id, currentQ.stat, tasks.questBaselines) >= currentQ.target) sideBadge++;
   }
 
   // Quests tab badge = sum of quest line badges

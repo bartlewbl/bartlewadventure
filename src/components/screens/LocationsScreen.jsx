@@ -1,6 +1,7 @@
 import {
   TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
   getActiveDailyTasks, getActiveWeeklyTasks,
+  getQuestProgress,
 } from '../../data/tasks';
 
 function formatNumber(n) {
@@ -47,7 +48,7 @@ function PinnedQuestTracker({ pinnedQuests, stats, tasks }) {
     <div className="pinned-quest-tracker">
       <div className="pinned-quest-header">Tracked Quests</div>
       {activeQuests.map(quest => {
-        const progress = stats[quest.stat] || 0;
+        const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
         const pct = Math.min(100, Math.floor((progress / quest.target) * 100));
         const complete = progress >= quest.target;
         return (
