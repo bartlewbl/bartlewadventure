@@ -547,6 +547,7 @@ function gameReducer(state, action) {
         screen: 'explore',
         currentLocation: action.location,
         exploreText: 'You enter ' + action.location.name + '...',
+        exploreFoundItem: null,
         energy: energy - ENERGY_COST_PER_TRIP,
         lastEnergyUpdate,
       };
@@ -633,6 +634,7 @@ function gameReducer(state, action) {
       let newText = text;
       let newPlayer = state.player;
       let newDiscovered = state.discoveredItemLocations;
+      let newFoundItem = null;
       const lootTable = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'energy-drink'];
 
       if (Math.random() < lootChance) {
@@ -655,7 +657,7 @@ function gameReducer(state, action) {
           }
           newPlayer = { ...state.player, inventory: [...state.player.inventory, foundItem] };
           newText = text + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
-          var exploreFoundItem = foundItem;
+          newFoundItem = foundItem;
         } else {
           newText = text + '\n\nYou find loot but your pack is full.';
         }
@@ -678,7 +680,7 @@ function gameReducer(state, action) {
         newStats = addStat(newStats, 'goldEarned', goldFound);
         newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldFound);
       }
-      return { ...state, exploreText: newText, exploreFoundItem: exploreFoundItem || null, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered, pets: petsAfterExplore };
+      return { ...state, exploreText: newText, exploreFoundItem: newFoundItem, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered, pets: petsAfterExplore };
     }
 
     case 'RANDOM_EVENT_CHOOSE': {
@@ -1426,7 +1428,7 @@ function gameReducer(state, action) {
       }
       return {
         ...state, screen: 'explore', battle: null, battleResult: null, battleLog: [],
-        exploreText: 'You continue exploring ' + (state.currentLocation?.name || '') + '...',
+        exploreText: 'You continue exploring ' + (state.currentLocation?.name || '') + '...', exploreFoundItem: null,
       };
     }
 
