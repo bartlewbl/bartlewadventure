@@ -8,7 +8,7 @@ export default function ExploreScreen({ location, text, foundItem, onContinue, o
       {foundItem && <ItemDropWindow item={foundItem} />}
       <div className="explore-actions">
         <button className="btn btn-primary" onClick={onContinue}>Continue</button>
-        <button className="btn btn-back" onClick={onBack}>Return to Town</button>
+        <button className="btn btn-back" onClick={onBack}>Leave Location</button>
       </div>
     </div>
   );

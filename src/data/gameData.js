@@ -972,13 +972,13 @@ export const REGIONS = [
   {
     id: 'neon-district', name: 'Neon District',
     description: 'The urban sprawl where it all began. Neon lights and gutter grime.',
-    levelReq: 1, travelCost: 0, bgKey: 'neon-district',
+    levelReq: 1, travelCost: 200, bgKey: 'neon-district',
     locations: LOCATIONS,
   },
   {
     id: 'frozen-wastes', name: 'Frozen Wastes',
     description: 'A desolate tundra of howling blizzards and ancient ice.',
-    levelReq: 5, travelCost: 25, bgKey: 'frozen-wastes',
+    levelReq: 5, travelCost: 500, bgKey: 'frozen-wastes',
     locations: [
       { id: 'frostbite-outpost', name: 'Frostbite Outpost', description: 'An abandoned outpost encrusted in rime and ice.', levelReq: 5,
         monsters: ['frost-wolf', 'ice-crawler', 'crystal-beetle', 'frost-spider', 'snow-wraith', 'frozen-vagrant'],
@@ -1003,7 +1003,7 @@ export const REGIONS = [
   {
     id: 'scorched-badlands', name: 'Scorched Badlands',
     description: 'Sun-blasted deserts and volcanic wastelands of searing heat.',
-    levelReq: 10, travelCost: 50, bgKey: 'scorched-badlands',
+    levelReq: 10, travelCost: 1000, bgKey: 'scorched-badlands',
     locations: [
       { id: 'ember-flats', name: 'Ember Flats', description: 'Cracked earth radiates heat from smoldering coal seams below.', levelReq: 10,
         monsters: ['sand-crawler', 'flame-beetle', 'ember-wolf', 'lava-slime', 'scorpion-drone', 'volcanic-bat'],
@@ -1028,7 +1028,7 @@ export const REGIONS = [
   {
     id: 'toxic-marshlands', name: 'Toxic Marshlands',
     description: 'Festering swamps choked with poisonous spores and rotting growth.',
-    levelReq: 18, travelCost: 100, bgKey: 'toxic-marshlands',
+    levelReq: 18, travelCost: 2500, bgKey: 'toxic-marshlands',
     locations: [
       { id: 'bogs-edge', name: 'Bog\'s Edge', description: 'Where solid ground ends and treacherous muck begins.', levelReq: 18,
         monsters: ['bog-lurker', 'plague-rat', 'toxic-frog', 'mire-snake', 'marsh-crawler', 'poison-bat'],
@@ -1053,7 +1053,7 @@ export const REGIONS = [
   {
     id: 'abyssal-depths', name: 'Abyssal Depths',
     description: 'Sunken ruins and ocean trenches teeming with deep-sea horrors.',
-    levelReq: 25, travelCost: 200, bgKey: 'abyssal-depths',
+    levelReq: 25, travelCost: 5000, bgKey: 'abyssal-depths',
     locations: [
       { id: 'tidal-caves', name: 'Tidal Caves', description: 'Sea caves flooded by the relentless tide.', levelReq: 25,
         monsters: ['tide-crawler', 'deep-angler', 'abyssal-jellyfish', 'barnacle-beast', 'void-fish', 'drowned-vagrant'],
@@ -1078,7 +1078,7 @@ export const REGIONS = [
   {
     id: 'celestial-highlands', name: 'Celestial Highlands',
     description: 'Floating islands bathed in starlight and guarded by divine constructs.',
-    levelReq: 35, travelCost: 350, bgKey: 'celestial-highlands',
+    levelReq: 35, travelCost: 10000, bgKey: 'celestial-highlands',
     locations: [
       { id: 'cloud-walkway', name: 'Cloud Walkway', description: 'Bridges of solidified cloud stretching between floating isles.', levelReq: 35,
         monsters: ['cloud-wisp', 'wind-dancer', 'storm-hawk', 'sky-wolf', 'solar-elemental', 'celestial-knight'],
@@ -1103,7 +1103,7 @@ export const REGIONS = [
   {
     id: 'void-nexus', name: 'Void Nexus',
     description: 'The edge of existence where reality unravels into nothingness.',
-    levelReq: 45, travelCost: 500, bgKey: 'void-nexus',
+    levelReq: 45, travelCost: 25000, bgKey: 'void-nexus',
     locations: [
       { id: 'rifts-edge', name: 'Rift\'s Edge', description: 'Where the fabric of reality begins to fray and tear.', levelReq: 45,
         monsters: ['rift-stalker', 'null-wraith', 'entropy-slime', 'void-wolf', 'dimension-crawler', 'chaos-phantom'],
