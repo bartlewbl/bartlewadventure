@@ -861,8 +861,93 @@ export const EGG_DROP_CONFIG = {
   },
 };
 
-// Max incubator slots (upgradeable)
-export const INCUBATOR_MAX_SLOTS = [1, 2, 3];
+// ---- INCUBATOR FOOD ----
+// Food items fuel the incubator. Without food, eggs won't progress.
+// Each food item provides a certain number of minutes of incubation fuel.
+export const INCUBATOR_FOOD = {
+  'dried-crickets': {
+    id: 'dried-crickets', name: 'Dried Crickets', type: 'incubator-food',
+    fuelMinutes: 15,
+    rarity: 'Common', buyPrice: 10, sellPrice: 3,
+    description: 'Crunchy dried insects. Basic incubator fuel.',
+  },
+  'nutrient-paste': {
+    id: 'nutrient-paste', name: 'Nutrient Paste', type: 'incubator-food',
+    fuelMinutes: 45,
+    rarity: 'Common', buyPrice: 25, sellPrice: 8,
+    description: 'A thick paste packed with vitamins. Steady incubator fuel.',
+  },
+  'golden-grub': {
+    id: 'golden-grub', name: 'Golden Grub', type: 'incubator-food',
+    fuelMinutes: 120,
+    rarity: 'Uncommon', buyPrice: 60, sellPrice: 20,
+    description: 'A plump golden larvae. Premium egg nourishment.',
+  },
+  'moonberry-jam': {
+    id: 'moonberry-jam', name: 'Moonberry Jam', type: 'incubator-food',
+    fuelMinutes: 300,
+    rarity: 'Rare', buyPrice: 140, sellPrice: 50,
+    description: 'Enchanted berry jam that accelerates egg development.',
+  },
+  'phoenix-nectar': {
+    id: 'phoenix-nectar', name: 'Phoenix Nectar', type: 'incubator-food',
+    fuelMinutes: 720,
+    rarity: 'Epic', buyPrice: 300, sellPrice: 110,
+    description: 'Legendary nectar said to awaken the strongest creatures.',
+  },
+};
+
+// Max incubator food capacity in minutes
+export const INCUBATOR_MAX_FOOD = 1440; // 24 hours
+
+// ---- GROCERY SHOP ----
+// Stock available at the grocery shop (food items for incubator and general consumables)
+export const GROCERY_ITEMS = [
+  {
+    id: 'shop-dried-crickets', foodId: 'dried-crickets',
+    name: 'Dried Crickets', type: 'incubator-food',
+    fuelMinutes: 15,
+    rarity: 'Common', buyPrice: 10, sellPrice: 3,
+    description: 'Crunchy dried insects. Basic incubator fuel. +15 min.',
+    levelReq: 1,
+  },
+  {
+    id: 'shop-nutrient-paste', foodId: 'nutrient-paste',
+    name: 'Nutrient Paste', type: 'incubator-food',
+    fuelMinutes: 45,
+    rarity: 'Common', buyPrice: 25, sellPrice: 8,
+    description: 'Thick vitamin paste. Steady incubator fuel. +45 min.',
+    levelReq: 1,
+  },
+  {
+    id: 'shop-golden-grub', foodId: 'golden-grub',
+    name: 'Golden Grub', type: 'incubator-food',
+    fuelMinutes: 120,
+    rarity: 'Uncommon', buyPrice: 60, sellPrice: 20,
+    description: 'Premium golden larvae. +2 hours of incubation.',
+    levelReq: 6,
+  },
+  {
+    id: 'shop-moonberry-jam', foodId: 'moonberry-jam',
+    name: 'Moonberry Jam', type: 'incubator-food',
+    fuelMinutes: 300,
+    rarity: 'Rare', buyPrice: 140, sellPrice: 50,
+    description: 'Enchanted jam. +5 hours of incubation.',
+    levelReq: 12,
+  },
+  {
+    id: 'shop-phoenix-nectar', foodId: 'phoenix-nectar',
+    name: 'Phoenix Nectar', type: 'incubator-food',
+    fuelMinutes: 720,
+    rarity: 'Epic', buyPrice: 300, sellPrice: 110,
+    description: 'Legendary nectar. +12 hours of incubation.',
+    levelReq: 18,
+  },
+];
+
+export function getGroceryStock(playerLevel) {
+  return GROCERY_ITEMS.filter(item => playerLevel >= item.levelReq);
+}
 
 // ---- SHOP MATERIAL ITEMS (rarely available) ----
 export const SHOP_MATERIALS = [
@@ -971,6 +1056,8 @@ export function createInitialBase() {
     // Incubator
     incubatorLevel: 0,
     incubatorSlots: [], // [{ eggId, placedAt } | null, ...]
+    incubatorFood: 0,   // minutes of food remaining
+    incubatorFoodLastUpdate: null,
   };
 }
 
@@ -1015,6 +1102,23 @@ export function getWarehouseBonus(base) {
   return upgradeDef?.inventoryBonus || 0;
 }
 
+// ---- HELPER: Get current incubator food (minutes remaining) ----
+// Food only depletes while there are eggs incubating
+export function getIncubatorFood(base) {
+  if (!base?.buildings?.incubator?.built) return 0;
+  let food = base.incubatorFood || 0;
+  const lastUpdate = base.incubatorFoodLastUpdate;
+  if (lastUpdate && food > 0) {
+    // Only consume food if there are active eggs
+    const hasActiveEggs = (base.incubatorSlots || []).some(s => s != null);
+    if (hasActiveEggs) {
+      const elapsed = (Date.now() - lastUpdate) / 60000; // minutes
+      food = Math.max(0, food - elapsed);
+    }
+  }
+  return food;
+}
+
 // ---- HELPER: Get incubator speed bonus ----
 export function getIncubatorSpeedBonus(base) {
   if (!base?.buildings?.incubator?.built) return 0;
@@ -1029,6 +1133,28 @@ export function getIncubatorSlots(base) {
   const level = base.incubatorLevel || 1;
   const upgradeDef = BUILDINGS.incubator.upgrades.find(u => u.level === level);
   return upgradeDef?.slots || 1;
+}
+
+// Generate a food item for inventory
+export function createFoodItem(foodId) {
+  const food = INCUBATOR_FOOD[foodId];
+  if (!food) return null;
+  return {
+    id: uid(),
+    foodId: foodId,
+    name: food.name,
+    type: 'incubator-food',
+    slot: null,
+    level: 1,
+    rarity: food.rarity,
+    rarityClass: food.rarity.toLowerCase(),
+    rarityColor: null,
+    icon: 'food',
+    description: food.description,
+    fuelMinutes: food.fuelMinutes,
+    sellPrice: food.sellPrice,
+    buyPrice: food.buyPrice,
+  };
 }
 
 // Generate an egg item for inventory/drops

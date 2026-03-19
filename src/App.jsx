@@ -424,6 +424,7 @@ export default function App() {
                 onFarmHarvest={actions.baseFarmHarvest}
                 onUpgradeWarehouse={actions.baseUpgradeWarehouse}
                 onPlaceEgg={actions.basePlaceEgg}
+                onFeedIncubator={actions.baseFeedIncubator}
                 onCollectHatch={actions.baseCollectHatch}
                 onUpgradeIncubator={actions.baseUpgradeIncubator}
               />

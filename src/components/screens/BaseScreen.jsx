@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   BUILDINGS, BUILDING_MATERIALS, FUEL_ITEMS, BREWERY_RECIPES, SMELTER_RECIPES,
   WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus, getWarehouseBonus,
-  EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots,
+  EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD,
 } from '../../data/baseData';
 
 const BUILDING_ICONS = {
@@ -894,7 +894,7 @@ function BankPanel({ base, player, onDeposit, onWithdraw, onFreeze, onCollectFro
   );
 }
 
-function IncubatorPanel({ base, player, onPlaceEgg, onCollectHatch, onUpgrade }) {
+function IncubatorPanel({ base, player, onPlaceEgg, onFeedIncubator, onCollectHatch, onUpgrade }) {
   const incubatorLevel = base.incubatorLevel || 1;
   const current = BUILDINGS.incubator.upgrades.find(u => u.level === incubatorLevel);
   const next = BUILDINGS.incubator.upgrades.find(u => u.level === incubatorLevel + 1);
@@ -904,16 +904,47 @@ function IncubatorPanel({ base, player, onPlaceEgg, onCollectHatch, onUpgrade })
   const now = Date.now();
   const mats = base.materials || {};
 
-  // Find eggs in player inventory
+  // Food status
+  const currentFood = getIncubatorFood(base);
+  const foodPercent = Math.min(100, (currentFood / INCUBATOR_MAX_FOOD) * 100);
+  const foodHours = Math.floor(currentFood / 60);
+  const foodMins = Math.floor(currentFood % 60);
+
+  // Find eggs and food in player inventory
   const eggs = player.inventory.filter(i => i.type === 'egg');
+  const foodItems = player.inventory.filter(i => i.type === 'incubator-food');
 
   return (
     <div className="base-building-content">
       <div className="base-section-title">Incubator</div>
-      <div className="base-section-desc">Place eggs found from monsters. They hatch into pets over time!</div>
+      <div className="base-section-desc">Place eggs found from monsters. Keep it fed to hatch pets!</div>
       <div className="base-inn-current">
         <div className="base-inn-level">{current?.name || 'Basic Incubator'} (Tier {incubatorLevel})</div>
         <div className="base-inn-bonus">{maxSlots} slot{maxSlots > 1 ? 's' : ''}{speedBonus > 0 ? ` | ${Math.round(speedBonus * 100)}% faster hatching` : ''}</div>
+      </div>
+
+      {/* Food Bar */}
+      <div className="base-fuel-panel">
+        <div className="base-section-title">{'\uD83C\uDF56'} Incubator Food</div>
+        <div className="base-fuel-bar-track">
+          <div className="base-fuel-bar-fill" style={{ width: `${foodPercent}%`, background: currentFood <= 0 ? '#a33' : undefined }} />
+          <span className="base-fuel-bar-text">{foodHours > 0 ? `${foodHours}h ` : ''}{foodMins}m / {INCUBATOR_MAX_FOOD / 60}h</span>
+        </div>
+        {currentFood <= 0 && <div className="base-warning">{'\u26A0'} No food! Eggs won't incubate. Buy food from the Grocery shop.</div>}
+
+        {foodItems.length > 0 && (
+          <div className="base-fuel-sources">
+            <div className="base-sub-label">Feed from inventory:</div>
+            {foodItems.map(item => (
+              <button key={item.id} className="btn btn-sm base-fuel-btn" onClick={() => onFeedIncubator(item.id)}>
+                {item.name} +{item.fuelMinutes}min
+              </button>
+            ))}
+          </div>
+        )}
+        {foodItems.length === 0 && currentFood <= 0 && (
+          <div className="base-empty-text">No food items. Visit the Grocery shop in town to buy incubator food.</div>
+        )}
       </div>
 
       <div className="base-sub-label">Incubation Slots</div>
@@ -937,7 +968,9 @@ function IncubatorPanel({ base, player, onPlaceEgg, onCollectHatch, onUpgrade })
                             </span>
                           </div>
                         </div>
-                        <button className="btn btn-sm" onClick={() => onPlaceEgg(egg.id)}>Place</button>
+                        <button className="btn btn-sm" onClick={() => onPlaceEgg(egg.id)} disabled={currentFood <= 0}>
+                          {currentFood <= 0 ? 'Need food' : 'Place'}
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -952,8 +985,10 @@ function IncubatorPanel({ base, player, onPlaceEgg, onCollectHatch, onUpgrade })
           if (!eggDef) return null;
           const effectiveTime = eggDef.incubateTime * (1 - speedBonus);
           const elapsed = now - slot.placedAt;
-          const done = elapsed >= effectiveTime;
-          const progress = Math.min(100, (elapsed / effectiveTime) * 100);
+          const done = elapsed >= effectiveTime && currentFood >= 0;
+          const progress = currentFood <= 0 && !done
+            ? Math.min(99, (elapsed / effectiveTime) * 100) // stall display if no food
+            : Math.min(100, (elapsed / effectiveTime) * 100);
           const remaining = Math.max(0, effectiveTime - elapsed);
           const mins = Math.ceil(remaining / 60000);
           const hours = Math.floor(mins / 60);
@@ -969,6 +1004,8 @@ function IncubatorPanel({ base, player, onPlaceEgg, onCollectHatch, onUpgrade })
               </div>
               {done ? (
                 <button className="btn btn-sm base-collect-btn" onClick={() => onCollectHatch(i)}>Hatch!</button>
+              ) : currentFood <= 0 ? (
+                <div className="base-craft-time" style={{ color: '#f66' }}>Paused - no food!</div>
               ) : (
                 <div className="base-craft-time">{hours > 0 ? `${hours}h ` : ''}{minsLeft}m remaining</div>
               )}
@@ -1036,7 +1073,7 @@ export default function BaseScreen({
   onBankDeposit, onBankWithdraw, onBankFreeze, onBankCollectFrozen, onBankLoan, onBankRepay,
   onStartSpar, onSparAttack, onSparSkill, onResetSpar,
   onFarmPlant, onFarmHarvest, onUpgradeWarehouse,
-  onPlaceEgg, onCollectHatch, onUpgradeIncubator,
+  onPlaceEgg, onFeedIncubator, onCollectHatch, onUpgradeIncubator,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -1160,8 +1197,8 @@ export default function BaseScreen({
         return (
           <IncubatorPanel
             base={base} player={player}
-            onPlaceEgg={onPlaceEgg} onCollectHatch={onCollectHatch}
-            onUpgrade={onUpgradeIncubator}
+            onPlaceEgg={onPlaceEgg} onFeedIncubator={onFeedIncubator}
+            onCollectHatch={onCollectHatch} onUpgrade={onUpgradeIncubator}
           />
         );
 

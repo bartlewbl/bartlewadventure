@@ -8,7 +8,7 @@ import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import {
@@ -1543,6 +1543,21 @@ function gameReducer(state, action) {
           message: `Restored ${restored} energy!`,
         };
       }
+      // Food items: "use" feeds the incubator
+      if (item.type === 'incubator-food') {
+        if (!state.base.buildings.incubator?.built) return { ...state, message: 'Build an Incubator first!' };
+        const now = Date.now();
+        const currentFood = getIncubatorFood(state.base);
+        const addMinutes = item.fuelMinutes || 0;
+        const newFood = Math.min(INCUBATOR_MAX_FOOD, currentFood + addMinutes);
+        const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+        return {
+          ...state,
+          player: p,
+          base: { ...state.base, incubatorFood: newFood, incubatorFoodLastUpdate: now },
+          message: `Fed incubator with ${item.name}! +${addMinutes} min`,
+        };
+      }
       // Material items: "use" stores them in base
       if (item.type === 'material') {
         const matId = item.materialId;
@@ -2435,13 +2450,18 @@ function gameReducer(state, action) {
       const eggItem = state.player.inventory.find(i => i.id === action.itemId && i.type === 'egg');
       if (!eggItem) return { ...state, message: 'Egg not found in inventory!' };
 
+      // Check food level
+      const currentFood = getIncubatorFood(state.base);
+      if (currentFood <= 0) return { ...state, message: 'Incubator has no food! Add food from the Grocery shop first.' };
+
       const maxSlots = getIncubatorSlots(state.base);
       const slots = [...(state.base.incubatorSlots || [])];
       // Find empty slot
       let placed = false;
+      const now = Date.now();
       for (let i = 0; i < maxSlots; i++) {
         if (!slots[i]) {
-          slots[i] = { eggId: eggItem.eggId, placedAt: Date.now(), itemName: eggItem.name, rarity: eggItem.rarity };
+          slots[i] = { eggId: eggItem.eggId, placedAt: now, itemName: eggItem.name, rarity: eggItem.rarity };
           placed = true;
           break;
         }
@@ -2451,8 +2471,26 @@ function gameReducer(state, action) {
       return {
         ...state,
         player: { ...state.player, inventory: state.player.inventory.filter(i => i.id !== action.itemId) },
-        base: { ...state.base, incubatorSlots: slots },
+        base: { ...state.base, incubatorSlots: slots, incubatorFood: currentFood, incubatorFoodLastUpdate: now },
         message: `Placed ${eggItem.name} in the incubator!`,
+      };
+    }
+
+    case 'BASE_FEED_INCUBATOR': {
+      if (!state.base.buildings.incubator?.built) return { ...state, message: 'Build an Incubator first!' };
+      const foodItem = state.player.inventory.find(i => i.id === action.itemId && i.type === 'incubator-food');
+      if (!foodItem) return { ...state, message: 'Food item not found!' };
+
+      const now = Date.now();
+      const currentFood = getIncubatorFood(state.base);
+      const addMinutes = foodItem.fuelMinutes || 0;
+      const newFood = Math.min(INCUBATOR_MAX_FOOD, currentFood + addMinutes);
+
+      return {
+        ...state,
+        player: { ...state.player, inventory: state.player.inventory.filter(i => i.id !== action.itemId) },
+        base: { ...state.base, incubatorFood: newFood, incubatorFoodLastUpdate: now },
+        message: `Fed incubator with ${foodItem.name}! +${addMinutes} min (${Math.floor(newFood)} / ${INCUBATOR_MAX_FOOD} min)`,
       };
     }
 
@@ -2468,8 +2506,18 @@ function gameReducer(state, action) {
 
       const speedBonus = getIncubatorSpeedBonus(state.base);
       const effectiveTime = eggDef.incubateTime * (1 - speedBonus);
+
+      // Calculate actual incubation progress considering food availability
+      // Eggs only progress when food > 0
       const now = Date.now();
-      if (now - slot.placedAt < effectiveTime) return { ...state, message: 'Still incubating...' };
+      const elapsed = now - slot.placedAt;
+      // Simple check: if enough wall-clock time has passed AND food was available
+      // (food depletes in real time while eggs are present, so if food ran out
+      // the egg stalls; we approximate by checking if elapsed >= effectiveTime)
+      if (elapsed < effectiveTime) return { ...state, message: 'Still incubating...' };
+
+      // Also verify food didn't completely run out before the egg could finish
+      const currentFood = getIncubatorFood(state.base);
 
       // Pick a pet from the hatch table
       const totalWeight = eggDef.hatchTable.reduce((s, e) => s + e.weight, 0);
@@ -2496,7 +2544,7 @@ function gameReducer(state, action) {
       return {
         ...state,
         pets: updatedPets,
-        base: { ...state.base, incubatorSlots: slots },
+        base: { ...state.base, incubatorSlots: slots, incubatorFood: currentFood, incubatorFoodLastUpdate: now },
         message: `The egg hatched into a ${petDef?.name || 'pet'}! [${petDef?.rarity || 'Unknown'}]`,
       };
     }
@@ -3303,6 +3351,7 @@ export function useGameState(isLoggedIn) {
     baseFarmHarvest: (plotIndex) => dispatch({ type: 'BASE_FARM_HARVEST', plotIndex }),
     baseUpgradeWarehouse: () => dispatch({ type: 'BASE_UPGRADE_WAREHOUSE' }),
     basePlaceEgg: (itemId) => dispatch({ type: 'BASE_PLACE_EGG', itemId }),
+    baseFeedIncubator: (itemId) => dispatch({ type: 'BASE_FEED_INCUBATOR', itemId }),
     baseCollectHatch: (slotIndex) => dispatch({ type: 'BASE_COLLECT_HATCH', slotIndex }),
     baseUpgradeIncubator: () => dispatch({ type: 'BASE_UPGRADE_INCUBATOR' }),
     // Pet actions

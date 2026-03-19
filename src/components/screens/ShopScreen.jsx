@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { getShopItems, getShopEnergyDrinks, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
+import { getGroceryStock } from '../../data/baseData';
 import useGameClock from '../../hooks/useGameClock';
 
 const SLOT_LABELS = {
@@ -15,6 +16,7 @@ const SLOT_LABELS = {
 const SHOPS = [
   { id: 'armourer', label: 'Armourer', icon: '\u2694', desc: 'Weapons & armor' },
   { id: 'brewer', label: 'Brewer', icon: '\u2697', desc: 'Potions & energy' },
+  { id: 'grocery', label: 'Grocery', icon: '\uD83D\uDED2', desc: 'Food for incubator' },
   { id: 'petshop', label: 'Pet Shop', icon: '\u{1F43E}', desc: 'Buy pets & pet items' },
   { id: 'featured', label: 'Featured', icon: '\u2605', desc: 'Daily deals' },
 ];
@@ -50,6 +52,7 @@ const statLine = (item) => {
     return stats.length ? stats.join('  ') : 'No bonuses';
   }
   if (item.type === 'energy-drink') return `Energy +${item.energyAmount}`;
+  if (item.type === 'incubator-food') return `Incubator +${item.fuelMinutes} min`;
   return `Heal ${item.healAmount} HP`;
 };
 
@@ -57,6 +60,7 @@ const typeLabel = (item) => {
   if (!item) return '';
   if (item.type === 'potion') return 'Potion';
   if (item.type === 'energy-drink') return 'Energy Drink';
+  if (item.type === 'incubator-food') return 'Incubator Food';
   return SLOT_LABELS[item.slot] || item.type;
 };
 
@@ -81,6 +85,8 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
   // Pet shop stock
   const petStock = useMemo(() => getPetShopStock(player.level), [player.level]);
   const petItemStock = useMemo(() => getPetItemShop(player.level), [player.level]);
+  // Grocery stock
+  const groceryStock = useMemo(() => getGroceryStock(player.level), [player.level]);
   // Featured — refreshes every 10 hours
   const featuredStock = useMemo(() => getDailyFeaturedItems(player.level, clock.shopSeed), [player.level, clock.shopSeed]);
 
@@ -205,6 +211,48 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                           <span className="shop-card-stats">{statLine(item)}</span>
                         </div>
+                      </div>
+                      <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
+                        title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
+                        <span className="shop-btn-price">{item.buyPrice}g</span>
+                        <span className="shop-btn-label">Buy</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {tab === 'sell' && renderSellList(player.inventory, player, onSell)}
+          </div>
+        </>
+      )}
+
+      {/* ===== GROCERY ===== */}
+      {activeShop === 'grocery' && (
+        <>
+          <div className="shop-tabs">
+            <button className={`shop-tab ${tab === 'buy' ? 'active' : ''}`} onClick={() => setTab('buy')}>Buy</button>
+            <button className={`shop-tab ${tab === 'sell' ? 'active' : ''}`} onClick={() => setTab('sell')}>Sell</button>
+          </div>
+
+          <div className="shop-content">
+            {tab === 'buy' && (
+              <div className="shop-list">
+                <div className="shop-featured-banner">Incubator Food - keeps your eggs warm and growing!</div>
+                {groceryStock.map(item => {
+                  const canAfford = player.gold >= item.buyPrice;
+                  const invFull = player.inventory.length >= player.maxInventory;
+                  return (
+                    <div key={item.id} className={`shop-card ${item.rarity?.toLowerCase() || ''} ${!canAfford ? 'unaffordable' : ''}`}>
+                      <div className="shop-card-left">
+                        <div className="shop-card-type">Incubator Food</div>
+                        <div className={`shop-card-name ${item.rarity?.toLowerCase() || ''}`}>{item.name}</div>
+                        <div className="shop-card-meta">
+                          <span className={`shop-rarity-badge ${item.rarity?.toLowerCase() || ''}`}>{item.rarity}</span>
+                          <span className="shop-card-stats">+{item.fuelMinutes} min incubation</span>
+                        </div>
+                        <div className="pet-ability-line">{item.description}</div>
                       </div>
                       <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
                         title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
