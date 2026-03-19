@@ -2155,6 +2155,11 @@ body {
   justify-content: center;
 }
 
+.screen-explore .item-drop-window {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
 /* ---- BATTLE SCREEN ---- */
 .screen-battle {
   justify-content: flex-start;
@@ -3377,9 +3382,14 @@ body {
   padding: 2px;
   border-radius: 6px;
   max-width: 280px;
+  width: 100%;
   background: linear-gradient(135deg, rgba(40, 40, 70, 0.95), rgba(20, 20, 45, 0.98));
   border: 2px solid #555;
   animation: itemDropAppear 0.4s ease-out;
+  line-height: 1.4;
+  font-size: 9px;
+  text-align: left;
+  color: #ddd;
 }
 .item-drop-window.rarity-common  { border-color: #888; }
 .item-drop-window.rarity-uncommon { border-color: #4fc3f7; box-shadow: 0 0 12px rgba(79, 195, 247, 0.25); }
