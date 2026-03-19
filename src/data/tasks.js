@@ -1665,11 +1665,23 @@ export function createInitialTaskProgress() {
     activeQuestLines: [],
     // Pinned quest IDs shown on location screen (max 3)
     pinnedQuests: [],
+    // Stat baselines for quest line quests: { [questId]: statValueWhenActivated }
+    // Progress = currentStat - baseline, so only post-acceptance actions count
+    questBaselines: {},
     // Seeds for cycle tracking
     lastDailySeed: getDailySeed(),
     lastWeeklySeed: getWeeklySeed(),
     lastMonthlySeed: getMonthlySeed(),
   };
+}
+
+// Get progress for a quest relative to its baseline (only counts post-acceptance actions)
+export function getQuestProgress(stats, questId, stat, baselines) {
+  const total = stats[stat] || 0;
+  const baseline = (baselines || {})[questId];
+  // If no baseline exists (legacy save), use full stat value for backward compat
+  if (baseline === undefined) return total;
+  return Math.max(0, total - baseline);
 }
 
 // Create initial stats object

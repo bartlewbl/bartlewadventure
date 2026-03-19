@@ -20,6 +20,7 @@ import {
   isQuestLineActive, canActivateQuestLine, getQuestLineKey, MAX_ACTIVE_QUEST_LINES,
   isDailyExpired, isWeeklyExpired, isMonthlyExpired,
   getDailySeed, getWeeklySeed, getMonthlySeed,
+  getQuestProgress,
 } from '../data/tasks';
 
 export const ENERGY_MAX = 100;
@@ -1698,7 +1699,7 @@ function gameReducer(state, action) {
         // Tutorial must be the current one (sequential)
         const currentTut = getCurrentTutorial(tasks.tutorialClaimed);
         if (!currentTut || currentTut.id !== taskId) return state;
-        progress = state.stats[taskDef?.stat] || 0;
+        progress = getQuestProgress(state.stats, taskId, taskDef?.stat, tasks.questBaselines);
       } else if (taskType === 'mission') {
         taskDef = STORY_MISSIONS.find(t => t.id === taskId);
         if (!taskDef) return state;
@@ -1712,7 +1713,7 @@ function gameReducer(state, action) {
           const prevMission = STORY_MISSIONS.find(m => m.chapter === taskDef.chapter && m.order === taskDef.order - 1);
           if (prevMission && !(tasks.missionClaimed || []).includes(prevMission.id)) return state;
         }
-        progress = state.stats[taskDef?.stat] || 0;
+        progress = getQuestProgress(state.stats, taskId, taskDef?.stat, tasks.questBaselines);
       } else if (taskType === 'sidequest') {
         const chainId = action.chainId;
         const chain = getSideQuestChain(chainId);
@@ -1722,7 +1723,7 @@ function gameReducer(state, action) {
         // Must be the current quest in the chain (sequential)
         const currentSQ = getCurrentSideQuest(chainId, tasks.sideQuestClaimed);
         if (!currentSQ || currentSQ.id !== taskId) return state;
-        progress = state.stats[taskDef?.stat] || 0;
+        progress = getQuestProgress(state.stats, taskId, taskDef?.stat, tasks.questBaselines);
       }
 
       if (!taskDef || progress < taskDef.target) return state;
@@ -1742,6 +1743,23 @@ function gameReducer(state, action) {
         ...tasks,
         [claimedKey]: [...(tasks[claimedKey] || []), taskId],
       };
+
+      // Set baseline for the next quest in the line so pre-existing stats don't count
+      let newBaselines = { ...(newTasks.questBaselines || {}) };
+      if (taskType === 'tutorial') {
+        const nextQ = getCurrentTutorial(newTasks.tutorialClaimed);
+        if (nextQ) newBaselines[nextQ.id] = newStats[nextQ.stat] || 0;
+      } else if (taskType === 'mission') {
+        const ch = getUnlockedChapter(newTasks.missionClaimed);
+        const chMissions = getMissionsForChapter(ch);
+        const nextQ = chMissions.find(m => !newTasks.missionClaimed.includes(m.id));
+        if (nextQ) newBaselines[nextQ.id] = newStats[nextQ.stat] || 0;
+      } else if (taskType === 'sidequest') {
+        const chainId = action.chainId;
+        const nextQ = getCurrentSideQuest(chainId, newTasks.sideQuestClaimed);
+        if (nextQ) newBaselines[nextQ.id] = newStats[nextQ.stat] || 0;
+      }
+      newTasks.questBaselines = newBaselines;
 
       // Auto-remove from pinned if it was pinned
       if (newTasks.pinnedQuests?.includes(taskId)) {
@@ -1825,9 +1843,25 @@ function gameReducer(state, action) {
           return { ...state, message: 'This quest chain is already completed.' };
         }
       }
+      // Snapshot stat baselines for the current quest in this line
+      let newBaselines = { ...(state.tasks.questBaselines || {}) };
+      if (lineKey === 'tutorial') {
+        const currentQ = getCurrentTutorial(state.tasks.tutorialClaimed || []);
+        if (currentQ) newBaselines[currentQ.id] = state.stats[currentQ.stat] || 0;
+      } else if (lineKey === 'mission') {
+        const mClaimed = state.tasks.missionClaimed || [];
+        const ch = getUnlockedChapter(mClaimed);
+        const chMissions = getMissionsForChapter(ch);
+        const currentQ = chMissions.find(m => !mClaimed.includes(m.id));
+        if (currentQ) newBaselines[currentQ.id] = state.stats[currentQ.stat] || 0;
+      } else if (lineKey.startsWith('side_')) {
+        const chainId = lineKey.replace('side_', '');
+        const currentQ = getCurrentSideQuest(chainId, state.tasks.sideQuestClaimed || []);
+        if (currentQ) newBaselines[currentQ.id] = state.stats[currentQ.stat] || 0;
+      }
       return {
         ...state,
-        tasks: { ...state.tasks, activeQuestLines: [...active, lineKey] },
+        tasks: { ...state.tasks, activeQuestLines: [...active, lineKey], questBaselines: newBaselines },
         message: 'Quest line activated!',
       };
     }
@@ -1852,12 +1886,24 @@ function gameReducer(state, action) {
           newPinned = newPinned.filter(id => !sIds.includes(id));
         }
       }
+      // Clear baselines for quests in this line so re-activation gets fresh baselines
+      let newBaselines = { ...(state.tasks.questBaselines || {}) };
+      if (lineKey === 'tutorial') {
+        TUTORIAL_QUESTS.forEach(q => { delete newBaselines[q.id]; });
+      } else if (lineKey === 'mission') {
+        STORY_MISSIONS.forEach(q => { delete newBaselines[q.id]; });
+      } else if (lineKey.startsWith('side_')) {
+        const cId = lineKey.replace('side_', '');
+        const ch = getSideQuestChain(cId);
+        if (ch) ch.quests.forEach(q => { delete newBaselines[q.id]; });
+      }
       return {
         ...state,
         tasks: {
           ...state.tasks,
           activeQuestLines: active.filter(k => k !== lineKey),
           pinnedQuests: newPinned,
+          questBaselines: newBaselines,
         },
         message: 'Quest line abandoned.',
       };
