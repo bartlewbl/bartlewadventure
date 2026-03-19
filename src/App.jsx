@@ -226,6 +226,7 @@ export default function App() {
               onSkills={() => actions.showScreen('skills')}
               canRest={canRest}
               activeBuffs={state.activeBuffs}
+              lastEnergyUpdate={state.lastEnergyUpdate}
             />
           )}
 

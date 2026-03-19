@@ -500,6 +500,26 @@ body {
   color: rgba(255, 255, 255, 0.5);
 }
 
+.energy-wheel-wrapper {
+  position: relative;
+}
+
+.energy-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(6, 12, 20, 0.95);
+  border: 1px solid rgba(118, 255, 223, 0.4);
+  color: #76ffdf;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+}
+
 .energy-meta {
   display: flex;
   flex-direction: column;
