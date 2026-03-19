@@ -118,7 +118,7 @@ export const BUILDING_MATERIALS = {
 // Material drop weights by region (added to monster drop tables)
 export const MATERIAL_DROP_CONFIG = {
   'neon-district': {
-    dropRate: 0.12,
+    dropRate: 0.05,
     materials: [
       { id: 'scrap-wood', weight: 40 },
       { id: 'iron-ore', weight: 30 },
@@ -128,7 +128,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'frozen-wastes': {
-    dropRate: 0.14,
+    dropRate: 0.06,
     materials: [
       { id: 'scrap-wood', weight: 30 },
       { id: 'stone-block', weight: 35 },
@@ -137,7 +137,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'scorched-badlands': {
-    dropRate: 0.15,
+    dropRate: 0.07,
     materials: [
       { id: 'iron-ore', weight: 35 },
       { id: 'stone-block', weight: 30 },
@@ -148,7 +148,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'toxic-marshlands': {
-    dropRate: 0.16,
+    dropRate: 0.07,
     materials: [
       { id: 'charcoal', weight: 25 },
       { id: 'toxic-resin', weight: 30 },
@@ -156,7 +156,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'abyssal-depths': {
-    dropRate: 0.17,
+    dropRate: 0.08,
     materials: [
       { id: 'deep-coral', weight: 25 },
       { id: 'copper-wire', weight: 20 },
@@ -164,7 +164,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'celestial-highlands': {
-    dropRate: 0.18,
+    dropRate: 0.09,
     materials: [
       { id: 'crystal-shard', weight: 15 },
       { id: 'starlight-dust', weight: 10 },
@@ -173,7 +173,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'void-nexus': {
-    dropRate: 0.20,
+    dropRate: 0.10,
     materials: [
       { id: 'void-essence', weight: 8 },
       { id: 'plasma-core', weight: 10 },
@@ -824,14 +824,14 @@ export const EGG_TYPES = {
 // Overall chance is very low; higher-tier regions can drop rarer eggs
 export const EGG_DROP_CONFIG = {
   'neon-district': {
-    dropRate: 0.008, // 0.8% chance per kill
+    dropRate: 0.004, // 0.4% chance per kill
     eggs: [
       { id: 'common-egg', weight: 90 },
       { id: 'uncommon-egg', weight: 10 },
     ],
   },
   'frozen-wastes': {
-    dropRate: 0.010,
+    dropRate: 0.005,
     eggs: [
       { id: 'common-egg', weight: 70 },
       { id: 'uncommon-egg', weight: 25 },
@@ -839,7 +839,7 @@ export const EGG_DROP_CONFIG = {
     ],
   },
   'scorched-badlands': {
-    dropRate: 0.012,
+    dropRate: 0.006,
     eggs: [
       { id: 'common-egg', weight: 55 },
       { id: 'uncommon-egg', weight: 30 },
@@ -848,7 +848,7 @@ export const EGG_DROP_CONFIG = {
     ],
   },
   'toxic-marshlands': {
-    dropRate: 0.012,
+    dropRate: 0.006,
     eggs: [
       { id: 'common-egg', weight: 50 },
       { id: 'uncommon-egg', weight: 30 },
@@ -857,7 +857,7 @@ export const EGG_DROP_CONFIG = {
     ],
   },
   'abyssal-depths': {
-    dropRate: 0.015,
+    dropRate: 0.007,
     eggs: [
       { id: 'common-egg', weight: 35 },
       { id: 'uncommon-egg', weight: 30 },
@@ -867,7 +867,7 @@ export const EGG_DROP_CONFIG = {
     ],
   },
   'celestial-highlands': {
-    dropRate: 0.018,
+    dropRate: 0.009,
     eggs: [
       { id: 'uncommon-egg', weight: 30 },
       { id: 'rare-egg', weight: 30 },
@@ -876,7 +876,7 @@ export const EGG_DROP_CONFIG = {
     ],
   },
   'void-nexus': {
-    dropRate: 0.020,
+    dropRate: 0.010,
     eggs: [
       { id: 'uncommon-egg', weight: 20 },
       { id: 'rare-egg', weight: 25 },
