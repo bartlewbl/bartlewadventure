@@ -1488,6 +1488,9 @@ function gameReducer(state, action) {
 
     case 'EQUIP_ITEM': {
       const item = action.item;
+      if (item.level && item.level > state.player.level) {
+        return { ...state, message: `You need to be level ${item.level} to equip ${item.name}!` };
+      }
       let slot = item.slot;
       const p = { ...state.player, equipment: { ...state.player.equipment } };
       // For accessories, support dual ring slots

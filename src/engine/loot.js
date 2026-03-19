@@ -5,11 +5,24 @@ import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem } from '../data/baseData';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
 
+// Normal-distribution weight: items near targetLevel are most common,
+// items 10+ levels above targetLevel become extremely rare.
+function gaussianWeight(itemLevel, targetLevel) {
+  const diff = itemLevel - targetLevel;
+  // Use a tighter sigma for items ABOVE player level to make high-level items rarer
+  const sigma = diff > 0 ? 4 : 6;
+  let w = Math.exp(-0.5 * (diff / sigma) ** 2);
+  // Extra suppression: items 10+ levels above become vanishingly rare
+  if (diff > 10) {
+    w *= Math.max(0.001, Math.exp(-0.8 * (diff - 10)));
+  }
+  return Math.max(0.001, w);
+}
+
 function pickFromLibrary(pool, targetLevel) {
   if (!pool || pool.length === 0) return null;
   const weighted = pool.map(item => {
-    const levelDiff = Math.abs(item.level - targetLevel);
-    const levelWeight = Math.max(1, 18 - levelDiff * 2);
+    const levelWeight = gaussianWeight(item.level, targetLevel);
     return { item, weight: (item.weight || 1) * levelWeight };
   });
   const total = weighted.reduce((sum, entry) => sum + entry.weight, 0);
@@ -31,7 +44,8 @@ function buildGearDrop(template, monsterLevel, dropType) {
   const def = template.baseDef > 0
     ? Math.max(0, Math.round(template.baseDef * baseLevelFactor * adaptFactor * rarityData.multiplier))
     : 0;
-  const effectiveLevel = Math.max(template.level, monsterLevel);
+  // Use the template level as the item's equip requirement level
+  const effectiveLevel = template.level;
 
   return {
     id: uid(),
@@ -387,10 +401,9 @@ export function generateLocationItem(locationId, playerLevel) {
 
   if (candidates.length === 0) return null;
 
-  // Weight by level proximity
+  // Weight by level proximity using normal distribution
   const weighted = candidates.map(({ template, type }) => {
-    const levelDiff = Math.abs(template.level - playerLevel);
-    const weight = Math.max(1, 18 - levelDiff * 2);
+    const weight = gaussianWeight(template.level, playerLevel) * (template.weight || 1);
     return { template, type, weight };
   });
 
