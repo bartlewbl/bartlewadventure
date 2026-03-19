@@ -212,7 +212,7 @@ export default function App() {
               playerName={state.player.name}
               playerLevel={state.player.level}
               onGoToTown={actions.goToTown}
-              onExplore={() => actions.showScreen('regions')}
+              onExplore={() => actions.showScreen(state.currentRegion ? 'locations' : 'regions')}
               onInventory={() => actions.showScreen('inventory')}
               onShop={() => actions.showScreen('shop')}
               onMarket={() => actions.showScreen('market')}
@@ -241,6 +241,7 @@ export default function App() {
                 canRest={canRest}
                 onClaimDailyReward={actions.claimDailyReward}
                 onGoToBase={() => actions.showScreen('base')}
+                currentRegion={state.currentRegion}
               />
             )}
 
@@ -248,8 +249,9 @@ export default function App() {
               <RegionsScreen
                 playerLevel={state.player.level}
                 playerGold={state.player.gold}
+                currentRegionId={state.currentRegion?.id || null}
                 onSelect={actions.selectRegion}
-                onBack={actions.goToTown}
+                onBack={state.currentRegion ? () => actions.showScreen('locations') : actions.goToTown}
               />
             )}
 
@@ -276,7 +278,7 @@ export default function App() {
                 text={state.exploreText}
                 foundItem={state.exploreFoundItem}
                 onContinue={actions.exploreStep}
-                onBack={actions.goToTown}
+                onBack={actions.leaveLocation}
               />
             )}
 

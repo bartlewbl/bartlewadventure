@@ -217,7 +217,9 @@ function extractSaveData(state) {
   if (screen === 'username-entry') screen = 'username-entry';
   return {
     player: state.player,
-    screen: (state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm') ? 'town' : state.screen,
+    screen: (state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm') ? 'town'
+      : (state.screen === 'explore' || state.screen === 'random-event' || state.screen === 'event-result') ? 'locations'
+      : state.screen,
     pendingLevelUps: state.pendingLevelUps || [],
     energy: state.energy,
     lastEnergyUpdate: state.lastEnergyUpdate,
@@ -448,6 +450,10 @@ function gameReducer(state, action) {
       if (!mergedPlayer.characterClass) resolvedScreen = 'class-select';
       if (mergedPlayer.name === 'Hero') resolvedScreen = 'username-entry';
       const savedRegion = currentRegionId ? REGIONS.find(r => r.id === currentRegionId) : null;
+      // If saved on locations/regions screen but region is missing, fall back to town
+      if ((resolvedScreen === 'locations' || resolvedScreen === 'explore') && !savedRegion) {
+        resolvedScreen = 'town';
+      }
       const mergedStats = { ...createInitialStats(), ...stats };
       const mergedTasks = refreshTaskCycles({ ...createInitialTaskProgress(), ...tasks });
       const mergedBase = { ...createInitialBase(), ...savedBase };
@@ -506,7 +512,7 @@ function gameReducer(state, action) {
     }
 
     case 'GO_TO_TOWN':
-      return { ...state, screen: 'town', currentRegion: null, currentLocation: null, battle: null, battleResult: null, battleLog: [], pendingBoss: null };
+      return { ...state, screen: 'town', currentLocation: null, battle: null, battleResult: null, battleLog: [], pendingBoss: null };
 
     case 'SHOW_SCREEN':
       return { ...state, screen: action.screen };
@@ -514,7 +520,12 @@ function gameReducer(state, action) {
     case 'SELECT_REGION': {
       const region = action.region;
       if (!region) return state;
-      const cost = region.travelCost || 0;
+      // Already in this region — just show locations, no cost
+      if (state.currentRegion?.id === region.id) {
+        return { ...state, screen: 'locations' };
+      }
+      // First region selection (new player, no current region) is free
+      const cost = state.currentRegion ? (region.travelCost || 0) : 0;
       if (cost > 0 && state.player.gold < cost) {
         return { ...state, message: `Not enough gold for the ticket! (${cost}g needed)` };
       }
@@ -529,7 +540,10 @@ function gameReducer(state, action) {
     }
 
     case 'BACK_TO_REGIONS':
-      return { ...state, screen: 'regions', currentRegion: null };
+      return { ...state, screen: 'regions' };
+
+    case 'LEAVE_LOCATION':
+      return { ...state, screen: 'locations', currentLocation: null, battle: null, battleResult: null, battleLog: [], pendingBoss: null };
 
     case 'ENTER_LOCATION': {
       const now = Date.now();
@@ -565,7 +579,7 @@ function gameReducer(state, action) {
           ...state,
           energy: exploreRegen.energy,
           lastEnergyUpdate: exploreRegen.lastEnergyUpdate,
-          screen: 'town',
+          screen: 'locations',
           currentLocation: null,
           message: 'Too exhausted to continue. Wait for energy to recover.',
         };
@@ -1434,7 +1448,7 @@ function gameReducer(state, action) {
 
     case 'CONTINUE_AFTER_BATTLE': {
       if (state.battleResult?.defeated) {
-        return { ...state, screen: 'town', battle: null, battleResult: null, battleLog: [], currentLocation: null, currentRegion: null };
+        return { ...state, screen: 'town', battle: null, battleResult: null, battleLog: [], currentLocation: null };
       }
       // If there are pending level-ups, go to stat selection
       if (state.pendingLevelUps?.length > 0) {
@@ -3330,6 +3344,7 @@ export function useGameState(isLoggedIn) {
     showScreen: (screen) => dispatch({ type: 'SHOW_SCREEN', screen }),
     selectRegion: (region) => dispatch({ type: 'SELECT_REGION', region }),
     backToRegions: () => dispatch({ type: 'BACK_TO_REGIONS' }),
+    leaveLocation: () => dispatch({ type: 'LEAVE_LOCATION' }),
     enterLocation: (loc) => dispatch({ type: 'ENTER_LOCATION', location: loc }),
     exploreStep: () => dispatch({ type: 'EXPLORE_STEP' }),
     randomEventChoose: (choiceIndex) => dispatch({ type: 'RANDOM_EVENT_CHOOSE', choiceIndex }),

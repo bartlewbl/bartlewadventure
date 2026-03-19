@@ -206,7 +206,7 @@ export default function LocationsScreen({
           );
         })}
       </div>
-      <button className="btn btn-back" onClick={onBack}>Back to Regions</button>
+      <button className="btn btn-back" onClick={onBack}>Change Region</button>
     </div>
   );
 }

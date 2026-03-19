@@ -96,7 +96,7 @@ function getActiveEffectLabels(effects, shopDiscount) {
   return labels;
 }
 
-export default function TownScreen({ player, energy, energyCost, onRest, onEnterLocation, onBuy, canRest, onClaimDailyReward, onGoToBase }) {
+export default function TownScreen({ player, energy, energyCost, onRest, onEnterLocation, onBuy, canRest, onClaimDailyReward, onGoToBase, currentRegion }) {
   const equipment = player?.equipment || {};
   const atkBonus = Object.values(equipment).reduce((sum, item) => sum + (item?.atk || 0), 0);
   const defBonus = Object.values(equipment).reduce((sum, item) => sum + (item?.def || 0), 0);
@@ -110,10 +110,10 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
   const events = useMemo(() => getRotatingEvents(clock.now), [clock.eventWindow, clock.daySeed]);
 
   const latestLocation = useMemo(() => {
-    const allLocations = REGIONS.flatMap(r => r.locations);
-    const unlocked = allLocations.filter(loc => (player?.level ?? 1) >= loc.levelReq);
+    const regionLocations = currentRegion ? currentRegion.locations : REGIONS[0].locations;
+    const unlocked = regionLocations.filter(loc => (player?.level ?? 1) >= loc.levelReq);
     return unlocked.length > 0 ? unlocked[unlocked.length - 1] : null;
-  }, [player?.level]);
+  }, [player?.level, currentRegion]);
 
   const canTravel = latestLocation && (energy ?? 0) >= (energyCost ?? 10);
 
