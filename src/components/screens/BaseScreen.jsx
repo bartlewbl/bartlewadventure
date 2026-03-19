@@ -4,6 +4,34 @@ import {
   WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus, getWarehouseBonus,
 } from '../../data/baseData';
 
+const BUILDING_ICONS = {
+  brewery: '\u2697\uFE0F',
+  smelter: '\uD83D\uDD25',
+  workshop: '\uD83D\uDD28',
+  inn: '\uD83C\uDFE8',
+  chamber: '\uD83D\uDECF\uFE0F',
+  adventureCamp: '\u26FA',
+  sparringRange: '\u2694\uFE0F',
+  bank: '\uD83C\uDFE6',
+  farm: '\uD83C\uDF3E',
+  warehouse: '\uD83D\uDCE6',
+  marketplace: '\uD83D\uDED2',
+};
+
+const TAB_ICONS = {
+  overview: '\uD83C\uDFE0',
+  brewery: '\u2697\uFE0F',
+  smelter: '\uD83D\uDD25',
+  workshop: '\uD83D\uDD28',
+  inn: '\uD83C\uDFE8',
+  chamber: '\uD83D\uDECF\uFE0F',
+  adventureCamp: '\u26FA',
+  sparringRange: '\u2694\uFE0F',
+  bank: '\uD83C\uDFE6',
+  farm: '\uD83C\uDF3E',
+  warehouse: '\uD83D\uDCE6',
+};
+
 // ---- Building Info Modal ----
 
 function getBuildingBenefits(buildingId, def) {
@@ -49,8 +77,9 @@ function BuildingInfoModal({ buildingId, buildingDef, player, base, onClose, onB
     <div className="base-info-overlay" onClick={onClose}>
       <div className="base-info-modal" onClick={e => e.stopPropagation()}>
         <div className="base-info-header">
+          <div className="base-info-icon">{BUILDING_ICONS[buildingId] || '\uD83C\uDFE0'}</div>
           <div className="base-info-name">{buildingDef.name}</div>
-          <button className="btn btn-sm base-info-close" onClick={onClose}>X</button>
+          <button className="btn btn-sm base-info-close" onClick={onClose}>\u2715</button>
         </div>
         <div className="base-info-desc">{buildingDef.description}</div>
 
@@ -117,12 +146,12 @@ function FuelPanel({ base, player, onAddFuel, onAddFuelFromStorage }) {
 
   return (
     <div className="base-fuel-panel">
-      <div className="base-section-title">Furnace Fuel</div>
+      <div className="base-section-title">\uD83D\uDD25 Furnace Fuel</div>
       <div className="base-fuel-bar-track">
         <div className="base-fuel-bar-fill" style={{ width: `${fuelPercent}%` }} />
+        <span className="base-fuel-bar-text">{Math.floor(currentFuel)} / 480 min</span>
       </div>
-      <div className="base-fuel-label">{Math.floor(currentFuel)} min remaining</div>
-      {currentFuel <= 0 && <div className="base-warning">No fuel! Buildings cannot operate.</div>}
+      {currentFuel <= 0 && <div className="base-warning">\u26A0 No fuel! Buildings cannot operate.</div>}
 
       {fuelMats.length > 0 && (
         <div className="base-fuel-sources">
@@ -157,7 +186,7 @@ function MaterialStoragePanel({ base, player, onStoreMaterial }) {
 
   return (
     <div className="base-storage-panel">
-      <div className="base-section-title">Material Storage</div>
+      <div className="base-section-title">\uD83D\uDCE6 Material Storage</div>
       <div className="base-material-grid">
         {Object.entries(materials).filter(([, qty]) => qty > 0).map(([id, qty]) => {
           const mat = BUILDING_MATERIALS[id];
@@ -925,7 +954,7 @@ export default function BaseScreen({
             />
             <MaterialStoragePanel base={base} player={player} onStoreMaterial={onStoreMaterial} />
 
-            <div className="base-section-title">Buildings</div>
+            <div className="base-section-title">\uD83C\uDFD7\uFE0F Buildings</div>
             <div className="base-buildings-grid">
               {Object.entries(BUILDINGS).map(([id, def]) => {
                 const built = buildings[id]?.built;
@@ -935,11 +964,15 @@ export default function BaseScreen({
                     className={`base-building-card ${built ? 'built' : 'locked'} clickable`}
                     onClick={() => setSelectedBuilding(id)}
                   >
+                    <div className="base-building-card-icon">{BUILDING_ICONS[id] || '\uD83C\uDFE0'}</div>
                     <div className="base-building-card-name">{def.name}</div>
                     <div className="base-building-card-status">
-                      {built ? 'Active' : `Lv.${def.levelReq} | ${def.buildCost.gold}g`}
+                      {built ? (
+                        <span className="base-status-active">\u2714 Active</span>
+                      ) : (
+                        <span className="base-status-locked">\uD83D\uDD12 Lv.{def.levelReq} | {def.buildCost.gold}g</span>
+                      )}
                     </div>
-                    <div className="base-building-card-hint">Tap for info</div>
                   </div>
                 );
               })}
@@ -1007,9 +1040,9 @@ export default function BaseScreen({
   return (
     <div className="screen screen-base">
       <div className="base-header">
-        <button className="btn btn-sm base-back-btn" onClick={onBack}>Back to Town</button>
-        <div className="base-title">Your Base</div>
-        <div className="base-gold">Gold: {player.gold}g</div>
+        <button className="btn btn-sm base-back-btn" onClick={onBack}>\u2190 Town</button>
+        <div className="base-title">\uD83C\uDFF0 Your Base</div>
+        <div className="base-gold">\uD83D\uDCB0 {player.gold}g</div>
       </div>
 
       <div className="base-tabs">
@@ -1019,7 +1052,8 @@ export default function BaseScreen({
             className={`base-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            {tab.label}
+            <span className="base-tab-icon">{TAB_ICONS[tab.id] || ''}</span>
+            <span className="base-tab-label">{tab.label}</span>
           </button>
         ))}
       </div>
