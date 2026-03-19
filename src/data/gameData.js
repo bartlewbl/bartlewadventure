@@ -2929,4 +2929,152 @@ export const RANDOM_EVENTS = [
       },
     ],
   },
+  // ---- ENERGY-FOCUSED EVENTS ----
+  {
+    id: 'ley-line-rift',
+    title: 'Ley Line Rift',
+    description: 'The ground cracks open revealing a pulsing ley line beneath the surface. Raw energy spirals upward like a miniature tornado.',
+    choices: [
+      {
+        label: 'Step Into the Rift',
+        outcomes: [
+          { weight: 0.35, type: 'energy_restore', amount: 18, text: 'The ley line surges through you! Every fiber of your being hums with power!' },
+          { weight: 0.25, type: 'heal', amount: 0.30, text: 'The raw energy mends your wounds as it washes over you.' },
+          { weight: 0.25, type: 'energy_drain', amount: 8, text: 'The rift destabilizes! It rips energy FROM you to sustain itself!' },
+          { weight: 0.15, type: 'damage', amount: 0.30, text: 'The energy is too volatile! It scorches you as the rift collapses!' },
+        ],
+      },
+      {
+        label: 'Siphon Carefully',
+        outcomes: [
+          { weight: 0.50, type: 'energy_restore', amount: 8, text: 'You channel a safe trickle of energy into yourself. Steady and effective.' },
+          { weight: 0.30, type: 'energy_restore', amount: 14, text: 'Your careful approach pays off — you draw deep without destabilizing the rift.' },
+          { weight: 0.20, type: 'energy_drain', amount: 4, text: 'The siphon reverses! A small burst of your energy is pulled into the rift.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'energy-leech-nest',
+    title: 'Energy Leech Nest',
+    description: 'Translucent parasites cling to the walls, their bodies glowing faintly. They feed on ambient energy — and you just walked into their territory.',
+    choices: [
+      {
+        label: 'Push Through Quickly',
+        outcomes: [
+          { weight: 0.40, type: 'energy_drain', amount: 6, text: 'The leeches latch on as you sprint past, sapping your strength!' },
+          { weight: 0.30, type: 'energy_drain', amount: 3, text: 'You dodge most of them but a few manage to drain you slightly.' },
+          { weight: 0.20, type: 'item', text: 'You spot dropped gear from a previous victim as you rush through!' },
+          { weight: 0.10, type: 'nothing', text: 'You barrel through untouched. The leeches were too slow!' },
+        ],
+      },
+      {
+        label: 'Burn the Nest',
+        outcomes: [
+          { weight: 0.35, type: 'energy_restore', amount: 10, text: 'The leeches burst and release all their stored energy — right into you!' },
+          { weight: 0.25, type: 'gold', text: 'The fire reveals coins embedded in the nest material. Previous victims\' belongings.' },
+          { weight: 0.25, type: 'energy_drain', amount: 5, text: 'The fire agitates them! They swarm you before burning up.' },
+          { weight: 0.15, type: 'battle_hard', text: 'A massive leech queen emerges from the burning nest, enraged!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'wandering-monk',
+    title: 'Wandering Monk',
+    description: 'A serene figure in tattered robes sits cross-legged on the path, surrounded by a faint aura. They open one eye as you approach.',
+    choices: [
+      {
+        label: 'Ask for a Blessing',
+        outcomes: [
+          { weight: 0.40, type: 'energy_restore', amount: 15, text: '"Your spirit is weary." They touch your forehead and vitality floods back!' },
+          { weight: 0.30, type: 'heal', amount: 0.25, text: '"Be whole again." Warmth spreads through your body as wounds close.' },
+          { weight: 0.20, type: 'energy_restore', amount: 8, text: 'They nod and hum softly. A gentle wave of energy washes over you.' },
+          { weight: 0.10, type: 'nothing', text: '"You are not ready." They close their eyes and say nothing more.' },
+        ],
+      },
+      {
+        label: 'Challenge Their Power',
+        outcomes: [
+          { weight: 0.30, type: 'energy_drain', amount: 10, text: 'They flick a finger and your strength drains instantly. "Humility is a virtue."' },
+          { weight: 0.30, type: 'battle_hard', text: '"So be it." They rise, and the air crackles with spiritual energy!' },
+          { weight: 0.20, type: 'gold_big', text: 'They laugh and toss you a sack of gold. "Bold spirit! Take this for your courage."' },
+          { weight: 0.20, type: 'energy_drain', amount: 6, text: 'They stare at you disapprovingly. You feel your resolve weaken under their gaze.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'unstable-power-cell',
+    title: 'Unstable Power Cell',
+    description: 'A cracked power cell sparks and hisses on the ground, leaking volatile energy. It could explode at any moment — or be salvaged.',
+    choices: [
+      {
+        label: 'Absorb the Energy',
+        outcomes: [
+          { weight: 0.30, type: 'energy_restore', amount: 20, text: 'You press your hands against it and absorb every last drop of power!' },
+          { weight: 0.25, type: 'energy_restore', amount: 10, text: 'You manage to absorb a good portion before the cell burns out.' },
+          { weight: 0.25, type: 'damage', amount: 0.35, text: 'The cell explodes in your hands! Searing pain shoots through your arms!' },
+          { weight: 0.20, type: 'energy_drain', amount: 7, text: 'The cell\'s polarity reverses and drains YOU instead! It feeds on your energy!' },
+        ],
+      },
+      {
+        label: 'Kick It Away',
+        outcomes: [
+          { weight: 0.40, type: 'nothing', text: 'The cell skids away and fizzles out harmlessly. Crisis averted.' },
+          { weight: 0.30, type: 'energy_restore', amount: 5, text: 'It explodes at a safe distance. The shockwave is oddly invigorating!' },
+          { weight: 0.30, type: 'gold', text: 'The explosion cracks open a hidden floor panel — coins spill out!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dreamcatcher-tree',
+    title: 'Dreamcatcher Tree',
+    description: 'A gnarled tree draped with glowing dreamcatchers sways despite no wind. Each dreamcatcher pulses with captured energy from passing travelers.',
+    choices: [
+      {
+        label: 'Take a Dreamcatcher',
+        outcomes: [
+          { weight: 0.35, type: 'energy_restore', amount: 12, text: 'The dreamcatcher shatters in your hands, releasing stored energy into you!' },
+          { weight: 0.25, type: 'energy_drain', amount: 8, text: 'The dreamcatcher latches onto YOU and starts draining! You tear it off, weakened.' },
+          { weight: 0.20, type: 'item_rare', text: 'The dreamcatcher solidifies into a tangible piece of equipment!' },
+          { weight: 0.20, type: 'damage', amount: 0.20, text: 'The tree lashes out with a branch as you reach for its ornaments!' },
+        ],
+      },
+      {
+        label: 'Rest Under the Tree',
+        outcomes: [
+          { weight: 0.40, type: 'energy_restore', amount: 10, text: 'The ambient energy of the dreamcatchers slowly seeps into you as you rest.' },
+          { weight: 0.30, type: 'heal', amount: 0.20, text: 'Peaceful dreams fill your brief nap. You wake feeling refreshed.' },
+          { weight: 0.30, type: 'energy_drain', amount: 5, text: 'You doze off and the tree feeds on your energy while you sleep!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'exhaustion-trap',
+    title: 'Fatigue Ward',
+    description: 'Invisible runes suddenly flare to life beneath your feet. You feel an oppressive weight settle on your shoulders — an ancient exhaustion trap.',
+    choices: [
+      {
+        label: 'Power Through',
+        outcomes: [
+          { weight: 0.40, type: 'energy_drain', amount: 8, text: 'You force your way out but the ward saps you badly before you escape.' },
+          { weight: 0.25, type: 'energy_drain', amount: 4, text: 'You push through with sheer willpower, losing only a little energy.' },
+          { weight: 0.20, type: 'nothing', text: 'The ward flickers and dies before it can take hold. Lucky!' },
+          { weight: 0.15, type: 'gold_big', text: 'You stumble out of the ward onto a hidden stash. The trap was guarding treasure!' },
+        ],
+      },
+      {
+        label: 'Disrupt the Runes',
+        outcomes: [
+          { weight: 0.35, type: 'energy_restore', amount: 12, text: 'You shatter the runes and they release all their stored energy into you!' },
+          { weight: 0.30, type: 'energy_drain', amount: 6, text: 'Your disruption attempt backfires. The ward pulses harder before dissipating.' },
+          { weight: 0.20, type: 'item', text: 'The broken rune stones are valuable — you pocket them.' },
+          { weight: 0.15, type: 'battle_hard', text: 'Destroying the runes awakens the construct that placed them!' },
+        ],
+      },
+    ],
+  },
 ];
