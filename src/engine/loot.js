@@ -105,6 +105,46 @@ export function rollDrop(dropTable, monsterLevel) {
   return generateItem(drop.type, monsterLevel);
 }
 
+// Boss-specific drop: always drops a gear item of at least Rare quality
+export function rollBossDrop(dropTable, monsterLevel) {
+  if (!dropTable || dropTable.length === 0) return null;
+  // Filter to gear types only (no potions/energy-drinks)
+  const gearDrops = dropTable.filter(d => d.type !== 'potion' && d.type !== 'energy-drink');
+  const table = gearDrops.length > 0 ? gearDrops : dropTable;
+  const drop = pickWeighted(table);
+  const pool = ITEM_LIBRARY[drop.type];
+  if (!pool) return generateItem(drop.type, monsterLevel);
+
+  const template = pickFromLibrary(pool, monsterLevel);
+  if (!template) return generateItem(drop.type, monsterLevel);
+
+  // Ensure minimum Rare rarity — re-roll rarity from Rare+ tiers
+  const rareAndAbove = RARITIES.filter(r => r.multiplier >= 1.7);
+  const rarity = pickWeighted(rareAndAbove);
+  const upgraded = { ...template, rarity: rarity.name };
+  return buildGearDrop(upgraded, monsterLevel, drop.type);
+}
+
+// Boss-specific material drops: always drops 3-5 materials from the region
+export function rollBossMaterials(regionId) {
+  const config = MATERIAL_DROP_CONFIG[regionId];
+  if (!config) return [];
+  const count = 3 + Math.floor(Math.random() * 3); // 3 to 5
+  const materials = [];
+  for (let i = 0; i < count; i++) {
+    const totalWeight = config.materials.reduce((s, m) => s + m.weight, 0);
+    let roll = Math.random() * totalWeight;
+    for (const mat of config.materials) {
+      roll -= mat.weight;
+      if (roll <= 0) {
+        materials.push(createMaterialItem(mat.id, 1));
+        break;
+      }
+    }
+  }
+  return materials;
+}
+
 // Generate an item from a daily reward spec: { kind:'item'|'potion', type, rarity, minLevel }
 // Picks a random template of the given type + rarity, scaled to player level.
 export function generateRewardItem(spec, playerLevel) {

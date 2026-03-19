@@ -25,6 +25,9 @@ export default function BattleResultScreen({ result, onContinue }) {
             {result.materialDrop && (
               <ItemDropWindow item={result.materialDrop} label="Material Found!" />
             )}
+            {result.bossMaterials && result.bossMaterials.map((mat, i) => (
+              <ItemDropWindow key={mat.id || i} item={mat} label={i === 0 ? 'Boss Materials!' : ''} />
+            ))}
             {result.eggDrop && (
               <ItemDropWindow item={result.eggDrop} label="Rare Find!" />
             )}
