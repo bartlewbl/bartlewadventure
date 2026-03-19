@@ -74,6 +74,10 @@ function getItemLocationText(itemName, discoveredItemLocations) {
   return `Found in: ${names.join(', ')}`;
 }
 
+function isItemLevelLocked(item, playerLevel) {
+  return item.level && item.level > playerLevel;
+}
+
 export default function InventoryScreen({
   player, playerAtk, playerDef, discoveredItemLocations, onEquip, onUnequip, onUse, onSell, onReorder, onBack,
 }) {
@@ -165,7 +169,8 @@ export default function InventoryScreen({
     const item = getDraggedItem();
     if (!item) return;
     event.preventDefault();
-    const valid = item.slot === slot || (item.slot === 'accessory' && slot === 'accessory2');
+    const slotMatch = item.slot === slot || (item.slot === 'accessory' && slot === 'accessory2');
+    const valid = slotMatch && !isItemLevelLocked(item, player.level);
     event.dataTransfer.dropEffect = valid ? 'move' : 'none';
     setSlotHover({ slot, valid });
     setHoverState(null);
@@ -178,7 +183,7 @@ export default function InventoryScreen({
     event.preventDefault();
     event.stopPropagation();
     const validSlot = item.slot === slot || (item.slot === 'accessory' && slot === 'accessory2');
-    if (!validSlot) {
+    if (!validSlot || isItemLevelLocked(item, player.level)) {
       setSlotHover({ slot, valid: false });
       return;
     }
@@ -269,10 +274,11 @@ export default function InventoryScreen({
               isHoverAfter ? 'drag-over-after' : '',
             ].filter(Boolean).join(' ');
 
+            const locked = isItemLevelLocked(item, player.level);
             return (
               <div
                 key={item.id}
-                className={itemClass}
+                className={`${itemClass}${locked ? ' inv-item-locked' : ''}`}
                 draggable
                 onDragStart={handleDragStart(index)}
                 onDragOver={handleDragOverItem(index)}
@@ -284,6 +290,7 @@ export default function InventoryScreen({
                   title={[
                     `${item.name} ${itemMetaTag(item)}`,
                     itemStatLine(item),
+                    locked ? `Requires Level ${item.level}` : null,
                     getItemLocationText(item.name, discoveredItemLocations),
                   ].filter(Boolean).join('\n')}
                 >
@@ -293,6 +300,9 @@ export default function InventoryScreen({
                   <span className="inv-item-stats">
                     {itemStatLine(item)}
                   </span>
+                  {locked && (
+                    <span className="inv-item-level-req">Requires Lv{item.level}</span>
+                  )}
                   {getItemLocationText(item.name, discoveredItemLocations) && (
                     <span className="inv-item-location">
                       {getItemLocationText(item.name, discoveredItemLocations)}
@@ -301,7 +311,10 @@ export default function InventoryScreen({
                 </div>
                 <div className="inv-item-actions">
                   {item.slot ? (
-                    <button className="btn btn-sm" onClick={() => onEquip(item)}>Equip</button>
+                    <button className="btn btn-sm" onClick={() => onEquip(item)} disabled={locked}
+                      title={locked ? `Requires Level ${item.level}` : ''}>
+                      {locked ? 'Locked' : 'Equip'}
+                    </button>
                   ) : (
                     <button className="btn btn-sm" onClick={() => onUse(item)}>Use</button>
                   )}

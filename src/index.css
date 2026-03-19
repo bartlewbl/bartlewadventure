@@ -2954,6 +2954,26 @@ body {
   font-style: italic;
 }
 
+.inv-item-level-req {
+  color: #ff6666;
+  font-size: 7px;
+  font-weight: bold;
+}
+
+.inv-item-locked {
+  opacity: 0.7;
+}
+
+.inv-item-locked .inv-item-name {
+  color: #888 !important;
+}
+
+.inv-item-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #ff6666;
+}
+
 .inv-item-actions {
   display: flex;
   gap: 2px;
