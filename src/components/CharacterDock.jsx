@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ENERGY_MAX, ENERGY_REGEN_PERCENT, ENERGY_REGEN_INTERVAL_MS } from '../hooks/useGameState';
 
 export default function CharacterDock({
@@ -50,12 +50,23 @@ export default function CharacterDock({
 
   const [hovered, setHovered] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const wheelRef = useRef(null);
+  const [tooltipPos, setTooltipPos] = useState(null);
 
   useEffect(() => {
     if (!hovered) return;
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
+  }, [hovered]);
+
+  useEffect(() => {
+    if (!hovered || !wheelRef.current) {
+      setTooltipPos(null);
+      return;
+    }
+    const rect = wheelRef.current.getBoundingClientRect();
+    setTooltipPos({ top: rect.top - 6, left: rect.left + rect.width / 2 });
   }, [hovered]);
 
   const gainPerTick = Math.max(1, Math.round(ENERGY_MAX * ENERGY_REGEN_PERCENT));
@@ -85,6 +96,7 @@ export default function CharacterDock({
 
       <div className="dock-wheels">
         <div
+          ref={wheelRef}
           className="dock-wheel-item energy-wheel-wrapper"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
@@ -96,8 +108,13 @@ export default function CharacterDock({
             </div>
           </div>
           <div className="wheel-label energy-label">Energy</div>
-          {hovered && (
-            <div className="energy-tooltip">{tooltipText}</div>
+          {hovered && tooltipPos && (
+            <div
+              className="energy-tooltip"
+              style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translate(-50%, -100%)' }}
+            >
+              {tooltipText}
+            </div>
           )}
         </div>
 
