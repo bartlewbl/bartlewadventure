@@ -315,6 +315,7 @@ export default function App() {
                 onMonsterTurn={actions.monsterTurn}
                 onTreeSkill={actions.battleTreeSkill}
                 onToggleSkillMenu={actions.toggleSkillMenu}
+                onToggleInspect={actions.toggleInspectMonster}
                 setBattleAnim={setBattleAnim}
                 animTick={animTick}
               />

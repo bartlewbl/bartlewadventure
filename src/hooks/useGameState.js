@@ -3,7 +3,7 @@ import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -237,7 +237,7 @@ function createBattleState(monster) {
     monsterPoisonTurns: 0, monsterDoomTurns: 0,
     undyingWillUsed: false, deathsEmbraceUsed: false,
     defendedLastTurn: false, dodgeNextTurn: false, dodgeCharges: 0,
-    showSkillMenu: false, spellweaverActive: false,
+    showSkillMenu: false, showInspect: false, spellweaverActive: false,
     avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
     petActions: [], // log of pet actions this turn
     petReviveUsed: false, // track phoenix revive
@@ -881,14 +881,26 @@ function gameReducer(state, action) {
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
 
+      // Critical hit check (stacks with lucky strike)
+      let playerCrit = false;
+      if (Math.random() < getPlayerCritChance(p)) {
+        dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
+        playerCrit = true;
+      }
+
       m.hp = Math.max(0, m.hp - dmg);
       b.monster = m;
       b.defending = false;
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
+      b.showInspect = false;
       let log = [...state.battleLog];
-      if (lucky.procced) {
+      if (lucky.procced && playerCrit) {
+        log.push({ text: `Lucky Strike + CRIT! Devastating ${dmg} damage!`, type: 'dmg-monster' });
+      } else if (lucky.procced) {
         log.push({ text: `Lucky Strike! Double damage for ${dmg}!`, type: 'dmg-monster' });
+      } else if (playerCrit) {
+        log.push({ text: `CRITICAL HIT! You attack for ${dmg} damage!`, type: 'dmg-monster' });
       } else {
         log.push({ text: `You attack for ${dmg} damage!`, type: 'dmg-monster' });
       }
@@ -955,20 +967,30 @@ function gameReducer(state, action) {
       p = applyLifeTap(p, manaCost);
 
       const effectiveDef = getEffectiveDef(m.def, skillEffect);
-      const dmg = calcDamage(atkValue, effectiveDef);
+      let dmg = calcDamage(atkValue, effectiveDef);
+
+      // Critical hit check for skills
+      let skillCrit = false;
+      if (Math.random() < getPlayerCritChance(p)) {
+        dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
+        skillCrit = true;
+      }
+
       m.hp = Math.max(0, m.hp - dmg);
       b.monster = m;
       b.defending = false;
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
+      b.showInspect = false;
       let log = [...state.battleLog];
       const classWeatherLabel = classWeatherBuff !== 1.0
         ? ` (${classWeatherBuff > 1 ? '+' : ''}${Math.round((classWeatherBuff - 1) * 100)}% weather)`
         : '';
+      const critLabel = skillCrit ? 'CRIT! ' : '';
       if (echoProc) {
-        log.push({ text: `Spell Echo! ${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
+        log.push({ text: `${critLabel}Spell Echo! ${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       } else {
-        log.push({ text: `${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
+        log.push({ text: `${critLabel}${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       }
 
       // Apply class skill effect (recoil, weaken, drain, etc.)
@@ -1035,20 +1057,30 @@ function gameReducer(state, action) {
       let finalMult = getExecuteMultiplier(skill.effect, m.hp, m.maxHp);
       if (skill.effect === 'counter' && b.defendedLastTurn) finalMult = 1.25;
 
-      const dmg = calcDamage(Math.floor(atkValue * finalMult), effectiveDef);
+      let dmg = calcDamage(Math.floor(atkValue * finalMult), effectiveDef);
+
+      // Critical hit check for tree skills
+      let treeCrit = false;
+      if (Math.random() < getPlayerCritChance(p)) {
+        dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
+        treeCrit = true;
+      }
+
       m.hp = Math.max(0, m.hp - dmg);
       b.monster = m;
       b.defending = false;
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
+      b.showInspect = false;
       let log = [...state.battleLog];
       const weatherBuffLabel = weatherSpellBuff !== 1.0
         ? ` (${weatherSpellBuff > 1 ? '+' : ''}${Math.round((weatherSpellBuff - 1) * 100)}% weather)`
         : '';
+      const treeCritLabel = treeCrit ? 'CRIT! ' : '';
       if (echoProc) {
-        log.push({ text: `Spell Echo! ${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
+        log.push({ text: `${treeCritLabel}Spell Echo! ${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       } else {
-        log.push({ text: `${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
+        log.push({ text: `${treeCritLabel}${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       }
 
       // Apply skill effect via data-driven registry
@@ -1093,7 +1125,12 @@ function gameReducer(state, action) {
 
     case 'TOGGLE_SKILL_MENU': {
       if (!state.battle) return state;
-      return { ...state, battle: { ...state.battle, showSkillMenu: !state.battle.showSkillMenu } };
+      return { ...state, battle: { ...state.battle, showSkillMenu: !state.battle.showSkillMenu, showInspect: false } };
+    }
+
+    case 'TOGGLE_INSPECT_MONSTER': {
+      if (!state.battle) return state;
+      return { ...state, battle: { ...state.battle, showInspect: !state.battle.showInspect, showSkillMenu: false } };
     }
 
     case 'UNLOCK_SKILL': {
@@ -1135,7 +1172,7 @@ function gameReducer(state, action) {
     }
 
     case 'BATTLE_DEFEND': {
-      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false };
+      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false };
       let p = { ...state.player };
       const log = [...state.battleLog, { text: 'You brace for impact!', type: 'info' }];
       // Arcane Barrier: defend restores 10 mana
@@ -1159,7 +1196,7 @@ function gameReducer(state, action) {
       if (healed === 0) return { ...state, message: 'HP is already full!' };
       const newInv = state.player.inventory.filter((_, i) => i !== potionIdx);
       const p = { ...state.player, hp: state.player.hp + healed, inventory: newInv };
-      const b = { ...state.battle, defending: false, showSkillMenu: false };
+      const b = { ...state.battle, defending: false, showSkillMenu: false, showInspect: false };
       const log = [...state.battleLog, { text: `Used ${potion.name}, healed ${healed} HP!`, type: 'heal' }];
       let newStats = addStat(state.stats, 'potionsUsed');
       newStats = addStat(newStats, 'totalHealing', healed);
@@ -1260,6 +1297,13 @@ function gameReducer(state, action) {
           dmg = calcDamage(m.atk, getPlayerDef(p, b));
         }
 
+        // Monster critical hit check
+        let monsterCrit = false;
+        if (Math.random() < getMonsterCritChance(m)) {
+          dmg = Math.floor(dmg * getMonsterCritMultiplier());
+          monsterCrit = true;
+        }
+
         // Damage reduction passives (defend, iron skin, thick skin, fortress)
         dmg = applyDamageReduction(dmg, p, b, cls);
 
@@ -1285,8 +1329,9 @@ function gameReducer(state, action) {
         dmg = Math.max(1, dmg);
         p = { ...p, hp: Math.max(0, p.hp - dmg) };
 
+        const critPrefix = monsterCrit ? 'CRIT! ' : '';
         if (mSkill) {
-          log.push({ text: `${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
+          log.push({ text: `${critPrefix}${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
           if (mSkill.effect === 'poison') {
             if (playerHasSkill(p, 'nec_t10a')) {
               log.push({ text: 'Lich Form: immune to poison!', type: 'info' });
@@ -1312,7 +1357,7 @@ function gameReducer(state, action) {
             log.push({ text: `${m.name} drained ${healed} HP!`, type: 'dmg-player' });
           }
         } else {
-          log.push({ text: `${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
+          log.push({ text: `${critPrefix}${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
         }
       }
 
@@ -3020,6 +3065,7 @@ export function useGameState(isLoggedIn) {
     battlePotion: () => dispatch({ type: 'BATTLE_USE_POTION' }),
     battleRun: () => dispatch({ type: 'BATTLE_RUN' }),
     toggleSkillMenu: () => dispatch({ type: 'TOGGLE_SKILL_MENU' }),
+    toggleInspectMonster: () => dispatch({ type: 'TOGGLE_INSPECT_MONSTER' }),
     unlockSkill: (skillId) => dispatch({ type: 'UNLOCK_SKILL', skillId }),
     bossAccept: () => dispatch({ type: 'BOSS_ACCEPT' }),
     bossDecline: () => dispatch({ type: 'BOSS_DECLINE' }),
