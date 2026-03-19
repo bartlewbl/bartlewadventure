@@ -4,6 +4,7 @@
 import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS } from '../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem } from '../data/baseData';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
+import { prob } from '../data/probabilityStore';
 
 // Normal-distribution weight: items near targetLevel are most common,
 // items 10+ levels above targetLevel become extremely rare.
@@ -114,7 +115,7 @@ export function generateItem(dropType, monsterLevel) {
 
 export function rollDrop(dropTable, monsterLevel) {
   if (!dropTable || dropTable.length === 0) return null;
-  if (Math.random() > 0.10) return null; // 10% chance to drop loot
+  if (Math.random() > prob('loot.monsterDropChance')) return null;
   const drop = pickWeighted(dropTable);
   return generateItem(drop.type, monsterLevel);
 }
@@ -143,7 +144,9 @@ export function rollBossDrop(dropTable, monsterLevel) {
 export function rollBossMaterials(regionId) {
   const config = MATERIAL_DROP_CONFIG[regionId];
   if (!config) return [];
-  const count = 3 + Math.floor(Math.random() * 3); // 3 to 5
+  const min = prob('loot.bossMaterialMin');
+  const max = prob('loot.bossMaterialMax');
+  const count = min + Math.floor(Math.random() * (max - min + 1));
   const materials = [];
   for (let i = 0; i < count; i++) {
     const totalWeight = config.materials.reduce((s, m) => s + m.weight, 0);
@@ -338,8 +341,8 @@ export function getArmourerStock(playerLevel, shopSeed) {
     // Apply heavy shop penalty: Epic weight /50, Legendary weight /500
     const shopWeighted = source.map(t => {
       let w = t.weight || (RARITY_LOOKUP[t.rarity]?.weight ?? 1);
-      if (t.rarity === 'Epic') w *= 0.02;
-      if (t.rarity === 'Legendary') w *= 0.002;
+      if (t.rarity === 'Epic') w *= prob('loot.shopEpicWeight');
+      if (t.rarity === 'Legendary') w *= prob('loot.shopLegendaryWeight');
       return { template: t, weight: w };
     });
     let count = 0;
@@ -427,10 +430,21 @@ export function generateLocationItem(locationId, playerLevel) {
 // ---- BASE BUILDING: Material drops ----
 
 // Roll for a material drop based on the region the player is in
+const REGION_MATERIAL_KEY = {
+  'neon-district': 'material.neonDistrict',
+  'frozen-wastes': 'material.frozenWastes',
+  'scorched-badlands': 'material.scorchedBadlands',
+  'toxic-marshlands': 'material.toxicMarshlands',
+  'abyssal-depths': 'material.abyssalDepths',
+  'celestial-highlands': 'material.celestialHighlands',
+  'void-nexus': 'material.voidNexus',
+};
+
 export function rollMaterialDrop(regionId) {
   const config = MATERIAL_DROP_CONFIG[regionId];
   if (!config) return null;
-  if (Math.random() > config.dropRate) return null;
+  const dropRate = REGION_MATERIAL_KEY[regionId] ? prob(REGION_MATERIAL_KEY[regionId]) : config.dropRate;
+  if (Math.random() > dropRate) return null;
 
   const totalWeight = config.materials.reduce((s, m) => s + m.weight, 0);
   let roll = Math.random() * totalWeight;
@@ -507,10 +521,21 @@ export function generateCampLoot(lootTier, playerLevel) {
 }
 
 // Roll for a rare egg drop based on the region the player is in
+const REGION_EGG_KEY = {
+  'neon-district': 'egg.neonDistrict',
+  'frozen-wastes': 'egg.frozenWastes',
+  'scorched-badlands': 'egg.scorchedBadlands',
+  'toxic-marshlands': 'egg.toxicMarshlands',
+  'abyssal-depths': 'egg.abyssalDepths',
+  'celestial-highlands': 'egg.celestialHighlands',
+  'void-nexus': 'egg.voidNexus',
+};
+
 export function rollEggDrop(regionId) {
   const config = EGG_DROP_CONFIG[regionId];
   if (!config) return null;
-  if (Math.random() > config.dropRate) return null;
+  const dropRate = REGION_EGG_KEY[regionId] ? prob(REGION_EGG_KEY[regionId]) : config.dropRate;
+  if (Math.random() > dropRate) return null;
 
   const totalWeight = config.eggs.reduce((s, e) => s + e.weight, 0);
   let roll = Math.random() * totalWeight;

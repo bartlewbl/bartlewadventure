@@ -32,6 +32,7 @@ export default function SidePanel({
   onSkills,
   canRest,
   lastEnergyUpdate,
+  onProbDashboard,
 }) {
   const clock = useGameClock();
 
@@ -98,6 +99,14 @@ export default function SidePanel({
       description: 'Stats and tasks',
       onClick: onJournal,
       active: screen === 'journal',
+      disabled: navLocked,
+    },
+    {
+      id: 'prob-dashboard',
+      label: 'Probabilities',
+      description: 'Manage game % chances',
+      onClick: onProbDashboard,
+      active: screen === 'probability-dashboard',
       disabled: navLocked,
     },
   ];

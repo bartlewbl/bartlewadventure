@@ -91,6 +91,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_market_status ON market_listings(status);
   CREATE INDEX IF NOT EXISTS idx_market_category ON market_listings(category, status);
   CREATE INDEX IF NOT EXISTS idx_market_seller ON market_listings(seller_user_id, status);
+
+  CREATE TABLE IF NOT EXISTS probability_config (
+    key TEXT PRIMARY KEY,
+    value REAL NOT NULL,
+    category TEXT NOT NULL,
+    label TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 export default db;

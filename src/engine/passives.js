@@ -2,6 +2,7 @@
 // Handles all passive triggers during: attacks, skill use, defense, potions, monster turns
 
 import { playerHasSkill, getBattleMaxHp, getBattleMaxMana } from './combat';
+import { prob } from '../data/probabilityStore';
 
 /**
  * Apply post-attack passives (after a normal attack deals damage).
@@ -13,31 +14,31 @@ export function applyAttackPassives({ player, monster, battle, log, dmg, cls }) 
   let m = monster;
   let b = battle;
 
-  // Necromancer Lifetap: heal 15% of damage dealt on normal attacks
+  // Necromancer Lifetap: heal % of damage dealt on normal attacks
   if (cls?.passive === 'Lifetap') {
-    const healAmt = Math.floor(dmg * 0.15);
+    const healAmt = Math.floor(dmg * prob('passive.lifetapHeal'));
     if (healAmt > 0 && p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Lifetap heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Vampiric Aura: all attacks heal 10% of damage dealt
+  // Vampiric Aura: all attacks heal % of damage dealt
   if (playerHasSkill(p, 'nec_t3a')) {
-    const healAmt = Math.floor(dmg * 0.10);
+    const healAmt = Math.floor(dmg * prob('passive.vampiricAura'));
     if (healAmt > 0 && p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Vampiric Aura heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Soul Siphon: 25% chance to restore 5 mana
-  if (playerHasSkill(p, 'nec_t1a') && Math.random() < 0.25) {
+  // Soul Siphon: chance to restore 5 mana
+  if (playerHasSkill(p, 'nec_t1a') && Math.random() < prob('passive.soulSiphonChance')) {
     const battleMana = getBattleMaxMana(p);
     p = { ...p, mana: Math.min(battleMana, p.mana + 5) };
     log.push({ text: `Soul Siphon restores 5 mana!`, type: 'heal' });
   }
-  // Bloodlust: heal 20% of damage dealt when below 30% HP
+  // Bloodlust: heal % of damage dealt when below 30% HP
   if (playerHasSkill(p, 'brs_t3a') && p.hp < battleMaxHp * 0.3) {
-    let healAmt = Math.floor(dmg * 0.20);
+    let healAmt = Math.floor(dmg * prob('passive.bloodlustHeal'));
     if (playerHasSkill(p, 'nec_t9a')) healAmt = Math.floor(healAmt * 1.5); // Eternal Hunger
     if (playerHasSkill(p, 'nec_t10a')) healAmt = healAmt * 2; // Lich Form
     if (healAmt > 0 && p.hp < battleMaxHp) {
@@ -80,7 +81,7 @@ export function applySkillPassives({ player, log, dmg }) {
 
   // Vampiric Aura on skill
   if (playerHasSkill(p, 'nec_t3a')) {
-    const healAmt = Math.floor(dmg * 0.10);
+    const healAmt = Math.floor(dmg * prob('passive.vampiricAura'));
     if (healAmt > 0 && p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Vampiric Aura heals ${healAmt} HP!`, type: 'heal' });
@@ -88,14 +89,14 @@ export function applySkillPassives({ player, log, dmg }) {
   }
   // Bloodlust
   if (playerHasSkill(p, 'brs_t3a') && p.hp < battleMaxHp * 0.3) {
-    const healAmt = Math.floor(dmg * 0.20);
+    const healAmt = Math.floor(dmg * prob('passive.bloodlustHeal'));
     if (healAmt > 0 && p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Bloodlust heals ${healAmt} HP!`, type: 'heal' });
     }
   }
   // Soul Siphon
-  if (playerHasSkill(p, 'nec_t1a') && Math.random() < 0.25) {
+  if (playerHasSkill(p, 'nec_t1a') && Math.random() < prob('passive.soulSiphonChance')) {
     const battleMana = getBattleMaxMana(p);
     p = { ...p, mana: Math.min(battleMana, p.mana + 5) };
     log.push({ text: `Soul Siphon restores 5 mana!`, type: 'heal' });
@@ -118,10 +119,9 @@ export function applyLifeTap(player, manaCost) {
  * Returns { attacked, dmg } where attacked is true if a second attack was made.
  */
 export function tryBladeDance(player, battle, calcDamageFn, getPlayerAtkFn) {
-  // Blade Dance: 10% chance, Swift Strikes: additional 20% chance
   let chance = 0;
-  if (playerHasSkill(player, 'thf_t9a')) chance += 0.10;
-  if (playerHasSkill(player, 'thf_t13a')) chance += 0.20; // Swift Strikes stacks
+  if (playerHasSkill(player, 'thf_t9a')) chance += prob('passive.bladeDance');
+  if (playerHasSkill(player, 'thf_t13a')) chance += prob('passive.swiftStrikes');
   if (chance <= 0) return { attacked: false, dmg: 0 };
   if (Math.random() >= chance) return { attacked: false, dmg: 0 };
   if (battle.monster.hp <= 0) return { attacked: false, dmg: 0 };
@@ -134,7 +134,7 @@ export function tryBladeDance(player, battle, calcDamageFn, getPlayerAtkFn) {
  */
 export function tryLuckyStrike(player, dmg) {
   if (!playerHasSkill(player, 'thf_t4a')) return { procced: false, dmg };
-  const chance = playerHasSkill(player, 'thf_t22a') ? 0.35 : 0.20; // Opportunity Strikes upgrade
+  const chance = playerHasSkill(player, 'thf_t22a') ? prob('passive.opportunityStrikes') : prob('passive.luckyStrike');
   if (Math.random() >= chance) return { procced: false, dmg };
   const mult = playerHasSkill(player, 'thf_t24a') ? 3 : 2; // Lethal Precision upgrade
   return { procced: true, dmg: dmg * mult };
@@ -149,33 +149,33 @@ export function applyTurnStartPassives({ player, battle, log }) {
   let p = player;
   let b = battle;
 
-  // Regeneration: heal 3% max HP
+  // Regeneration: heal % max HP
   if (playerHasSkill(p, 'war_t6a')) {
-    const healAmt = Math.floor(battleMaxHp * 0.03);
+    const healAmt = Math.floor(battleMaxHp * prob('passive.regeneration'));
     if (p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Regeneration heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Endurance (war_t14a): heal 5% max HP
+  // Endurance (war_t14a): heal % max HP
   if (playerHasSkill(p, 'war_t14a')) {
-    const healAmt = Math.floor(battleMaxHp * 0.05);
+    const healAmt = Math.floor(battleMaxHp * prob('passive.endurance'));
     if (p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Endurance heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Indestructible (war_t24a): heal 8% max HP
+  // Indestructible (war_t24a): heal % max HP
   if (playerHasSkill(p, 'war_t24a')) {
-    const healAmt = Math.floor(battleMaxHp * 0.08);
+    const healAmt = Math.floor(battleMaxHp * prob('passive.indestructible'));
     if (p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Indestructible heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Soul Fortress (nec_t18a): heal 5% max HP
+  // Soul Fortress (nec_t18a): heal % max HP
   if (playerHasSkill(p, 'nec_t18a')) {
-    const healAmt = Math.floor(battleMaxHp * 0.05);
+    const healAmt = Math.floor(battleMaxHp * prob('passive.soulFortressHeal'));
     if (p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Soul Fortress heals ${healAmt} HP!`, type: 'heal' });
@@ -187,30 +187,30 @@ export function applyTurnStartPassives({ player, battle, log }) {
     p = { ...p, mana: Math.min(battleMana, p.mana + 4) };
     log.push({ text: `Meditation restores 4 mana!`, type: 'heal' });
   }
-  // Mana Regeneration: restore 8% max mana (uses wisdom-boosted max)
+  // Mana Regeneration: restore % max mana (uses wisdom-boosted max)
   if (playerHasSkill(p, 'mag_t9a')) {
     const battleMana = getBattleMaxMana(p);
-    const manaAmt = Math.floor(battleMana * 0.08);
+    const manaAmt = Math.floor(battleMana * prob('passive.manaRegen'));
     p = { ...p, mana: Math.min(battleMana, p.mana + manaAmt) };
     log.push({ text: `Mana Regen restores ${manaAmt} mana!`, type: 'heal' });
   }
-  // Leyline Tap (mag_t17a): restore 12% max mana
+  // Leyline Tap (mag_t17a): restore % max mana
   if (playerHasSkill(p, 'mag_t17a')) {
     const battleMana = getBattleMaxMana(p);
-    const manaAmt = Math.floor(battleMana * 0.12);
+    const manaAmt = Math.floor(battleMana * prob('passive.leylineTap'));
     p = { ...p, mana: Math.min(battleMana, p.mana + manaAmt) };
     log.push({ text: `Leyline Tap restores ${manaAmt} mana!`, type: 'heal' });
   }
-  // Dark Pact: sacrifice 5% HP per turn (3% if Undying Servitude)
+  // Dark Pact: sacrifice HP per turn
   if (playerHasSkill(p, 'nec_t4a')) {
-    const rate = playerHasSkill(p, 'nec_t17a') ? 0.03 : 0.05;
+    const rate = playerHasSkill(p, 'nec_t17a') ? prob('passive.darkPactUpgradedDrain') : prob('passive.darkPactDrain');
     const sacrifice = Math.floor(p.maxHp * rate);
     p = { ...p, hp: Math.max(1, p.hp - sacrifice) };
     log.push({ text: `Dark Pact drains ${sacrifice} HP!`, type: 'dmg-player' });
   }
-  // Pact of Undeath (nec_t15a): HP slowly drains 1%/turn
+  // Pact of Undeath (nec_t15a): HP slowly drains per turn
   if (playerHasSkill(p, 'nec_t15a')) {
-    const drain = Math.floor(battleMaxHp * 0.01);
+    const drain = Math.floor(battleMaxHp * prob('passive.pactOfUndeath'));
     p = { ...p, hp: Math.max(1, p.hp - drain) };
     log.push({ text: `Pact of Undeath drains ${drain} HP!`, type: 'dmg-player' });
   }
@@ -309,27 +309,27 @@ export function applyDamageReduction(dmg, player, battle, cls) {
 
   // Defend block
   if (battle.defending) {
-    let blockMult = 0.5;
-    if (cls?.passive === 'Fortify') blockMult = 0.3;
-    if (playerHasSkill(player, 'war_t2a')) blockMult = 0.15; // Bulwark: 85% block
-    if (playerHasSkill(player, 'war_t12a')) blockMult = 0.05; // Phalanx: 95% block
+    let blockMult = prob('passive.defendBlock');
+    if (cls?.passive === 'Fortify') blockMult = prob('passive.fortifyBlock');
+    if (playerHasSkill(player, 'war_t2a')) blockMult = prob('passive.bulwarkBlock');
+    if (playerHasSkill(player, 'war_t12a')) blockMult = prob('passive.phalanxBlock');
     d = Math.floor(d * blockMult);
   }
-  // Iron Skin: 10% less damage
+  // Iron Skin
   if (playerHasSkill(player, 'war_t1a')) {
-    d = Math.floor(d * 0.9);
+    d = Math.floor(d * prob('passive.ironSkin'));
   }
-  // Thick Skin: 8% less damage
+  // Thick Skin
   if (playerHasSkill(player, 'brs_t5a')) {
-    d = Math.floor(d * 0.92);
+    d = Math.floor(d * prob('passive.thickSkin'));
   }
-  // Fortress: 20% less damage
+  // Fortress
   if (playerHasSkill(player, 'war_t10a')) {
-    d = Math.floor(d * 0.8);
+    d = Math.floor(d * prob('passive.fortress'));
   }
-  // Soul Fortress (nec_t18a): 15% less damage
+  // Soul Fortress (nec_t18a)
   if (playerHasSkill(player, 'nec_t18a')) {
-    d = Math.floor(d * 0.85);
+    d = Math.floor(d * prob('passive.soulFortressDR'));
   }
   // Berserker Stance (brs_t12a): +15% damage taken
   if (playerHasSkill(player, 'brs_t12a')) {
@@ -343,13 +343,13 @@ export function applyDamageReduction(dmg, player, battle, cls) {
       d = Math.floor(d * 1.25);
     }
   }
-  // Eternal Guardian (war_t20a): 50% less damage
+  // Eternal Guardian (war_t20a)
   if (playerHasSkill(player, 'war_t20a')) {
-    d = Math.floor(d * 0.5);
+    d = Math.floor(d * prob('passive.eternalGuardian'));
   }
-  // Battle Hardened (war_t19a): 2% less per turn
+  // Battle Hardened (war_t19a)
   if (playerHasSkill(player, 'war_t19a') && (battle.battleHardenedTurns || 0) > 0) {
-    const reduction = Math.min(0.40, (battle.battleHardenedTurns || 0) * 0.02);
+    const reduction = Math.min(prob('passive.battleHardenedCap'), (battle.battleHardenedTurns || 0) * prob('passive.battleHardenedRate'));
     d = Math.floor(d * (1 - reduction));
   }
   // Scarred Veteran (brs_t21a): 1% reduction per 5% HP missing
@@ -401,12 +401,12 @@ export function checkDodge(player, battle, log) {
     // Athletics: each point gives +0.5% dodge chance
     const athletics = player.athletics || 0;
     chance += athletics * 0.005;
-    if (playerHasSkill(player, 'thf_t1a')) chance += 0.15;
-    if (playerHasSkill(player, 'thf_t3a')) chance += 0.10;
-    if (playerHasSkill(player, 'thf_t12a')) chance += 0.20; // Cloak of Shadows
-    if (playerHasSkill(player, 'thf_t15a')) chance += 0.50; // Phantom Existence
-    if (playerHasSkill(player, 'thf_t20a')) chance += 0.75; // Living Shadow (replaces other dodge — capped below)
-    return Math.min(chance, 0.90); // Cap at 90%
+    if (playerHasSkill(player, 'thf_t1a')) chance += prob('passive.shadowStep');
+    if (playerHasSkill(player, 'thf_t3a')) chance += prob('passive.evasionMastery');
+    if (playerHasSkill(player, 'thf_t12a')) chance += prob('passive.cloakOfShadows');
+    if (playerHasSkill(player, 'thf_t15a')) chance += prob('passive.phantomExistence');
+    if (playerHasSkill(player, 'thf_t20a')) chance += prob('passive.livingShadow');
+    return Math.min(chance, prob('passive.dodgeCap'));
   })();
   if (dodgeChance > 0 && Math.random() < dodgeChance) {
     log.push({ text: 'You dodge the attack!', type: 'info' });
@@ -415,8 +415,8 @@ export function checkDodge(player, battle, log) {
   }
   // Smoke Bomb (thf_t21a): 25% chance to gain dodge after being hit
   // (handled after damage, not here)
-  // Aegis: 15% chance to fully block
-  const aegisChance = playerHasSkill(player, 'war_t17a') ? 0.25 : (playerHasSkill(player, 'war_t4a') ? 0.15 : 0);
+  // Aegis
+  const aegisChance = playerHasSkill(player, 'war_t17a') ? prob('passive.aegisUpgraded') : (playerHasSkill(player, 'war_t4a') ? prob('passive.aegisChance') : 0);
   if (aegisChance > 0 && Math.random() < aegisChance) {
     log.push({ text: 'Aegis fully blocks the attack!', type: 'info' });
     return { dodged: true, battle: b, log };
@@ -498,8 +498,8 @@ export function applySurvivalPassives({ player, battle, log }) {
     b = { ...b, deathsEmbraceUsed: true };
     log.push({ text: `Death's Embrace heals ${healAmt} HP!`, type: 'heal' });
   }
-  // Smoke Bomb (thf_t21a): 25% chance to gain dodge after being hit
-  if (playerHasSkill(p, 'thf_t21a') && Math.random() < 0.25) {
+  // Smoke Bomb (thf_t21a): chance to gain dodge after being hit
+  if (playerHasSkill(p, 'thf_t21a') && Math.random() < prob('passive.smokeBomb')) {
     b = { ...b, dodgeNextTurn: true };
     log.push({ text: `Smoke Bomb! Dodge next attack!`, type: 'info' });
   }
@@ -511,7 +511,7 @@ export function applySurvivalPassives({ player, battle, log }) {
  * Apply Cursed Blood passive (20% chance to poison attacker when hit).
  */
 export function applyCursedBlood(player, battle, log) {
-  if (!playerHasSkill(player, 'nec_t8a') || Math.random() >= 0.2) return { battle, log };
+  if (!playerHasSkill(player, 'nec_t8a') || Math.random() >= prob('passive.cursedBlood')) return { battle, log };
   const b = { ...battle, monsterPoisonTurns: Math.max(battle.monsterPoisonTurns, 2) };
   log.push({ text: `Cursed Blood poisons ${battle.monster.name}!`, type: 'info' });
   return { battle: b, log };

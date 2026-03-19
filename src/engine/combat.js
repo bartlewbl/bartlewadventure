@@ -3,10 +3,11 @@
 
 import { CHARACTER_CLASSES } from '../data/gameData';
 import { getTreeSkill } from '../data/skillTrees';
+import { prob } from '../data/probabilityStore';
 
 export function calcDamage(atk, def) {
   const base = Math.max(1, atk - def * 0.5);
-  const variance = 0.85 + Math.random() * 0.3;
+  const variance = prob('combat.damageVarianceLow') + Math.random() * prob('combat.damageVarianceRange');
   return Math.max(1, Math.floor(base * variance));
 }
 
@@ -254,8 +255,8 @@ export function getPlayerDodgeChance(player) {
   // Athletics: each point gives +0.5% dodge chance
   const athletics = player.athletics || 0;
   chance += athletics * 0.005;
-  if (playerHasSkill(player, 'thf_t1a')) chance += 0.15;
-  if (playerHasSkill(player, 'thf_t3a')) chance += 0.10;
+  if (playerHasSkill(player, 'thf_t1a')) chance += prob('passive.shadowStep');
+  if (playerHasSkill(player, 'thf_t3a')) chance += prob('passive.evasionMastery');
   return chance;
 }
 
@@ -293,7 +294,7 @@ export function getSkillPassiveBonus(player) {
 
 // Check Spell Echo proc (20% chance for double damage, 35% with Spell Echo+)
 export function rollSpellEcho(player) {
-  const chance = playerHasSkill(player, 'mag_t18a') ? 0.35 : 0.2;
+  const chance = playerHasSkill(player, 'mag_t18a') ? prob('passive.spellEchoUpgraded') : prob('passive.spellEcho');
   if (playerHasSkill(player, 'mag_t2a') && Math.random() < chance) return true;
   return false;
 }
@@ -328,37 +329,34 @@ export function getEffectiveDef(monsterDef, effect) {
 
 // Critical hit chance for player: base 3%, modified by athletics and luck
 export function getPlayerCritChance(player) {
-  let chance = 0.03; // 3% base crit chance
-  // Athletics adds crit chance: +0.2% per point
-  chance += (player.athletics || 0) * 0.002;
-  // Wisdom adds minor crit chance: +0.1% per point
-  chance += (player.wisdom || 0) * 0.001;
-  return Math.min(0.20, chance); // cap at 20%
+  let chance = prob('combat.baseCritChance');
+  chance += (player.athletics || 0) * prob('combat.critPerAthletics');
+  chance += (player.wisdom || 0) * prob('combat.critPerWisdom');
+  return Math.min(prob('combat.critCap'), chance);
 }
 
 // Critical hit multiplier for player
 export function getPlayerCritMultiplier(player) {
-  let mult = 1.5; // 150% base crit damage
+  let mult = prob('combat.critMultiplier');
   return mult;
 }
 
 // Monster critical hit chance: base 3%, scales with level
 export function getMonsterCritChance(monster) {
-  let chance = 0.03; // 3% base
-  // Higher level monsters crit slightly more often
-  chance += Math.min(0.05, (monster.level || 1) * 0.0005);
-  return Math.min(0.08, chance); // cap at 8%
+  let chance = prob('combat.monsterCritBase');
+  chance += Math.min(0.05, (monster.level || 1) * prob('combat.monsterCritPerLevel'));
+  return Math.min(prob('combat.monsterCritCap'), chance);
 }
 
 // Monster critical hit multiplier
 export function getMonsterCritMultiplier() {
-  return 1.5; // 150% damage on crit
+  return prob('combat.monsterCritMultiplier');
 }
 
 // Charisma price modifier: each point gives 1% better prices (capped at 25%)
 export function getCharismaPriceBonus(player) {
   const charisma = player.charisma || 0;
-  return Math.min(0.25, charisma * 0.01);
+  return Math.min(prob('charisma.priceCap'), charisma * prob('charisma.pricePerPoint'));
 }
 
 // Check execute multiplier for conditional damage skills

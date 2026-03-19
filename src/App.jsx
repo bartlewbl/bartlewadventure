@@ -25,6 +25,8 @@ import PetScreen from './components/screens/PetScreen';
 import StatSelectScreen from './components/screens/StatSelectScreen';
 import SidePanel from './components/SidePanel';
 import RightPanel from './components/RightPanel';
+import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
+import { loadProbabilityConfig } from './data/probabilityStore';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -38,6 +40,9 @@ export default function App() {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(true);
   const [battleAnim, setBattleAnim] = useState(null);
+
+  // Load probability config from DB on mount
+  useEffect(() => { loadProbabilityConfig(); }, []);
 
   // Check existing session on mount and go straight to game
   useEffect(() => {
@@ -226,6 +231,7 @@ export default function App() {
               onSkills={() => actions.showScreen('skills')}
               canRest={canRest}
               lastEnergyUpdate={state.lastEnergyUpdate}
+              onProbDashboard={() => actions.showScreen('probability-dashboard')}
             />
           )}
 
@@ -460,6 +466,10 @@ export default function App() {
                 onBack={actions.goToTown}
                 onMarketTransaction={actions.applyMarketTransaction}
               />
+            )}
+
+            {state.screen === 'probability-dashboard' && (
+              <ProbabilityDashboard onBack={actions.goToTown} />
             )}
           </div>
 

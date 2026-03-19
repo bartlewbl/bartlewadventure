@@ -11,6 +11,7 @@ import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateReward
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
+import { prob } from '../data/probabilityStore';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
@@ -594,8 +595,8 @@ function gameReducer(state, action) {
       const exploreRegionId = state.currentRegion?.id || null;
       const petsAfterExplore = progressPetQuests(state.pets || createInitialPetState(), 'explore', 1, exploreRegionId);
 
-      // Boss encounter check (0.5% chance when location has a boss)
-      if (loc.boss && Math.random() < (loc.bossRate || 0.005)) {
+      // Boss encounter check
+      if (loc.boss && Math.random() < (loc.bossRate || prob('explore.bossRate'))) {
         const boss = scaleBoss(loc.boss, loc.levelReq);
         if (boss) {
           return {
@@ -612,7 +613,7 @@ function gameReducer(state, action) {
       // Random event check (5% base chance, modified by time/weather)
       const effects = getCurrentEffects();
       const weatherId = getCurrentWeatherId();
-      const eventChance = 0.05 * effects.eventChanceMult;
+      const eventChance = prob('explore.randomEventChance') * effects.eventChanceMult;
       if (Math.random() < eventChance) {
         // Filter events: include universal events + weather-matching events
         const eligibleEvents = RANDOM_EVENTS.filter(e => !e.weather || e.weather === weatherId);
@@ -668,8 +669,7 @@ function gameReducer(state, action) {
       if (Math.random() < lootChance) {
         if (newPlayer.inventory.length < newPlayer.maxInventory) {
           let foundItem;
-          // 40% chance to find a location-specific item
-          if (Math.random() < 0.4) {
+          if (Math.random() < prob('loot.locationItemChance')) {
             foundItem = generateLocationItem(loc.id, Math.max(loc.levelReq, state.player.level));
           }
           if (!foundItem) {
@@ -689,8 +689,8 @@ function gameReducer(state, action) {
         } else {
           newText = (scavengedMaterial ? newText : text) + '\n\nYou find loot but your pack is full.';
         }
-      } else if (Math.random() < 0.3) {
-        const found = Math.floor(3 + Math.random() * Math.max(2, state.player.level * 2));
+      } else if (Math.random() < prob('explore.goldFindChance')) {
+        const found = Math.floor(prob('explore.goldFindMin') + Math.random() * Math.max(prob('explore.goldFindRange'), state.player.level * 2));
         newPlayer = { ...newPlayer, gold: newPlayer.gold + found };
         newText = (scavengedMaterial ? newText : text) + `\n\nYou find ${found} gold tucked under debris.`;
       } else if (!scavengedMaterial) {
@@ -1264,7 +1264,7 @@ function gameReducer(state, action) {
 
     case 'BATTLE_RUN': {
       const cls = getClassData(state.player);
-      let escapeChance = (cls?.passive === 'Greed') ? 0.75 : 0.5;
+      let escapeChance = (cls?.passive === 'Greed') ? prob('combat.escapeChanceGreed') : prob('combat.escapeChanceBase');
       if (playerHasSkill(state.player, 'thf_t7a')) escapeChance = 1.0;
       if (Math.random() < escapeChance) {
         const newStats = addStat(state.stats, 'battlesRun');
@@ -1321,7 +1321,7 @@ function gameReducer(state, action) {
       ({ dodged, battle: b, log } = checkDodge(p, b, log));
 
       if (!dodged) {
-        const useSkill = m.skills.length > 0 && Math.random() < 0.3;
+        const useSkill = m.skills.length > 0 && Math.random() < prob('combat.monsterSkillChance');
         const mSkillId = useSkill ? m.skills[Math.floor(Math.random() * m.skills.length)] : null;
         const mSkill = mSkillId ? SKILLS[mSkillId] : null;
 
