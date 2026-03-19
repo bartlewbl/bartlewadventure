@@ -8610,3 +8610,31 @@ body {
   cursor: pointer;
   border-radius: 2px;
 }
+
+/* ---- ADMIN PROBABILITY BUTTON ---- */
+.admin-prob-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #555;
+  background: rgba(20, 20, 50, 0.85);
+  color: #ffd700;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  transition: all 0.15s;
+  pointer-events: auto;
+}
+
+.admin-prob-btn:hover {
+  background: rgba(40, 40, 80, 0.95);
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}

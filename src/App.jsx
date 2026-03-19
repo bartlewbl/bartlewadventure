@@ -198,6 +198,13 @@ export default function App() {
       />
 
       <div className="ui-overlay">
+        {user?.username === 'bartlew' && state.screen !== 'probability-dashboard' && (
+          <button
+            className="admin-prob-btn"
+            onClick={() => actions.showScreen('probability-dashboard')}
+            title="Probability Dashboard"
+          >%</button>
+        )}
         <div className="ui-main">
           {!hidePanels && (
             <SidePanel
@@ -231,7 +238,6 @@ export default function App() {
               onSkills={() => actions.showScreen('skills')}
               canRest={canRest}
               lastEnergyUpdate={state.lastEnergyUpdate}
-              onProbDashboard={() => actions.showScreen('probability-dashboard')}
             />
           )}
 
