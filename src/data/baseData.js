@@ -351,6 +351,145 @@ export const BUILDINGS = {
   },
 };
 
+// ---- BUFF POTIONS ----
+// Timed buff potions that grant combat bonuses for a real-time duration.
+// They can drop rarely from monsters or be brewed in the brewery.
+export const BUFF_POTION_TYPES = {
+  'buff-atk': {
+    id: 'buff-atk',
+    name: 'Warcry Tonic',
+    description: 'Boosts ATK by 8% for the duration.',
+    icon: 'buff-potion',
+    buffType: 'atk',
+    buffValue: 0.08,
+    duration: 10 * 60 * 1000,    // 10 minutes
+    rarity: 'Uncommon',
+    sellPrice: 35,
+  },
+  'buff-atk-strong': {
+    id: 'buff-atk-strong',
+    name: 'Berserker Brew',
+    description: 'Boosts ATK by 15% for the duration.',
+    icon: 'buff-potion',
+    buffType: 'atk',
+    buffValue: 0.15,
+    duration: 20 * 60 * 1000,    // 20 minutes
+    rarity: 'Rare',
+    sellPrice: 80,
+  },
+  'buff-def': {
+    id: 'buff-def',
+    name: 'Ironhide Elixir',
+    description: 'Boosts DEF by 8% for the duration.',
+    icon: 'buff-potion',
+    buffType: 'def',
+    buffValue: 0.08,
+    duration: 10 * 60 * 1000,    // 10 minutes
+    rarity: 'Uncommon',
+    sellPrice: 35,
+  },
+  'buff-def-strong': {
+    id: 'buff-def-strong',
+    name: 'Titanshield Draught',
+    description: 'Boosts DEF by 15% for the duration.',
+    icon: 'buff-potion',
+    buffType: 'def',
+    buffValue: 0.15,
+    duration: 20 * 60 * 1000,    // 20 minutes
+    rarity: 'Rare',
+    sellPrice: 80,
+  },
+  'buff-xp': {
+    id: 'buff-xp',
+    name: 'Scholar\'s Draught',
+    description: 'Boosts XP gain by 10% for the duration.',
+    icon: 'buff-potion',
+    buffType: 'xp',
+    buffValue: 0.10,
+    duration: 30 * 60 * 1000,    // 30 minutes
+    rarity: 'Rare',
+    sellPrice: 60,
+  },
+  'buff-gold': {
+    id: 'buff-gold',
+    name: 'Midas Flask',
+    description: 'Boosts gold gain by 12% for the duration.',
+    icon: 'buff-potion',
+    buffType: 'gold',
+    buffValue: 0.12,
+    duration: 30 * 60 * 1000,    // 30 minutes
+    rarity: 'Rare',
+    sellPrice: 60,
+  },
+  'buff-crit': {
+    id: 'buff-crit',
+    name: 'Precision Serum',
+    description: '5% chance for double damage on attacks.',
+    icon: 'buff-potion',
+    buffType: 'crit',
+    buffValue: 0.05,
+    duration: 15 * 60 * 1000,    // 15 minutes
+    rarity: 'Epic',
+    sellPrice: 120,
+  },
+  'buff-all': {
+    id: 'buff-all',
+    name: 'Elixir of the Ancients',
+    description: '+10% ATK, +10% DEF, +8% XP, +8% Gold for the duration.',
+    icon: 'buff-potion',
+    buffType: 'all',
+    buffValue: { atk: 0.10, def: 0.10, xp: 0.08, gold: 0.08 },
+    duration: 60 * 60 * 1000,    // 1 hour
+    rarity: 'Legendary',
+    sellPrice: 250,
+  },
+};
+
+// Buff potion drop table for monsters (used by loot.js)
+// Lower weight = rarer drop
+export const BUFF_POTION_DROP_TABLE = [
+  { id: 'buff-atk', weight: 20 },
+  { id: 'buff-def', weight: 20 },
+  { id: 'buff-atk-strong', weight: 8 },
+  { id: 'buff-def-strong', weight: 8 },
+  { id: 'buff-xp', weight: 10 },
+  { id: 'buff-gold', weight: 10 },
+  { id: 'buff-crit', weight: 5 },
+  { id: 'buff-all', weight: 2 },
+];
+
+// ---- HELPER: Get active buff bonuses ----
+export function getActiveBuffs(activeBuffs) {
+  const now = Date.now();
+  const bonuses = { atk: 0, def: 0, xp: 0, gold: 0, crit: 0 };
+  if (!activeBuffs || activeBuffs.length === 0) return bonuses;
+  for (const buff of activeBuffs) {
+    if (now - buff.startTime >= buff.duration) continue; // expired
+    const bType = BUFF_POTION_TYPES[buff.buffPotionId];
+    if (!bType) continue;
+    if (bType.buffType === 'all') {
+      const vals = bType.buffValue;
+      bonuses.atk += vals.atk || 0;
+      bonuses.def += vals.def || 0;
+      bonuses.xp += vals.xp || 0;
+      bonuses.gold += vals.gold || 0;
+    } else {
+      bonuses[bType.buffType] = (bonuses[bType.buffType] || 0) + bType.buffValue;
+    }
+  }
+  return bonuses;
+}
+
+// ---- HELPER: Remove expired buffs ----
+export function pruneExpiredBuffs(activeBuffs) {
+  if (!activeBuffs || activeBuffs.length === 0) return [];
+  const now = Date.now();
+  return activeBuffs.filter(b => {
+    const bType = BUFF_POTION_TYPES[b.buffPotionId];
+    return bType && (now - b.startTime < bType.duration);
+  });
+}
+
 // ---- BREWERY RECIPES ----
 export const BREWERY_RECIPES = [
   {
@@ -388,6 +527,55 @@ export const BREWERY_RECIPES = [
     materials: { 'herb-bundle': 8, 'glass-vial': 3, 'toxic-resin': 3, 'starlight-dust': 1 },
     result: { type: 'energy-drink', tier: 3 }, craftTime: 20000,
     desc: 'Brew the ultimate energy restoration elixir.',
+  },
+  // ---- BUFF POTIONS ----
+  {
+    id: 'brew-warcry-tonic', name: 'Brew Warcry Tonic',
+    materials: { 'herb-bundle': 3, 'glass-vial': 1, 'toxic-resin': 2 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-atk' }, craftTime: 12000,
+    desc: '+8% ATK for 10 min.',
+  },
+  {
+    id: 'brew-ironhide-elixir', name: 'Brew Ironhide Elixir',
+    materials: { 'herb-bundle': 3, 'glass-vial': 1, 'iron-ore': 2 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-def' }, craftTime: 12000,
+    desc: '+8% DEF for 10 min.',
+  },
+  {
+    id: 'brew-berserker-brew', name: 'Brew Berserker Brew',
+    materials: { 'herb-bundle': 5, 'glass-vial': 2, 'toxic-resin': 3, 'crystal-shard': 1 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-atk-strong' }, craftTime: 18000,
+    desc: '+15% ATK for 20 min.',
+  },
+  {
+    id: 'brew-titanshield', name: 'Brew Titanshield Draught',
+    materials: { 'herb-bundle': 5, 'glass-vial': 2, 'iron-ore': 3, 'crystal-shard': 1 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-def-strong' }, craftTime: 18000,
+    desc: '+15% DEF for 20 min.',
+  },
+  {
+    id: 'brew-scholar-draught', name: 'Brew Scholar\'s Draught',
+    materials: { 'herb-bundle': 4, 'glass-vial': 2, 'crystal-shard': 2 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-xp' }, craftTime: 15000,
+    desc: '+10% XP for 30 min.',
+  },
+  {
+    id: 'brew-midas-flask', name: 'Brew Midas Flask',
+    materials: { 'herb-bundle': 4, 'glass-vial': 2, 'deep-coral': 1, 'toxic-resin': 2 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-gold' }, craftTime: 15000,
+    desc: '+12% Gold for 30 min.',
+  },
+  {
+    id: 'brew-precision-serum', name: 'Brew Precision Serum',
+    materials: { 'herb-bundle': 6, 'glass-vial': 2, 'crystal-shard': 2, 'starlight-dust': 1 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-crit' }, craftTime: 22000,
+    desc: '5% double damage for 15 min.',
+  },
+  {
+    id: 'brew-elixir-ancients', name: 'Brew Elixir of the Ancients',
+    materials: { 'herb-bundle': 10, 'glass-vial': 3, 'crystal-shard': 3, 'starlight-dust': 2, 'void-essence': 1 },
+    result: { type: 'buff-potion', buffPotionId: 'buff-all' }, craftTime: 30000,
+    desc: '+10% ATK/DEF, +8% XP/Gold for 1 hour.',
   },
 ];
 

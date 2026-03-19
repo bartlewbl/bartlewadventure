@@ -3,6 +3,7 @@
 
 import { CHARACTER_CLASSES } from '../data/gameData';
 import { getTreeSkill } from '../data/skillTrees';
+import { getActiveBuffs } from '../data/baseData';
 
 export function calcDamage(atk, def) {
   const base = Math.max(1, atk - def * 0.5);
@@ -43,7 +44,7 @@ export function getEffectiveManaCost(player, baseCost, battle) {
   return Math.max(1, cost);
 }
 
-export function getPlayerAtk(player, battle) {
+export function getPlayerAtk(player, battle, activeBuffs) {
   let atk = player.baseAtk;
   let equipAtk = 0;
   for (const item of Object.values(player.equipment)) {
@@ -191,10 +192,15 @@ export function getPlayerAtk(player, battle) {
   if (battle?.monsterMarkTurns > 0) {
     atk = Math.floor(atk * 1.25);
   }
+  // Buff potion ATK bonus
+  if (activeBuffs) {
+    const buffs = getActiveBuffs(activeBuffs);
+    if (buffs.atk > 0) atk = Math.floor(atk * (1 + buffs.atk));
+  }
   return Math.max(1, atk - (battle?.atkDebuff || 0));
 }
 
-export function getPlayerDef(player, battle) {
+export function getPlayerDef(player, battle, activeBuffs) {
   let def = player.baseDef;
   for (const item of Object.values(player.equipment)) {
     if (item) def += (item.def || 0);
@@ -245,6 +251,11 @@ export function getPlayerDef(player, battle) {
   // Cataclysm of Steel halved DEF
   if (battle?.playerDefHalved) {
     def = Math.floor(def * 0.5);
+  }
+  // Buff potion DEF bonus
+  if (activeBuffs) {
+    const buffs = getActiveBuffs(activeBuffs);
+    if (buffs.def > 0) def = Math.floor(def * (1 + buffs.def));
   }
   return Math.max(0, def - (battle?.defDebuff || 0));
 }

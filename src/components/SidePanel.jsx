@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import CharacterDock from './CharacterDock';
 import useGameClock from '../hooks/useGameClock';
+import { BUFF_POTION_TYPES } from '../data/baseData';
 
 export default function SidePanel({
   collapsed,
@@ -31,9 +33,24 @@ export default function SidePanel({
   onProfile,
   onSkills,
   canRest,
+  activeBuffs,
   lastEnergyUpdate,
 }) {
   const clock = useGameClock();
+  const [, forceUpdate] = useState(0);
+
+  // Re-render every second to update buff timers
+  useEffect(() => {
+    if (!activeBuffs || activeBuffs.length === 0) return;
+    const interval = setInterval(() => forceUpdate(n => n + 1), 1000);
+    return () => clearInterval(interval);
+  }, [activeBuffs]);
+
+  const now = Date.now();
+  const visibleBuffs = (activeBuffs || []).filter(b => {
+    const bType = BUFF_POTION_TYPES[b.buffPotionId];
+    return bType && (now - b.startTime < bType.duration);
+  });
 
   const navItems = [
     {
@@ -132,6 +149,25 @@ export default function SidePanel({
             </div>
             <div className="side-clock-reset">Daily reset: {clock.dailyResetIn}</div>
           </div>
+
+          {visibleBuffs.length > 0 && (
+            <div className="side-panel-buffs">
+              <div className="side-panel-card-label">Active Buffs</div>
+              {visibleBuffs.map(buff => {
+                const bType = BUFF_POTION_TYPES[buff.buffPotionId];
+                const remaining = Math.max(0, buff.duration - (now - buff.startTime));
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                return (
+                  <div key={buff.buffPotionId} className="side-buff-item">
+                    <span className="side-buff-name">{bType.name}</span>
+                    <span className="side-buff-timer">{timeStr}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {currentLocation && (
             <div className="side-panel-card">

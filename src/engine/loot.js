@@ -2,7 +2,7 @@
 // All item creation logic extracted from gameData.js
 
 import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS } from '../data/gameData';
-import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem } from '../data/baseData';
+import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, BUFF_POTION_TYPES, BUFF_POTION_DROP_TABLE } from '../data/baseData';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
 
 function pickFromLibrary(pool, targetLevel) {
@@ -49,7 +49,62 @@ function buildGearDrop(template, monsterLevel, dropType) {
   };
 }
 
+// Generate a random buff potion from the drop table
+export function generateBuffPotion() {
+  const totalWeight = BUFF_POTION_DROP_TABLE.reduce((s, e) => s + e.weight, 0);
+  let roll = Math.random() * totalWeight;
+  let picked = BUFF_POTION_DROP_TABLE[BUFF_POTION_DROP_TABLE.length - 1];
+  for (const entry of BUFF_POTION_DROP_TABLE) {
+    roll -= entry.weight;
+    if (roll <= 0) { picked = entry; break; }
+  }
+  const bType = BUFF_POTION_TYPES[picked.id];
+  if (!bType) return null;
+  const rarityData = RARITY_LOOKUP[bType.rarity] || RARITIES[0];
+  return {
+    id: uid(),
+    name: bType.name,
+    type: 'buff-potion',
+    buffPotionId: bType.id,
+    slot: null,
+    level: 1,
+    rarity: bType.rarity,
+    rarityClass: rarityData.cssClass,
+    rarityColor: rarityData.color,
+    icon: 'buff-potion',
+    description: bType.description,
+    sellPrice: bType.sellPrice,
+    duration: bType.duration,
+  };
+}
+
+// Generate a specific buff potion by ID (used by brewery crafting)
+export function generateSpecificBuffPotion(buffPotionId) {
+  const bType = BUFF_POTION_TYPES[buffPotionId];
+  if (!bType) return null;
+  const rarityData = RARITY_LOOKUP[bType.rarity] || RARITIES[0];
+  return {
+    id: uid(),
+    name: bType.name,
+    type: 'buff-potion',
+    buffPotionId: bType.id,
+    slot: null,
+    level: 1,
+    rarity: bType.rarity,
+    rarityClass: rarityData.cssClass,
+    rarityColor: rarityData.color,
+    icon: 'buff-potion',
+    description: bType.description,
+    sellPrice: bType.sellPrice,
+    duration: bType.duration,
+  };
+}
+
 export function generateItem(dropType, monsterLevel) {
+  if (dropType === 'buff-potion') {
+    return generateBuffPotion();
+  }
+
   if (dropType === 'potion') {
     const rarity = pickWeighted(RARITIES);
     const tierIndex = Math.min(POTION_TIERS.length - 1, Math.floor(monsterLevel / 4));

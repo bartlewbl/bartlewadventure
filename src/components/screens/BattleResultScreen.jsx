@@ -27,6 +27,11 @@ export default function BattleResultScreen({ result, onContinue }) {
                 Material: {result.materialDrop.name}
               </div>
             )}
+            {result.buffPotionDrop && (
+              <div className={result.buffPotionDrop.rarityClass}>
+                Buff Potion: {result.buffPotionDrop.name} [{result.buffPotionDrop.rarity}]
+              </div>
+            )}
             {!result.droppedItem && result.lostItemName && (
               <div className="rarity-common">
                 Pack full: {result.lostItemName} slipped away.
