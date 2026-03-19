@@ -325,12 +325,37 @@ export const BUILDINGS = {
     icon: 'farm',
     plots: 3,
     crops: [
+      // --- Tier 1: Quick crops (15-45 min) ---
       { id: 'herb-patch', name: 'Herb Patch', growTime: 30 * 60 * 1000, desc: '30 min - Herb Bundles + Food', cost: { gold: 20 }, yield: { materialId: 'herb-bundle', qty: [2, 4] }, foodYield: { name: 'Fresh Herbs', fuelMinutes: 10 } },
-      { id: 'crystal-bloom', name: 'Crystal Bloom', growTime: 2 * 60 * 60 * 1000, desc: '2 hours - Crystal Shards + Food', cost: { gold: 80 }, yield: { materialId: 'crystal-shard', qty: [1, 2] }, foodYield: { name: 'Crystal Nectar', fuelMinutes: 40 } },
-      { id: 'toxic-vine', name: 'Toxic Vine', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Toxic Resin + Food', cost: { gold: 40 }, yield: { materialId: 'toxic-resin', qty: [1, 3] }, foodYield: { name: 'Vine Berries', fuelMinutes: 20 } },
       { id: 'iron-root', name: 'Iron Root', growTime: 45 * 60 * 1000, desc: '45 min - Iron Ore + Food', cost: { gold: 30 }, yield: { materialId: 'iron-ore', qty: [2, 4] }, foodYield: { name: 'Root Vegetables', fuelMinutes: 15 } },
+      { id: 'neon-lettuce', name: 'Neon Lettuce', growTime: 15 * 60 * 1000, desc: '15 min - Quick food crop', cost: { gold: 10 }, yield: { gold: [12, 18] }, foodYield: { name: 'Neon Lettuce Wrap', fuelMinutes: 5 } },
+      { id: 'glow-radish', name: 'Glow Radish', growTime: 20 * 60 * 1000, desc: '20 min - Glass Vials + Food', cost: { gold: 15 }, yield: { materialId: 'glass-vial', qty: [1, 3] }, foodYield: { name: 'Pickled Radish', fuelMinutes: 8 } },
+      { id: 'scrap-moss', name: 'Scrap Moss', growTime: 25 * 60 * 1000, desc: '25 min - Scrap Wood + Food', cost: { gold: 18 }, yield: { materialId: 'scrap-wood', qty: [2, 5] }, foodYield: { name: 'Moss Soup', fuelMinutes: 9 } },
+      { id: 'rust-wheat', name: 'Rust Wheat', growTime: 35 * 60 * 1000, desc: '35 min - Gold + Food', cost: { gold: 25 }, yield: { gold: [30, 50] }, foodYield: { name: 'Rust Bread', fuelMinutes: 12 } },
+
+      // --- Tier 2: Medium crops (1-2 hours) ---
+      { id: 'toxic-vine', name: 'Toxic Vine', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Toxic Resin + Food', cost: { gold: 40 }, yield: { materialId: 'toxic-resin', qty: [1, 3] }, foodYield: { name: 'Vine Berries', fuelMinutes: 20 } },
+      { id: 'crystal-bloom', name: 'Crystal Bloom', growTime: 2 * 60 * 60 * 1000, desc: '2 hours - Crystal Shards + Food', cost: { gold: 80 }, yield: { materialId: 'crystal-shard', qty: [1, 2] }, foodYield: { name: 'Crystal Nectar', fuelMinutes: 40 } },
+      { id: 'charcoal-fungus', name: 'Charcoal Fungus', growTime: 1.5 * 60 * 60 * 1000, desc: '1.5 hours - Charcoal + Food', cost: { gold: 50 }, yield: { materialId: 'charcoal', qty: [2, 4] }, foodYield: { name: 'Smoked Mushroom', fuelMinutes: 25 } },
+      { id: 'copper-melon', name: 'Copper Melon', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Copper Wire + Food', cost: { gold: 45 }, yield: { materialId: 'copper-wire', qty: [1, 2] }, foodYield: { name: 'Melon Slices', fuelMinutes: 22 } },
+      { id: 'stone-tuber', name: 'Stone Tuber', growTime: 50 * 60 * 1000, desc: '50 min - Stone Blocks + Food', cost: { gold: 35 }, yield: { materialId: 'stone-block', qty: [2, 4] }, foodYield: { name: 'Baked Tuber', fuelMinutes: 18 } },
+      { id: 'marsh-pepper', name: 'Marsh Pepper', growTime: 1.25 * 60 * 60 * 1000, desc: '1.25 hours - Toxic Resin + Food', cost: { gold: 55 }, yield: { materialId: 'toxic-resin', qty: [2, 4] }, foodYield: { name: 'Spicy Pepper Stew', fuelMinutes: 28 } },
+      { id: 'ember-corn', name: 'Ember Corn', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Coal Chunks + Food', cost: { gold: 60 }, yield: { materialId: 'coal-chunk', qty: [1, 2] }, foodYield: { name: 'Popped Ember Corn', fuelMinutes: 30 } },
+      { id: 'frost-carrot', name: 'Frost Carrot', growTime: 1.5 * 60 * 60 * 1000, desc: '1.5 hours - Stone Blocks + Food', cost: { gold: 65 }, yield: { materialId: 'stone-block', qty: [3, 5] }, foodYield: { name: 'Frost Carrot Cake', fuelMinutes: 32 } },
+
+      // --- Tier 3: Slow crops (3-6 hours) ---
       { id: 'gold-grain', name: 'Gold Grain', growTime: 4 * 60 * 60 * 1000, desc: '4 hours - Gold harvest + Food', cost: { gold: 100 }, yield: { gold: [150, 300] }, foodYield: { name: 'Golden Porridge', fuelMinutes: 50 } },
+      { id: 'coral-bulb', name: 'Coral Bulb', growTime: 3 * 60 * 60 * 1000, desc: '3 hours - Deep Coral + Food', cost: { gold: 120 }, yield: { materialId: 'deep-coral', qty: [1, 2] }, foodYield: { name: 'Coral Chowder', fuelMinutes: 60 } },
+      { id: 'iron-pumpkin', name: 'Iron Pumpkin', growTime: 3.5 * 60 * 60 * 1000, desc: '3.5 hours - Iron Ore + Food', cost: { gold: 90 }, yield: { materialId: 'iron-ore', qty: [4, 8] }, foodYield: { name: 'Pumpkin Pie', fuelMinutes: 45 } },
+      { id: 'plasma-grape', name: 'Plasma Grape', growTime: 5 * 60 * 60 * 1000, desc: '5 hours - Gold + Food', cost: { gold: 150 }, yield: { gold: [220, 420] }, foodYield: { name: 'Plasma Wine', fuelMinutes: 75 } },
+      { id: 'thunder-bean', name: 'Thunder Bean', growTime: 4 * 60 * 60 * 1000, desc: '4 hours - Crystal Shards + Food', cost: { gold: 130 }, yield: { materialId: 'crystal-shard', qty: [2, 3] }, foodYield: { name: 'Thunder Bean Chili', fuelMinutes: 65 } },
+      { id: 'oil-seed', name: 'Oil Seed', growTime: 3 * 60 * 60 * 1000, desc: '3 hours - Oil Canisters + Food', cost: { gold: 110 }, yield: { materialId: 'oil-canister', qty: [1, 2] }, foodYield: { name: 'Fried Oil Cakes', fuelMinutes: 55 } },
+
+      // --- Tier 4: Long crops (6-12 hours) ---
       { id: 'starlight-flower', name: 'Starlight Flower', growTime: 8 * 60 * 60 * 1000, desc: '8 hours - Starlight Dust + Food', cost: { gold: 200 }, yield: { materialId: 'starlight-dust', qty: [1, 2] }, foodYield: { name: 'Starlight Salad', fuelMinutes: 100 } },
+      { id: 'void-orchid', name: 'Void Orchid', growTime: 12 * 60 * 60 * 1000, desc: '12 hours - Void Essence + Food', cost: { gold: 400 }, yield: { materialId: 'void-essence', qty: [1, 1] }, foodYield: { name: 'Void Truffle Risotto', fuelMinutes: 200 } },
+      { id: 'celestial-fig', name: 'Celestial Fig', growTime: 10 * 60 * 60 * 1000, desc: '10 hours - Gold + Food', cost: { gold: 300 }, yield: { gold: [500, 800] }, foodYield: { name: 'Celestial Fig Tart', fuelMinutes: 150 } },
+      { id: 'abyssal-kelp', name: 'Abyssal Kelp', growTime: 6 * 60 * 60 * 1000, desc: '6 hours - Deep Coral + Food', cost: { gold: 180 }, yield: { materialId: 'deep-coral', qty: [2, 3] }, foodYield: { name: 'Kelp Noodle Bowl', fuelMinutes: 90 } },
     ],
     levelReq: 4,
   },
@@ -903,46 +928,49 @@ export const INCUBATOR_MAX_FOOD = 1440; // 24 hours
 // ---- GROCERY SHOP ----
 // Stock available at the grocery shop (food items for incubator and general consumables)
 export const GROCERY_ITEMS = [
-  {
-    id: 'shop-dried-crickets', foodId: 'dried-crickets',
-    name: 'Dried Crickets', type: 'incubator-food',
-    fuelMinutes: 15,
-    rarity: 'Common', buyPrice: 10, sellPrice: 3,
-    description: 'Crunchy dried insects. Basic incubator fuel. +15 min.',
-    levelReq: 1,
-  },
-  {
-    id: 'shop-nutrient-paste', foodId: 'nutrient-paste',
-    name: 'Nutrient Paste', type: 'incubator-food',
-    fuelMinutes: 45,
-    rarity: 'Common', buyPrice: 25, sellPrice: 8,
-    description: 'Thick vitamin paste. Steady incubator fuel. +45 min.',
-    levelReq: 1,
-  },
-  {
-    id: 'shop-golden-grub', foodId: 'golden-grub',
-    name: 'Golden Grub', type: 'incubator-food',
-    fuelMinutes: 120,
-    rarity: 'Uncommon', buyPrice: 60, sellPrice: 20,
-    description: 'Premium golden larvae. +2 hours of incubation.',
-    levelReq: 6,
-  },
-  {
-    id: 'shop-moonberry-jam', foodId: 'moonberry-jam',
-    name: 'Moonberry Jam', type: 'incubator-food',
-    fuelMinutes: 300,
-    rarity: 'Rare', buyPrice: 140, sellPrice: 50,
-    description: 'Enchanted jam. +5 hours of incubation.',
-    levelReq: 12,
-  },
-  {
-    id: 'shop-phoenix-nectar', foodId: 'phoenix-nectar',
-    name: 'Phoenix Nectar', type: 'incubator-food',
-    fuelMinutes: 720,
-    rarity: 'Epic', buyPrice: 300, sellPrice: 110,
-    description: 'Legendary nectar. +12 hours of incubation.',
-    levelReq: 18,
-  },
+  // --- Common (Lv.1) ---
+  { id: 'shop-dried-crickets', name: 'Dried Crickets', type: 'incubator-food', fuelMinutes: 15, rarity: 'Common', buyPrice: 10, sellPrice: 3, description: 'Crunchy dried insects. Basic incubator fuel. +15 min.', levelReq: 1 },
+  { id: 'shop-nutrient-paste', name: 'Nutrient Paste', type: 'incubator-food', fuelMinutes: 45, rarity: 'Common', buyPrice: 25, sellPrice: 8, description: 'Thick vitamin paste. Steady incubator fuel. +45 min.', levelReq: 1 },
+  { id: 'shop-stale-bread', name: 'Stale Bread', type: 'incubator-food', fuelMinutes: 10, rarity: 'Common', buyPrice: 6, sellPrice: 2, description: 'Hard bread. Better than nothing. +10 min.', levelReq: 1 },
+  { id: 'shop-worm-jerky', name: 'Worm Jerky', type: 'incubator-food', fuelMinutes: 20, rarity: 'Common', buyPrice: 12, sellPrice: 4, description: 'Chewy dried worms. +20 min.', levelReq: 1 },
+  { id: 'shop-rice-ball', name: 'Rice Ball', type: 'incubator-food', fuelMinutes: 25, rarity: 'Common', buyPrice: 15, sellPrice: 5, description: 'Simple rice ball wrapped in seaweed. +25 min.', levelReq: 1 },
+  { id: 'shop-mushroom-broth', name: 'Mushroom Broth', type: 'incubator-food', fuelMinutes: 30, rarity: 'Common', buyPrice: 18, sellPrice: 6, description: 'Warm savory broth. +30 min.', levelReq: 1 },
+  { id: 'shop-dried-fruit', name: 'Dried Fruit Mix', type: 'incubator-food', fuelMinutes: 35, rarity: 'Common', buyPrice: 20, sellPrice: 7, description: 'Assorted dehydrated fruits. +35 min.', levelReq: 1 },
+  { id: 'shop-oat-biscuit', name: 'Oat Biscuit', type: 'incubator-food', fuelMinutes: 40, rarity: 'Common', buyPrice: 22, sellPrice: 7, description: 'Dense oat biscuit with honey. +40 min.', levelReq: 1 },
+
+  // --- Common (Lv.3-5) ---
+  { id: 'shop-egg-custard', name: 'Egg Custard', type: 'incubator-food', fuelMinutes: 50, rarity: 'Common', buyPrice: 28, sellPrice: 9, description: 'Creamy custard. Eggs love irony. +50 min.', levelReq: 3 },
+  { id: 'shop-honey-cake', name: 'Honey Cake', type: 'incubator-food', fuelMinutes: 55, rarity: 'Common', buyPrice: 32, sellPrice: 10, description: 'Sweet cake dripping with wild honey. +55 min.', levelReq: 3 },
+  { id: 'shop-smoked-fish', name: 'Smoked Fish', type: 'incubator-food', fuelMinutes: 60, rarity: 'Common', buyPrice: 35, sellPrice: 11, description: 'Salt-cured and smoked to perfection. +1 hour.', levelReq: 4 },
+  { id: 'shop-cheese-wedge', name: 'Cheese Wedge', type: 'incubator-food', fuelMinutes: 65, rarity: 'Common', buyPrice: 38, sellPrice: 12, description: 'Aged cave cheese. Pungent but nutritious. +65 min.', levelReq: 5 },
+
+  // --- Uncommon (Lv.6-10) ---
+  { id: 'shop-golden-grub', name: 'Golden Grub', type: 'incubator-food', fuelMinutes: 120, rarity: 'Uncommon', buyPrice: 60, sellPrice: 20, description: 'Premium golden larvae. +2 hours of incubation.', levelReq: 6 },
+  { id: 'shop-spiced-sausage', name: 'Spiced Sausage', type: 'incubator-food', fuelMinutes: 80, rarity: 'Uncommon', buyPrice: 45, sellPrice: 15, description: 'Hearty sausage with marsh peppers. +80 min.', levelReq: 6 },
+  { id: 'shop-crystal-candy', name: 'Crystal Candy', type: 'incubator-food', fuelMinutes: 90, rarity: 'Uncommon', buyPrice: 50, sellPrice: 16, description: 'Hard candy infused with crystal dust. +90 min.', levelReq: 7 },
+  { id: 'shop-stuffed-pepper', name: 'Stuffed Pepper', type: 'incubator-food', fuelMinutes: 100, rarity: 'Uncommon', buyPrice: 55, sellPrice: 18, description: 'Marsh pepper stuffed with grain. +100 min.', levelReq: 7 },
+  { id: 'shop-meat-pie', name: 'Meat Pie', type: 'incubator-food', fuelMinutes: 110, rarity: 'Uncommon', buyPrice: 58, sellPrice: 19, description: 'Flaky crust with seasoned filling. +110 min.', levelReq: 8 },
+  { id: 'shop-neon-noodles', name: 'Neon Noodles', type: 'incubator-food', fuelMinutes: 130, rarity: 'Uncommon', buyPrice: 65, sellPrice: 21, description: 'Glowing street noodles from the Neon District. +130 min.', levelReq: 9 },
+  { id: 'shop-frost-cream', name: 'Frost Cream', type: 'incubator-food', fuelMinutes: 140, rarity: 'Uncommon', buyPrice: 70, sellPrice: 23, description: 'Never-melting frozen dessert. +140 min.', levelReq: 9 },
+  { id: 'shop-ember-steak', name: 'Ember Steak', type: 'incubator-food', fuelMinutes: 150, rarity: 'Uncommon', buyPrice: 75, sellPrice: 25, description: 'Thick steak seared over ember coals. +150 min.', levelReq: 10 },
+
+  // --- Rare (Lv.12-16) ---
+  { id: 'shop-moonberry-jam', name: 'Moonberry Jam', type: 'incubator-food', fuelMinutes: 300, rarity: 'Rare', buyPrice: 140, sellPrice: 50, description: 'Enchanted jam. +5 hours of incubation.', levelReq: 12 },
+  { id: 'shop-coral-sashimi', name: 'Coral Sashimi', type: 'incubator-food', fuelMinutes: 200, rarity: 'Rare', buyPrice: 100, sellPrice: 35, description: 'Fresh-cut deep sea delicacy. +200 min.', levelReq: 12 },
+  { id: 'shop-dragon-dumpling', name: 'Dragon Dumpling', type: 'incubator-food', fuelMinutes: 240, rarity: 'Rare', buyPrice: 115, sellPrice: 40, description: 'Steamed dumpling with fiery filling. +4 hours.', levelReq: 13 },
+  { id: 'shop-thunder-mochi', name: 'Thunder Mochi', type: 'incubator-food', fuelMinutes: 270, rarity: 'Rare', buyPrice: 125, sellPrice: 44, description: 'Stretchy rice cake that crackles with energy. +270 min.', levelReq: 14 },
+  { id: 'shop-shadow-truffle', name: 'Shadow Truffle', type: 'incubator-food', fuelMinutes: 330, rarity: 'Rare', buyPrice: 155, sellPrice: 55, description: 'Rare fungus found only in void-touched soil. +330 min.', levelReq: 15 },
+  { id: 'shop-plasma-pudding', name: 'Plasma Pudding', type: 'incubator-food', fuelMinutes: 360, rarity: 'Rare', buyPrice: 170, sellPrice: 60, description: 'Luminescent dessert that hums with power. +6 hours.', levelReq: 16 },
+
+  // --- Epic (Lv.18-22) ---
+  { id: 'shop-phoenix-nectar', name: 'Phoenix Nectar', type: 'incubator-food', fuelMinutes: 720, rarity: 'Epic', buyPrice: 300, sellPrice: 110, description: 'Legendary nectar. +12 hours of incubation.', levelReq: 18 },
+  { id: 'shop-celestial-fondue', name: 'Celestial Fondue', type: 'incubator-food', fuelMinutes: 480, rarity: 'Epic', buyPrice: 220, sellPrice: 80, description: 'Melted starlight cheese with cosmic bread. +8 hours.', levelReq: 18 },
+  { id: 'shop-void-ramen', name: 'Void Ramen', type: 'incubator-food', fuelMinutes: 540, rarity: 'Epic', buyPrice: 250, sellPrice: 90, description: 'Broth simmered in the space between worlds. +9 hours.', levelReq: 20 },
+  { id: 'shop-titan-roast', name: 'Titan Roast', type: 'incubator-food', fuelMinutes: 600, rarity: 'Epic', buyPrice: 270, sellPrice: 100, description: 'Massive slow-roasted feast fit for a titan. +10 hours.', levelReq: 20 },
+
+  // --- Legendary (Lv.25+) ---
+  { id: 'shop-ambrosia-cake', name: 'Ambrosia Cake', type: 'incubator-food', fuelMinutes: 960, rarity: 'Legendary', buyPrice: 500, sellPrice: 180, description: 'Divine pastry that transcends mortal baking. +16 hours.', levelReq: 25 },
+  { id: 'shop-eternity-stew', name: 'Eternity Stew', type: 'incubator-food', fuelMinutes: 1440, rarity: 'Legendary', buyPrice: 800, sellPrice: 300, description: 'A stew that simmers outside of time itself. +24 hours.', levelReq: 28 },
 ];
 
 export function getGroceryStock(playerLevel) {
