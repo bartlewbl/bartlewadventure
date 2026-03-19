@@ -7,7 +7,7 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
-import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
+import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
@@ -3144,13 +3144,27 @@ function handleVictory(state) {
 
   // Roll for building material drop based on region
   let materialDrop = null;
+  let bossMaterials = null;
   const regionId = state.currentRegion?.id;
   if (regionId) {
-    materialDrop = rollMaterialDrop(regionId);
-    if (materialDrop && p.inventory.length < p.maxInventory) {
-      p.inventory = [...p.inventory, materialDrop];
-    } else if (materialDrop) {
-      materialDrop = null; // inventory full
+    if (m.isBoss) {
+      // Bosses always drop many materials
+      const mats = rollBossMaterials(regionId);
+      const added = [];
+      for (const mat of mats) {
+        if (p.inventory.length < p.maxInventory) {
+          p.inventory = [...p.inventory, mat];
+          added.push(mat);
+        }
+      }
+      if (added.length > 0) bossMaterials = added;
+    } else {
+      materialDrop = rollMaterialDrop(regionId);
+      if (materialDrop && p.inventory.length < p.maxInventory) {
+        p.inventory = [...p.inventory, materialDrop];
+      } else if (materialDrop) {
+        materialDrop = null; // inventory full
+      }
     }
   }
 
@@ -3165,7 +3179,10 @@ function handleVictory(state) {
     }
   }
 
-  const droppedItem = rollDrop(m.dropTable, m.level);
+  // Bosses always drop a gear item of at least Rare quality
+  const droppedItem = m.isBoss
+    ? rollBossDrop(m.dropTable, m.level)
+    : rollDrop(m.dropTable, m.level);
   let lootAdded = false;
   let lostItemName = null;
   if (droppedItem) {
@@ -3225,6 +3242,7 @@ function handleVictory(state) {
       victory: true, expGain, goldGain,
       droppedItem: lootAdded ? droppedItem : null,
       materialDrop: materialDrop || null,
+      bossMaterials: bossMaterials || null,
       eggDrop: eggDrop || null,
       lostItemName,
       levelUps: pendingLevels,
