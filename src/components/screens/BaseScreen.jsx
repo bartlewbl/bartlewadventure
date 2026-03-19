@@ -79,7 +79,7 @@ function BuildingInfoModal({ buildingId, buildingDef, player, base, onClose, onB
         <div className="base-info-header">
           <div className="base-info-icon">{BUILDING_ICONS[buildingId] || '\uD83C\uDFE0'}</div>
           <div className="base-info-name">{buildingDef.name}</div>
-          <button className="btn btn-sm base-info-close" onClick={onClose}>\u2715</button>
+          <button className="btn btn-sm base-info-close" onClick={onClose}>{'✕'}</button>
         </div>
         <div className="base-info-desc">{buildingDef.description}</div>
 
@@ -146,12 +146,12 @@ function FuelPanel({ base, player, onAddFuel, onAddFuelFromStorage }) {
 
   return (
     <div className="base-fuel-panel">
-      <div className="base-section-title">\uD83D\uDD25 Furnace Fuel</div>
+      <div className="base-section-title">{'🔥'} Furnace Fuel</div>
       <div className="base-fuel-bar-track">
         <div className="base-fuel-bar-fill" style={{ width: `${fuelPercent}%` }} />
         <span className="base-fuel-bar-text">{Math.floor(currentFuel)} / 480 min</span>
       </div>
-      {currentFuel <= 0 && <div className="base-warning">\u26A0 No fuel! Buildings cannot operate.</div>}
+      {currentFuel <= 0 && <div className="base-warning">{'⚠'} No fuel! Buildings cannot operate.</div>}
 
       {fuelMats.length > 0 && (
         <div className="base-fuel-sources">
@@ -186,7 +186,7 @@ function MaterialStoragePanel({ base, player, onStoreMaterial }) {
 
   return (
     <div className="base-storage-panel">
-      <div className="base-section-title">\uD83D\uDCE6 Material Storage</div>
+      <div className="base-section-title">{'📦'} Material Storage</div>
       <div className="base-material-grid">
         {Object.entries(materials).filter(([, qty]) => qty > 0).map(([id, qty]) => {
           const mat = BUILDING_MATERIALS[id];
@@ -954,7 +954,7 @@ export default function BaseScreen({
             />
             <MaterialStoragePanel base={base} player={player} onStoreMaterial={onStoreMaterial} />
 
-            <div className="base-section-title">\uD83C\uDFD7\uFE0F Buildings</div>
+            <div className="base-section-title">{'🏗️'} Buildings</div>
             <div className="base-buildings-grid">
               {Object.entries(BUILDINGS).map(([id, def]) => {
                 const built = buildings[id]?.built;
@@ -968,9 +968,9 @@ export default function BaseScreen({
                     <div className="base-building-card-name">{def.name}</div>
                     <div className="base-building-card-status">
                       {built ? (
-                        <span className="base-status-active">\u2714 Active</span>
+                        <span className="base-status-active">{'✔'} Active</span>
                       ) : (
-                        <span className="base-status-locked">\uD83D\uDD12 Lv.{def.levelReq} | {def.buildCost.gold}g</span>
+                        <span className="base-status-locked">{'🔒'} Lv.{def.levelReq} | {def.buildCost.gold}g</span>
                       )}
                     </div>
                   </div>
@@ -1040,9 +1040,9 @@ export default function BaseScreen({
   return (
     <div className="screen screen-base">
       <div className="base-header">
-        <button className="btn btn-sm base-back-btn" onClick={onBack}>\u2190 Town</button>
-        <div className="base-title">\uD83C\uDFF0 Your Base</div>
-        <div className="base-gold">\uD83D\uDCB0 {player.gold}g</div>
+        <button className="btn btn-sm base-back-btn" onClick={onBack}>{'←'} Town</button>
+        <div className="base-title">{'🏰'} Your Base</div>
+        <div className="base-gold">{'💰'} {player.gold}g</div>
       </div>
 
       <div className="base-tabs">
