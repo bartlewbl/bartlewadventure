@@ -176,7 +176,18 @@ export default function LocationsScreen({
                 disabled={locked}
               >
                 <div className="location-item-left">
-                  <div className="location-name">{loc.name}</div>
+                  <div className="location-name">
+                    {loc.name}
+                    <span
+                      className={`location-info-btn ${expanded ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setExpandedId(expanded ? null : loc.id);
+                      }}
+                      title="View spawn info"
+                    >?</span>
+                  </div>
                   <div className="location-desc">{loc.description}</div>
                   {(needsLevel || needsEnergy) && (
                     <div className="location-req">
@@ -187,16 +198,6 @@ export default function LocationsScreen({
                 <div className="location-level">
                   Lv.{loc.levelReq}+
                 </div>
-              </button>
-              <button
-                className={`location-info-btn ${expanded ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpandedId(expanded ? null : loc.id);
-                }}
-                title="View spawn info"
-              >
-                ?
               </button>
               {expanded && (
                 <LocationSpawnInfo location={loc} regionId={regionId} />
