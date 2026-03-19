@@ -1,3 +1,5 @@
+import ItemDropWindow from '../ItemDropWindow';
+
 export default function BattleResultScreen({ result, onContinue }) {
   if (!result) return null;
 
@@ -18,19 +20,13 @@ export default function BattleResultScreen({ result, onContinue }) {
             <div>+{result.expGain} EXP{result.innBonus ? ` (Inn +${Math.round(result.innBonus * 100)}%)` : ''}</div>
             <div>+{result.goldGain} Gold</div>
             {result.droppedItem && (
-              <div className={result.droppedItem.rarityClass}>
-                Got: {result.droppedItem.name} [{result.droppedItem.rarity}]
-              </div>
+              <ItemDropWindow item={result.droppedItem} label="Loot Drop!" />
             )}
             {result.materialDrop && (
-              <div className={`rarity-${(result.materialDrop.rarity || 'common').toLowerCase()}`}>
-                Material: {result.materialDrop.name}
-              </div>
+              <ItemDropWindow item={result.materialDrop} label="Material Found!" />
             )}
             {result.eggDrop && (
-              <div className={`rarity-${(result.eggDrop.rarity || 'common').toLowerCase()}`}>
-                {'\uD83E\uDD5A'} Rare Find: {result.eggDrop.name} [{result.eggDrop.rarity}]
-              </div>
+              <ItemDropWindow item={result.eggDrop} label="Rare Find!" />
             )}
             {!result.droppedItem && result.lostItemName && (
               <div className="rarity-common">

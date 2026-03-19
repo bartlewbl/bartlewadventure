@@ -274,6 +274,7 @@ export default function App() {
               <ExploreScreen
                 location={state.currentLocation}
                 text={state.exploreText}
+                foundItem={state.exploreFoundItem}
                 onContinue={actions.exploreStep}
                 onBack={actions.goToTown}
               />
