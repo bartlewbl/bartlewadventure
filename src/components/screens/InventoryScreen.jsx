@@ -12,7 +12,7 @@ for (const region of REGIONS) {
 const SLOT_NAMES = {
   weapon: 'Weapon', shield: 'Shield', helmet: 'Helmet',
   armor: 'Armor', gloves: 'Gloves', boots: 'Boots',
-  belt: 'Belt', cape: 'Cape', amulet: 'Amulet', accessory: 'Accessory',
+  belt: 'Belt', cape: 'Cape', amulet: 'Amulet', accessory: 'Ring 1', accessory2: 'Ring 2',
 };
 
 const INV_CATEGORIES = [
@@ -165,7 +165,7 @@ export default function InventoryScreen({
     const item = getDraggedItem();
     if (!item) return;
     event.preventDefault();
-    const valid = item.slot === slot;
+    const valid = item.slot === slot || (item.slot === 'accessory' && slot === 'accessory2');
     event.dataTransfer.dropEffect = valid ? 'move' : 'none';
     setSlotHover({ slot, valid });
     setHoverState(null);
@@ -177,11 +177,12 @@ export default function InventoryScreen({
     if (!item) return;
     event.preventDefault();
     event.stopPropagation();
-    if (item.slot !== slot) {
+    const validSlot = item.slot === slot || (item.slot === 'accessory' && slot === 'accessory2');
+    if (!validSlot) {
       setSlotHover({ slot, valid: false });
       return;
     }
-    onEquip(item);
+    onEquip(item, slot);
     clearDragState();
   };
 
