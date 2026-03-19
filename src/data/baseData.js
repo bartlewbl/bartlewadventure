@@ -358,10 +358,10 @@ export const BUFF_POTION_TYPES = {
   'buff-atk': {
     id: 'buff-atk',
     name: 'Warcry Tonic',
-    description: 'Boosts ATK by 15% for the duration.',
+    description: 'Boosts ATK by 8% for the duration.',
     icon: 'buff-potion',
     buffType: 'atk',
-    buffValue: 0.15,
+    buffValue: 0.08,
     duration: 10 * 60 * 1000,    // 10 minutes
     rarity: 'Uncommon',
     sellPrice: 35,
@@ -369,10 +369,10 @@ export const BUFF_POTION_TYPES = {
   'buff-atk-strong': {
     id: 'buff-atk-strong',
     name: 'Berserker Brew',
-    description: 'Boosts ATK by 30% for the duration.',
+    description: 'Boosts ATK by 15% for the duration.',
     icon: 'buff-potion',
     buffType: 'atk',
-    buffValue: 0.30,
+    buffValue: 0.15,
     duration: 20 * 60 * 1000,    // 20 minutes
     rarity: 'Rare',
     sellPrice: 80,
@@ -380,10 +380,10 @@ export const BUFF_POTION_TYPES = {
   'buff-def': {
     id: 'buff-def',
     name: 'Ironhide Elixir',
-    description: 'Boosts DEF by 15% for the duration.',
+    description: 'Boosts DEF by 8% for the duration.',
     icon: 'buff-potion',
     buffType: 'def',
-    buffValue: 0.15,
+    buffValue: 0.08,
     duration: 10 * 60 * 1000,    // 10 minutes
     rarity: 'Uncommon',
     sellPrice: 35,
@@ -391,10 +391,10 @@ export const BUFF_POTION_TYPES = {
   'buff-def-strong': {
     id: 'buff-def-strong',
     name: 'Titanshield Draught',
-    description: 'Boosts DEF by 30% for the duration.',
+    description: 'Boosts DEF by 15% for the duration.',
     icon: 'buff-potion',
     buffType: 'def',
-    buffValue: 0.30,
+    buffValue: 0.15,
     duration: 20 * 60 * 1000,    // 20 minutes
     rarity: 'Rare',
     sellPrice: 80,
@@ -402,10 +402,10 @@ export const BUFF_POTION_TYPES = {
   'buff-xp': {
     id: 'buff-xp',
     name: 'Scholar\'s Draught',
-    description: 'Boosts XP gain by 20% for the duration.',
+    description: 'Boosts XP gain by 10% for the duration.',
     icon: 'buff-potion',
     buffType: 'xp',
-    buffValue: 0.20,
+    buffValue: 0.10,
     duration: 30 * 60 * 1000,    // 30 minutes
     rarity: 'Rare',
     sellPrice: 60,
@@ -413,10 +413,10 @@ export const BUFF_POTION_TYPES = {
   'buff-gold': {
     id: 'buff-gold',
     name: 'Midas Flask',
-    description: 'Boosts gold gain by 25% for the duration.',
+    description: 'Boosts gold gain by 12% for the duration.',
     icon: 'buff-potion',
     buffType: 'gold',
-    buffValue: 0.25,
+    buffValue: 0.12,
     duration: 30 * 60 * 1000,    // 30 minutes
     rarity: 'Rare',
     sellPrice: 60,
@@ -424,10 +424,10 @@ export const BUFF_POTION_TYPES = {
   'buff-crit': {
     id: 'buff-crit',
     name: 'Precision Serum',
-    description: '10% chance for double damage on attacks.',
+    description: '5% chance for double damage on attacks.',
     icon: 'buff-potion',
     buffType: 'crit',
-    buffValue: 0.10,
+    buffValue: 0.05,
     duration: 15 * 60 * 1000,    // 15 minutes
     rarity: 'Epic',
     sellPrice: 120,
@@ -435,10 +435,10 @@ export const BUFF_POTION_TYPES = {
   'buff-all': {
     id: 'buff-all',
     name: 'Elixir of the Ancients',
-    description: '+20% ATK, +20% DEF, +15% XP, +15% Gold for the duration.',
+    description: '+10% ATK, +10% DEF, +8% XP, +8% Gold for the duration.',
     icon: 'buff-potion',
     buffType: 'all',
-    buffValue: { atk: 0.20, def: 0.20, xp: 0.15, gold: 0.15 },
+    buffValue: { atk: 0.10, def: 0.10, xp: 0.08, gold: 0.08 },
     duration: 60 * 60 * 1000,    // 1 hour
     rarity: 'Legendary',
     sellPrice: 250,
@@ -533,49 +533,49 @@ export const BREWERY_RECIPES = [
     id: 'brew-warcry-tonic', name: 'Brew Warcry Tonic',
     materials: { 'herb-bundle': 3, 'glass-vial': 1, 'toxic-resin': 2 },
     result: { type: 'buff-potion', buffPotionId: 'buff-atk' }, craftTime: 12000,
-    desc: '+15% ATK for 10 min.',
+    desc: '+8% ATK for 10 min.',
   },
   {
     id: 'brew-ironhide-elixir', name: 'Brew Ironhide Elixir',
     materials: { 'herb-bundle': 3, 'glass-vial': 1, 'iron-ore': 2 },
     result: { type: 'buff-potion', buffPotionId: 'buff-def' }, craftTime: 12000,
-    desc: '+15% DEF for 10 min.',
+    desc: '+8% DEF for 10 min.',
   },
   {
     id: 'brew-berserker-brew', name: 'Brew Berserker Brew',
     materials: { 'herb-bundle': 5, 'glass-vial': 2, 'toxic-resin': 3, 'crystal-shard': 1 },
     result: { type: 'buff-potion', buffPotionId: 'buff-atk-strong' }, craftTime: 18000,
-    desc: '+30% ATK for 20 min.',
+    desc: '+15% ATK for 20 min.',
   },
   {
     id: 'brew-titanshield', name: 'Brew Titanshield Draught',
     materials: { 'herb-bundle': 5, 'glass-vial': 2, 'iron-ore': 3, 'crystal-shard': 1 },
     result: { type: 'buff-potion', buffPotionId: 'buff-def-strong' }, craftTime: 18000,
-    desc: '+30% DEF for 20 min.',
+    desc: '+15% DEF for 20 min.',
   },
   {
     id: 'brew-scholar-draught', name: 'Brew Scholar\'s Draught',
     materials: { 'herb-bundle': 4, 'glass-vial': 2, 'crystal-shard': 2 },
     result: { type: 'buff-potion', buffPotionId: 'buff-xp' }, craftTime: 15000,
-    desc: '+20% XP for 30 min.',
+    desc: '+10% XP for 30 min.',
   },
   {
     id: 'brew-midas-flask', name: 'Brew Midas Flask',
     materials: { 'herb-bundle': 4, 'glass-vial': 2, 'deep-coral': 1, 'toxic-resin': 2 },
     result: { type: 'buff-potion', buffPotionId: 'buff-gold' }, craftTime: 15000,
-    desc: '+25% Gold for 30 min.',
+    desc: '+12% Gold for 30 min.',
   },
   {
     id: 'brew-precision-serum', name: 'Brew Precision Serum',
     materials: { 'herb-bundle': 6, 'glass-vial': 2, 'crystal-shard': 2, 'starlight-dust': 1 },
     result: { type: 'buff-potion', buffPotionId: 'buff-crit' }, craftTime: 22000,
-    desc: '10% double damage for 15 min.',
+    desc: '5% double damage for 15 min.',
   },
   {
     id: 'brew-elixir-ancients', name: 'Brew Elixir of the Ancients',
     materials: { 'herb-bundle': 10, 'glass-vial': 3, 'crystal-shard': 3, 'starlight-dust': 2, 'void-essence': 1 },
     result: { type: 'buff-potion', buffPotionId: 'buff-all' }, craftTime: 30000,
-    desc: '+20% ATK/DEF, +15% XP/Gold for 1 hour.',
+    desc: '+10% ATK/DEF, +8% XP/Gold for 1 hour.',
   },
 ];
 
