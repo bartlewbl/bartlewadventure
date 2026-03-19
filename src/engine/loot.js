@@ -216,7 +216,7 @@ export function getDailyFeaturedItems(playerLevel, shopSeed) {
   const extraordinaryRarities = RARITIES
     .filter(r => r.name === 'Uncommon' || r.name === 'Epic')
     .map(r => r.name === 'Epic' ? { ...r, weight: 0.1 } : r);
-  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
+  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring', 'gloves', 'amulet', 'belt', 'cape'];
   const featured = [];
   const usedNames = new Set();
 
@@ -268,7 +268,7 @@ export function getDailyFeaturedItems(playerLevel, shopSeed) {
 
 // ---- ARMOURER SHOP: gear items for buy ----
 export function getArmourerStock(playerLevel, shopSeed) {
-  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
+  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring', 'gloves', 'amulet', 'belt', 'cape'];
   const items = [];
   const usedNames = new Set();
   const rng = shopSeed != null ? seededRandom(shopSeed + playerLevel * 7) : null;
@@ -331,7 +331,7 @@ export function getArmourerStock(playerLevel, shopSeed) {
 
 // Generate an item that is specifically findable at the given location
 export function generateLocationItem(locationId, playerLevel) {
-  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring'];
+  const gearTypes = ['sword', 'shield', 'helmet', 'armor', 'boots', 'ring', 'gloves', 'amulet', 'belt', 'cape'];
   const candidates = [];
 
   for (const type of gearTypes) {
@@ -407,7 +407,7 @@ export function generateCraftedItem(templateId, playerLevel) {
   return {
     id: uid(),
     name: template.name,
-    type: template.slot === 'accessory' ? 'ring' : template.slot === 'weapon' ? 'sword' : template.slot,
+    type: template.slot === 'accessory' ? 'ring' : template.slot === 'weapon' ? 'sword' : template.slot === 'gloves' ? 'gloves' : template.slot === 'amulet' ? 'amulet' : template.slot === 'belt' ? 'belt' : template.slot === 'cape' ? 'cape' : template.slot,
     slot: template.slot,
     level: effectiveLevel,
     rarity: template.rarity,

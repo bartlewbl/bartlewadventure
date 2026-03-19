@@ -46,7 +46,7 @@ function createInitialPlayer() {
     wisdom: 3,
     athletics: 3,
     gold: 30,
-    equipment: { weapon: null, shield: null, helmet: null, armor: null, boots: null, accessory: null },
+    equipment: { weapon: null, shield: null, helmet: null, armor: null, gloves: null, boots: null, belt: null, cape: null, amulet: null, accessory: null },
     inventory: [],
     maxInventory: 20,
     skillTree: [],
@@ -437,6 +437,10 @@ function gameReducer(state, action) {
         lastEnergyUpdate ?? baseState.lastEnergyUpdate,
       );
       const mergedPlayer = { ...baseState.player, ...player };
+      // Migrate equipment: ensure new slots exist for old saves
+      if (mergedPlayer.equipment) {
+        mergedPlayer.equipment = { ...baseState.player.equipment, ...mergedPlayer.equipment };
+      }
       // If the player has no custom name, send them to username entry
       // If they have a name but no class, send them to class select
       let resolvedScreen = screen || 'town';

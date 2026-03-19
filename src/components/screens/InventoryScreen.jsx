@@ -11,7 +11,8 @@ for (const region of REGIONS) {
 
 const SLOT_NAMES = {
   weapon: 'Weapon', shield: 'Shield', helmet: 'Helmet',
-  armor: 'Armor', boots: 'Boots', accessory: 'Accessory',
+  armor: 'Armor', gloves: 'Gloves', boots: 'Boots',
+  belt: 'Belt', cape: 'Cape', amulet: 'Amulet', accessory: 'Accessory',
 };
 
 const INV_CATEGORIES = [
@@ -20,7 +21,11 @@ const INV_CATEGORIES = [
   { id: 'shields', label: 'Shields', icon: '\u26E8' },
   { id: 'helmets', label: 'Helmets', icon: '\u2229' },
   { id: 'armor', label: 'Armor', icon: '\u26CA' },
+  { id: 'gloves', label: 'Gloves', icon: '\u270B' },
   { id: 'boots', label: 'Boots', icon: '\u2319' },
+  { id: 'belts', label: 'Belts', icon: '\u2261' },
+  { id: 'capes', label: 'Capes', icon: '\u2767' },
+  { id: 'amulets', label: 'Amulets', icon: '\u2740' },
   { id: 'accessories', label: 'Rings', icon: '\u25C7' },
   { id: 'potions', label: 'Potions', icon: '\u2661' },
   { id: 'energy-drinks', label: 'Energy', icon: '\u26A1' },
@@ -34,6 +39,10 @@ function getItemCategory(item) {
   if (item.slot === 'helmet') return 'helmets';
   if (item.slot === 'armor') return 'armor';
   if (item.slot === 'boots') return 'boots';
+  if (item.slot === 'gloves') return 'gloves';
+  if (item.slot === 'belt') return 'belts';
+  if (item.slot === 'cape') return 'capes';
+  if (item.slot === 'amulet') return 'amulets';
   if (item.slot === 'accessory') return 'accessories';
   return 'misc';
 }

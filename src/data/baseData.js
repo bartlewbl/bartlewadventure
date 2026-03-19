@@ -581,6 +581,82 @@ export const WORKSHOP_RECIPES = [
     result: { type: 'ring', template: 'crafted-starlight-pendant' }, craftTime: 20000,
     desc: 'A pendant that radiates with celestial power.',
   },
+  // --- GLOVES (3) ---
+  {
+    id: 'craft-iron-gauntlets', name: 'Craft Iron Gauntlets',
+    materials: { 'iron-ingot': 3, 'scrap-wood': 1 },
+    result: { type: 'gloves', template: 'crafted-iron-gauntlets' }, craftTime: 10000,
+    desc: 'Sturdy iron gauntlets for hand protection.',
+  },
+  {
+    id: 'craft-crystal-handguards', name: 'Craft Crystal Handguards',
+    materials: { 'crystal-shard': 3, 'iron-ingot': 2, 'copper-wire': 1 },
+    result: { type: 'gloves', template: 'crafted-crystal-handguards' }, craftTime: 14000,
+    desc: 'Crystal-reinforced handguards with arcane power.',
+  },
+  {
+    id: 'craft-starlight-grips', name: 'Craft Starlight Grips',
+    materials: { 'starlight-dust': 2, 'crystal-shard': 2, 'iron-ingot': 1 },
+    result: { type: 'gloves', template: 'crafted-starlight-grips' }, craftTime: 20000,
+    desc: 'Gloves infused with starlight energy.',
+  },
+  // --- AMULETS (3) ---
+  {
+    id: 'craft-copper-pendant', name: 'Craft Copper Pendant',
+    materials: { 'copper-wire': 3, 'glass-vial': 1 },
+    result: { type: 'amulet', template: 'crafted-copper-pendant' }, craftTime: 8000,
+    desc: 'A simple copper pendant with modest power.',
+  },
+  {
+    id: 'craft-crystal-amulet', name: 'Craft Crystal Amulet',
+    materials: { 'crystal-shard': 3, 'copper-wire': 2, 'glass-vial': 1 },
+    result: { type: 'amulet', template: 'crafted-crystal-amulet' }, craftTime: 14000,
+    desc: 'An amulet with a crystal core that amplifies power.',
+  },
+  {
+    id: 'craft-starlight-talisman', name: 'Craft Starlight Talisman',
+    materials: { 'starlight-dust': 3, 'crystal-shard': 1, 'copper-wire': 1 },
+    result: { type: 'amulet', template: 'crafted-starlight-talisman' }, craftTime: 20000,
+    desc: 'A talisman radiating with celestial energy.',
+  },
+  // --- BELTS (3) ---
+  {
+    id: 'craft-iron-girdle', name: 'Craft Iron Girdle',
+    materials: { 'iron-ingot': 2, 'scrap-wood': 2 },
+    result: { type: 'belt', template: 'crafted-iron-girdle' }, craftTime: 10000,
+    desc: 'A heavy iron girdle for core protection.',
+  },
+  {
+    id: 'craft-crystal-belt', name: 'Craft Crystal Belt',
+    materials: { 'crystal-shard': 2, 'iron-ingot': 2, 'copper-wire': 1 },
+    result: { type: 'belt', template: 'crafted-crystal-belt' }, craftTime: 14000,
+    desc: 'A belt reinforced with crystal plating.',
+  },
+  {
+    id: 'craft-starlight-sash', name: 'Craft Starlight Sash',
+    materials: { 'starlight-dust': 2, 'crystal-shard': 1, 'iron-ingot': 1 },
+    result: { type: 'belt', template: 'crafted-starlight-sash' }, craftTime: 20000,
+    desc: 'A sash woven from threads of starlight.',
+  },
+  // --- CAPES (3) ---
+  {
+    id: 'craft-woven-cloak', name: 'Craft Woven Cloak',
+    materials: { 'herb-bundle': 2, 'scrap-wood': 2, 'glass-vial': 1 },
+    result: { type: 'cape', template: 'crafted-woven-cloak' }, craftTime: 10000,
+    desc: 'A sturdy woven cloak for protection.',
+  },
+  {
+    id: 'craft-crystal-mantle', name: 'Craft Crystal Mantle',
+    materials: { 'crystal-shard': 3, 'herb-bundle': 2, 'glass-vial': 1 },
+    result: { type: 'cape', template: 'crafted-crystal-mantle' }, craftTime: 14000,
+    desc: 'A mantle threaded with crystal fibers.',
+  },
+  {
+    id: 'craft-starlight-shroud', name: 'Craft Starlight Shroud',
+    materials: { 'starlight-dust': 2, 'crystal-shard': 2, 'herb-bundle': 1 },
+    result: { type: 'cape', template: 'crafted-starlight-shroud' }, craftTime: 20000,
+    desc: 'A shroud that shimmers with celestial light.',
+  },
 ];
 
 // Crafted item templates (used by workshop)
@@ -616,6 +692,22 @@ export const CRAFTED_ITEMS = {
   'crafted-crystal-ring': { name: 'Crystal Ring', slot: 'accessory', rarity: 'Rare', baseAtk: 8, baseDef: 5, baseLevel: 15 },
   'crafted-coral-charm': { name: 'Coral Charm', slot: 'accessory', rarity: 'Rare', baseAtk: 5, baseDef: 7, baseLevel: 14 },
   'crafted-starlight-pendant': { name: 'Starlight Pendant', slot: 'accessory', rarity: 'Epic', baseAtk: 12, baseDef: 8, baseLevel: 20 },
+  // Gloves
+  'crafted-iron-gauntlets': { name: 'Iron Gauntlets', slot: 'gloves', rarity: 'Uncommon', baseAtk: 3, baseDef: 5, baseLevel: 8 },
+  'crafted-crystal-handguards': { name: 'Crystal Handguards', slot: 'gloves', rarity: 'Rare', baseAtk: 6, baseDef: 7, baseLevel: 15 },
+  'crafted-starlight-grips': { name: 'Starlight Grips', slot: 'gloves', rarity: 'Epic', baseAtk: 10, baseDef: 10, baseLevel: 22 },
+  // Amulets
+  'crafted-copper-pendant': { name: 'Copper Pendant', slot: 'amulet', rarity: 'Uncommon', baseAtk: 4, baseDef: 3, baseLevel: 8 },
+  'crafted-crystal-amulet': { name: 'Crystal Amulet', slot: 'amulet', rarity: 'Rare', baseAtk: 7, baseDef: 5, baseLevel: 15 },
+  'crafted-starlight-talisman': { name: 'Starlight Talisman', slot: 'amulet', rarity: 'Epic', baseAtk: 11, baseDef: 8, baseLevel: 22 },
+  // Belts
+  'crafted-iron-girdle': { name: 'Iron Girdle', slot: 'belt', rarity: 'Uncommon', baseAtk: 2, baseDef: 6, baseLevel: 8 },
+  'crafted-crystal-belt': { name: 'Crystal Belt', slot: 'belt', rarity: 'Rare', baseAtk: 4, baseDef: 8, baseLevel: 15 },
+  'crafted-starlight-sash': { name: 'Starlight Sash', slot: 'belt', rarity: 'Epic', baseAtk: 6, baseDef: 12, baseLevel: 22 },
+  // Capes
+  'crafted-woven-cloak': { name: 'Woven Cloak', slot: 'cape', rarity: 'Uncommon', baseAtk: 2, baseDef: 6, baseLevel: 8 },
+  'crafted-crystal-mantle': { name: 'Crystal Mantle', slot: 'cape', rarity: 'Rare', baseAtk: 4, baseDef: 9, baseLevel: 15 },
+  'crafted-starlight-shroud': { name: 'Starlight Shroud', slot: 'cape', rarity: 'Epic', baseAtk: 7, baseDef: 12, baseLevel: 22 },
 };
 
 // ---- SHOP MATERIAL ITEMS (rarely available) ----
