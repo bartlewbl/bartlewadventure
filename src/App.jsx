@@ -261,6 +261,7 @@ export default function App() {
                 energyCost={ENERGY_COST_PER_TRIP}
                 locations={state.currentRegion.locations}
                 regionName={state.currentRegion.name}
+                regionId={state.currentRegion.id}
                 onSelect={actions.enterLocation}
                 onBack={actions.backToRegions}
                 pinnedQuests={state.tasks.pinnedQuests}

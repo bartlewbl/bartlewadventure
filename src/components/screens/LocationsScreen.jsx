@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import {
   TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
   getActiveDailyTasks, getActiveWeeklyTasks,
   getQuestProgress,
 } from '../../data/tasks';
+import { MONSTERS, BOSSES } from '../../data/gameData';
+import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS } from '../../data/baseData';
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -68,6 +71,68 @@ function PinnedQuestTracker({ pinnedQuests, stats, tasks }) {
   );
 }
 
+const RARITY_COLORS = {
+  Common: '#aaa',
+  Uncommon: '#4fc3f7',
+  Rare: '#ffd740',
+  Epic: '#ce93d8',
+  Legendary: '#ff8a65',
+};
+
+function LocationSpawnInfo({ location, regionId }) {
+  const monsterNames = location.monsters.map(id => {
+    const m = MONSTERS[id];
+    return m ? m.name : id;
+  });
+
+  const boss = location.boss && BOSSES[location.boss];
+
+  const materialConfig = MATERIAL_DROP_CONFIG[regionId];
+  const materials = materialConfig
+    ? materialConfig.materials.map(m => {
+        const mat = BUILDING_MATERIALS[m.id];
+        return mat ? { name: mat.name, rarity: mat.rarity } : null;
+      }).filter(Boolean)
+    : [];
+
+  return (
+    <div className="location-spawn-info">
+      <div className="spawn-section">
+        <div className="spawn-label">Enemies</div>
+        <div className="spawn-tags">
+          {monsterNames.map((name, i) => (
+            <span key={i} className="spawn-tag enemy-tag">{name}</span>
+          ))}
+        </div>
+      </div>
+      {boss && (
+        <div className="spawn-section">
+          <div className="spawn-label">Boss</div>
+          <div className="spawn-tags">
+            <span className="spawn-tag boss-tag">{boss.name}{boss.title ? ` — ${boss.title}` : ''}</span>
+          </div>
+        </div>
+      )}
+      {materials.length > 0 && (
+        <div className="spawn-section">
+          <div className="spawn-label">Materials ({Math.round(materialConfig.dropRate * 100)}% drop)</div>
+          <div className="spawn-tags">
+            {materials.map((mat, i) => (
+              <span
+                key={i}
+                className="spawn-tag material-tag"
+                style={{ color: RARITY_COLORS[mat.rarity] || '#aaa' }}
+              >
+                {mat.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LocationsScreen({
   playerLevel,
   energy,
@@ -75,12 +140,14 @@ export default function LocationsScreen({
   energyCost,
   locations,
   regionName,
+  regionId,
   onSelect,
   onBack,
   pinnedQuests,
   stats,
   tasks,
 }) {
+  const [expandedId, setExpandedId] = useState(null);
   const requiredEnergy = energyCost ?? 0;
   const availableEnergy = energy ?? requiredEnergy;
   const maxEnergy = energyMax ?? Math.max(availableEnergy, requiredEnergy, 1);
@@ -100,26 +167,41 @@ export default function LocationsScreen({
           const needsLevel = playerLevel < loc.levelReq;
           const needsEnergy = availableEnergy < requiredEnergy;
           const locked = needsLevel || needsEnergy;
+          const expanded = expandedId === loc.id;
           return (
-            <button
-              key={loc.id}
-              className={`location-item ${locked ? 'locked' : ''}`}
-              onClick={() => !locked && onSelect(loc)}
-              disabled={locked}
-            >
-              <div className="location-item-left">
-                <div className="location-name">{loc.name}</div>
-                <div className="location-desc">{loc.description}</div>
-                {(needsLevel || needsEnergy) && (
-                  <div className="location-req">
-                    {needsLevel ? `Lv.${loc.levelReq}+ required` : `Need ${requiredEnergy} energy`}
-                  </div>
-                )}
-              </div>
-              <div className="location-level">
-                Lv.{loc.levelReq}+
-              </div>
-            </button>
+            <div key={loc.id} className="location-entry">
+              <button
+                className={`location-item ${locked ? 'locked' : ''}`}
+                onClick={() => !locked && onSelect(loc)}
+                disabled={locked}
+              >
+                <div className="location-item-left">
+                  <div className="location-name">{loc.name}</div>
+                  <div className="location-desc">{loc.description}</div>
+                  {(needsLevel || needsEnergy) && (
+                    <div className="location-req">
+                      {needsLevel ? `Lv.${loc.levelReq}+ required` : `Need ${requiredEnergy} energy`}
+                    </div>
+                  )}
+                </div>
+                <div className="location-level">
+                  Lv.{loc.levelReq}+
+                </div>
+              </button>
+              <button
+                className={`location-info-btn ${expanded ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedId(expanded ? null : loc.id);
+                }}
+                title="View spawn info"
+              >
+                ?
+              </button>
+              {expanded && (
+                <LocationSpawnInfo location={loc} regionId={regionId} />
+              )}
+            </div>
           );
         })}
       </div>

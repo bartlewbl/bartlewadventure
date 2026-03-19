@@ -1708,6 +1708,88 @@ body {
   margin-left: 8px;
 }
 
+/* ---- LOCATION SPAWN INFO ---- */
+.location-entry {
+  position: relative;
+}
+
+.location-info-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  background: rgba(60, 60, 100, 0.9);
+  border: 1px solid #666;
+  color: #aaa;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: all 0.1s;
+}
+
+.location-info-btn:hover,
+.location-info-btn.active {
+  border-color: #76ffdf;
+  color: #76ffdf;
+  background: rgba(40, 40, 80, 0.95);
+}
+
+.location-spawn-info {
+  background: rgba(20, 20, 45, 0.95);
+  border: 1px solid #555;
+  border-top: none;
+  padding: 8px 10px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.spawn-section {
+  margin-bottom: 6px;
+}
+
+.spawn-section:last-child {
+  margin-bottom: 0;
+}
+
+.spawn-label {
+  font-size: 6px;
+  color: #76ffdf;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.spawn-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.spawn-tag {
+  font-size: 6px;
+  padding: 2px 4px;
+  background: rgba(50, 50, 80, 0.8);
+  border: 1px solid #444;
+}
+
+.spawn-tag.enemy-tag {
+  color: #e0e0e0;
+}
+
+.spawn-tag.boss-tag {
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+  background: rgba(80, 20, 20, 0.6);
+}
+
+.spawn-tag.material-tag {
+  border-color: #555;
+}
+
 /* ---- REGIONS SCREEN ---- */
 .screen-regions {
   justify-content: flex-start;
