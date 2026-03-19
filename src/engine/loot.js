@@ -100,6 +100,7 @@ export function generateItem(dropType, monsterLevel) {
 
 export function rollDrop(dropTable, monsterLevel) {
   if (!dropTable || dropTable.length === 0) return null;
+  if (Math.random() > 0.10) return null; // 10% chance to drop loot
   const drop = pickWeighted(dropTable);
   return generateItem(drop.type, monsterLevel);
 }
