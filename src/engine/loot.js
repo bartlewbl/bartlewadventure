@@ -287,7 +287,9 @@ export function getDailyFeaturedItems(playerLevel, shopSeed, playerClass) {
     if (!pool) continue;
 
     const rarity = seededPickWeighted(extraordinaryRarities, rng);
-    const classPool = playerClass ? pool.filter(t => !t.classes || t.classes.includes(playerClass)) : pool;
+    // ~30% chance to show a cross-class item in the featured store
+    const showCrossClass = rng() < 0.3;
+    const classPool = playerClass && !showCrossClass ? pool.filter(t => !t.classes || t.classes.includes(playerClass)) : pool;
     const candidates = classPool.filter(item => item.rarity === rarity.name && item.level <= Math.max(playerLevel + 3, 5));
     if (candidates.length === 0) continue;
 
@@ -337,8 +339,9 @@ export function getArmourerStock(playerLevel, shopSeed, playerClass) {
   for (const type of gearTypes) {
     let pool = ITEM_LIBRARY[type];
     if (!pool) continue;
-    // Filter by player class
-    if (playerClass) {
+    // Filter by player class, but ~25% chance to show a cross-class item
+    const crossClassRoll = rng ? rng() : Math.random();
+    if (playerClass && crossClassRoll >= 0.25) {
       pool = pool.filter(t => !t.classes || t.classes.includes(playerClass));
     }
     // Pick items near player level
