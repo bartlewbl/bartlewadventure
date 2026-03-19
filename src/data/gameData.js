@@ -89,7 +89,7 @@ export const MONSTERS = {
   },
   'sewer-roach': {
     name: 'Sewer Roach', sprite: 'rat', baseHp: 18, baseAtk: 4, baseDef: 1,
-    baseExp: 10, baseGold: 4, skills: ['sting'],
+    baseExp: 10, baseGold: 4, skills: ['sting', 'venom'],
     dropTable: [{ type: 'potion', weight: 40 }, { type: 'boots', weight: 5 }],
   },
   'stray-cat': {
@@ -109,7 +109,7 @@ export const MONSTERS = {
   },
   'junk-spider': {
     name: 'Junk Spider', sprite: 'rat', baseHp: 15, baseAtk: 5, baseDef: 1,
-    baseExp: 10, baseGold: 4, skills: ['web'],
+    baseExp: 10, baseGold: 4, skills: ['web', 'venom'],
     dropTable: [{ type: 'potion', weight: 40 }, { type: 'ring', weight: 4 }],
   },
   'rust-moth': {
@@ -159,7 +159,7 @@ export const MONSTERS = {
   },
   'neon-phantom': {
     name: 'Neon Phantom', sprite: 'ghost', baseHp: 22, baseAtk: 12, baseDef: 2,
-    baseExp: 21, baseGold: 10, skills: ['curse', 'drain'],
+    baseExp: 21, baseGold: 10, skills: ['curse', 'drain', 'poison'],
     dropTable: [{ type: 'ring', weight: 10 }, { type: 'potion', weight: 30 }],
   },
   'wire-rat': {
@@ -194,7 +194,7 @@ export const MONSTERS = {
   },
   'volt-spider': {
     name: 'Volt Spider', sprite: 'rat', baseHp: 30, baseAtk: 16, baseDef: 3,
-    baseExp: 32, baseGold: 17, skills: ['shock', 'web'],
+    baseExp: 32, baseGold: 17, skills: ['shock', 'web', 'venom'],
     dropTable: [{ type: 'ring', weight: 9 }, { type: 'potion', weight: 28 }],
   },
   'rust-skeleton': {
@@ -214,7 +214,7 @@ export const MONSTERS = {
   },
   'roof-stalker': {
     name: 'Roof Stalker', sprite: 'vagrant', baseHp: 50, baseAtk: 22, baseDef: 7,
-    baseExp: 46, baseGold: 25, skills: ['backstab', 'steal'],
+    baseExp: 46, baseGold: 25, skills: ['backstab', 'steal', 'venom'],
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 20 }],
   },
   'antenna-golem': {
@@ -274,7 +274,7 @@ export const MONSTERS = {
   },
   'acid-sprayer': {
     name: 'Acid Sprayer', sprite: 'snake', baseHp: 50, baseAtk: 23, baseDef: 6,
-    baseExp: 52, baseGold: 27, skills: ['venom', 'screech'],
+    baseExp: 52, baseGold: 27, skills: ['venom', 'screech', 'poison'],
     dropTable: [{ type: 'potion', weight: 25 }, { type: 'ring', weight: 8 }, { type: 'boots', weight: 7 }],
   },
   'iron-wolf': {
@@ -284,7 +284,7 @@ export const MONSTERS = {
   },
   'chain-wraith': {
     name: 'Chain Wraith', sprite: 'ghost', baseHp: 52, baseAtk: 25, baseDef: 7,
-    baseExp: 54, baseGold: 28, skills: ['curse', 'drain', 'slash'],
+    baseExp: 54, baseGold: 28, skills: ['curse', 'drain', 'slash', 'deathgrip'],
     dropTable: [{ type: 'ring', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 20 }],
   },
   'furnace-bat': {
@@ -324,12 +324,12 @@ export const MONSTERS = {
   },
   'dark-assassin': {
     name: 'Dark Assassin', sprite: 'vagrant', baseHp: 55, baseAtk: 32, baseDef: 7,
-    baseExp: 67, baseGold: 36, skills: ['backstab', 'steal', 'slash'],
+    baseExp: 67, baseGold: 36, skills: ['backstab', 'steal', 'venom'],
     dropTable: [{ type: 'sword', weight: 12 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 18 }, { type: 'energy-drink', weight: 5 }],
   },
   'shadow-dragon': {
     name: 'Shadow Dragon', sprite: 'dragon', baseHp: 85, baseAtk: 30, baseDef: 12,
-    baseExp: 72, baseGold: 40, skills: ['firebreath', 'slash', 'charge'],
+    baseExp: 72, baseGold: 40, skills: ['firebreath', 'venom', 'charge'],
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'potion', weight: 15 }],
   },
   'neon-reaper': {

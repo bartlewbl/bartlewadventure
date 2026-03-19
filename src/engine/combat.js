@@ -326,6 +326,35 @@ export function getEffectiveDef(monsterDef, effect) {
   return monsterDef;
 }
 
+// Critical hit chance for player: base 5%, modified by athletics and luck
+export function getPlayerCritChance(player) {
+  let chance = 0.05; // 5% base crit chance
+  // Athletics adds crit chance: +0.3% per point
+  chance += (player.athletics || 0) * 0.003;
+  // Wisdom adds minor crit chance: +0.2% per point
+  chance += (player.wisdom || 0) * 0.002;
+  return Math.min(0.35, chance); // cap at 35%
+}
+
+// Critical hit multiplier for player
+export function getPlayerCritMultiplier(player) {
+  let mult = 1.5; // 150% base crit damage
+  return mult;
+}
+
+// Monster critical hit chance: base 5%, scales with level
+export function getMonsterCritChance(monster) {
+  let chance = 0.05; // 5% base
+  // Higher level monsters crit slightly more often
+  chance += Math.min(0.10, (monster.level || 1) * 0.001);
+  return Math.min(0.15, chance); // cap at 15%
+}
+
+// Monster critical hit multiplier
+export function getMonsterCritMultiplier() {
+  return 1.5; // 150% damage on crit
+}
+
 // Charisma price modifier: each point gives 1% better prices (capped at 25%)
 export function getCharismaPriceBonus(player) {
   const charisma = player.charisma || 0;

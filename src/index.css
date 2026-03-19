@@ -3770,6 +3770,60 @@ body {
   gap: 3px;
 }
 
+.battle-inspect-panel {
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+}
+
+.inspect-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.inspect-title {
+  font-size: 9px;
+  font-weight: bold;
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.inspect-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  padding: 1px 4px;
+  background: rgba(20, 30, 60, 0.6);
+  border-radius: 2px;
+}
+
+.inspect-label {
+  color: #aab;
+  font-weight: bold;
+}
+
+.inspect-value {
+  color: #f5f5ff;
+}
+
+.status-poison { color: #66bb6a; }
+.status-doom { color: #ab47bc; }
+.status-debuff { color: #ff7043; }
+
+.btn-battle-inspect {
+  background: rgba(30, 50, 80, 0.9);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+}
+
+.btn-battle-inspect:hover:not(:disabled) {
+  border-color: #ffd700;
+  background: rgba(50, 70, 100, 0.9);
+}
+
 .btn-skill {
   display: flex;
   flex-direction: column;

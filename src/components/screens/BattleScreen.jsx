@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
 import { getBattleMaxMana } from '../../engine/combat';
+import { SKILLS } from '../../data/gameData';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
 import useGameClock from '../../hooks/useGameClock';
 import { ELEMENTS, getSkillElement, getWeatherSpellBuff, getWeatherSpellBuffList } from '../../engine/elements';
@@ -20,7 +21,7 @@ let floatIdCounter = 0;
 export default function BattleScreen({
   battle, battleLog, player, pets,
   onAttack, onSkill, onDefend, onPotion, onRun, onMonsterTurn,
-  onTreeSkill, onToggleSkillMenu,
+  onTreeSkill, onToggleSkillMenu, onToggleInspect,
   setBattleAnim, animTick,
 }) {
   const logRef = useRef(null);
@@ -255,6 +256,7 @@ export default function BattleScreen({
   const disabled = !battle.isPlayerTurn || pendingTurnRef.current;
   const isBoss = !!m.isBoss;
   const showSkillMenu = battle.showSkillMenu;
+  const showInspect = battle.showInspect;
 
   const passives = getPlayerPassiveSkills(player);
   const activeSkills = getPlayerActiveSkills(player);
@@ -408,7 +410,33 @@ export default function BattleScreen({
       </div>
 
       {/* Skill submenu */}
-      {showSkillMenu ? (
+      {showInspect ? (
+        <div className="battle-actions battle-inspect-panel">
+          <div className="inspect-stats">
+            <div className="inspect-title">{m.name} {isBoss ? '(BOSS)' : ''}</div>
+            <div className="inspect-row"><span className="inspect-label">Level:</span> <span className="inspect-value">{m.level}</span></div>
+            <div className="inspect-row"><span className="inspect-label">HP:</span> <span className="inspect-value">{m.hp} / {m.maxHp}</span></div>
+            <div className="inspect-row"><span className="inspect-label">ATK:</span> <span className="inspect-value">{m.atk}</span></div>
+            <div className="inspect-row"><span className="inspect-label">DEF:</span> <span className="inspect-value">{m.def}</span></div>
+            <div className="inspect-row"><span className="inspect-label">Skills:</span> <span className="inspect-value">{m.skills?.length > 0 ? m.skills.map(s => {
+              const sk = SKILLS[s];
+              return sk ? sk.name : s;
+            }).join(', ') : 'None'}</span></div>
+            {battle.monsterPoisonTurns > 0 && (
+              <div className="inspect-row"><span className="inspect-label">Status:</span> <span className="inspect-value status-poison">Poisoned ({battle.monsterPoisonTurns})</span></div>
+            )}
+            {battle.monsterDoomTurns > 0 && (
+              <div className="inspect-row"><span className="inspect-label">Status:</span> <span className="inspect-value status-doom">Doomed ({battle.monsterDoomTurns})</span></div>
+            )}
+            {battle.armorBreakTurns > 0 && (
+              <div className="inspect-row"><span className="inspect-label">Status:</span> <span className="inspect-value status-debuff">Armor Broken ({battle.armorBreakTurns})</span></div>
+            )}
+          </div>
+          <button className="btn btn-back btn-sm" onClick={onToggleInspect}>
+            Back
+          </button>
+        </div>
+      ) : showSkillMenu ? (
         <div className="battle-actions battle-skill-menu">
           {activeSkills.map(skill => {
             const elemId = getSkillElement(skill.isClassSkill ? null : skill.id, player.characterClass);
@@ -470,6 +498,13 @@ export default function BattleScreen({
             onClick={treeActives.length > 0 ? onToggleSkillMenu : handleClassSkill}
           >
             {treeActives.length > 0 ? 'Skills' : (activeSkills[0]?.name || 'Skill')}
+          </button>
+          <button
+            className="btn btn-battle-inspect"
+            disabled={disabled}
+            onClick={onToggleInspect}
+          >
+            Inspect
           </button>
           <button
             className="btn btn-battle-heal"
