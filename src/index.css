@@ -1709,34 +1709,20 @@ body {
 }
 
 /* ---- LOCATION SPAWN INFO ---- */
-.location-entry {
-  position: relative;
-}
-
 .location-info-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 18px;
-  height: 18px;
-  background: rgba(60, 60, 100, 0.9);
-  border: 1px solid #666;
-  color: #aaa;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
+  color: #888;
+  font-size: 8px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  transition: all 0.1s;
+  margin-left: 6px;
+  border: none;
+  background: none;
+  padding: 0;
+  transition: color 0.1s;
 }
 
 .location-info-btn:hover,
 .location-info-btn.active {
-  border-color: #76ffdf;
   color: #76ffdf;
-  background: rgba(40, 40, 80, 0.95);
 }
 
 .location-spawn-info {
