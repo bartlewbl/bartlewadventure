@@ -1205,6 +1205,315 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_eg_7', name: 'Eternal Legend', description: 'Win 200 battles. You have transcended the grind.', stat: 'battlesWon', target: 200, reward: { gold: 5000 }, order: 7 },
     ],
   },
+
+  // ============================================================
+  // DAILY QUEST LINES - Completable in a single day of play.
+  // Shorter chains (3-5 quests) with generous rewards.
+  // ============================================================
+
+  // Chain: Speed Demon - fast-paced kill rush (Lv 1)
+  {
+    chainId: 'speed_demon',
+    chainName: 'Speed Demon',
+    chainDescription: 'Blitz through enemies at breakneck speed. No time to rest.',
+    chainIcon: 'lightning',
+    levelReq: 1,
+    quests: [
+      { id: 'side_sd_1', name: 'Quick Draw', description: 'Start fast. Defeat 3 monsters.', stat: 'monstersKilled', target: 3, reward: { gold: 50 }, order: 1 },
+      { id: 'side_sd_2', name: 'Rampage', description: 'Keep the momentum going. Win 5 battles.', stat: 'battlesWon', target: 5, reward: { gold: 100 }, order: 2 },
+      { id: 'side_sd_3', name: 'Blitz Kill', description: 'Don\'t slow down. Defeat 12 monsters.', stat: 'monstersKilled', target: 12, reward: { gold: 150 }, order: 3 },
+      { id: 'side_sd_4', name: 'Speed Demon', description: 'Finish the rush. Deal 800 total damage.', stat: 'damageDealt', target: 800, reward: { gold: 300 }, order: 4 },
+    ],
+  },
+
+  // Chain: Gold Fever - earn gold fast (Lv 1)
+  {
+    chainId: 'gold_fever',
+    chainName: 'Gold Fever',
+    chainDescription: 'The gold rush is on. Stack as much coin as you can before sundown.',
+    chainIcon: 'coin',
+    levelReq: 1,
+    quests: [
+      { id: 'side_gf_1', name: 'Pocket Lint', description: 'Scrape together your first earnings. Earn 30 gold.', stat: 'goldEarned', target: 30, reward: { gold: 40 }, order: 1 },
+      { id: 'side_gf_2', name: 'Quick Flip', description: 'Sell 2 items for a quick profit.', stat: 'itemsSold', target: 2, reward: { gold: 75 }, order: 2 },
+      { id: 'side_gf_3', name: 'Cash Grab', description: 'The gold is flowing. Earn 150 gold.', stat: 'goldEarned', target: 150, reward: { gold: 150 }, order: 3 },
+      { id: 'side_gf_4', name: 'Gold Fever', description: 'Sell 5 more items to cash out big.', stat: 'itemsSold', target: 5, reward: { gold: 350 }, order: 4 },
+    ],
+  },
+
+  // Chain: Dungeon Sprint - explore quickly (Lv 1)
+  {
+    chainId: 'dungeon_sprint',
+    chainName: 'Dungeon Sprint',
+    chainDescription: 'Race through as many dungeons as you can in a single day.',
+    chainIcon: 'compass',
+    levelReq: 1,
+    quests: [
+      { id: 'side_ds_1', name: 'Door Kicker', description: 'Bust into your first dungeon. Complete 2 explorations.', stat: 'explorationsCompleted', target: 2, reward: { gold: 40 }, order: 1 },
+      { id: 'side_ds_2', name: 'Room Clearer', description: 'Keep pushing deeper. Complete 5 explorations.', stat: 'explorationsCompleted', target: 5, reward: { gold: 80 }, order: 2 },
+      { id: 'side_ds_3', name: 'Speedrunner', description: 'You can\'t stop now. Loot 4 items.', stat: 'itemsLooted', target: 4, reward: { gold: 120 }, order: 3 },
+      { id: 'side_ds_4', name: 'Dungeon Sprint Champion', description: 'Finish the sprint. Complete 10 explorations.', stat: 'explorationsCompleted', target: 10, reward: { gold: 300 }, order: 4 },
+    ],
+  },
+
+  // Chain: Glass Cannon - deal damage, take damage (Lv 3)
+  {
+    chainId: 'glass_cannon',
+    chainName: 'Glass Cannon',
+    chainDescription: 'Hit hard, get hit harder. Pure offense, zero defense.',
+    chainIcon: 'flame',
+    levelReq: 3,
+    quests: [
+      { id: 'side_gc_1', name: 'Reckless Strike', description: 'Swing first, ask questions never. Deal 300 damage.', stat: 'damageDealt', target: 300, reward: { gold: 60 }, order: 1 },
+      { id: 'side_gc_2', name: 'Pain Trade', description: 'You give and you take. Absorb 200 damage.', stat: 'damageTaken', target: 200, reward: { gold: 80 }, order: 2 },
+      { id: 'side_gc_3', name: 'All In', description: 'Hold nothing back. Deal 1,000 total damage.', stat: 'damageDealt', target: 1000, reward: { gold: 150 }, order: 3 },
+      { id: 'side_gc_4', name: 'Glass Cannon', description: 'Survive the carnage. Use 3 potions to stay alive.', stat: 'potionsUsed', target: 3, reward: { gold: 250 }, order: 4 },
+      { id: 'side_gc_5', name: 'Nuclear Option', description: 'End it with a bang. Deal 2,000 total damage.', stat: 'damageDealt', target: 2000, reward: { gold: 400 }, order: 5 },
+    ],
+  },
+
+  // Chain: Loot Goblin - loot everything (Lv 3)
+  {
+    chainId: 'loot_goblin',
+    chainName: 'Loot Goblin',
+    chainDescription: 'If it drops, you grab it. If it shines, it\'s yours.',
+    chainIcon: 'chest',
+    levelReq: 3,
+    quests: [
+      { id: 'side_lg_1', name: 'Sticky Fingers', description: 'Grab your first haul. Loot 3 items.', stat: 'itemsLooted', target: 3, reward: { gold: 50 }, order: 1 },
+      { id: 'side_lg_2', name: 'Five Finger Discount', description: 'Keep looting. Grab 6 more items.', stat: 'itemsLooted', target: 6, reward: { gold: 100 }, order: 2 },
+      { id: 'side_lg_3', name: 'Hoard Mode', description: 'Sell off the excess. Sell 4 items.', stat: 'itemsSold', target: 4, reward: { gold: 150 }, order: 3 },
+      { id: 'side_lg_4', name: 'Loot Goblin Supreme', description: 'Loot 12 items total. Your pockets overflow.', stat: 'itemsLooted', target: 12, reward: { gold: 350 }, order: 4 },
+    ],
+  },
+
+  // Chain: Potion Chugger - use potions aggressively (Lv 5)
+  {
+    chainId: 'potion_chugger',
+    chainName: 'Potion Chugger',
+    chainDescription: 'Why fight smart when you can just drink more potions?',
+    chainIcon: 'flask',
+    levelReq: 5,
+    quests: [
+      { id: 'side_pc_1', name: 'Taste Test', description: 'Start chugging. Use 2 potions.', stat: 'potionsUsed', target: 2, reward: { gold: 60 }, order: 1 },
+      { id: 'side_pc_2', name: 'Chug Chug Chug', description: 'Keep drinking. Heal 300 total HP.', stat: 'totalHealing', target: 300, reward: { gold: 100 }, order: 2 },
+      { id: 'side_pc_3', name: 'Potion Addict', description: 'You can\'t stop. Use 5 more potions.', stat: 'potionsUsed', target: 5, reward: { gold: 175 }, order: 3 },
+      { id: 'side_pc_4', name: 'Bottomless Stomach', description: 'Heal 800 total HP through sheer consumption.', stat: 'totalHealing', target: 800, reward: { gold: 350 }, order: 4 },
+    ],
+  },
+
+  // Chain: Critical Striker - crit-focused (Lv 5)
+  {
+    chainId: 'critical_striker',
+    chainName: 'Critical Striker',
+    chainDescription: 'Every hit should be a critical hit. Aim for the weak spots.',
+    chainIcon: 'crosshair',
+    levelReq: 5,
+    quests: [
+      { id: 'side_cs_1', name: 'Lucky Hit', description: 'Land your first critical hits. Get 2 crits.', stat: 'criticalHits', target: 2, reward: { gold: 75 }, order: 1 },
+      { id: 'side_cs_2', name: 'Weak Point', description: 'Exploit every weakness. Land 5 critical hits.', stat: 'criticalHits', target: 5, reward: { gold: 125 }, order: 2 },
+      { id: 'side_cs_3', name: 'Surgical Precision', description: 'Make every swing count. Deal 1,500 total damage.', stat: 'damageDealt', target: 1500, reward: { gold: 200 }, order: 3 },
+      { id: 'side_cs_4', name: 'Crit Machine', description: 'You can\'t miss. Land 10 critical hits.', stat: 'criticalHits', target: 10, reward: { gold: 400 }, order: 4 },
+    ],
+  },
+
+  // Chain: Comeback Kid - survive and win (Lv 8)
+  {
+    chainId: 'comeback_kid',
+    chainName: 'Comeback Kid',
+    chainDescription: 'Get knocked down, get back up, and win anyway.',
+    chainIcon: 'heart',
+    levelReq: 8,
+    quests: [
+      { id: 'side_ck_1', name: 'Eat Dirt', description: 'Take a beating first. Absorb 500 damage.', stat: 'damageTaken', target: 500, reward: { gold: 80 }, order: 1 },
+      { id: 'side_ck_2', name: 'Patch Up', description: 'Heal through the pain. Heal 400 HP.', stat: 'totalHealing', target: 400, reward: { gold: 120 }, order: 2 },
+      { id: 'side_ck_3', name: 'Refuse to Die', description: 'Use 4 potions and keep fighting.', stat: 'potionsUsed', target: 4, reward: { gold: 175 }, order: 3 },
+      { id: 'side_ck_4', name: 'The Comeback', description: 'Win 8 battles despite everything.', stat: 'battlesWon', target: 8, reward: { gold: 250 }, order: 4 },
+      { id: 'side_ck_5', name: 'Comeback Kid', description: 'Deal 3,000 damage to prove you\'re unstoppable.', stat: 'damageDealt', target: 3000, reward: { gold: 500 }, order: 5 },
+    ],
+  },
+
+  // Chain: Boss Rush - kill bosses fast (Lv 10)
+  {
+    chainId: 'boss_rush',
+    chainName: 'Boss Rush',
+    chainDescription: 'Skip the small fry. Only bosses matter today.',
+    chainIcon: 'skull',
+    levelReq: 10,
+    quests: [
+      { id: 'side_br_1', name: 'Opening Act', description: 'Defeat your first boss of the day.', stat: 'bossesKilled', target: 1, reward: { gold: 150 }, order: 1 },
+      { id: 'side_br_2', name: 'Double Down', description: 'Two bosses down. Keep pushing.', stat: 'bossesKilled', target: 2, reward: { gold: 250 }, order: 2 },
+      { id: 'side_br_3', name: 'Boss Breaker', description: 'Deal 5,000 damage to the big ones.', stat: 'damageDealt', target: 5000, reward: { gold: 400 }, order: 3 },
+      { id: 'side_br_4', name: 'Boss Rush Complete', description: 'Defeat 4 bosses in your rush.', stat: 'bossesKilled', target: 4, reward: { gold: 750 }, order: 4 },
+    ],
+  },
+
+  // Chain: Endurance Run - long play session (Lv 10)
+  {
+    chainId: 'endurance_run',
+    chainName: 'Endurance Run',
+    chainDescription: 'See how far you can push in a single marathon session.',
+    chainIcon: 'infinity',
+    levelReq: 10,
+    quests: [
+      { id: 'side_er_1', name: 'Warm Up', description: 'Get moving. Complete 5 explorations.', stat: 'explorationsCompleted', target: 5, reward: { gold: 75 }, order: 1 },
+      { id: 'side_er_2', name: 'Into the Zone', description: 'Hit your stride. Win 10 battles.', stat: 'battlesWon', target: 10, reward: { gold: 150 }, order: 2 },
+      { id: 'side_er_3', name: 'Second Wind', description: 'Push through the wall. Deal 4,000 damage.', stat: 'damageDealt', target: 4000, reward: { gold: 250 }, order: 3 },
+      { id: 'side_er_4', name: 'Runner\'s High', description: 'Loot 8 items along the way.', stat: 'itemsLooted', target: 8, reward: { gold: 300 }, order: 4 },
+      { id: 'side_er_5', name: 'Marathon Complete', description: 'Cross the finish line. Complete 15 explorations.', stat: 'explorationsCompleted', target: 15, reward: { gold: 600 }, order: 5 },
+    ],
+  },
+
+  // Chain: Neon Blitz - Neon District speed challenge (Lv 1)
+  {
+    chainId: 'neon_blitz',
+    chainName: 'Neon Blitz',
+    chainDescription: 'Light up the Neon District with an all-out blitz.',
+    chainIcon: 'lightning',
+    levelReq: 1,
+    quests: [
+      { id: 'side_nb_1', name: 'Neon Lights', description: 'Hit the streets. Complete 3 explorations.', stat: 'explorationsCompleted', target: 3, reward: { gold: 35 }, order: 1 },
+      { id: 'side_nb_2', name: 'Street Fight', description: 'Brawl in the alleyways. Win 4 battles.', stat: 'battlesWon', target: 4, reward: { gold: 65 }, order: 2 },
+      { id: 'side_nb_3', name: 'Neon Hunter', description: 'Clear the district. Defeat 8 monsters.', stat: 'monstersKilled', target: 8, reward: { gold: 100 }, order: 3 },
+      { id: 'side_nb_4', name: 'Neon Blitz', description: 'Own the night. Earn 100 gold.', stat: 'goldEarned', target: 100, reward: { gold: 250 }, order: 4 },
+    ],
+  },
+
+  // Chain: Scrap Dealer - sell everything (Lv 5)
+  {
+    chainId: 'scrap_dealer',
+    chainName: 'Scrap Dealer',
+    chainDescription: 'One adventurer\'s junk is another\'s treasure. Sell it all.',
+    chainIcon: 'coin',
+    levelReq: 5,
+    quests: [
+      { id: 'side_scr_1', name: 'Junk Collector', description: 'Loot 4 items to start your inventory.', stat: 'itemsLooted', target: 4, reward: { gold: 50 }, order: 1 },
+      { id: 'side_scr_2', name: 'Yard Sale', description: 'Sell 3 items for quick cash.', stat: 'itemsSold', target: 3, reward: { gold: 100 }, order: 2 },
+      { id: 'side_scr_3', name: 'Bulk Discount', description: 'Keep the deals flowing. Sell 6 items total.', stat: 'itemsSold', target: 6, reward: { gold: 200 }, order: 3 },
+      { id: 'side_scr_4', name: 'Scrap King', description: 'Cash out big. Earn 300 gold total.', stat: 'goldEarned', target: 300, reward: { gold: 400 }, order: 4 },
+    ],
+  },
+
+  // Chain: Frostbite Blitz - frozen wastes quick run (Lv 12)
+  {
+    chainId: 'frostbite_blitz',
+    chainName: 'Frostbite Blitz',
+    chainDescription: 'Raid the Frozen Wastes before the cold claims you.',
+    chainIcon: 'snowflake',
+    levelReq: 12,
+    quests: [
+      { id: 'side_fb_1', name: 'Cold Snap', description: 'Brave the cold. Complete 6 explorations.', stat: 'explorationsCompleted', target: 6, reward: { gold: 120 }, order: 1 },
+      { id: 'side_fb_2', name: 'Frozen Fury', description: 'Crush the frost beasts. Defeat 15 monsters.', stat: 'monstersKilled', target: 15, reward: { gold: 200 }, order: 2 },
+      { id: 'side_fb_3', name: 'Ice Breaker', description: 'Shatter their defenses. Deal 3,000 damage.', stat: 'damageDealt', target: 3000, reward: { gold: 300 }, order: 3 },
+      { id: 'side_fb_4', name: 'Frostbite Blitz', description: 'Finish the raid. Win 10 battles.', stat: 'battlesWon', target: 10, reward: { gold: 500 }, order: 4 },
+    ],
+  },
+
+  // Chain: Inferno Sprint - scorched badlands quick run (Lv 18)
+  {
+    chainId: 'inferno_sprint',
+    chainName: 'Inferno Sprint',
+    chainDescription: 'Sprint through the Scorched Badlands before you burn to ash.',
+    chainIcon: 'flame',
+    levelReq: 18,
+    quests: [
+      { id: 'side_is_1', name: 'Heat Stroke', description: 'Charge into the heat. Defeat 20 monsters.', stat: 'monstersKilled', target: 20, reward: { gold: 200 }, order: 1 },
+      { id: 'side_is_2', name: 'Scorching Path', description: 'Blaze a trail. Complete 8 explorations.', stat: 'explorationsCompleted', target: 8, reward: { gold: 275 }, order: 2 },
+      { id: 'side_is_3', name: 'Flame Surge', description: 'Unleash your fire. Deal 6,000 total damage.', stat: 'damageDealt', target: 6000, reward: { gold: 400 }, order: 3 },
+      { id: 'side_is_4', name: 'Inferno Sprint', description: 'Survive and profit. Earn 500 gold.', stat: 'goldEarned', target: 500, reward: { gold: 650 }, order: 4 },
+    ],
+  },
+
+  // Chain: Swamp Blitz - toxic marshlands quick run (Lv 25)
+  {
+    chainId: 'swamp_blitz',
+    chainName: 'Swamp Blitz',
+    chainDescription: 'Slash through the Toxic Marshlands before the poison sets in.',
+    chainIcon: 'flask',
+    levelReq: 25,
+    quests: [
+      { id: 'side_sb_1', name: 'Muck Rusher', description: 'Dive into the swamp. Complete 8 explorations.', stat: 'explorationsCompleted', target: 8, reward: { gold: 250 }, order: 1 },
+      { id: 'side_sb_2', name: 'Toxic Takedown', description: 'Clear the corruption fast. Defeat 25 monsters.', stat: 'monstersKilled', target: 25, reward: { gold: 350 }, order: 2 },
+      { id: 'side_sb_3', name: 'Antidote Rush', description: 'Keep yourself alive. Use 4 potions.', stat: 'potionsUsed', target: 4, reward: { gold: 300 }, order: 3 },
+      { id: 'side_sb_4', name: 'Swamp Blitz', description: 'Escape the marsh victorious. Deal 10,000 damage.', stat: 'damageDealt', target: 10000, reward: { gold: 750 }, order: 4 },
+    ],
+  },
+
+  // Chain: Abyss Dive - abyssal depths quick run (Lv 32)
+  {
+    chainId: 'abyss_dive',
+    chainName: 'Abyss Dive',
+    chainDescription: 'Plunge into the Abyssal Depths for a smash-and-grab raid.',
+    chainIcon: 'anchor',
+    levelReq: 32,
+    quests: [
+      { id: 'side_adv_1', name: 'Deep Plunge', description: 'Descend fast. Complete 10 explorations.', stat: 'explorationsCompleted', target: 10, reward: { gold: 350 }, order: 1 },
+      { id: 'side_adv_2', name: 'Pressure Crush', description: 'Overwhelm them. Defeat 30 monsters.', stat: 'monstersKilled', target: 30, reward: { gold: 500 }, order: 2 },
+      { id: 'side_adv_3', name: 'Abyssal Loot', description: 'Scavenge the depths. Loot 8 items.', stat: 'itemsLooted', target: 8, reward: { gold: 450 }, order: 3 },
+      { id: 'side_adv_4', name: 'Depth Charge', description: 'Annihilate. Deal 15,000 total damage.', stat: 'damageDealt', target: 15000, reward: { gold: 900 }, order: 4 },
+    ],
+  },
+
+  // Chain: Celestial Dash - celestial highlands quick run (Lv 40)
+  {
+    chainId: 'celestial_dash',
+    chainName: 'Celestial Dash',
+    chainDescription: 'Race across the Celestial Highlands and claim heavenly spoils.',
+    chainIcon: 'star',
+    levelReq: 40,
+    quests: [
+      { id: 'side_cd_1', name: 'Sky Rush', description: 'Ascend quickly. Complete 10 explorations.', stat: 'explorationsCompleted', target: 10, reward: { gold: 500 }, order: 1 },
+      { id: 'side_cd_2', name: 'Angel Slaughter', description: 'Cut through the celestials. Defeat 35 monsters.', stat: 'monstersKilled', target: 35, reward: { gold: 650 }, order: 2 },
+      { id: 'side_cd_3', name: 'Heaven\'s Toll', description: 'Collect the riches above. Earn 800 gold.', stat: 'goldEarned', target: 800, reward: { gold: 600 }, order: 3 },
+      { id: 'side_cd_4', name: 'Celestial Dash', description: 'Strike with divine force. Deal 25,000 damage.', stat: 'damageDealt', target: 25000, reward: { gold: 1200 }, order: 4 },
+    ],
+  },
+
+  // Chain: Void Raid - void nexus quick run (Lv 50)
+  {
+    chainId: 'void_raid',
+    chainName: 'Void Raid',
+    chainDescription: 'A suicidal raid into the Void Nexus. Get in, hit hard, get out.',
+    chainIcon: 'void',
+    levelReq: 50,
+    quests: [
+      { id: 'side_vr_1', name: 'Breach Point', description: 'Tear through the void. Complete 10 explorations.', stat: 'explorationsCompleted', target: 10, reward: { gold: 750 }, order: 1 },
+      { id: 'side_vr_2', name: 'Void Storm', description: 'Unleash chaos. Defeat 40 monsters.', stat: 'monstersKilled', target: 40, reward: { gold: 900 }, order: 2 },
+      { id: 'side_vr_3', name: 'Reality Shatter', description: 'Break everything. Deal 40,000 total damage.', stat: 'damageDealt', target: 40000, reward: { gold: 1200 }, order: 3 },
+      { id: 'side_vr_4', name: 'Void Raid', description: 'Defeat a void boss and escape. Defeat 2 bosses.', stat: 'bossesKilled', target: 2, reward: { gold: 2000 }, order: 4 },
+    ],
+  },
+
+  // Chain: Dodge Master - evasion focused (Lv 8)
+  {
+    chainId: 'dodge_master',
+    chainName: 'Dodge Master',
+    chainDescription: 'Why block when you can simply not get hit?',
+    chainIcon: 'wind',
+    levelReq: 8,
+    quests: [
+      { id: 'side_dm_1', name: 'Side Step', description: 'Start dodging. Perform 3 dodges.', stat: 'dodgesPerformed', target: 3, reward: { gold: 75 }, order: 1 },
+      { id: 'side_dm_2', name: 'Untouchable', description: 'Keep evading. Win 6 battles.', stat: 'battlesWon', target: 6, reward: { gold: 125 }, order: 2 },
+      { id: 'side_dm_3', name: 'Ghost', description: 'They can\'t hit what they can\'t see. Dodge 8 times.', stat: 'dodgesPerformed', target: 8, reward: { gold: 200 }, order: 3 },
+      { id: 'side_dm_4', name: 'Dodge Master', description: 'Strike back hard. Deal 2,500 total damage.', stat: 'damageDealt', target: 2500, reward: { gold: 450 }, order: 4 },
+    ],
+  },
+
+  // Chain: One Punch - highest damage focused (Lv 15)
+  {
+    chainId: 'one_punch',
+    chainName: 'One Punch',
+    chainDescription: 'Channel everything into a single devastating blow.',
+    chainIcon: 'fist',
+    levelReq: 15,
+    quests: [
+      { id: 'side_op_1', name: 'Warm Up Swing', description: 'Start hitting hard. Land a 30+ damage hit.', stat: 'highestDamage', target: 30, reward: { gold: 100 }, order: 1 },
+      { id: 'side_op_2', name: 'Power Strike', description: 'Build momentum. Win 6 battles.', stat: 'battlesWon', target: 6, reward: { gold: 150 }, order: 2 },
+      { id: 'side_op_3', name: 'Haymaker', description: 'Hit harder. Land a 75+ damage hit.', stat: 'highestDamage', target: 75, reward: { gold: 250 }, order: 3 },
+      { id: 'side_op_4', name: 'Skull Crusher', description: 'Destroy everything. Deal 5,000 total damage.', stat: 'damageDealt', target: 5000, reward: { gold: 400 }, order: 4 },
+      { id: 'side_op_5', name: 'One Punch', description: 'The ultimate hit. Land a 120+ damage single strike.', stat: 'highestDamage', target: 120, reward: { gold: 750 }, order: 5 },
+    ],
+  },
 ];
 
 // Get the total number of chapters
