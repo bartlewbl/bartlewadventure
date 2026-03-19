@@ -118,7 +118,7 @@ export const BUILDING_MATERIALS = {
 // Material drop weights by region (added to monster drop tables)
 export const MATERIAL_DROP_CONFIG = {
   'neon-district': {
-    dropRate: 0.03,
+    dropRate: 0.07,
     materials: [
       { id: 'scrap-wood', weight: 40 },
       { id: 'iron-ore', weight: 30 },
@@ -128,7 +128,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'frozen-wastes': {
-    dropRate: 0.04,
+    dropRate: 0.09,
     materials: [
       { id: 'scrap-wood', weight: 30 },
       { id: 'stone-block', weight: 35 },
@@ -137,7 +137,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'scorched-badlands': {
-    dropRate: 0.04,
+    dropRate: 0.09,
     materials: [
       { id: 'iron-ore', weight: 35 },
       { id: 'stone-block', weight: 30 },
@@ -148,7 +148,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'toxic-marshlands': {
-    dropRate: 0.05,
+    dropRate: 0.10,
     materials: [
       { id: 'charcoal', weight: 25 },
       { id: 'toxic-resin', weight: 30 },
@@ -156,7 +156,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'abyssal-depths': {
-    dropRate: 0.05,
+    dropRate: 0.10,
     materials: [
       { id: 'deep-coral', weight: 25 },
       { id: 'copper-wire', weight: 20 },
@@ -164,7 +164,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'celestial-highlands': {
-    dropRate: 0.06,
+    dropRate: 0.12,
     materials: [
       { id: 'crystal-shard', weight: 15 },
       { id: 'starlight-dust', weight: 10 },
@@ -173,7 +173,7 @@ export const MATERIAL_DROP_CONFIG = {
     ],
   },
   'void-nexus': {
-    dropRate: 0.07,
+    dropRate: 0.14,
     materials: [
       { id: 'void-essence', weight: 8 },
       { id: 'plasma-core', weight: 10 },
