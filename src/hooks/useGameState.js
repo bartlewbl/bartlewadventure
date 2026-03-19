@@ -629,6 +629,13 @@ function gameReducer(state, action) {
         };
       }
 
+      // No encounter - roll for material drop from scavenging
+      const scavengeRegionId = state.currentRegion?.id || null;
+      let scavengedMaterial = null;
+      if (scavengeRegionId) {
+        scavengedMaterial = rollMaterialDrop(scavengeRegionId);
+      }
+
       // No encounter - chance to find loot, gold, or nothing (modified by time/weather)
       const lootChance = (loc.lootRate ?? 0.3) * effects.lootMult;
       let newText = text;
@@ -637,8 +644,15 @@ function gameReducer(state, action) {
       let newFoundItem = null;
       const lootTable = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'energy-drink'];
 
+      // Add scavenged material to inventory
+      if (scavengedMaterial && state.player.inventory.length < state.player.maxInventory) {
+        newPlayer = { ...newPlayer, inventory: [...(newPlayer === state.player ? state.player.inventory : newPlayer.inventory), scavengedMaterial] };
+        newText = text + `\n\nYou salvage ${scavengedMaterial.name} from the wreckage.`;
+        newFoundItem = scavengedMaterial;
+      }
+
       if (Math.random() < lootChance) {
-        if (state.player.inventory.length < state.player.maxInventory) {
+        if (newPlayer.inventory.length < newPlayer.maxInventory) {
           let foundItem;
           // 40% chance to find a location-specific item
           if (Math.random() < 0.4) {
@@ -655,17 +669,17 @@ function gameReducer(state, action) {
               newDiscovered = { ...newDiscovered, [foundItem.name]: [...existing, foundItem.foundLocation] };
             }
           }
-          newPlayer = { ...state.player, inventory: [...state.player.inventory, foundItem] };
-          newText = text + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
+          newPlayer = { ...newPlayer, inventory: [...newPlayer.inventory, foundItem] };
+          newText = (scavengedMaterial ? newText : text) + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
           newFoundItem = foundItem;
         } else {
-          newText = text + '\n\nYou find loot but your pack is full.';
+          newText = (scavengedMaterial ? newText : text) + '\n\nYou find loot but your pack is full.';
         }
       } else if (Math.random() < 0.3) {
         const found = Math.floor(3 + Math.random() * Math.max(2, state.player.level * 2));
-        newPlayer = { ...state.player, gold: state.player.gold + found };
-        newText = text + `\n\nYou find ${found} gold tucked under debris.`;
-      } else {
+        newPlayer = { ...newPlayer, gold: newPlayer.gold + found };
+        newText = (scavengedMaterial ? newText : text) + `\n\nYou find ${found} gold tucked under debris.`;
+      } else if (!scavengedMaterial) {
         newText = text + '\n\nNothing but distant sirens... for now.';
       }
       // Track exploration
