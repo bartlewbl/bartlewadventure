@@ -60,32 +60,32 @@ export const MONSTERS = {
   rat: {
     name: 'Gutter Rat', sprite: 'rat', baseHp: 22, baseAtk: 5, baseDef: 1,
     baseExp: 12, baseGold: 6, skills: ['bite'],
-    dropTable: [{ type: 'potion', weight: 35 }, { type: 'boots', weight: 8 }, { type: 'energy-drink', weight: 5 }],
+    dropTable: [{ type: 'potion', weight: 35 }, { type: 'boots', weight: 8 }, { type: 'gloves', weight: 4 }, { type: 'energy-drink', weight: 5 }],
   },
   'alpha-rat': {
     name: 'Alpha Rat', sprite: 'rat', baseHp: 40, baseAtk: 10, baseDef: 3,
     baseExp: 24, baseGold: 15, skills: ['bite'],
-    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 20 }, { type: 'energy-drink', weight: 5 }],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 8 }, { type: 'belt', weight: 4 }, { type: 'potion', weight: 20 }, { type: 'energy-drink', weight: 5 }],
   },
   slime: {
     name: 'Neon Slime', sprite: 'slime', baseHp: 28, baseAtk: 6, baseDef: 2,
     baseExp: 16, baseGold: 8, skills: [],
-    dropTable: [{ type: 'potion', weight: 45 }, { type: 'ring', weight: 5 }, { type: 'energy-drink', weight: 8 }],
+    dropTable: [{ type: 'potion', weight: 45 }, { type: 'ring', weight: 5 }, { type: 'amulet', weight: 4 }, { type: 'energy-drink', weight: 8 }],
   },
   'toxic-slime': {
     name: 'Toxic Slime', sprite: 'slime', baseHp: 45, baseAtk: 12, baseDef: 4,
     baseExp: 34, baseGold: 20, skills: ['poison'],
-    dropTable: [{ type: 'armor', weight: 10 }, { type: 'ring', weight: 7 }, { type: 'potion', weight: 35 }],
+    dropTable: [{ type: 'armor', weight: 10 }, { type: 'ring', weight: 7 }, { type: 'cape', weight: 4 }, { type: 'potion', weight: 35 }],
   },
   vagrant: {
     name: 'Feral Vagrant', sprite: 'vagrant', baseHp: 36, baseAtk: 12, baseDef: 5,
     baseExp: 30, baseGold: 18, skills: ['slash'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 25 }, { type: 'energy-drink', weight: 6 }],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'gloves', weight: 5 }, { type: 'potion', weight: 25 }, { type: 'energy-drink', weight: 6 }],
   },
   'rogue-vagrant': {
     name: 'Rogue Vagrant', sprite: 'vagrant', baseHp: 60, baseAtk: 18, baseDef: 7,
     baseExp: 48, baseGold: 28, skills: ['slash', 'steal'],
-    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 6 }, { type: 'potion', weight: 30 }, { type: 'energy-drink', weight: 7 }],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 6 }, { type: 'cape', weight: 5 }, { type: 'amulet', weight: 4 }, { type: 'potion', weight: 30 }, { type: 'energy-drink', weight: 7 }],
   },
   'sewer-roach': {
     name: 'Sewer Roach', sprite: 'rat', baseHp: 18, baseAtk: 4, baseDef: 1,
@@ -130,17 +130,17 @@ export const MONSTERS = {
   'shadow-bat': {
     name: 'Shadow Bat', sprite: 'bat', baseHp: 24, baseAtk: 8, baseDef: 2,
     baseExp: 18, baseGold: 9, skills: ['screech', 'bite'],
-    dropTable: [{ type: 'potion', weight: 30 }, { type: 'helmet', weight: 8 }],
+    dropTable: [{ type: 'potion', weight: 30 }, { type: 'helmet', weight: 8 }, { type: 'cape', weight: 4 }],
   },
   'dumpster-snake': {
     name: 'Dumpster Snake', sprite: 'snake', baseHp: 28, baseAtk: 9, baseDef: 3,
     baseExp: 20, baseGold: 10, skills: ['venom', 'bite'],
-    dropTable: [{ type: 'potion', weight: 30 }, { type: 'ring', weight: 7 }, { type: 'boots', weight: 6 }],
+    dropTable: [{ type: 'potion', weight: 30 }, { type: 'ring', weight: 7 }, { type: 'boots', weight: 6 }, { type: 'belt', weight: 4 }],
   },
   'gutter-goblin': {
     name: 'Gutter Goblin', sprite: 'goblin', baseHp: 30, baseAtk: 10, baseDef: 3,
     baseExp: 22, baseGold: 12, skills: ['slash', 'steal'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'helmet', weight: 7 }, { type: 'potion', weight: 25 }, { type: 'energy-drink', weight: 6 }],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'helmet', weight: 7 }, { type: 'gloves', weight: 5 }, { type: 'potion', weight: 25 }, { type: 'energy-drink', weight: 6 }],
   },
   'alley-wolf': {
     name: 'Alley Wolf', sprite: 'wolf', baseHp: 32, baseAtk: 11, baseDef: 4,
@@ -185,7 +185,7 @@ export const MONSTERS = {
   'pipe-golem': {
     name: 'Pipe Golem', sprite: 'golem', baseHp: 55, baseAtk: 12, baseDef: 8,
     baseExp: 36, baseGold: 20, skills: ['bash', 'slam'],
-    dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'potion', weight: 18 }],
+    dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'belt', weight: 5 }, { type: 'potion', weight: 18 }],
   },
   'sludge-slime': {
     name: 'Sludge Slime', sprite: 'slime', baseHp: 40, baseAtk: 11, baseDef: 5,
@@ -210,22 +210,22 @@ export const MONSTERS = {
   'sky-hawk': {
     name: 'Sky Hawk', sprite: 'bat', baseHp: 44, baseAtk: 20, baseDef: 6,
     baseExp: 42, baseGold: 22, skills: ['slash', 'screech'],
-    dropTable: [{ type: 'helmet', weight: 10 }, { type: 'boots', weight: 9 }, { type: 'potion', weight: 22 }],
+    dropTable: [{ type: 'helmet', weight: 10 }, { type: 'boots', weight: 9 }, { type: 'cape', weight: 6 }, { type: 'potion', weight: 22 }],
   },
   'roof-stalker': {
     name: 'Roof Stalker', sprite: 'vagrant', baseHp: 50, baseAtk: 22, baseDef: 7,
     baseExp: 46, baseGold: 25, skills: ['backstab', 'steal', 'venom'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 20 }],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'amulet', weight: 5 }, { type: 'gloves', weight: 5 }, { type: 'potion', weight: 20 }],
   },
   'antenna-golem': {
     name: 'Antenna Golem', sprite: 'golem', baseHp: 70, baseAtk: 16, baseDef: 10,
     baseExp: 48, baseGold: 26, skills: ['shock', 'bash'],
-    dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'potion', weight: 16 }],
+    dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'belt', weight: 5 }, { type: 'gloves', weight: 5 }, { type: 'potion', weight: 16 }],
   },
   'wind-phantom': {
     name: 'Wind Phantom', sprite: 'ghost', baseHp: 40, baseAtk: 23, baseDef: 5,
     baseExp: 44, baseGold: 23, skills: ['curse', 'drain'],
-    dropTable: [{ type: 'ring', weight: 10 }, { type: 'potion', weight: 25 }],
+    dropTable: [{ type: 'ring', weight: 10 }, { type: 'cape', weight: 6 }, { type: 'amulet', weight: 5 }, { type: 'potion', weight: 25 }],
   },
   'drone-wasp': {
     name: 'Drone Wasp', sprite: 'bat', baseHp: 38, baseAtk: 21, baseDef: 5,
@@ -255,7 +255,7 @@ export const MONSTERS = {
   'forge-elemental': {
     name: 'Forge Elemental', sprite: 'slime', baseHp: 62, baseAtk: 24, baseDef: 8,
     baseExp: 55, baseGold: 30, skills: ['firebreath', 'slam'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 20 }],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'gloves', weight: 6 }, { type: 'belt', weight: 4 }, { type: 'potion', weight: 20 }],
   },
   'scrap-golem': {
     name: 'Scrap Golem', sprite: 'golem', baseHp: 80, baseAtk: 20, baseDef: 12,
@@ -300,7 +300,7 @@ export const MONSTERS = {
   'terminal-enforcer': {
     name: 'Terminal Enforcer', sprite: 'vagrant', baseHp: 72, baseAtk: 28, baseDef: 10,
     baseExp: 65, baseGold: 35, skills: ['slash', 'bash', 'charge'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 9 }, { type: 'potion', weight: 18 }, { type: 'energy-drink', weight: 7 }],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 9 }, { type: 'gloves', weight: 5 }, { type: 'cape', weight: 4 }, { type: 'potion', weight: 18 }, { type: 'energy-drink', weight: 7 }],
   },
   'midnight-wolf': {
     name: 'Midnight Wolf', sprite: 'wolf', baseHp: 70, baseAtk: 27, baseDef: 11,
@@ -310,7 +310,7 @@ export const MONSTERS = {
   'phantom-conductor': {
     name: 'Phantom Conductor', sprite: 'ghost', baseHp: 60, baseAtk: 30, baseDef: 8,
     baseExp: 66, baseGold: 35, skills: ['shock', 'curse', 'drain'],
-    dropTable: [{ type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 18 }],
+    dropTable: [{ type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'amulet', weight: 6 }, { type: 'potion', weight: 18 }],
   },
   'glitch-golem': {
     name: 'Glitch Golem', sprite: 'golem', baseHp: 90, baseAtk: 24, baseDef: 14,
@@ -330,7 +330,7 @@ export const MONSTERS = {
   'shadow-dragon': {
     name: 'Shadow Dragon', sprite: 'dragon', baseHp: 85, baseAtk: 30, baseDef: 12,
     baseExp: 72, baseGold: 40, skills: ['firebreath', 'venom', 'charge'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'potion', weight: 15 }],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'cape', weight: 5 }, { type: 'belt', weight: 4 }, { type: 'gloves', weight: 4 }, { type: 'amulet', weight: 4 }, { type: 'potion', weight: 15 }],
   },
   'neon-reaper': {
     name: 'Neon Reaper', sprite: 'skeleton', baseHp: 68, baseAtk: 31, baseDef: 9,
@@ -1781,6 +1781,231 @@ export const ITEM_LIBRARY = {
     { name: 'Shell Fragment Charm', rarity: 'Common', level: 43, baseAtk: 19, baseDef: 9, findableAt: ['coral-labyrinth'] },
     { name: 'Starlight Trinket', rarity: 'Common', level: 52, baseAtk: 22, baseDef: 11, findableAt: ['cloud-walkway'] },
     { name: 'Void Fragment Ring', rarity: 'Common', level: 61, baseAtk: 26, baseDef: 13, findableAt: ['rifts-edge'] },
+  ]),
+  gloves: createGearList('gloves', 'gloves', [
+    // Neon District tier
+    { name: 'Fingerless Street Gloves', rarity: 'Common', level: 1, baseDef: 1, baseAtk: 1, findableAt: ['neon-mile'] },
+    { name: 'Rubber Work Gloves', rarity: 'Common', level: 2, baseDef: 2, findableAt: ['neon-mile'] },
+    { name: 'Scrap Knuckle Guards', rarity: 'Uncommon', level: 2, baseDef: 1, baseAtk: 2, findableAt: ['neon-mile'] },
+    { name: 'Neon Grip Gloves', rarity: 'Rare', level: 3, baseDef: 2, baseAtk: 2, findableAt: ['neon-mile'] },
+    { name: 'Holographic Handwraps', rarity: 'Legendary', level: 2, baseDef: 2, baseAtk: 2, findableAt: ['neon-mile'] },
+    // Shadow Alley tier
+    { name: 'Pickpocket Mitts', rarity: 'Common', level: 3, baseDef: 2, baseAtk: 1, findableAt: ['shadow-alley'] },
+    { name: 'Shadow Grip Gauntlets', rarity: 'Uncommon', level: 4, baseDef: 2, baseAtk: 2, findableAt: ['shadow-alley'] },
+    { name: 'Razorwire Gloves', rarity: 'Rare', level: 4, baseDef: 2, baseAtk: 3, findableAt: ['shadow-alley'] },
+    { name: 'Phantom Touch Wraps', rarity: 'Epic', level: 4, baseDef: 3, baseAtk: 3, findableAt: ['shadow-alley'] },
+    { name: 'Ghostweave Gloves', rarity: 'Legendary', level: 3, baseDef: 3, baseAtk: 2, findableAt: ['shadow-alley'] },
+    // Metro Underpass tier
+    { name: 'Tunnel Digger Gauntlets', rarity: 'Common', level: 5, baseDef: 3, baseAtk: 2, findableAt: ['metro-underpass'] },
+    { name: 'Copper-Plated Fists', rarity: 'Uncommon', level: 6, baseDef: 3, baseAtk: 3, findableAt: ['metro-underpass'] },
+    { name: 'Shock Conductor Gloves', rarity: 'Rare', level: 6, baseDef: 3, baseAtk: 4, findableAt: ['metro-underpass'] },
+    { name: 'Arc Discharge Gauntlets', rarity: 'Epic', level: 7, baseDef: 4, baseAtk: 4, findableAt: ['metro-underpass'] },
+    { name: 'Tesla Grip', rarity: 'Legendary', level: 6, baseDef: 4, baseAtk: 4, findableAt: ['metro-underpass'] },
+    // Skyline Rooftops tier
+    { name: 'Climbing Grip Gloves', rarity: 'Common', level: 8, baseDef: 4, baseAtk: 3, findableAt: ['skyline-rooftops'] },
+    { name: 'Carbon Fiber Handguards', rarity: 'Uncommon', level: 9, baseDef: 5, baseAtk: 3, findableAt: ['skyline-rooftops'] },
+    { name: 'Grapple Gauntlets', rarity: 'Rare', level: 9, baseDef: 4, baseAtk: 5, findableAt: ['skyline-rooftops'] },
+    { name: 'Windshear Handwraps', rarity: 'Epic', level: 10, baseDef: 5, baseAtk: 5, findableAt: ['skyline-rooftops'] },
+    // Ironworks Yard tier
+    { name: 'Foundry Mittens', rarity: 'Common', level: 11, baseDef: 6, baseAtk: 4, findableAt: ['ironworks-yard'] },
+    { name: 'Alloy-Plated Gauntlets', rarity: 'Uncommon', level: 12, baseDef: 6, baseAtk: 5, findableAt: ['ironworks-yard'] },
+    { name: 'Forgehammer Fists', rarity: 'Rare', level: 12, baseDef: 6, baseAtk: 6, findableAt: ['ironworks-yard'] },
+    { name: 'Magma-Touched Grips', rarity: 'Epic', level: 13, baseDef: 7, baseAtk: 6, findableAt: ['ironworks-yard'] },
+    // Midnight Terminal tier
+    { name: 'Midnight Grip Gloves', rarity: 'Common', level: 14, baseDef: 7, baseAtk: 5, findableAt: ['midnight-terminal'] },
+    { name: 'Data Stream Gauntlets', rarity: 'Uncommon', level: 15, baseDef: 8, baseAtk: 6 },
+    { name: 'Neon Pulse Fists', rarity: 'Rare', level: 16, baseDef: 8, baseAtk: 7, findableAt: ['midnight-terminal'] },
+    { name: 'Void Grip Gauntlets', rarity: 'Epic', level: 17, baseDef: 9, baseAtk: 8, findableAt: ['midnight-terminal'] },
+    { name: 'Singularity Grasp', rarity: 'Legendary', level: 20, baseDef: 10, baseAtk: 9 },
+    // Frozen Wastes tier
+    { name: 'Frostbite Gauntlets', rarity: 'Rare', level: 22, baseDef: 11, baseAtk: 8, findableAt: ['frostbite-outpost', 'glacier-tunnels'] },
+    { name: 'Glacier Grip', rarity: 'Epic', level: 25, baseDef: 13, baseAtk: 10, findableAt: ['crystal-caverns', 'frozen-citadel'] },
+    { name: 'Permafrost Mittens', rarity: 'Uncommon', level: 23, baseDef: 12, baseAtk: 7, findableAt: ['permafrost-ruins'] },
+    { name: 'Avalanche Fists', rarity: 'Epic', level: 24, baseDef: 12, baseAtk: 9, findableAt: ['blizzard-peak'] },
+    // Scorched Badlands tier
+    { name: 'Ember Gauntlets', rarity: 'Uncommon', level: 28, baseDef: 14, baseAtk: 10, findableAt: ['ember-flats', 'sunscorch-canyon'] },
+    { name: 'Volcanic Fists', rarity: 'Rare', level: 30, baseDef: 15, baseAtk: 12, findableAt: ['magma-vents', 'volcanic-forge'] },
+    { name: 'Inferno Grips', rarity: 'Epic', level: 32, baseDef: 16, baseAtk: 13, findableAt: ['inferno-pit'] },
+    // Toxic Marshlands tier
+    { name: 'Spore-Coated Gloves', rarity: 'Uncommon', level: 35, baseDef: 16, baseAtk: 12, findableAt: ['fungal-hollow'] },
+    { name: 'Venomweave Gauntlets', rarity: 'Epic', level: 34, baseDef: 17, baseAtk: 14, findableAt: ['venomous-thicket', 'plague-ponds'] },
+    { name: 'Rot Touch Mitts', rarity: 'Common', level: 38, baseDef: 18, baseAtk: 13, findableAt: ['rot-core'] },
+    // Abyssal Depths tier
+    { name: 'Coral Knuckle Guards', rarity: 'Rare', level: 40, baseDef: 19, baseAtk: 15, findableAt: ['coral-labyrinth', 'tidal-caves'] },
+    { name: 'Leviathan Scale Gloves', rarity: 'Legendary', level: 45, baseDef: 22, baseAtk: 17, findableAt: ['krakens-rest', 'abyssal-trench'] },
+    { name: 'Pressure Gauntlets', rarity: 'Uncommon', level: 42, baseDef: 19, baseAtk: 14, findableAt: ['pressure-rift'] },
+    // Celestial Highlands tier
+    { name: 'Starforged Gauntlets', rarity: 'Epic', level: 50, baseDef: 24, baseAtk: 19, findableAt: ['solar-fields', 'astral-gardens'] },
+    { name: 'Empyrean Handguards', rarity: 'Rare', level: 55, baseDef: 26, baseAtk: 21, findableAt: ['comets-trail', 'empyrean-gate'] },
+    { name: 'Cloud-Touched Gloves', rarity: 'Uncommon', level: 52, baseDef: 24, baseAtk: 18, findableAt: ['cloud-walkway'] },
+    // Void Nexus tier
+    { name: 'Rift Weaver Gloves', rarity: 'Legendary', level: 58, baseDef: 28, baseAtk: 22, findableAt: ['rifts-edge', 'entropy-garden'] },
+    { name: 'Nullpoint Gauntlets', rarity: 'Epic', level: 62, baseDef: 30, baseAtk: 24, findableAt: ['paradox-maze', 'singularity-well'] },
+    { name: 'Oblivion Grip', rarity: 'Legendary', level: 65, baseDef: 33, baseAtk: 26, findableAt: ['oblivion-throne'] },
+  ]),
+  amulet: createGearList('amulet', 'amulet', [
+    // Neon District tier
+    { name: 'Twisted Wire Pendant', rarity: 'Common', level: 1, baseAtk: 1, baseDef: 1, findableAt: ['neon-mile'] },
+    { name: 'Neon Shard Necklace', rarity: 'Uncommon', level: 2, baseAtk: 2, baseDef: 1, findableAt: ['neon-mile'] },
+    { name: 'Glowing Circuit Amulet', rarity: 'Rare', level: 3, baseAtk: 2, baseDef: 2, findableAt: ['neon-mile'] },
+    { name: 'Hologram Locket', rarity: 'Legendary', level: 2, baseAtk: 2, baseDef: 2, findableAt: ['neon-mile'] },
+    // Shadow Alley tier
+    { name: 'Tarnished Medallion', rarity: 'Common', level: 3, baseAtk: 2, baseDef: 1, findableAt: ['shadow-alley'] },
+    { name: 'Shadow Fang Pendant', rarity: 'Uncommon', level: 4, baseAtk: 2, baseDef: 2, findableAt: ['shadow-alley'] },
+    { name: 'Obsidian Eye Amulet', rarity: 'Epic', level: 4, baseAtk: 3, baseDef: 2, findableAt: ['shadow-alley'] },
+    { name: 'Nightshade Choker', rarity: 'Legendary', level: 4, baseAtk: 3, baseDef: 3, findableAt: ['shadow-alley'] },
+    // Metro Underpass tier
+    { name: 'Subway Token Necklace', rarity: 'Common', level: 5, baseAtk: 3, baseDef: 2, findableAt: ['metro-underpass'] },
+    { name: 'Charged Coil Pendant', rarity: 'Uncommon', level: 6, baseAtk: 3, baseDef: 3, findableAt: ['metro-underpass'] },
+    { name: 'Arc Reactor Amulet', rarity: 'Rare', level: 7, baseAtk: 4, baseDef: 3, findableAt: ['metro-underpass'] },
+    { name: 'Thundercore Pendant', rarity: 'Epic', level: 7, baseAtk: 5, baseDef: 3, findableAt: ['metro-underpass'] },
+    // Skyline Rooftops tier
+    { name: 'Antenna Fragment Chain', rarity: 'Common', level: 8, baseAtk: 4, baseDef: 3, findableAt: ['skyline-rooftops'] },
+    { name: 'Skyward Talisman', rarity: 'Uncommon', level: 9, baseAtk: 5, baseDef: 3, findableAt: ['skyline-rooftops'] },
+    { name: 'Windcaller Pendant', rarity: 'Rare', level: 10, baseAtk: 5, baseDef: 4, findableAt: ['skyline-rooftops'] },
+    // Ironworks Yard tier
+    { name: 'Cog Chain Necklace', rarity: 'Common', level: 11, baseAtk: 5, baseDef: 4, findableAt: ['ironworks-yard'] },
+    { name: 'Alloy Core Pendant', rarity: 'Uncommon', level: 12, baseAtk: 6, baseDef: 4, findableAt: ['ironworks-yard'] },
+    { name: 'Reactor Heart Amulet', rarity: 'Rare', level: 13, baseAtk: 7, baseDef: 5, findableAt: ['ironworks-yard'] },
+    { name: 'Forge Emblem', rarity: 'Epic', level: 13, baseAtk: 8, baseDef: 5, findableAt: ['ironworks-yard'] },
+    // Midnight Terminal tier
+    { name: 'Datachip Pendant', rarity: 'Common', level: 14, baseAtk: 7, baseDef: 5, findableAt: ['midnight-terminal'] },
+    { name: 'Encryption Key Amulet', rarity: 'Uncommon', level: 15, baseAtk: 8, baseDef: 5 },
+    { name: 'Signal Jammer Choker', rarity: 'Rare', level: 16, baseAtk: 9, baseDef: 6, findableAt: ['midnight-terminal'] },
+    { name: 'Binary Star Pendant', rarity: 'Epic', level: 18, baseAtk: 10, baseDef: 7, findableAt: ['midnight-terminal'] },
+    { name: 'Singularity Core Amulet', rarity: 'Legendary', level: 20, baseAtk: 12, baseDef: 8 },
+    // Frozen Wastes tier
+    { name: 'Frostcore Amulet', rarity: 'Rare', level: 22, baseAtk: 13, baseDef: 8, findableAt: ['frostbite-outpost', 'glacier-tunnels'] },
+    { name: 'Glacier Tear Pendant', rarity: 'Epic', level: 25, baseAtk: 15, baseDef: 9, findableAt: ['crystal-caverns', 'frozen-citadel'] },
+    { name: 'Icicle Shard Chain', rarity: 'Uncommon', level: 23, baseAtk: 14, baseDef: 7, findableAt: ['permafrost-ruins'] },
+    // Scorched Badlands tier
+    { name: 'Ember Heart Amulet', rarity: 'Uncommon', level: 28, baseAtk: 16, baseDef: 9, findableAt: ['ember-flats', 'sunscorch-canyon'] },
+    { name: 'Volcanic Shard Pendant', rarity: 'Rare', level: 30, baseAtk: 18, baseDef: 10, findableAt: ['magma-vents', 'volcanic-forge'] },
+    { name: 'Inferno Core Choker', rarity: 'Epic', level: 32, baseAtk: 20, baseDef: 11, findableAt: ['inferno-pit'] },
+    // Toxic Marshlands tier
+    { name: 'Spore Cluster Necklace', rarity: 'Uncommon', level: 35, baseAtk: 19, baseDef: 10, findableAt: ['fungal-hollow'] },
+    { name: 'Venom Fang Pendant', rarity: 'Epic', level: 34, baseAtk: 20, baseDef: 12, findableAt: ['venomous-thicket', 'plague-ponds'] },
+    { name: 'Rot Blossom Amulet', rarity: 'Common', level: 38, baseAtk: 21, baseDef: 11, findableAt: ['rot-core'] },
+    // Abyssal Depths tier
+    { name: 'Deep Coral Pendant', rarity: 'Rare', level: 40, baseAtk: 22, baseDef: 12, findableAt: ['coral-labyrinth', 'tidal-caves'] },
+    { name: 'Leviathan Fang Chain', rarity: 'Legendary', level: 45, baseAtk: 25, baseDef: 14, findableAt: ['krakens-rest', 'abyssal-trench'] },
+    { name: 'Pressure Pearl Amulet', rarity: 'Uncommon', level: 42, baseAtk: 21, baseDef: 12, findableAt: ['pressure-rift'] },
+    // Celestial Highlands tier
+    { name: 'Star Ember Pendant', rarity: 'Epic', level: 50, baseAtk: 27, baseDef: 15, findableAt: ['solar-fields', 'astral-gardens'] },
+    { name: 'Empyrean Talisman', rarity: 'Rare', level: 55, baseAtk: 29, baseDef: 16, findableAt: ['comets-trail', 'empyrean-gate'] },
+    // Void Nexus tier
+    { name: 'Rift Shard Pendant', rarity: 'Legendary', level: 58, baseAtk: 31, baseDef: 17, findableAt: ['rifts-edge', 'entropy-garden'] },
+    { name: 'Nullpoint Amulet', rarity: 'Epic', level: 62, baseAtk: 33, baseDef: 18, findableAt: ['paradox-maze', 'singularity-well'] },
+    { name: 'Oblivion Talisman', rarity: 'Legendary', level: 65, baseAtk: 36, baseDef: 20, findableAt: ['oblivion-throne'] },
+  ]),
+  belt: createGearList('belt', 'belt', [
+    // Neon District tier
+    { name: 'Frayed Rope Belt', rarity: 'Common', level: 1, baseDef: 2, findableAt: ['neon-mile'] },
+    { name: 'Wire-Stitched Sash', rarity: 'Uncommon', level: 2, baseDef: 2, baseAtk: 1, findableAt: ['neon-mile'] },
+    { name: 'Neon Strip Belt', rarity: 'Rare', level: 3, baseDef: 3, baseAtk: 1, findableAt: ['neon-mile'] },
+    { name: 'Holographic Waistguard', rarity: 'Legendary', level: 2, baseDef: 3, baseAtk: 1, findableAt: ['neon-mile'] },
+    // Shadow Alley tier
+    { name: 'Leather Tool Belt', rarity: 'Common', level: 3, baseDef: 3, findableAt: ['shadow-alley'] },
+    { name: 'Shadow Cinch', rarity: 'Uncommon', level: 4, baseDef: 3, baseAtk: 1, findableAt: ['shadow-alley'] },
+    { name: 'Assassin\'s Sash', rarity: 'Rare', level: 5, baseDef: 4, baseAtk: 2, findableAt: ['shadow-alley'] },
+    { name: 'Phantom Waistband', rarity: 'Epic', level: 4, baseDef: 4, baseAtk: 2, findableAt: ['shadow-alley'] },
+    // Metro Underpass tier
+    { name: 'Conductor\'s Belt', rarity: 'Common', level: 6, baseDef: 4, baseAtk: 1, findableAt: ['metro-underpass'] },
+    { name: 'Cable-Wound Girdle', rarity: 'Uncommon', level: 7, baseDef: 5, baseAtk: 1, findableAt: ['metro-underpass'] },
+    { name: 'Arc Stabilizer Belt', rarity: 'Rare', level: 7, baseDef: 5, baseAtk: 2, findableAt: ['metro-underpass'] },
+    { name: 'Tesla Coil Sash', rarity: 'Epic', level: 7, baseDef: 6, baseAtk: 2, findableAt: ['metro-underpass'] },
+    // Skyline Rooftops tier
+    { name: 'Grapple Harness Belt', rarity: 'Common', level: 8, baseDef: 5, baseAtk: 1, findableAt: ['skyline-rooftops'] },
+    { name: 'Windrunner Sash', rarity: 'Uncommon', level: 9, baseDef: 6, baseAtk: 2, findableAt: ['skyline-rooftops'] },
+    { name: 'Skyline Utility Belt', rarity: 'Rare', level: 10, baseDef: 7, baseAtk: 2, findableAt: ['skyline-rooftops'] },
+    // Ironworks Yard tier
+    { name: 'Forgemaster\'s Girdle', rarity: 'Common', level: 11, baseDef: 7, baseAtk: 2, findableAt: ['ironworks-yard'] },
+    { name: 'Alloy Chain Belt', rarity: 'Uncommon', level: 12, baseDef: 8, baseAtk: 2, findableAt: ['ironworks-yard'] },
+    { name: 'Anvil Guard Belt', rarity: 'Rare', level: 13, baseDef: 9, baseAtk: 3, findableAt: ['ironworks-yard'] },
+    { name: 'Molten Core Girdle', rarity: 'Epic', level: 13, baseDef: 9, baseAtk: 3, findableAt: ['ironworks-yard'] },
+    // Midnight Terminal tier
+    { name: 'Circuit Board Belt', rarity: 'Common', level: 14, baseDef: 9, baseAtk: 2, findableAt: ['midnight-terminal'] },
+    { name: 'Encrypted Sash', rarity: 'Uncommon', level: 15, baseDef: 10, baseAtk: 3 },
+    { name: 'Datastream Girdle', rarity: 'Rare', level: 16, baseDef: 11, baseAtk: 3, findableAt: ['midnight-terminal'] },
+    { name: 'Void Anchor Belt', rarity: 'Epic', level: 18, baseDef: 12, baseAtk: 4, findableAt: ['midnight-terminal'] },
+    { name: 'Singularity Waistguard', rarity: 'Legendary', level: 20, baseDef: 14, baseAtk: 4 },
+    // Frozen Wastes tier
+    { name: 'Frostbind Belt', rarity: 'Rare', level: 22, baseDef: 14, baseAtk: 4, findableAt: ['frostbite-outpost', 'glacier-tunnels'] },
+    { name: 'Glacier Chain Girdle', rarity: 'Epic', level: 25, baseDef: 16, baseAtk: 5, findableAt: ['crystal-caverns', 'frozen-citadel'] },
+    // Scorched Badlands tier
+    { name: 'Heatshield Sash', rarity: 'Uncommon', level: 28, baseDef: 17, baseAtk: 5, findableAt: ['ember-flats', 'sunscorch-canyon'] },
+    { name: 'Volcanic Band Belt', rarity: 'Rare', level: 30, baseDef: 19, baseAtk: 6, findableAt: ['magma-vents', 'volcanic-forge'] },
+    // Toxic Marshlands tier
+    { name: 'Spore Guard Belt', rarity: 'Uncommon', level: 35, baseDef: 20, baseAtk: 6, findableAt: ['fungal-hollow'] },
+    { name: 'Toxin Ward Girdle', rarity: 'Epic', level: 34, baseDef: 21, baseAtk: 7, findableAt: ['venomous-thicket', 'plague-ponds'] },
+    { name: 'Rot Wrap Belt', rarity: 'Common', level: 38, baseDef: 22, baseAtk: 6, findableAt: ['rot-core'] },
+    // Abyssal Depths tier
+    { name: 'Coral Chain Belt', rarity: 'Rare', level: 40, baseDef: 23, baseAtk: 7, findableAt: ['coral-labyrinth', 'tidal-caves'] },
+    { name: 'Leviathan Hide Girdle', rarity: 'Legendary', level: 45, baseDef: 26, baseAtk: 9, findableAt: ['krakens-rest', 'abyssal-trench'] },
+    // Celestial Highlands tier
+    { name: 'Starweave Belt', rarity: 'Epic', level: 50, baseDef: 29, baseAtk: 10, findableAt: ['solar-fields', 'astral-gardens'] },
+    { name: 'Empyrean Girdle', rarity: 'Rare', level: 55, baseDef: 32, baseAtk: 11, findableAt: ['comets-trail', 'empyrean-gate'] },
+    // Void Nexus tier
+    { name: 'Rift Anchor Belt', rarity: 'Legendary', level: 58, baseDef: 34, baseAtk: 12, findableAt: ['rifts-edge', 'entropy-garden'] },
+    { name: 'Nullpoint Girdle', rarity: 'Epic', level: 62, baseDef: 36, baseAtk: 13, findableAt: ['paradox-maze', 'singularity-well'] },
+    { name: 'Oblivion Waistguard', rarity: 'Legendary', level: 65, baseDef: 40, baseAtk: 15, findableAt: ['oblivion-throne'] },
+  ]),
+  cape: createGearList('cape', 'cape', [
+    // Neon District tier
+    { name: 'Tattered Cloak', rarity: 'Common', level: 1, baseDef: 2, findableAt: ['neon-mile'] },
+    { name: 'Neon-Trimmed Cape', rarity: 'Uncommon', level: 2, baseDef: 2, baseAtk: 1, findableAt: ['neon-mile'] },
+    { name: 'Flickering Mantle', rarity: 'Rare', level: 3, baseDef: 3, baseAtk: 1, findableAt: ['neon-mile'] },
+    { name: 'Holographic Shroud', rarity: 'Legendary', level: 2, baseDef: 3, baseAtk: 1, findableAt: ['neon-mile'] },
+    // Shadow Alley tier
+    { name: 'Ragpicker\'s Shawl', rarity: 'Common', level: 3, baseDef: 3, findableAt: ['shadow-alley'] },
+    { name: 'Shadow Veil', rarity: 'Uncommon', level: 4, baseDef: 3, baseAtk: 1, findableAt: ['shadow-alley'] },
+    { name: 'Nightstalker Cape', rarity: 'Rare', level: 5, baseDef: 4, baseAtk: 2, findableAt: ['shadow-alley'] },
+    { name: 'Phantom Cloak', rarity: 'Epic', level: 4, baseDef: 5, baseAtk: 1, findableAt: ['shadow-alley'] },
+    { name: 'Wraithweave Mantle', rarity: 'Legendary', level: 4, baseDef: 5, baseAtk: 2, findableAt: ['shadow-alley'] },
+    // Metro Underpass tier
+    { name: 'Conductor\'s Cape', rarity: 'Common', level: 6, baseDef: 4, baseAtk: 1, findableAt: ['metro-underpass'] },
+    { name: 'Voltage Shroud', rarity: 'Uncommon', level: 7, baseDef: 5, baseAtk: 1, findableAt: ['metro-underpass'] },
+    { name: 'Spark Trail Cloak', rarity: 'Rare', level: 7, baseDef: 5, baseAtk: 2, findableAt: ['metro-underpass'] },
+    { name: 'Arc Storm Mantle', rarity: 'Epic', level: 7, baseDef: 6, baseAtk: 2, findableAt: ['metro-underpass'] },
+    // Skyline Rooftops tier
+    { name: 'Windcatcher Cape', rarity: 'Common', level: 8, baseDef: 5, baseAtk: 1, findableAt: ['skyline-rooftops'] },
+    { name: 'Gale Runner Cloak', rarity: 'Uncommon', level: 9, baseDef: 6, baseAtk: 2, findableAt: ['skyline-rooftops'] },
+    { name: 'Stormweave Mantle', rarity: 'Rare', level: 10, baseDef: 7, baseAtk: 2, findableAt: ['skyline-rooftops'] },
+    // Ironworks Yard tier
+    { name: 'Soot-Stained Cloak', rarity: 'Common', level: 11, baseDef: 7, baseAtk: 2, findableAt: ['ironworks-yard'] },
+    { name: 'Fireproof Mantle', rarity: 'Uncommon', level: 12, baseDef: 8, baseAtk: 2, findableAt: ['ironworks-yard'] },
+    { name: 'Forge Ember Cape', rarity: 'Rare', level: 13, baseDef: 9, baseAtk: 3, findableAt: ['ironworks-yard'] },
+    { name: 'Molten Shroud', rarity: 'Epic', level: 13, baseDef: 10, baseAtk: 3, findableAt: ['ironworks-yard'] },
+    // Midnight Terminal tier
+    { name: 'Data Veil Cape', rarity: 'Common', level: 14, baseDef: 9, baseAtk: 2, findableAt: ['midnight-terminal'] },
+    { name: 'Signal Ghost Cloak', rarity: 'Uncommon', level: 15, baseDef: 10, baseAtk: 3 },
+    { name: 'Encrypted Shroud', rarity: 'Rare', level: 16, baseDef: 11, baseAtk: 3, findableAt: ['midnight-terminal'] },
+    { name: 'Void Trail Mantle', rarity: 'Epic', level: 18, baseDef: 13, baseAtk: 4, findableAt: ['midnight-terminal'] },
+    { name: 'Cosmic Shroud', rarity: 'Legendary', level: 20, baseDef: 14, baseAtk: 5 },
+    // Frozen Wastes tier
+    { name: 'Blizzard Cloak', rarity: 'Rare', level: 22, baseDef: 15, baseAtk: 4, findableAt: ['frostbite-outpost', 'blizzard-peak'] },
+    { name: 'Glacier Veil', rarity: 'Epic', level: 25, baseDef: 17, baseAtk: 5, findableAt: ['crystal-caverns', 'frozen-citadel'] },
+    { name: 'Snowdrift Cape', rarity: 'Uncommon', level: 23, baseDef: 14, baseAtk: 4, findableAt: ['glacier-tunnels'] },
+    // Scorched Badlands tier
+    { name: 'Heatwave Cloak', rarity: 'Uncommon', level: 28, baseDef: 18, baseAtk: 5, findableAt: ['ember-flats', 'sunscorch-canyon'] },
+    { name: 'Volcanic Ash Mantle', rarity: 'Rare', level: 30, baseDef: 20, baseAtk: 6, findableAt: ['magma-vents', 'volcanic-forge'] },
+    { name: 'Inferno Shroud', rarity: 'Epic', level: 32, baseDef: 21, baseAtk: 7, findableAt: ['inferno-pit'] },
+    // Toxic Marshlands tier
+    { name: 'Fungal Spore Cape', rarity: 'Uncommon', level: 35, baseDef: 21, baseAtk: 6, findableAt: ['fungal-hollow', 'bogs-edge'] },
+    { name: 'Plague Veil', rarity: 'Epic', level: 34, baseDef: 22, baseAtk: 7, findableAt: ['venomous-thicket', 'plague-ponds'] },
+    { name: 'Rot Mantle', rarity: 'Common', level: 38, baseDef: 23, baseAtk: 6, findableAt: ['rot-core'] },
+    // Abyssal Depths tier
+    { name: 'Tidal Cloak', rarity: 'Rare', level: 40, baseDef: 24, baseAtk: 7, findableAt: ['tidal-caves', 'sunken-bazaar'] },
+    { name: 'Leviathan Scale Cape', rarity: 'Legendary', level: 45, baseDef: 28, baseAtk: 9, findableAt: ['krakens-rest', 'abyssal-trench'] },
+    { name: 'Pressure Depth Mantle', rarity: 'Uncommon', level: 42, baseDef: 24, baseAtk: 7, findableAt: ['pressure-rift'] },
+    // Celestial Highlands tier
+    { name: 'Starlight Mantle', rarity: 'Epic', level: 50, baseDef: 30, baseAtk: 10, findableAt: ['stormspire-tower', 'solar-fields'] },
+    { name: 'Empyrean Wings', rarity: 'Rare', level: 55, baseDef: 33, baseAtk: 11, findableAt: ['comets-trail', 'empyrean-gate'] },
+    { name: 'Aurora Veil', rarity: 'Uncommon', level: 52, baseDef: 29, baseAtk: 9, findableAt: ['astral-gardens'] },
+    // Void Nexus tier
+    { name: 'Rift Tear Cape', rarity: 'Legendary', level: 58, baseDef: 35, baseAtk: 12, findableAt: ['rifts-edge', 'null-chamber'] },
+    { name: 'Nullpoint Shroud', rarity: 'Epic', level: 62, baseDef: 38, baseAtk: 14, findableAt: ['paradox-maze', 'singularity-well'] },
+    { name: 'Oblivion Mantle Cape', rarity: 'Legendary', level: 65, baseDef: 42, baseAtk: 16, findableAt: ['oblivion-throne'] },
   ]),
 };
 

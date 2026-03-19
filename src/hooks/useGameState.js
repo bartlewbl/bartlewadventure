@@ -47,7 +47,7 @@ function createInitialPlayer() {
     wisdom: 3,
     athletics: 3,
     gold: 30,
-    equipment: { weapon: null, shield: null, helmet: null, armor: null, boots: null, accessory: null },
+    equipment: { weapon: null, shield: null, helmet: null, armor: null, gloves: null, boots: null, belt: null, cape: null, amulet: null, accessory: null, accessory2: null },
     inventory: [],
     maxInventory: 20,
     skillTree: [],
@@ -438,6 +438,10 @@ function gameReducer(state, action) {
         lastEnergyUpdate ?? baseState.lastEnergyUpdate,
       );
       const mergedPlayer = { ...baseState.player, ...player };
+      // Migrate equipment: ensure new slots exist for old saves
+      if (mergedPlayer.equipment) {
+        mergedPlayer.equipment = { ...baseState.player.equipment, ...mergedPlayer.equipment };
+      }
       // If the player has no custom name, send them to username entry
       // If they have a name but no class, send them to class select
       let resolvedScreen = screen || 'town';
@@ -1467,8 +1471,26 @@ function gameReducer(state, action) {
 
     case 'EQUIP_ITEM': {
       const item = action.item;
-      const slot = item.slot;
+      let slot = item.slot;
       const p = { ...state.player, equipment: { ...state.player.equipment } };
+      // For accessories, support dual ring slots
+      if (slot === 'accessory') {
+        // If a specific slot was requested (via drag-drop), use it
+        if (action.targetSlot === 'accessory2') {
+          slot = 'accessory2';
+        } else if (action.targetSlot === 'accessory') {
+          slot = 'accessory';
+        } else {
+          // Auto-pick: prefer empty slot, otherwise replace primary
+          if (!p.equipment.accessory) {
+            slot = 'accessory';
+          } else if (!p.equipment.accessory2) {
+            slot = 'accessory2';
+          } else {
+            slot = 'accessory'; // default to replacing primary
+          }
+        }
+      }
       let inv = [...p.inventory];
       if (p.equipment[slot]) {
         inv.push(p.equipment[slot]);
@@ -3119,7 +3141,7 @@ export function useGameState(isLoggedIn) {
     continueAfterBattle: () => dispatch({ type: 'CONTINUE_AFTER_BATTLE' }),
     applyStatChoices: (selectedStats) => dispatch({ type: 'APPLY_STAT_CHOICES', selectedStats }),
     restAtInn: () => dispatch({ type: 'REST_AT_INN' }),
-    equipItem: (item) => dispatch({ type: 'EQUIP_ITEM', item }),
+    equipItem: (item, targetSlot) => dispatch({ type: 'EQUIP_ITEM', item, targetSlot }),
     unequipItem: (slot) => dispatch({ type: 'UNEQUIP_ITEM', slot }),
     useItem: (item) => dispatch({ type: 'USE_ITEM', item }),
     sellItem: (item) => dispatch({ type: 'SELL_ITEM', item }),
