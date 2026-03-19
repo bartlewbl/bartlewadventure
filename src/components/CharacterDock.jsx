@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { ENERGY_MAX, ENERGY_REGEN_PERCENT, ENERGY_REGEN_INTERVAL_MS } from '../hooks/useGameState';
+
 export default function CharacterDock({
   playerName,
   playerLevel,
@@ -17,6 +20,7 @@ export default function CharacterDock({
   navLocked,
   onRest,
   canRest,
+  lastEnergyUpdate,
 }) {
   const safeMax = energyMax ?? Math.max(energy ?? 0, 1);
   const current = Math.max(0, Math.min(energy ?? safeMax, safeMax));
@@ -44,6 +48,33 @@ export default function CharacterDock({
     { id: 'skills', label: 'Skills', action: onSkills },
   ];
 
+  const [hovered, setHovered] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!hovered) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [hovered]);
+
+  const gainPerTick = Math.max(1, Math.round(ENERGY_MAX * ENERGY_REGEN_PERCENT));
+  const isFull = current >= safeMax;
+
+  let tooltipText;
+  if (isFull) {
+    tooltipText = 'Energy is full';
+  } else if (lastEnergyUpdate == null) {
+    tooltipText = `+${gainPerTick} every 15 min`;
+  } else {
+    const nextTick = lastEnergyUpdate + ENERGY_REGEN_INTERVAL_MS;
+    const remaining = Math.max(0, nextTick - now);
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+    tooltipText = `+${gainPerTick} in ${timeStr}`;
+  }
+
   return (
     <div className="character-dock">
       <div className="dock-hero">
@@ -53,7 +84,11 @@ export default function CharacterDock({
       </div>
 
       <div className="dock-wheels">
-        <div className="dock-wheel-item">
+        <div
+          className="dock-wheel-item energy-wheel-wrapper"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
           <div className="energy-ring" style={strokeStyle}>
             <div className="energy-core">
               <div className="energy-value">{current}</div>
@@ -61,6 +96,9 @@ export default function CharacterDock({
             </div>
           </div>
           <div className="wheel-label energy-label">Energy</div>
+          {hovered && (
+            <div className="energy-tooltip">{tooltipText}</div>
+          )}
         </div>
 
         <div className="dock-wheel-item">

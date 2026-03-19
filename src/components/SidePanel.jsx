@@ -31,6 +31,7 @@ export default function SidePanel({
   onProfile,
   onSkills,
   canRest,
+  lastEnergyUpdate,
 }) {
   const clock = useGameClock();
 
@@ -177,6 +178,7 @@ export default function SidePanel({
             navLocked={navLocked}
             onRest={onRest}
             canRest={canRest}
+            lastEnergyUpdate={lastEnergyUpdate}
           />
 
           {navLocked && (
