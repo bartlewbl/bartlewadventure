@@ -423,6 +423,10 @@ export default function App() {
                 onFarmPlant={actions.baseFarmPlant}
                 onFarmHarvest={actions.baseFarmHarvest}
                 onUpgradeWarehouse={actions.baseUpgradeWarehouse}
+                onPlaceEgg={actions.basePlaceEgg}
+                onFeedIncubator={actions.baseFeedIncubator}
+                onCollectHatch={actions.baseCollectHatch}
+                onUpgradeIncubator={actions.baseUpgradeIncubator}
               />
             )}
 
