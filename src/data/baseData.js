@@ -325,12 +325,12 @@ export const BUILDINGS = {
     icon: 'farm',
     plots: 3,
     crops: [
-      { id: 'herb-patch', name: 'Herb Patch', growTime: 30 * 60 * 1000, desc: '30 min - Herb Bundles', cost: { gold: 20 }, yield: { materialId: 'herb-bundle', qty: [2, 4] } },
-      { id: 'crystal-bloom', name: 'Crystal Bloom', growTime: 2 * 60 * 60 * 1000, desc: '2 hours - Crystal Shards', cost: { gold: 80 }, yield: { materialId: 'crystal-shard', qty: [1, 2] } },
-      { id: 'toxic-vine', name: 'Toxic Vine', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Toxic Resin', cost: { gold: 40 }, yield: { materialId: 'toxic-resin', qty: [1, 3] } },
-      { id: 'iron-root', name: 'Iron Root', growTime: 45 * 60 * 1000, desc: '45 min - Iron Ore', cost: { gold: 30 }, yield: { materialId: 'iron-ore', qty: [2, 4] } },
-      { id: 'gold-grain', name: 'Gold Grain', growTime: 4 * 60 * 60 * 1000, desc: '4 hours - Gold harvest', cost: { gold: 100 }, yield: { gold: [150, 300] } },
-      { id: 'starlight-flower', name: 'Starlight Flower', growTime: 8 * 60 * 60 * 1000, desc: '8 hours - Starlight Dust', cost: { gold: 200 }, yield: { materialId: 'starlight-dust', qty: [1, 2] } },
+      { id: 'herb-patch', name: 'Herb Patch', growTime: 30 * 60 * 1000, desc: '30 min - Herb Bundles + Food', cost: { gold: 20 }, yield: { materialId: 'herb-bundle', qty: [2, 4] }, foodYield: { name: 'Fresh Herbs', fuelMinutes: 10 } },
+      { id: 'crystal-bloom', name: 'Crystal Bloom', growTime: 2 * 60 * 60 * 1000, desc: '2 hours - Crystal Shards + Food', cost: { gold: 80 }, yield: { materialId: 'crystal-shard', qty: [1, 2] }, foodYield: { name: 'Crystal Nectar', fuelMinutes: 40 } },
+      { id: 'toxic-vine', name: 'Toxic Vine', growTime: 1 * 60 * 60 * 1000, desc: '1 hour - Toxic Resin + Food', cost: { gold: 40 }, yield: { materialId: 'toxic-resin', qty: [1, 3] }, foodYield: { name: 'Vine Berries', fuelMinutes: 20 } },
+      { id: 'iron-root', name: 'Iron Root', growTime: 45 * 60 * 1000, desc: '45 min - Iron Ore + Food', cost: { gold: 30 }, yield: { materialId: 'iron-ore', qty: [2, 4] }, foodYield: { name: 'Root Vegetables', fuelMinutes: 15 } },
+      { id: 'gold-grain', name: 'Gold Grain', growTime: 4 * 60 * 60 * 1000, desc: '4 hours - Gold harvest + Food', cost: { gold: 100 }, yield: { gold: [150, 300] }, foodYield: { name: 'Golden Porridge', fuelMinutes: 50 } },
+      { id: 'starlight-flower', name: 'Starlight Flower', growTime: 8 * 60 * 60 * 1000, desc: '8 hours - Starlight Dust + Food', cost: { gold: 200 }, yield: { materialId: 'starlight-dust', qty: [1, 2] }, foodYield: { name: 'Starlight Salad', fuelMinutes: 100 } },
     ],
     levelReq: 4,
   },
@@ -1133,6 +1133,24 @@ export function getIncubatorSlots(base) {
   const level = base.incubatorLevel || 1;
   const upgradeDef = BUILDINGS.incubator.upgrades.find(u => u.level === level);
   return upgradeDef?.slots || 1;
+}
+
+// Generate a food item from a farm crop harvest
+export function createCropFoodItem(cropDef) {
+  if (!cropDef?.foodYield) return null;
+  const rarity = cropDef.cost.gold >= 100 ? 'Uncommon' : 'Common';
+  return {
+    id: uid(),
+    name: cropDef.foodYield.name,
+    type: 'incubator-food',
+    slot: null,
+    level: 1,
+    rarity,
+    rarityClass: rarity.toLowerCase(),
+    description: `Harvested from ${cropDef.name}. Incubator fuel.`,
+    fuelMinutes: cropDef.foodYield.fuelMinutes,
+    sellPrice: Math.max(1, Math.floor(cropDef.cost.gold * 0.25)),
+  };
 }
 
 // Generate a food item for inventory

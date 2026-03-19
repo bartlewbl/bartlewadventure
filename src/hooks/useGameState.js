@@ -8,7 +8,7 @@ import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import {
@@ -2383,14 +2383,20 @@ function gameReducer(state, action) {
       const newMats = { ...state.base.materials };
       let harvestMsg = '';
 
+      // Create food item from crop (if inventory has space)
+      const foodItem = createCropFoodItem(hCropDef);
+      const canAddFood = foodItem && state.player.inventory.length < state.player.maxInventory;
+      const newInv = canAddFood ? [...state.player.inventory, foodItem] : [...state.player.inventory];
+      const foodMsg = canAddFood ? ` + ${foodItem.name} (+${foodItem.fuelMinutes}min food)` : '';
+
       if (hCropDef.yield.gold) {
         const [minG, maxG] = hCropDef.yield.gold;
         const goldYield = minG + Math.floor(Math.random() * (maxG - minG + 1));
         return {
           ...state,
-          player: { ...state.player, gold: state.player.gold + goldYield },
+          player: { ...state.player, gold: state.player.gold + goldYield, inventory: newInv },
           base: { ...state.base, farmPlots: plots },
-          message: `Harvested ${hCropDef.name}! +${goldYield}g`,
+          message: `Harvested ${hCropDef.name}! +${goldYield}g${foodMsg}`,
         };
       }
 
@@ -2398,10 +2404,11 @@ function gameReducer(state, action) {
       const qty = minQ + Math.floor(Math.random() * (maxQ - minQ + 1));
       const matId = hCropDef.yield.materialId;
       newMats[matId] = (newMats[matId] || 0) + qty;
-      harvestMsg = `Harvested ${hCropDef.name}! +${qty}x ${BUILDING_MATERIALS[matId]?.name || matId}`;
+      harvestMsg = `Harvested ${hCropDef.name}! +${qty}x ${BUILDING_MATERIALS[matId]?.name || matId}${foodMsg}`;
 
       return {
         ...state,
+        player: { ...state.player, inventory: newInv },
         base: { ...state.base, farmPlots: plots, materials: newMats },
         message: harvestMsg,
       };
