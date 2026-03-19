@@ -1,3 +1,5 @@
+import { getClassName, getClassColor } from '../data/gameData';
+
 const SLOT_LABELS = {
   weapon: 'Weapon',
   shield: 'Shield',
@@ -91,6 +93,11 @@ export default function ItemDropWindow({ item, label }) {
             {item.rarity}
           </div>
           {statLine && <div className="item-drop-stats">{statLine}</div>}
+          {item.classes && (
+            <div className="item-drop-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em', marginTop: '2px' }}>
+              {item.classes.map(c => getClassName(c)).join(', ')}
+            </div>
+          )}
         </div>
       </div>
     </div>

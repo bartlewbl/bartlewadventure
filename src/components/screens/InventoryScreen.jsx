@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { REGIONS } from '../../data/gameData';
+import { REGIONS, canClassEquip, getClassName, getClassColor } from '../../data/gameData';
 
 // Build a lookup from location id to location name
 const LOCATION_NAME_MAP = {};
@@ -76,6 +76,11 @@ function getItemLocationText(itemName, discoveredItemLocations) {
 
 function isItemLevelLocked(item, playerLevel) {
   return item.level && item.level > playerLevel;
+}
+
+function getItemClassText(item) {
+  if (!item.classes) return null;
+  return item.classes.map(c => getClassName(c)).join(', ');
 }
 
 export default function InventoryScreen({
@@ -275,10 +280,13 @@ export default function InventoryScreen({
             ].filter(Boolean).join(' ');
 
             const locked = isItemLevelLocked(item, player.level);
+            const classLocked = item.slot && !canClassEquip(item, player.characterClass);
+            const cantEquip = locked || classLocked;
+            const classText = getItemClassText(item);
             return (
               <div
                 key={item.id}
-                className={`${itemClass}${locked ? ' inv-item-locked' : ''}`}
+                className={`${itemClass}${cantEquip ? ' inv-item-locked' : ''}`}
                 draggable
                 onDragStart={handleDragStart(index)}
                 onDragOver={handleDragOverItem(index)}
@@ -290,7 +298,9 @@ export default function InventoryScreen({
                   title={[
                     `${item.name} ${itemMetaTag(item)}`,
                     itemStatLine(item),
+                    classText ? `Class: ${classText}` : null,
                     locked ? `Requires Level ${item.level}` : null,
+                    classLocked ? `Wrong class` : null,
                     getItemLocationText(item.name, discoveredItemLocations),
                   ].filter(Boolean).join('\n')}
                 >
@@ -300,8 +310,16 @@ export default function InventoryScreen({
                   <span className="inv-item-stats">
                     {itemStatLine(item)}
                   </span>
+                  {classText && (
+                    <span className="inv-item-class" style={{ color: item.classes?.length === 1 ? getClassColor(item.classes[0]) : '#aaa' }}>
+                      {classText}
+                    </span>
+                  )}
                   {locked && (
                     <span className="inv-item-level-req">Requires Lv{item.level}</span>
+                  )}
+                  {classLocked && (
+                    <span className="inv-item-level-req">Wrong class</span>
                   )}
                   {getItemLocationText(item.name, discoveredItemLocations) && (
                     <span className="inv-item-location">
@@ -311,9 +329,9 @@ export default function InventoryScreen({
                 </div>
                 <div className="inv-item-actions">
                   {item.slot ? (
-                    <button className="btn btn-sm" onClick={() => onEquip(item)} disabled={locked}
-                      title={locked ? `Requires Level ${item.level}` : ''}>
-                      {locked ? 'Locked' : 'Equip'}
+                    <button className="btn btn-sm" onClick={() => onEquip(item)} disabled={cantEquip}
+                      title={locked ? `Requires Level ${item.level}` : classLocked ? 'Wrong class' : ''}>
+                      {cantEquip ? 'Locked' : 'Equip'}
                     </button>
                   ) : (
                     <button className="btn btn-sm" onClick={() => onUse(item)}>Use</button>

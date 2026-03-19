@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { getShopItems, getShopEnergyDrinks, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
+import { getClassName, getClassColor } from '../../data/gameData';
 import useGameClock from '../../hooks/useGameClock';
 
 const SLOT_LABELS = {
@@ -79,7 +80,7 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
   const clock = useGameClock();
 
   // Armourer stock — refreshes every 10 hours
-  const armourerStock = useMemo(() => getArmourerStock(player.level, clock.shopSeed), [player.level, clock.shopSeed]);
+  const armourerStock = useMemo(() => getArmourerStock(player.level, clock.shopSeed, player.characterClass), [player.level, clock.shopSeed, player.characterClass]);
   // Brewer stock
   const brewerStock = useMemo(() => [...getShopItems(player.level), ...getShopEnergyDrinks(player.level)], [player.level]);
   // Pet shop stock
@@ -88,7 +89,7 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
   // Grocery stock
   const groceryStock = useMemo(() => getGroceryStock(player.level), [player.level]);
   // Featured — refreshes every 10 hours
-  const featuredStock = useMemo(() => getDailyFeaturedItems(player.level, clock.shopSeed), [player.level, clock.shopSeed]);
+  const featuredStock = useMemo(() => getDailyFeaturedItems(player.level, clock.shopSeed, player.characterClass), [player.level, clock.shopSeed, player.characterClass]);
 
   const ownedPetIds = new Set((pets?.ownedPets || []).map(p => p.id));
 
@@ -170,6 +171,11 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                         <div className="shop-card-meta">
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                           <span className="shop-card-stats">{statLine(item)}</span>
+                          {item.classes && (
+                            <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}>
+                              {item.classes.map(c => getClassName(c)).join(', ')}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
@@ -361,6 +367,11 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                     <div className="shop-card-meta">
                       <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                       <span className="shop-card-stats">{statLine(item)}</span>
+                      {item.classes && (
+                        <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}>
+                          {item.classes.map(c => getClassName(c)).join(', ')}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}>
