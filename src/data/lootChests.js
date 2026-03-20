@@ -102,7 +102,7 @@ export const LOOT_CHESTS = [
       { type: 'material', materialPool: 'rare', weight: 10 },
       { type: 'energy-drink', weight: 8 },
     ],
-    buyPrice: 500,
+    buyPrice: 1500,
     sellPrice: 75,
   },
   {
@@ -124,7 +124,7 @@ export const LOOT_CHESTS = [
       { type: 'material', materialPool: 'rare', weight: 14 },
       { type: 'energy-drink', weight: 6 },
     ],
-    buyPrice: 600,
+    buyPrice: 2000,
     sellPrice: 90,
   },
   {
@@ -147,7 +147,7 @@ export const LOOT_CHESTS = [
       { type: 'potion', weight: 10 },
       { type: 'material', materialPool: 'epic', weight: 8 },
     ],
-    buyPrice: 1200,
+    buyPrice: 4000,
     sellPrice: 150,
   },
   {
