@@ -1,6 +1,6 @@
 // Monster and boss scaling functions
 
-import { MONSTERS, BOSSES, getMonsterBaseSpeed, getMonsterBaseCombatStats, BOSS_GIMMICKS } from '../data/gameData';
+import { MONSTERS, BOSSES, getMonsterBaseSpeed, getMonsterBaseCombatStats, getMonsterElement, BOSS_GIMMICKS } from '../data/gameData';
 import { prob } from '../data/probabilityStore';
 
 // Scale a gold reward by player level.
@@ -37,6 +37,7 @@ export function scaleMonster(monsterId, areaLevel) {
     skills: base.skills,
     dropTable: base.dropTable,
     level: areaLevel,
+    element: getMonsterElement(base),
   };
 }
 
@@ -72,6 +73,7 @@ export function scaleBoss(bossId, areaLevel) {
     skills: base.skills,
     dropTable: base.dropTable,
     level: areaLevel,
+    element: getMonsterElement(base),
     gimmick,
   };
 }

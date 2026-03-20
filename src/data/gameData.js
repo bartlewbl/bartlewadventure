@@ -1294,6 +1294,102 @@ export function getMonsterBaseCombatStats(entry) {
   return { ...base, ...(entry.combatStats || {}) };
 }
 
+// ---- MONSTER ELEMENT TYPES ----
+// Each sprite type has a primary element. Bosses can override.
+export const SPRITE_ELEMENT = {
+  rat: 'physical',
+  bat: 'shadow',
+  ghost: 'shadow',
+  slime: 'nature',
+  snake: 'nature',
+  vagrant: 'physical',
+  goblin: 'physical',
+  wolf: 'physical',
+  golem: 'physical',
+  skeleton: 'shadow',
+  dragon: 'fire',
+};
+
+// Location-based element overrides for thematic monsters
+export const MONSTER_ELEMENT_OVERRIDE = {
+  'frost-wolf': 'ice', 'ice-crawler': 'ice', 'snow-wraith': 'ice', 'glacial-golem': 'ice',
+  'frost-spider': 'ice', 'tundra-stalker': 'ice', 'ice-phantom': 'ice', 'blizzard-hawk': 'ice',
+  'crystal-beetle': 'ice', 'permafrost-skeleton': 'ice',
+  'forge-elemental': 'fire', 'molten-slime': 'fire', 'furnace-bat': 'fire',
+  'toxic-slime': 'nature', 'sludge-slime': 'nature', 'void-slime': 'arcane',
+  'neon-phantom': 'arcane', 'signal-ghost': 'lightning', 'wind-phantom': 'arcane',
+  'phantom-conductor': 'lightning', 'glitch-golem': 'lightning', 'dark-assassin': 'shadow',
+  'shadow-dragon': 'shadow', 'neon-reaper': 'shadow', 'wire-rat': 'lightning',
+  'volt-spider': 'lightning', 'steam-skeleton': 'fire', 'iron-wolf': 'physical',
+  'chain-wraith': 'shadow', 'drone-wasp': 'lightning', 'factory-drone': 'lightning',
+  'acid-sprayer': 'nature',
+};
+
+export function getMonsterElement(entry) {
+  if (entry.element) return entry.element;
+  if (MONSTER_ELEMENT_OVERRIDE[entry.id]) return MONSTER_ELEMENT_OVERRIDE[entry.id];
+  return SPRITE_ELEMENT[entry.sprite] || 'physical';
+}
+
+// ---- COMBO CHAIN DEFINITIONS ----
+// Patterns of actions that grant bonuses when executed in sequence
+export const COMBO_CHAINS = {
+  'power_combo': {
+    name: 'Power Combo', sequence: ['attack', 'attack', 'skill'], bonus: 'dmg_boost',
+    boostPct: 0.5, desc: 'ATK → ATK → Skill: Next skill deals +50% damage',
+  },
+  'tactical_combo': {
+    name: 'Tactical Strike', sequence: ['defend', 'attack'], bonus: 'crit_boost',
+    critBoost: 0.4, desc: 'Defend → ATK: Guaranteed +40% crit chance on attack',
+  },
+  'channel_combo': {
+    name: 'Overcharge', sequence: ['channel', 'skill'], bonus: 'double_channel',
+    desc: 'Channel → Skill: Channel bonus applies to skill too (stacks)',
+  },
+  'relentless_combo': {
+    name: 'Relentless', sequence: ['attack', 'attack', 'attack'], bonus: 'bleed',
+    bleedPct: 0.04, bleedTurns: 2, desc: 'ATK × 3: Enemy bleeds 4% HP/turn for 2 turns',
+  },
+  'counter_combo': {
+    name: 'Counter Rush', sequence: ['parry', 'attack'], bonus: 'pierce',
+    piercePct: 0.5, desc: 'Parry → ATK: Attack ignores 50% DEF',
+  },
+};
+
+// ---- STANCE DEFINITIONS ----
+export const STANCES = {
+  balanced: { name: 'Balanced', dmgDealt: 1.0, dmgTaken: 1.0, critMod: 0, dodgeMod: 0 },
+  aggressive: { name: 'Aggressive', dmgDealt: 1.3, dmgTaken: 1.2, critMod: 0.1, dodgeMod: -0.05 },
+  defensive: { name: 'Defensive', dmgDealt: 0.7, dmgTaken: 0.6, critMod: -0.05, dodgeMod: 0.1 },
+};
+
+// ---- UNIVERSAL COMBAT SKILLS (learnable by all classes through progression) ----
+export const UNIVERSAL_SKILLS = {
+  parry: { name: 'Parry', desc: 'Block and counter — take 80% less damage, counter for 0.8x ATK if hit', manaCost: 5, unlockLevel: 5 },
+  stun_strike: { name: 'Stun Strike', desc: 'Attack for 0.8x damage with 55% chance to stun for 1 turn', manaCost: 8, multiplier: 0.8, unlockLevel: 8 },
+  war_shout: { name: 'War Shout', desc: 'Reduce enemy ATK by 20% and boost your DEF by 15% for 3 turns', manaCost: 10, unlockLevel: 12 },
+  mind_blast: { name: 'Mind Blast', desc: '1.0x damage with 50% chance to confuse enemy for 2 turns', manaCost: 10, multiplier: 1.0, unlockLevel: 15 },
+  life_drain: { name: 'Life Drain', desc: '1.2x damage, heal 40% of damage dealt', manaCost: 12, multiplier: 1.2, unlockLevel: 18 },
+  elemental_strike: { name: 'Elemental Strike', desc: '1.5x damage matching weather element, +30% in matching weather', manaCost: 14, multiplier: 1.5, unlockLevel: 22 },
+};
+
+// ---- MILESTONE PROGRESSION REWARDS ----
+// Permanent bonuses at specific levels
+export const LEVEL_MILESTONES = {
+  5:  { reward: 'unlock_parry', desc: 'Parry unlocked — block and counter in combat' },
+  8:  { reward: 'unlock_stun_strike', desc: 'Stun Strike unlocked — stun enemies in combat' },
+  10: { reward: 'stat_boost', stats: { maxHp: 15, maxMana: 10 }, desc: '+15 HP, +10 Mana' },
+  12: { reward: 'unlock_war_shout', desc: 'War Shout unlocked — buff DEF and debuff enemy ATK' },
+  15: { reward: 'unlock_mind_blast', desc: 'Mind Blast unlocked — confuse enemies' },
+  18: { reward: 'unlock_life_drain', desc: 'Life Drain unlocked — heal through damage' },
+  20: { reward: 'stat_boost', stats: { maxHp: 25, maxMana: 15, baseAtk: 3, baseDef: 2 }, desc: '+25 HP, +15 Mana, +3 ATK, +2 DEF' },
+  22: { reward: 'unlock_elemental_strike', desc: 'Elemental Strike unlocked — element-based attack' },
+  25: { reward: 'combo_master', desc: 'Combo Master — combo chains deal +20% bonus damage' },
+  30: { reward: 'stat_boost', stats: { maxHp: 40, maxMana: 20, baseAtk: 5, baseDef: 3, speed: 2 }, desc: '+40 HP, +20 Mana, +5 ATK, +3 DEF, +2 SPD' },
+  35: { reward: 'stance_master', desc: 'Stance Master — stance bonuses increased by 50%' },
+  40: { reward: 'stat_boost', stats: { maxHp: 50, maxMana: 30, baseAtk: 8, baseDef: 5, speed: 3, evasion: 3, accuracy: 3 }, desc: 'Major stat boost at level 40' },
+};
+
 // ---- MONSTER/BOSS SKILLS ----
 export const SKILLS = {
   bite:       { name: 'Bite',        multiplier: 1.3 },

@@ -1,9 +1,9 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -60,6 +60,9 @@ function createInitialPlayer() {
     inventory: [],
     maxInventory: 20,
     skillTree: [],
+    unlockedUniversalSkills: [], // universal combat skills unlocked through level milestones
+    comboMaster: false, // combo chains deal +20% bonus
+    stanceMaster: false, // stance bonuses increased by 50%
   };
 }
 
@@ -165,6 +168,26 @@ function processLevelUps(player) {
       fortitudeGain: (growth?.fortitude ?? 0) + Math.floor(Math.random() * (growth?.fortitudeRand ?? 1)),
     };
     pendingLevels.push({ level: p.level, offers, picks: STAT_PICKS_PER_LEVEL });
+
+    // Apply level milestones
+    const milestone = LEVEL_MILESTONES[p.level];
+    if (milestone) {
+      if (milestone.reward === 'stat_boost' && milestone.stats) {
+        for (const [key, val] of Object.entries(milestone.stats)) {
+          p[key] = (p[key] || 0) + val;
+        }
+      } else if (milestone.reward.startsWith('unlock_')) {
+        const skillKey = milestone.reward.replace('unlock_', '');
+        if (!p.unlockedUniversalSkills.includes(skillKey)) {
+          p.unlockedUniversalSkills = [...p.unlockedUniversalSkills, skillKey];
+        }
+      } else if (milestone.reward === 'combo_master') {
+        p.comboMaster = true;
+      } else if (milestone.reward === 'stance_master') {
+        p.stanceMaster = true;
+      }
+      pendingLevels[pendingLevels.length - 1].milestone = milestone;
+    }
   }
   // Restore HP/mana on level up (even before stat choices are made)
   if (pendingLevels.length > 0) {
@@ -308,6 +331,21 @@ function createBattleState(monster, player) {
     // Fortitude (grit) - survive lethal once
     fortitudeUsed: false,
     monsterFortitudeUsed: false,
+    // Stance system
+    stance: 'balanced', // current stance: balanced, aggressive, defensive
+    // Combo chain system
+    actionHistory: [], // track recent player actions for combo detection
+    activeCombo: null, // currently active combo bonus
+    comboBleedTurns: 0, // bleed effect from relentless combo
+    comboBleedPct: 0,
+    // Parry system
+    parrying: false, // player is parrying this turn
+    // Elemental system
+    monsterElement: monster.element || 'physical',
+    // War Shout buff
+    warShoutTurns: 0,
+    warShoutAtkDebuff: 0,
+    warShoutDefBuff: 0,
   };
 }
 
@@ -1089,19 +1127,32 @@ function gameReducer(state, action) {
         log.push({ text: `Channeled energy released! ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' });
       }
 
+      // Stance modifier on outgoing damage
+      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
+      dmg = Math.floor(dmg * stanceMods.dmgDealt);
+
       // Aggression bonus: increased outgoing damage
       const pAggression = getPlayerAggression(p);
       if (pAggression > 0) {
         dmg = Math.floor(dmg * calcAggressionDmgDealt(pAggression));
       }
 
+      // Elemental damage multiplier (player attack element vs monster element)
+      const playerAttackElement = getSkillElement(null, p.characterClass);
+      const elemMult = calcElementalDamageMultiplier(playerAttackElement, b.monsterElement);
+      if (elemMult !== 1.0) {
+        dmg = Math.floor(dmg * elemMult);
+        if (elemMult > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+        else log.push({ text: 'Not very effective...', type: 'info' });
+      }
+
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
 
-      // Critical hit check (includes luck bonus)
+      // Critical hit check (includes luck bonus + stance crit mod)
       let playerCrit = false;
       const pLuck = getPlayerLuck(p);
-      const critChance = getPlayerCritChance(p) + luckCritBonus(pLuck);
+      const critChance = getPlayerCritChance(p) + luckCritBonus(pLuck) + stanceMods.critMod;
       if (Math.random() < critChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         playerCrit = true;
@@ -1145,6 +1196,29 @@ function gameReducer(state, action) {
         log.push({ text: `CRITICAL HIT! You attack for ${dmg} damage!`, type: 'dmg-monster' });
       } else {
         log.push({ text: `You attack for ${dmg} damage!`, type: 'dmg-monster' });
+      }
+
+      // Track action in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'attack'].slice(-5);
+      // Check combo chains
+      const combos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (combos.length > 0) {
+        for (const combo of combos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          } else if (combo.bonus === 'bleed') {
+            b.comboBleedTurns = combo.bleedTurns || 2;
+            b.comboBleedPct = combo.bleedPct || 0.04;
+            log.push({ text: `Enemy is bleeding!`, type: 'info' });
+          } else if (combo.bonus === 'pierce') {
+            // Pierce: next attack ignores 50% DEF — already dealt
+          }
+          b.activeCombo = combo;
+        }
+        b.actionHistory = []; // reset after combo completes
       }
 
       // Monster reflect damage (boss gimmick)
@@ -1438,6 +1512,7 @@ function gameReducer(state, action) {
       b.playerChannelBonusActive = false;
       b.defending = false;
       b.defendedLastTurn = false;
+      b.actionHistory = [...(b.actionHistory || []), 'channel'].slice(-5);
       const log = [...state.battleLog, { text: `You channel energy... Next attack will deal ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' }];
       return { ...state, player: p, battle: b, battleLog: log };
     }
@@ -1446,7 +1521,7 @@ function gameReducer(state, action) {
       if (state.battle.noDefend) {
         return { ...state, message: 'You cannot defend right now!' };
       }
-      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false };
+      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false, actionHistory: [...(state.battle.actionHistory || []), 'defend'].slice(-5) };
       let p = { ...state.player };
       const log = [...state.battleLog, { text: 'You brace for impact!', type: 'info' }];
       // Arcane Barrier: defend restores 10 mana
@@ -1571,6 +1646,26 @@ function gameReducer(state, action) {
       // Tick down buffs
       if (b.avatarTurns > 0) b.avatarTurns--;
       if (b.armorBreakTurns > 0) b.armorBreakTurns--;
+      if (b.warShoutTurns > 0) {
+        b.warShoutTurns--;
+        if (b.warShoutTurns <= 0) {
+          b.warShoutAtkDebuff = 0;
+          b.warShoutDefBuff = 0;
+        }
+      }
+      // Combo bleed tick
+      if (b.comboBleedTurns > 0) {
+        const bleedDmg = Math.floor(m.maxHp * (b.comboBleedPct || 0.04));
+        m.hp = Math.max(0, m.hp - bleedDmg);
+        b.comboBleedTurns--;
+        log.push({ text: `Bleed deals ${bleedDmg} to ${m.name}!`, type: 'dmg-monster' });
+        if (m.hp <= 0) {
+          b.monster = m;
+          return handleVictory({ ...state, player: p, battle: b, battleLog: log });
+        }
+      }
+      // Reset parry flag at start of monster turn
+      b.parrying = false;
 
       // ---- BOSS GIMMICK PROCESSING ----
       if (b.gimmick && m.isBoss) {
@@ -1843,11 +1938,14 @@ function gameReducer(state, action) {
         }
       } else {
         // Normal monster attack (not channeling)
+        // Stance dodge modifier
+        const stanceModsDefend = getStanceModifiers(b.stance, p.stanceMaster);
+
         // Player evasion-based dodge (separate from skill-based dodge)
         const pEvasion = getPlayerEvasion(p, b);
         const mAccuracy = m.accuracy || 4;
         const pLuckVal = getPlayerLuck(p);
-        const evasionDodge = calcEvasionDodgeChance(pEvasion, mAccuracy) + luckDodgeBonus(pLuckVal);
+        const evasionDodge = calcEvasionDodgeChance(pEvasion, mAccuracy) + luckDodgeBonus(pLuckVal) + stanceModsDefend.dodgeMod;
 
         // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
         let dodged;
@@ -1944,10 +2042,29 @@ function gameReducer(state, action) {
               }
             }
 
+            // Stance modifier on incoming damage
+            dmg = Math.floor(dmg * stanceModsDefend.dmgTaken);
+
             // Player aggression: takes more damage
             const pAgg = getPlayerAggression(p);
             if (pAgg > 0) {
               dmg = Math.floor(dmg * calcAggressionDmgTaken(pAgg));
+            }
+
+            // Parry: massive damage reduction + counter attack
+            if (b.parrying) {
+              dmg = Math.floor(dmg * (1 - PARRY_DAMAGE_REDUCTION));
+              log.push({ text: `Parried! Blocked ${Math.round(PARRY_DAMAGE_REDUCTION * 100)}% of damage!`, type: 'info' });
+              // Counter attack
+              const counterDmg = Math.floor(calcDamage(Math.floor(getPlayerAtk(p, b) * PARRY_COUNTER_MULTIPLIER), m.def));
+              m = { ...m, hp: Math.max(0, m.hp - counterDmg) };
+              log.push({ text: `Counter attack for ${counterDmg} damage!`, type: 'dmg-monster' });
+              b.parrying = false;
+            }
+
+            // War Shout ATK debuff on monster
+            if (b.warShoutTurns > 0) {
+              dmg = Math.max(1, dmg - b.warShoutAtkDebuff);
             }
 
             // Damage reduction passives (defend, iron skin, thick skin, fortress)
@@ -3824,6 +3941,164 @@ function gameReducer(state, action) {
       return { ...state, player: p, pets, message: `Donated ${goldAmount}g to ${pet.name}!` };
     }
 
+    // ---- STANCE SYSTEM ----
+    case 'BATTLE_CHANGE_STANCE': {
+      if (!state.battle) return state;
+      const newStance = action.stance;
+      if (!STANCES[newStance]) return state;
+      const stanceLog = [...state.battleLog, { text: `Switched to ${STANCES[newStance].name} stance!`, type: 'info' }];
+      return { ...state, battle: { ...state.battle, stance: newStance, showSkillMenu: false, showInspect: false }, battleLog: stanceLog };
+    }
+
+    // ---- PARRY SYSTEM ----
+    case 'BATTLE_PARRY': {
+      if (!state.battle) return state;
+      let b = { ...state.battle, showSkillMenu: false, showInspect: false };
+      let p = { ...state.player };
+      if (b.playerStunTurns > 0) {
+        return { ...state, message: 'You are stunned and cannot act!' };
+      }
+      if (!p.unlockedUniversalSkills?.includes('parry')) {
+        return { ...state, message: 'You have not unlocked Parry yet!' };
+      }
+      const parryCost = UNIVERSAL_SKILLS.parry.manaCost || 5;
+      if (p.mana < parryCost) {
+        return { ...state, message: `Not enough mana to parry! (${parryCost} needed)` };
+      }
+      p = { ...p, mana: p.mana - parryCost };
+      b.parrying = true;
+      b.defending = false;
+      b.defendedLastTurn = false;
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'parry'].slice(-5);
+      const parryLog = [...state.battleLog, { text: 'You ready a parry stance!', type: 'info' }];
+      return { ...state, player: p, battle: b, battleLog: parryLog };
+    }
+
+    // ---- UNIVERSAL COMBAT SKILLS ----
+    case 'BATTLE_UNIVERSAL_SKILL': {
+      if (!state.battle) return state;
+      let b = { ...state.battle, showSkillMenu: false, showInspect: false };
+      let m = { ...b.monster };
+      let p = { ...state.player };
+      let log = [...state.battleLog];
+      const uSkillId = action.skillId;
+      const uSkill = UNIVERSAL_SKILLS[uSkillId];
+      if (!uSkill) return state;
+      if (!p.unlockedUniversalSkills?.includes(uSkillId)) {
+        return { ...state, message: `You have not unlocked ${uSkill.name} yet!` };
+      }
+      if (b.playerStunTurns > 0) {
+        b.playerStunTurns--;
+        log.push({ text: `You are stunned and cannot act! (${b.playerStunTurns} turns left)`, type: 'dmg-player' });
+        return { ...state, battle: b, battleLog: log };
+      }
+      const uCost = getEffectiveManaCost(p, uSkill.manaCost || 0, b);
+      if (p.mana < uCost) {
+        return { ...state, message: `Not enough mana! (${uCost} needed)` };
+      }
+      p = { ...p, mana: p.mana - uCost };
+
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+
+      switch (uSkillId) {
+        case 'stun_strike': {
+          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 0.8)), m.def);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Stun Strike for ${dmg} damage!`, type: 'dmg-monster' });
+          // Stun chance
+          const mTen = m.tenacity || 0;
+          const stunChance = Math.max(0.1, STUN_BASE_CHANCE - mTen * 0.02);
+          if (Math.random() < stunChance) {
+            const dur = reduceDurationByTenacity(1, mTen);
+            b.monsterStunTurns = dur;
+            log.push({ text: `${m.name} is stunned for ${dur} turn!`, type: 'info' });
+          } else {
+            log.push({ text: `${m.name} resists the stun!`, type: 'info' });
+          }
+          break;
+        }
+        case 'war_shout': {
+          b.warShoutTurns = 3;
+          b.warShoutAtkDebuff = Math.floor(m.atk * 0.2);
+          b.warShoutDefBuff = Math.floor(getPlayerDef(p, b) * 0.15);
+          log.push({ text: `War Shout! Enemy ATK reduced, your DEF boosted for 3 turns!`, type: 'info' });
+          break;
+        }
+        case 'mind_blast': {
+          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.0)), m.def);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Mind Blast for ${dmg} damage!`, type: 'dmg-monster' });
+          const mTen = m.tenacity || 0;
+          const confChance = Math.max(0.1, CONFUSION_BASE_CHANCE - mTen * 0.02);
+          if (Math.random() < confChance) {
+            const dur = reduceDurationByTenacity(2, mTen);
+            b.monsterConfusionTurns = dur;
+            log.push({ text: `${m.name} is confused for ${dur} turns!`, type: 'info' });
+          } else {
+            log.push({ text: `${m.name} resists the confusion!`, type: 'info' });
+          }
+          break;
+        }
+        case 'life_drain': {
+          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.2)), m.def);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          const healed = Math.floor(dmg * 0.4);
+          p = { ...p, hp: Math.min(p.maxHp, p.hp + healed) };
+          log.push({ text: `Life Drain for ${dmg} damage! Healed ${healed} HP!`, type: 'dmg-monster' });
+          break;
+        }
+        case 'elemental_strike': {
+          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.5)), m.def);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          // Element matching: use weather element for bonus
+          const weatherElem = getCurrentWeatherId();
+          const elemBonus = weatherElem === 'thunderstorm' || weatherElem === 'rain' ? 1.3 : 1.0;
+          dmg = Math.floor(dmg * elemBonus);
+          // Elemental advantage
+          const atkElem = getSkillElement(null, p.characterClass);
+          const eMult = calcElementalDamageMultiplier(atkElem, b.monsterElement);
+          dmg = Math.floor(dmg * eMult);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Elemental Strike for ${dmg} damage!${elemBonus > 1 ? ' (Weather boost!)' : ''}`, type: 'dmg-monster' });
+          if (eMult > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+          else if (eMult < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
+          break;
+        }
+        default:
+          log.push({ text: `Used ${uSkill.name}!`, type: 'info' });
+          break;
+      }
+
+      b.monster = m;
+      b.defending = false;
+      b.defendedLastTurn = false;
+
+      // Check combos
+      const uCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (uCombos.length > 0) {
+        for (const combo of uCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          b.activeCombo = combo;
+        }
+        b.actionHistory = [];
+      }
+
+      let newStats = addStat(state.stats, 'universalSkillsUsed');
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats });
+      }
+      return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
+    }
+
     default:
       return state;
   }
@@ -4049,6 +4324,9 @@ export function useGameState(isLoggedIn) {
     bossAccept: () => dispatch({ type: 'BOSS_ACCEPT' }),
     bossDecline: () => dispatch({ type: 'BOSS_DECLINE' }),
     monsterTurn: () => dispatch({ type: 'MONSTER_TURN' }),
+    battleParry: () => dispatch({ type: 'BATTLE_PARRY' }),
+    battleChangeStance: (stance) => dispatch({ type: 'BATTLE_CHANGE_STANCE', stance }),
+    battleUniversalSkill: (skillId) => dispatch({ type: 'BATTLE_UNIVERSAL_SKILL', skillId }),
     continueAfterBattle: () => dispatch({ type: 'CONTINUE_AFTER_BATTLE' }),
     applyStatChoices: (selectedStats) => dispatch({ type: 'APPLY_STAT_CHOICES', selectedStats }),
     restAtInn: () => dispatch({ type: 'REST_AT_INN' }),

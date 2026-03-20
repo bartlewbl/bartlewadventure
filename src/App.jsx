@@ -333,6 +333,9 @@ export default function App() {
                 onTreeSkill={actions.battleTreeSkill}
                 onToggleSkillMenu={actions.toggleSkillMenu}
                 onToggleInspect={actions.toggleInspectMonster}
+                onParry={actions.battleParry}
+                onChangeStance={actions.battleChangeStance}
+                onUniversalSkill={actions.battleUniversalSkill}
                 setBattleAnim={setBattleAnim}
                 animTick={animTick}
               />

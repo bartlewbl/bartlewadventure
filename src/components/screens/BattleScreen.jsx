@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
-import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, getPlayerResistance, getPlayerTenacity, getPlayerAggression, getPlayerLuck, getPlayerFortitude } from '../../engine/combat';
+import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, getPlayerResistance, getPlayerTenacity, getPlayerAggression, getPlayerLuck, getPlayerFortitude, getStanceModifiers } from '../../engine/combat';
+import { STANCES, UNIVERSAL_SKILLS } from '../../data/gameData';
 import { SKILLS } from '../../data/gameData';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
 import useGameClock from '../../hooks/useGameClock';
@@ -22,6 +23,7 @@ export default function BattleScreen({
   battle, battleLog, player, pets,
   onAttack, onSkill, onDefend, onChannel, onPotion, onRun, onMonsterTurn,
   onTreeSkill, onToggleSkillMenu, onToggleInspect,
+  onParry, onChangeStance, onUniversalSkill,
   setBattleAnim, animTick,
 }) {
   const logRef = useRef(null);
@@ -401,6 +403,11 @@ export default function BattleScreen({
             </span>
           </div>
           {isBoss && m.title && <div className="boss-subtitle">{m.title}</div>}
+          {battle.monsterElement && battle.monsterElement !== 'physical' && (
+            <div className={`monster-element element-${battle.monsterElement}`}>
+              {ELEMENTS[battle.monsterElement]?.icon} {ELEMENTS[battle.monsterElement]?.label}
+            </div>
+          )}
           <div className="stat-bar">
             <span className="bar-label">HP</span>
             <div className={`bar hp-bar monster ${isBoss ? 'boss-hp' : ''}`}>
@@ -410,6 +417,36 @@ export default function BattleScreen({
           </div>
         </div>
       </div>
+
+      {/* Stance selector */}
+      <div className="battle-stance-bar">
+        {Object.entries(STANCES).map(([id, stance]) => (
+          <button
+            key={id}
+            className={`stance-btn ${battle.stance === id ? 'stance-active' : ''}`}
+            onClick={() => onChangeStance(id)}
+            disabled={disabled || battle.stance === id}
+            title={`${stance.name}: DMG ${Math.round(stance.dmgDealt * 100)}% / Taken ${Math.round(stance.dmgTaken * 100)}%`}
+          >
+            {stance.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Active combo display */}
+      {battle.activeCombo && (
+        <div className="battle-combo-display">
+          <span className="combo-label">COMBO:</span>
+          <span className="combo-name">{battle.activeCombo.name}</span>
+        </div>
+      )}
+
+      {/* Combo bleed indicator */}
+      {battle.comboBleedTurns > 0 && (
+        <div className="battle-combo-bleed">
+          <span className="bleed-label">Bleeding ({battle.comboBleedTurns})</span>
+        </div>
+      )}
 
       {/* Status effects row */}
       <div className="battle-status-row">
@@ -461,6 +498,12 @@ export default function BattleScreen({
           {battle.fortitudeUsed && (
             <span className="battle-debuff used">Grit Used</span>
           )}
+          {battle.parrying && (
+            <span className="battle-debuff buff">Parrying</span>
+          )}
+          {battle.warShoutTurns > 0 && (
+            <span className="battle-debuff buff">War Shout ({battle.warShoutTurns})</span>
+          )}
         </div>
       </div>
 
@@ -496,6 +539,9 @@ export default function BattleScreen({
             <div className="inspect-row"><span className="inspect-label">RES/TEN:</span> <span className="inspect-value">{m.resistance || 0}/{m.tenacity || 0}</span></div>
             <div className="inspect-row"><span className="inspect-label">AGR/LCK:</span> <span className="inspect-value">{m.aggression || 0}/{m.luck || 0}</span></div>
             <div className="inspect-row"><span className="inspect-label">GRT:</span> <span className="inspect-value">{m.fortitude || 0}</span></div>
+            {battle.monsterElement && battle.monsterElement !== 'physical' && (
+              <div className="inspect-row"><span className="inspect-label">Element:</span> <span className="inspect-value">{ELEMENTS[battle.monsterElement]?.icon} {ELEMENTS[battle.monsterElement]?.label}</span></div>
+            )}
             {battle.monsterChanneling && (
               <div className="inspect-row"><span className="inspect-label">Status:</span> <span className="inspect-value status-channel">Channeling ({battle.monsterChannelTurns} turns)</span></div>
             )}
@@ -556,6 +602,25 @@ export default function BattleScreen({
               </button>
             );
           })}
+          {/* Universal combat skills */}
+          {player.unlockedUniversalSkills?.filter(id => id !== 'parry').map(skillId => {
+            const uSkill = UNIVERSAL_SKILLS[skillId];
+            if (!uSkill) return null;
+            return (
+              <button
+                key={skillId}
+                className="btn btn-universal-skill"
+                disabled={disabled || player.mana < (uSkill.manaCost || 0)}
+                onClick={() => handlePlayerAction(() => onUniversalSkill(skillId), 'player-skill')}
+                title={uSkill.desc}
+              >
+                <span className="skill-btn-name">{uSkill.name}</span>
+                <span className="skill-btn-meta">
+                  <span className="skill-btn-cost">{uSkill.manaCost || 0}mp</span>
+                </span>
+              </button>
+            );
+          })}
           <button className="btn btn-back btn-sm" disabled={disabled} onClick={onToggleSkillMenu}>
             Back
           </button>
@@ -591,6 +656,16 @@ export default function BattleScreen({
           >
             {battle.playerChannelBonusActive ? 'Charged!' : 'Channel'}
           </button>
+          {player.unlockedUniversalSkills?.includes('parry') && (
+            <button
+              className="btn btn-battle-parry"
+              disabled={disabled || player.mana < (UNIVERSAL_SKILLS.parry?.manaCost || 5)}
+              onClick={() => handlePlayerAction(onParry, 'player-defend')}
+              title={`Parry: Block 80% damage and counter (${UNIVERSAL_SKILLS.parry?.manaCost || 5} mana)`}
+            >
+              Parry
+            </button>
+          )}
           <button
             className="btn btn-battle-inspect"
             disabled={disabled}

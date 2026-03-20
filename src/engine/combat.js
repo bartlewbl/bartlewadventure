@@ -1,9 +1,10 @@
 // Combat calculations - damage formulas, stat modifiers, dodge/HP
 // All functions are pure (no side effects), taking player/battle state as arguments.
 
-import { CHARACTER_CLASSES, SKILLS } from '../data/gameData';
+import { CHARACTER_CLASSES, SKILLS, COMBO_CHAINS, STANCES } from '../data/gameData';
 import { getTreeSkill } from '../data/skillTrees';
 import { prob } from '../data/probabilityStore';
+import { getElementCounter, getElementWeakness } from './elements';
 
 export function calcDamage(atk, def) {
   const base = Math.max(1, atk - def * 0.5);
@@ -555,3 +556,57 @@ export const STUN_BASE_CHANCE = 0.55; // base chance to land stun (before tenaci
 
 // ---- CONFUSION SYSTEM ----
 export const CONFUSION_BASE_CHANCE = 0.5; // base chance to land confusion
+
+// ---- ELEMENTAL DAMAGE SYSTEM ----
+// Element counter: +50% damage. Weak: -25% damage.
+
+export function calcElementalDamageMultiplier(attackElement, defenderElement) {
+  if (!attackElement || !defenderElement || attackElement === 'physical' || defenderElement === 'physical') return 1.0;
+  const counter = getElementCounter(attackElement);
+  if (counter === defenderElement) return 1.5; // strong against
+  const weakness = getElementWeakness(attackElement);
+  if (weakness === defenderElement) return 0.75; // weak against
+  return 1.0;
+}
+
+// ---- COMBO CHAIN SYSTEM ----
+// Check if the action history matches any combo pattern
+export function checkComboChains(actionHistory, hasComboMaster) {
+  const completedCombos = [];
+  for (const [id, combo] of Object.entries(COMBO_CHAINS)) {
+    const seq = combo.sequence;
+    if (actionHistory.length >= seq.length) {
+      const recent = actionHistory.slice(-seq.length);
+      if (recent.every((a, i) => a === seq[i])) {
+        completedCombos.push({ id, ...combo });
+      }
+    }
+  }
+  // Apply combo master bonus if unlocked
+  if (hasComboMaster && completedCombos.length > 0) {
+    completedCombos.forEach(c => {
+      if (c.boostPct) c.boostPct *= 1.2;
+      if (c.critBoost) c.critBoost *= 1.2;
+      if (c.bleedPct) c.bleedPct *= 1.2;
+    });
+  }
+  return completedCombos;
+}
+
+// ---- STANCE SYSTEM ----
+export function getStanceModifiers(stanceId, hasStanceMaster) {
+  const stance = STANCES[stanceId] || STANCES.balanced;
+  if (!hasStanceMaster) return stance;
+  // Stance master: bonuses increased by 50% (both positive and negative amplified)
+  return {
+    name: stance.name,
+    dmgDealt: 1 + (stance.dmgDealt - 1) * 1.5,
+    dmgTaken: 1 + (stance.dmgTaken - 1) * 1.5,
+    critMod: stance.critMod * 1.5,
+    dodgeMod: stance.dodgeMod * 1.5,
+  };
+}
+
+// ---- PARRY SYSTEM ----
+export const PARRY_DAMAGE_REDUCTION = 0.8; // 80% less damage when parrying
+export const PARRY_COUNTER_MULTIPLIER = 0.8; // counter for 0.8x ATK
