@@ -3170,6 +3170,23 @@ body {
   font-style: italic;
 }
 
+.inv-item-quest-needed {
+  border-left: 2px solid #ffcc00;
+  background: linear-gradient(90deg, rgba(255,204,0,0.08) 0%, transparent 40%);
+}
+
+.inv-item-quest-tag {
+  display: inline-block;
+  font-size: 7px;
+  color: #fff;
+  background: linear-gradient(135deg, #e6a800, #cc8400);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-top: 2px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+}
+
 .inv-item-level-req {
   color: #ff6666;
   font-size: 7px;
