@@ -390,6 +390,7 @@ export default function App() {
                 playerAtk={playerAtk}
                 playerDef={playerDef}
                 discoveredItemLocations={state.discoveredItemLocations}
+                villageQuests={state.villageQuests}
                 onEquip={actions.equipItem}
                 onUnequip={actions.unequipItem}
                 onUse={actions.useItem}

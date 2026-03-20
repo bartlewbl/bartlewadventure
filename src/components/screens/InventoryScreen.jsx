@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { REGIONS, canClassEquip, getClassName, getClassColor, getClassShortName } from '../../data/gameData';
+import { REGIONS, QUEST_VILLAGES, canClassEquip, getClassName, getClassColor, getClassShortName } from '../../data/gameData';
 
 // Build a lookup from location id to location name
 const LOCATION_NAME_MAP = {};
@@ -86,13 +86,32 @@ function getItemClassText(item) {
   return item.classes.map(c => getClassShortName(c)).join('/');
 }
 
+// Build a set of { itemName, locationId, questName } for all active village quest item requirements
+function getActiveQuestItemNeeds(villageQuests) {
+  const needs = [];
+  const accepted = villageQuests?.acceptedQuests || [];
+  const completed = villageQuests?.completedQuests || [];
+  for (const aq of accepted) {
+    if (completed.includes(aq.questId)) continue;
+    const village = Object.values(QUEST_VILLAGES).flat().find(v => v.id === aq.villageId);
+    const questDef = village?.quests.find(q => q.id === aq.questId);
+    if (!questDef?.itemRequirements) continue;
+    for (const req of questDef.itemRequirements) {
+      needs.push({ itemName: req.itemName, locationId: req.locationId, questName: questDef.name });
+    }
+  }
+  return needs;
+}
+
 export default function InventoryScreen({
-  player, playerAtk, playerDef, discoveredItemLocations, onEquip, onUnequip, onUse, onSell, onReorder, onBack,
+  player, playerAtk, playerDef, discoveredItemLocations, villageQuests, onEquip, onUnequip, onUse, onSell, onReorder, onBack,
 }) {
   const [category, setCategory] = useState('all');
   const [dragInfo, setDragInfo] = useState(null);
   const [hoverState, setHoverState] = useState(null);
   const [slotHover, setSlotHover] = useState(null);
+
+  const questItemNeeds = useMemo(() => getActiveQuestItemNeeds(villageQuests), [villageQuests]);
 
   const filteredInventory = useMemo(() => {
     if (category === 'all') return player.inventory;
@@ -286,10 +305,13 @@ export default function InventoryScreen({
             const classLocked = item.slot && !canClassEquip(item, player.characterClass);
             const cantEquip = locked || classLocked;
             const classText = getItemClassText(item);
+            const questMatch = questItemNeeds.find(
+              need => need.itemName === item.name && need.locationId === item.foundLocation
+            );
             return (
               <div
                 key={item.id}
-                className={`${itemClass}${cantEquip ? ' inv-item-locked' : ''}`}
+                className={`${itemClass}${cantEquip ? ' inv-item-locked' : ''}${questMatch ? ' inv-item-quest-needed' : ''}`}
                 draggable
                 onDragStart={handleDragStart(index)}
                 onDragOver={handleDragOverItem(index)}
@@ -328,6 +350,9 @@ export default function InventoryScreen({
                     <span className="inv-item-location">
                       {getItemLocationText(item.name, discoveredItemLocations)}
                     </span>
+                  )}
+                  {questMatch && (
+                    <span className="inv-item-quest-tag">Quest: {questMatch.questName}</span>
                   )}
                 </div>
                 <div className="inv-item-actions">

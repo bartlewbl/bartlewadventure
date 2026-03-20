@@ -3702,6 +3702,7 @@ export const QUEST_VILLAGES = {
         { id: 'ph-q1', name: 'Debug the Grid', description: 'Defeat 8 Neon Beetles to clear the power grid.', stat: 'monstersKilled', target: 8, reward: { gold: 120, item: 'ring' } },
         { id: 'ph-q2', name: 'Gutter Cleanup', description: 'Defeat 15 monsters in Neon Mile.', stat: 'monstersKilled', target: 15, reward: { gold: 200, item: 'sword' } },
         { id: 'ph-q3', name: 'Data Recovery', description: 'Explore 10 times.', stat: 'explorationsCompleted', target: 10, reward: { gold: 300, item: 'helmet' } },
+        { id: 'ph-q4', name: 'Neon Salvage Op', description: 'Retrieve a Rusty Shiv from Neon Mile and a Scrap Axe from Shadow Alley for our defenses.', stat: 'monstersKilled', target: 0, reward: { gold: 400, item: 'amulet' }, itemRequirements: [{ itemName: 'Rusty Shiv', locationId: 'neon-mile', locationName: 'Neon Mile' }, { itemName: 'Scrap Axe', locationId: 'shadow-alley', locationName: 'Shadow Alley' }] },
       ],
       traders: [
         {
@@ -3731,6 +3732,7 @@ export const QUEST_VILLAGES = {
       quests: [
         { id: 'uv-q1', name: 'Blackout Patrol', description: 'Win 10 battles.', stat: 'battlesWon', target: 10, reward: { gold: 180, item: 'armor' } },
         { id: 'uv-q2', name: 'Voltage Collector', description: 'Earn 500 gold from any source.', stat: 'goldEarned', target: 500, reward: { gold: 350, item: 'amulet' } },
+        { id: 'uv-q3', name: 'Power Cell Assembly', description: 'Bring a Copper Dagger from Neon Mile and an Iron Shortsword from Metro Underpass to build a power cell.', stat: 'monstersKilled', target: 0, reward: { gold: 500, item: 'ring' }, itemRequirements: [{ itemName: 'Copper Dagger', locationId: 'neon-mile', locationName: 'Neon Mile' }, { itemName: 'Iron Shortsword', locationId: 'metro-underpass', locationName: 'Metro Underpass' }] },
       ],
       traders: [
         {
@@ -3763,6 +3765,7 @@ export const QUEST_VILLAGES = {
         { id: 'ff-q1', name: 'Thaw the Passage', description: 'Defeat 12 Frost Wolves to clear the mountain pass.', stat: 'monstersKilled', target: 12, reward: { gold: 250, item: 'boots' } },
         { id: 'ff-q2', name: 'Icebreaker', description: 'Deal 2000 total damage.', stat: 'damageDealt', target: 2000, reward: { gold: 400, item: 'sword' } },
         { id: 'ff-q3', name: 'Avalanche Watch', description: 'Explore 15 times.', stat: 'explorationsCompleted', target: 15, reward: { gold: 500, item: 'shield' } },
+        { id: 'ff-q4', name: 'Frostforging Supplies', description: 'Bring a Frostbite Cleaver from Glacier Tunnels and a Cryo Lancet from Glacier Tunnels to fuel the forge.', stat: 'monstersKilled', target: 0, reward: { gold: 700, item: 'armor' }, itemRequirements: [{ itemName: 'Frostbite Cleaver', locationId: 'glacier-tunnels', locationName: 'Glacier Tunnels' }, { itemName: 'Cryo Lancet', locationId: 'glacier-tunnels', locationName: 'Glacier Tunnels' }] },
       ],
       traders: [
         {
@@ -3796,6 +3799,7 @@ export const QUEST_VILLAGES = {
         { id: 'oo-q1', name: 'Sand Viper Hunt', description: 'Win 15 battles in the badlands.', stat: 'battlesWon', target: 15, reward: { gold: 350, item: 'ring' } },
         { id: 'oo-q2', name: 'Forge Materials', description: 'Loot 10 items.', stat: 'itemsLooted', target: 10, reward: { gold: 450, item: 'armor' } },
         { id: 'oo-q3', name: 'Mirage Runner', description: 'Explore 20 times.', stat: 'explorationsCompleted', target: 20, reward: { gold: 600, item: 'cape' } },
+        { id: 'oo-q4', name: 'Desert Arms Deal', description: 'Bring an Ember Scimitar from Sunscorch Canyon and a Volcanic Greataxe from Inferno Pit for the outpost armory.', stat: 'monstersKilled', target: 0, reward: { gold: 900, item: 'sword' }, itemRequirements: [{ itemName: 'Ember Scimitar', locationId: 'sunscorch-canyon', locationName: 'Sunscorch Canyon' }, { itemName: 'Volcanic Greataxe', locationId: 'inferno-pit', locationName: 'Inferno Pit' }] },
       ],
       traders: [
         {
@@ -3890,6 +3894,7 @@ export const QUEST_VILLAGES = {
         { id: 'dh-q1', name: 'Leviathan Slayer', description: 'Defeat 25 monsters in the depths.', stat: 'monstersKilled', target: 25, reward: { gold: 800, item: 'sword' } },
         { id: 'dh-q2', name: 'Pressure Test', description: 'Deal 8000 total damage.', stat: 'damageDealt', target: 8000, reward: { gold: 1000, item: 'armor' } },
         { id: 'dh-q3', name: 'Abyssal Explorer', description: 'Explore 30 times.', stat: 'explorationsCompleted', target: 30, reward: { gold: 1200, item: 'ring' } },
+        { id: 'dh-q4', name: 'Trench Expedition Gear', description: 'Retrieve a Coral Trident from the Coral Labyrinth and a Leviathan Tooth from Kraken\'s Rest for our deep-sea research.', stat: 'monstersKilled', target: 0, reward: { gold: 2000, item: 'armor' }, itemRequirements: [{ itemName: 'Coral Trident', locationId: 'coral-labyrinth', locationName: 'Coral Labyrinth' }, { itemName: 'Leviathan Tooth', locationId: 'krakens-rest', locationName: "Kraken's Rest" }] },
       ],
       traders: [
         {
@@ -4002,6 +4007,7 @@ export const QUEST_VILLAGES = {
         { id: 'eb-q1', name: 'Reality Anchor', description: 'Defeat 35 monsters.', stat: 'monstersKilled', target: 35, reward: { gold: 1500, item: 'armor' } },
         { id: 'eb-q2', name: 'Void Walker', description: 'Explore 40 times.', stat: 'explorationsCompleted', target: 40, reward: { gold: 2000, item: 'ring' } },
         { id: 'eb-q3', name: 'Dimensional Rift', description: 'Deal 15000 total damage.', stat: 'damageDealt', target: 15000, reward: { gold: 2500, item: 'sword' } },
+        { id: 'eb-q4', name: 'Reality Stabilizer Parts', description: 'Bring a Rift Severer from the Paradox Maze and a Nullpoint Edge from the Singularity Well to stabilize the dimensional rift.', stat: 'monstersKilled', target: 0, reward: { gold: 3500, item: 'cape' }, itemRequirements: [{ itemName: 'Rift Severer', locationId: 'paradox-maze', locationName: 'Paradox Maze' }, { itemName: 'Nullpoint Edge', locationId: 'singularity-well', locationName: 'Singularity Well' }] },
       ],
       traders: [
         {
