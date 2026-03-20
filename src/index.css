@@ -2281,7 +2281,58 @@ body {
 .screen-battle {
   justify-content: flex-start;
   padding-top: 50px;
-  gap: 4px;
+  gap: 3px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 8px;
+}
+
+/* Top bar: turn indicator + mana side by side */
+.battle-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 95%;
+  max-width: 500px;
+  padding: 0 4px;
+}
+
+/* Alerts panel: channel warnings, gimmicks, enemy intent */
+.battle-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 95%;
+  max-width: 500px;
+  padding: 4px 6px;
+  background: rgba(10, 10, 25, 0.6);
+  border: 1px solid rgba(255, 100, 100, 0.15);
+  border-radius: 4px;
+}
+
+.battle-alerts .battle-channel-warning,
+.battle-alerts .battle-channel-ready,
+.battle-alerts .battle-channel-active,
+.battle-alerts .battle-gimmick,
+.battle-alerts .battle-enemy-intent {
+  margin: 0;
+  border: none;
+  background: none;
+  padding: 2px 4px;
+}
+
+/* Combat info panel: speed, stance, combos, weather, passives */
+.battle-combat-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 95%;
+  max-width: 500px;
+  padding: 4px 6px;
+  background: rgba(10, 10, 30, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
 }
 
 /* Turn indicator */
@@ -2317,12 +2368,11 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 10px;
-  background: rgba(10, 10, 30, 0.8);
-  border: 1px solid rgba(100, 100, 200, 0.15);
-  border-radius: 4px;
-  width: 90%;
-  max-width: 460px;
+  padding: 2px 6px;
+  background: rgba(10, 10, 30, 0.5);
+  border: 1px solid rgba(100, 100, 200, 0.12);
+  border-radius: 3px;
+  width: 100%;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -2474,6 +2524,10 @@ body {
   width: 95%;
   max-width: 500px;
   gap: 8px;
+  padding: 4px 6px;
+  background: rgba(10, 10, 30, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
 }
 
 .monster-info {
@@ -2489,21 +2543,21 @@ body {
 }
 
 .battle-log {
-  position: absolute;
-  bottom: 80px;
-  left: 12px;
-  right: 12px;
-  max-height: 100px;
+  width: 95%;
+  max-width: 500px;
+  max-height: 90px;
+  min-height: 40px;
   overflow-y: auto;
   font-size: 8px;
   line-height: 1.8;
   color: #ccc;
   background: rgba(0, 0, 0, 0.8);
-  padding: 8px;
+  padding: 6px 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   -webkit-overflow-scrolling: touch;
   backdrop-filter: blur(4px);
+  flex-shrink: 1;
 }
 
 .log-dmg-player { color: #ff6666; }
@@ -2512,15 +2566,14 @@ body {
 .log-info { color: #ffcc66; }
 
 .battle-actions {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
   justify-content: center;
-  padding: 0 8px;
+  padding: 4px 8px;
+  width: 95%;
+  max-width: 500px;
+  margin-top: auto;
 }
 
 .battle-actions .btn {
@@ -3681,8 +3734,7 @@ body {
   .screen { padding-top: 40px; }
   .side-panel { padding-top: 38px; }
   .btn { padding: 8px 14px; font-size: 8px; }
-  .battle-log { max-height: 60px; bottom: 55px; }
-  .battle-actions { bottom: 4px; }
+  .battle-log { max-height: 50px; }
   .battle-actions .btn { padding: 7px 10px; font-size: 7px; }
   .explore-text { font-size: 8px; }
   .inventory-list { max-height: 100px; }
@@ -3697,7 +3749,7 @@ body {
 @media (min-width: 601px) and (min-height: 501px) {
   .equipment-grid { grid-template-columns: repeat(3, 1fr); }
   .town-layout { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-  .battle-log { max-height: 120px; }
+  .battle-log { max-height: 100px; }
 }
 
 /* Landscape orientation adjustments */
@@ -4017,10 +4069,8 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  width: 90%;
-  max-width: 350px;
-  margin-top: 4px;
+  padding: 2px 4px;
+  width: 100%;
 }
 
 .battle-passives-label {
@@ -4043,10 +4093,18 @@ body {
 .battle-debuffs-player {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
   padding: 2px 0;
-  width: 90%;
-  max-width: 350px;
+  flex: 1;
+  min-width: 0;
+}
+
+.battle-debuffs-monster {
+  justify-content: flex-start;
+}
+
+.battle-debuffs-player {
+  justify-content: flex-end;
 }
 
 .battle-debuff {
@@ -4313,12 +4371,21 @@ body {
 .battle-skill-menu {
   flex-wrap: wrap;
   gap: 3px;
+  background: rgba(10, 15, 30, 0.9);
+  border: 1px solid rgba(79, 195, 247, 0.15);
+  border-radius: 4px;
+  padding: 6px 8px;
 }
 
 .battle-inspect-panel {
   flex-direction: column;
   gap: 4px;
-  padding: 8px;
+  padding: 6px 8px;
+  background: rgba(10, 15, 30, 0.9);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .inspect-stats {
@@ -4408,9 +4475,6 @@ body {
 
 /* Battle mana display */
 .battle-mana-display {
-  position: absolute;
-  top: 55px;
-  right: 12px;
   font-size: 8px;
   color: #4fc3f7;
   background: rgba(0, 0, 0, 0.6);
@@ -8587,8 +8651,7 @@ body {
 .battle-pets {
   display: flex;
   gap: 4px;
-  justify-content: center;
-  margin: 4px 0;
+  margin-top: 3px;
   flex-wrap: wrap;
 }
 

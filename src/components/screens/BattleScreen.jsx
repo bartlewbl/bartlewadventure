@@ -280,6 +280,18 @@ export default function BattleScreen({
 
   const ROLE_ICONS = { attacker: '\u2694', defender: '\u26E8', healer: '\u2661', buffer: '\u2606', hybrid: '\u269B' };
 
+  const hasMonsterDebuffs = battle.monsterPoisonTurns > 0 || battle.monsterDoomTurns > 0 ||
+    battle.monsterStunTurns > 0 || battle.monsterConfusionTurns > 0 || battle.armorShatterTurns > 0;
+  const hasPlayerBuffsDebuffs = battle.poisonTurns > 0 || battle.atkDebuff > 0 || battle.defDebuff > 0 ||
+    battle.dodgeNextTurn || battle.dodgeCharges > 0 || battle.avatarTurns > 0 || battle.defending ||
+    battle.playerStunTurns > 0 || battle.playerConfusionTurns > 0 || battle.fortitudeUsed ||
+    battle.parrying || battle.warShoutTurns > 0 || battle.elementalWardTurns > 0 ||
+    battle.frenzyBonusTurns > 0 || battle.playerInvulnTurns > 0 || battle.guaranteedCrit ||
+    battle.lastStandUsed || battle.limitBreakUsed;
+  const hasAlerts = battle.monsterChanneling || battle.playerChannelBonusActive || battle.playerChanneling ||
+    (battle.gimmick && isBoss);
+  const comboProgress = battle.actionHistory?.length > 0 ? getComboProgress(battle.actionHistory) : [];
+
   return (
     <div className="screen screen-battle">
       {/* Floating damage numbers */}
@@ -293,77 +305,17 @@ export default function BattleScreen({
         </div>
       ))}
 
-      {/* Turn indicator */}
-      <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
-        {battle.isPlayerTurn && !pendingTurnRef.current ? 'YOUR TURN' : 'ENEMY TURN'}
+      {/* === TOP BAR: Turn indicator + Mana === */}
+      <div className="battle-top-bar">
+        <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
+          {battle.isPlayerTurn && !pendingTurnRef.current ? 'YOUR TURN' : 'ENEMY TURN'}
+        </div>
+        <div className="battle-mana-display">
+          Mana: {player.mana}/{getBattleMaxMana(player)}
+        </div>
       </div>
 
-      {/* Speed comparison bar */}
-      <div className="battle-speed-bar">
-        <span className={`speed-tag ${battle.playerIsFaster ? 'speed-advantage' : ''}`}>
-          SPD: {battle.playerSpeed || '?'}
-        </span>
-        <span className="speed-vs">vs</span>
-        <span className={`speed-tag ${!battle.playerIsFaster ? 'speed-advantage' : ''}`}>
-          SPD: {battle.monsterSpeed || '?'}
-        </span>
-        {battle.playerIsFaster && <span className="speed-bonus-label">You act first!</span>}
-      </div>
-
-      {/* Enemy intent preview (when player is faster) */}
-      {battle.playerIsFaster && battle.monsterNextMove && battle.isPlayerTurn && (
-        <div className="battle-enemy-intent">
-          <span className="intent-label">Enemy Intent:</span>
-          <span className={`intent-action intent-${battle.monsterNextMove.type}`}>
-            {battle.monsterNextMove.name}
-            {battle.monsterNextMove.type === 'channel' && ' (Charging!)'}
-            {battle.monsterNextMove.type === 'unleash' && ' (UNLEASH!)'}
-          </span>
-        </div>
-      )}
-
-      {/* Monster channeling warning */}
-      {battle.monsterChanneling && (
-        <div className="battle-channel-warning">
-          <span className="channel-pulse">{m.name} is channeling energy!</span>
-          <span className="channel-turns">{battle.monsterChannelTurns} turn{battle.monsterChannelTurns > 1 ? 's' : ''} until unleash!</span>
-        </div>
-      )}
-
-      {/* Player channel bonus indicator */}
-      {battle.playerChannelBonusActive && (
-        <div className="battle-channel-ready">
-          Channeled energy ready! Next attack deals 2x damage!
-        </div>
-      )}
-      {battle.playerChanneling && (
-        <div className="battle-channel-active">
-          Channeling energy...
-        </div>
-      )}
-
-      {/* Boss gimmick display */}
-      {battle.gimmick && isBoss && (
-        <div className={`battle-gimmick ${battle.gimmickActive ? 'gimmick-active' : 'gimmick-pending'}`}>
-          <span className="gimmick-icon">{battle.gimmickActive ? '!' : '?'}</span>
-          <span className="gimmick-name">{battle.gimmick.name}</span>
-          {!battle.gimmickActive && <span className="gimmick-hint">Triggers at {Math.round(battle.gimmick.triggerHpPct * 100)}% HP</span>}
-          {battle.gimmickActive && <span className="gimmick-desc">{battle.gimmick.desc}</span>}
-        </div>
-      )}
-
-      {/* Weather spell buff bar */}
-      {weatherBuffs.length > 0 && (
-        <div className="battle-weather-bar">
-          <span className="battle-weather-icon">{clock.weather.icon}</span>
-          {weatherBuffs.map((wb, i) => (
-            <span key={i} className={`battle-weather-buff ${wb.positive ? 'buff' : 'debuff'}`}>
-              {wb.element.icon} {wb.label}
-            </span>
-          ))}
-        </div>
-      )}
-
+      {/* === COMBATANTS: Player vs Monster === */}
       <div className="battle-combatants">
         {/* Player side */}
         <div className="battle-combatant battle-player-side">
@@ -375,21 +327,20 @@ export default function BattleScreen({
             </div>
             <span className="bar-text">{player.hp}/{player.maxHp}</span>
           </div>
-        </div>
-
-        {/* Active pet companion */}
-        {equippedPets.length > 0 && (() => {
-          const pet = equippedPets[0];
-          return (
-            <div className="battle-pets">
-              <div className={`battle-pet-tag active-pet ${pet.energy <= 0 ? 'exhausted' : ''} ${pet.bond < 30 ? 'low-bond' : ''}`}>
-                <span className="battle-pet-icon">{ROLE_ICONS[pet.role] || ''}</span>
-                <span className="battle-pet-name">{pet.name}</span>
-                <span className="battle-pet-stats">B:{pet.bond} E:{pet.energy}</span>
+          {/* Pet companion under player */}
+          {equippedPets.length > 0 && (() => {
+            const pet = equippedPets[0];
+            return (
+              <div className="battle-pets">
+                <div className={`battle-pet-tag active-pet ${pet.energy <= 0 ? 'exhausted' : ''} ${pet.bond < 30 ? 'low-bond' : ''}`}>
+                  <span className="battle-pet-icon">{ROLE_ICONS[pet.role] || ''}</span>
+                  <span className="battle-pet-name">{pet.name}</span>
+                  <span className="battle-pet-stats">B:{pet.bond} E:{pet.energy}</span>
+                </div>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
+        </div>
 
         {/* VS indicator */}
         <div className="battle-vs">VS</div>
@@ -418,45 +369,174 @@ export default function BattleScreen({
         </div>
       </div>
 
-      {/* Stance selector */}
-      <div className="battle-stance-bar">
-        {Object.entries(STANCES).map(([id, stance]) => (
-          <button
-            key={id}
-            className={`stance-btn ${battle.stance === id ? 'stance-active' : ''}`}
-            onClick={() => onChangeStance(id)}
-            disabled={disabled || battle.stance === id}
-            title={`${stance.name}: DMG ${Math.round(stance.dmgDealt * 100)}% / Taken ${Math.round(stance.dmgTaken * 100)}%`}
-          >
-            {stance.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Stance momentum indicator */}
-      {battle.stanceMomentum > 0 && battle.stance !== 'balanced' && (
-        <div className="battle-momentum-bar">
-          <span className="momentum-label">Momentum:</span>
-          <div className="momentum-fill-track">
-            <div className="momentum-fill" style={{ width: `${Math.min(100, (battle.stanceMomentum / 0.3) * 100)}%` }} />
+      {/* === STATUS PANEL: Debuffs on both sides === */}
+      {(hasMonsterDebuffs || hasPlayerBuffsDebuffs) && (
+        <div className="battle-status-row">
+          <div className="battle-debuffs-monster">
+            {battle.monsterPoisonTurns > 0 && (
+              <span className="battle-debuff poison">Poison ({battle.monsterPoisonTurns})</span>
+            )}
+            {battle.monsterDoomTurns > 0 && (
+              <span className="battle-debuff doom">Doom ({battle.monsterDoomTurns})</span>
+            )}
+            {battle.monsterStunTurns > 0 && (
+              <span className="battle-debuff stun">Stunned ({battle.monsterStunTurns})</span>
+            )}
+            {battle.monsterConfusionTurns > 0 && (
+              <span className="battle-debuff confusion">Confused ({battle.monsterConfusionTurns})</span>
+            )}
+            {battle.armorShatterTurns > 0 && (
+              <span className="battle-debuff debuff">Armor Broken ({battle.armorShatterTurns})</span>
+            )}
           </div>
-          <span className="momentum-pct">+{Math.round(battle.stanceMomentum * 100)}%</span>
+          <div className="battle-debuffs-player">
+            {battle.poisonTurns > 0 && (
+              <span className="battle-debuff poison">Poisoned ({battle.poisonTurns})</span>
+            )}
+            {battle.atkDebuff > 0 && (
+              <span className="battle-debuff debuff">ATK -{battle.atkDebuff}</span>
+            )}
+            {battle.defDebuff > 0 && (
+              <span className="battle-debuff debuff">DEF -{battle.defDebuff}</span>
+            )}
+            {battle.dodgeNextTurn && (
+              <span className="battle-debuff buff">Dodge Ready</span>
+            )}
+            {battle.dodgeCharges > 0 && (
+              <span className="battle-debuff buff">Dodge x{battle.dodgeCharges}</span>
+            )}
+            {battle.avatarTurns > 0 && (
+              <span className="battle-debuff buff">Avatar ({battle.avatarTurns})</span>
+            )}
+            {battle.defending && (
+              <span className="battle-debuff buff">Defending</span>
+            )}
+            {battle.playerStunTurns > 0 && (
+              <span className="battle-debuff stun">Stunned ({battle.playerStunTurns})</span>
+            )}
+            {battle.playerConfusionTurns > 0 && (
+              <span className="battle-debuff confusion">Confused ({battle.playerConfusionTurns})</span>
+            )}
+            {battle.fortitudeUsed && (
+              <span className="battle-debuff used">Grit Used</span>
+            )}
+            {battle.parrying && (
+              <span className="battle-debuff buff">Parrying</span>
+            )}
+            {battle.warShoutTurns > 0 && (
+              <span className="battle-debuff buff">War Shout ({battle.warShoutTurns})</span>
+            )}
+            {battle.elementalWardTurns > 0 && (
+              <span className="battle-debuff buff">Elem Ward ({battle.elementalWardTurns})</span>
+            )}
+            {battle.frenzyBonusTurns > 0 && (
+              <span className="battle-debuff buff">Frenzy ({battle.frenzyBonusTurns})</span>
+            )}
+            {battle.playerInvulnTurns > 0 && (
+              <span className="battle-debuff buff">Invulnerable ({battle.playerInvulnTurns})</span>
+            )}
+            {battle.guaranteedCrit && (
+              <span className="battle-debuff buff">Crit Ready!</span>
+            )}
+            {battle.lastStandUsed && (
+              <span className="battle-debuff used">Last Stand Used</span>
+            )}
+            {battle.limitBreakUsed && (
+              <span className="battle-debuff used">Limit Break Used</span>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Active combo display */}
-      {battle.activeCombo && (
-        <div className="battle-combo-display">
-          <span className="combo-label">COMBO:</span>
-          <span className="combo-name">{battle.activeCombo.name}</span>
-          {battle.comboStreak > 1 && <span className="combo-streak">x{battle.comboStreak}</span>}
+      {/* === ALERTS: Channel warnings, gimmicks, enemy intent === */}
+      {(hasAlerts || (battle.playerIsFaster && battle.monsterNextMove && battle.isPlayerTurn)) && (
+        <div className="battle-alerts">
+          {battle.monsterChanneling && (
+            <div className="battle-channel-warning">
+              <span className="channel-pulse">{m.name} is channeling!</span>
+              <span className="channel-turns">{battle.monsterChannelTurns}t until unleash</span>
+            </div>
+          )}
+          {battle.playerChannelBonusActive && (
+            <div className="battle-channel-ready">
+              Channeled! Next attack deals 2x damage
+            </div>
+          )}
+          {battle.playerChanneling && (
+            <div className="battle-channel-active">
+              Channeling energy...
+            </div>
+          )}
+          {battle.gimmick && isBoss && (
+            <div className={`battle-gimmick ${battle.gimmickActive ? 'gimmick-active' : 'gimmick-pending'}`}>
+              <span className="gimmick-icon">{battle.gimmickActive ? '!' : '?'}</span>
+              <span className="gimmick-name">{battle.gimmick.name}</span>
+              {!battle.gimmickActive && <span className="gimmick-hint">at {Math.round(battle.gimmick.triggerHpPct * 100)}% HP</span>}
+              {battle.gimmickActive && <span className="gimmick-desc">{battle.gimmick.desc}</span>}
+            </div>
+          )}
+          {battle.playerIsFaster && battle.monsterNextMove && battle.isPlayerTurn && (
+            <div className="battle-enemy-intent">
+              <span className="intent-label">Intent:</span>
+              <span className={`intent-action intent-${battle.monsterNextMove.type}`}>
+                {battle.monsterNextMove.name}
+                {battle.monsterNextMove.type === 'channel' && ' (Charging!)'}
+                {battle.monsterNextMove.type === 'unleash' && ' (UNLEASH!)'}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Combo progress indicators */}
-      {battle.actionHistory?.length > 0 && (() => {
-        const comboProgress = getComboProgress(battle.actionHistory);
-        return comboProgress.length > 0 ? (
+      {/* === COMBAT INFO: Speed, Stance, Momentum, Combos, Weather, Passives === */}
+      <div className="battle-combat-info">
+        {/* Speed comparison */}
+        <div className="battle-speed-bar">
+          <span className={`speed-tag ${battle.playerIsFaster ? 'speed-advantage' : ''}`}>
+            SPD {battle.playerSpeed || '?'}
+          </span>
+          <span className="speed-vs">vs</span>
+          <span className={`speed-tag ${!battle.playerIsFaster ? 'speed-advantage' : ''}`}>
+            SPD {battle.monsterSpeed || '?'}
+          </span>
+          {battle.playerIsFaster && <span className="speed-bonus-label">First!</span>}
+        </div>
+
+        {/* Stance selector */}
+        <div className="battle-stance-bar">
+          {Object.entries(STANCES).map(([id, stance]) => (
+            <button
+              key={id}
+              className={`stance-btn ${battle.stance === id ? 'stance-active' : ''}`}
+              onClick={() => onChangeStance(id)}
+              disabled={disabled || battle.stance === id}
+              title={`${stance.name}: DMG ${Math.round(stance.dmgDealt * 100)}% / Taken ${Math.round(stance.dmgTaken * 100)}%`}
+            >
+              {stance.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Momentum bar */}
+        {battle.stanceMomentum > 0 && battle.stance !== 'balanced' && (
+          <div className="battle-momentum-bar">
+            <span className="momentum-label">Momentum:</span>
+            <div className="momentum-fill-track">
+              <div className="momentum-fill" style={{ width: `${Math.min(100, (battle.stanceMomentum / 0.3) * 100)}%` }} />
+            </div>
+            <span className="momentum-pct">+{Math.round(battle.stanceMomentum * 100)}%</span>
+          </div>
+        )}
+
+        {/* Combo display */}
+        {battle.activeCombo && (
+          <div className="battle-combo-display">
+            <span className="combo-label">COMBO:</span>
+            <span className="combo-name">{battle.activeCombo.name}</span>
+            {battle.comboStreak > 1 && <span className="combo-streak">x{battle.comboStreak}</span>}
+          </div>
+        )}
+        {comboProgress.length > 0 && (
           <div className="battle-combo-progress">
             {comboProgress.map(cp => (
               <span key={cp.id} className="combo-progress-item" title={`Next: ${cp.nextAction}`}>
@@ -464,115 +544,46 @@ export default function BattleScreen({
               </span>
             ))}
           </div>
-        ) : null;
-      })()}
+        )}
+        {battle.comboBleedTurns > 0 && (
+          <div className="battle-combo-bleed">
+            <span className="bleed-label">Bleeding ({battle.comboBleedTurns})</span>
+          </div>
+        )}
 
-      {/* Combo bleed indicator */}
-      {battle.comboBleedTurns > 0 && (
-        <div className="battle-combo-bleed">
-          <span className="bleed-label">Bleeding ({battle.comboBleedTurns})</span>
-        </div>
-      )}
+        {/* Weather buffs */}
+        {weatherBuffs.length > 0 && (
+          <div className="battle-weather-bar">
+            <span className="battle-weather-icon">{clock.weather.icon}</span>
+            {weatherBuffs.map((wb, i) => (
+              <span key={i} className={`battle-weather-buff ${wb.positive ? 'buff' : 'debuff'}`}>
+                {wb.element.icon} {wb.label}
+              </span>
+            ))}
+          </div>
+        )}
 
-      {/* Status effects row */}
-      <div className="battle-status-row">
-        {/* Monster debuffs */}
-        <div className="battle-debuffs-monster">
-          {battle.monsterPoisonTurns > 0 && (
-            <span className="battle-debuff poison">Poison ({battle.monsterPoisonTurns})</span>
-          )}
-          {battle.monsterDoomTurns > 0 && (
-            <span className="battle-debuff doom">Doom ({battle.monsterDoomTurns})</span>
-          )}
-          {battle.monsterStunTurns > 0 && (
-            <span className="battle-debuff stun">Stunned ({battle.monsterStunTurns})</span>
-          )}
-          {battle.monsterConfusionTurns > 0 && (
-            <span className="battle-debuff confusion">Confused ({battle.monsterConfusionTurns})</span>
-          )}
-          {battle.armorShatterTurns > 0 && (
-            <span className="battle-debuff debuff">Armor Broken ({battle.armorShatterTurns})</span>
-          )}
-        </div>
-
-        {/* Player status effects */}
-        <div className="battle-debuffs-player">
-          {battle.poisonTurns > 0 && (
-            <span className="battle-debuff poison">Poisoned ({battle.poisonTurns})</span>
-          )}
-          {battle.atkDebuff > 0 && (
-            <span className="battle-debuff debuff">ATK -{battle.atkDebuff}</span>
-          )}
-          {battle.defDebuff > 0 && (
-            <span className="battle-debuff debuff">DEF -{battle.defDebuff}</span>
-          )}
-          {battle.dodgeNextTurn && (
-            <span className="battle-debuff buff">Dodge Ready</span>
-          )}
-          {battle.dodgeCharges > 0 && (
-            <span className="battle-debuff buff">Dodge x{battle.dodgeCharges}</span>
-          )}
-          {battle.avatarTurns > 0 && (
-            <span className="battle-debuff buff">Avatar ({battle.avatarTurns})</span>
-          )}
-          {battle.defending && (
-            <span className="battle-debuff buff">Defending</span>
-          )}
-          {battle.playerStunTurns > 0 && (
-            <span className="battle-debuff stun">Stunned ({battle.playerStunTurns})</span>
-          )}
-          {battle.playerConfusionTurns > 0 && (
-            <span className="battle-debuff confusion">Confused ({battle.playerConfusionTurns})</span>
-          )}
-          {battle.fortitudeUsed && (
-            <span className="battle-debuff used">Grit Used</span>
-          )}
-          {battle.parrying && (
-            <span className="battle-debuff buff">Parrying</span>
-          )}
-          {battle.warShoutTurns > 0 && (
-            <span className="battle-debuff buff">War Shout ({battle.warShoutTurns})</span>
-          )}
-          {battle.elementalWardTurns > 0 && (
-            <span className="battle-debuff buff">Elem Ward ({battle.elementalWardTurns})</span>
-          )}
-          {battle.frenzyBonusTurns > 0 && (
-            <span className="battle-debuff buff">Frenzy ({battle.frenzyBonusTurns})</span>
-          )}
-          {battle.playerInvulnTurns > 0 && (
-            <span className="battle-debuff buff">Invulnerable ({battle.playerInvulnTurns})</span>
-          )}
-          {battle.guaranteedCrit && (
-            <span className="battle-debuff buff">Crit Ready!</span>
-          )}
-          {battle.lastStandUsed && (
-            <span className="battle-debuff used">Last Stand Used</span>
-          )}
-          {battle.limitBreakUsed && (
-            <span className="battle-debuff used">Limit Break Used</span>
-          )}
-        </div>
+        {/* Passives */}
+        {passives.length > 0 && (
+          <div className="battle-passives">
+            <span className="battle-passives-label">Passives:</span>
+            {passives.map(p => (
+              <span key={p.id} className="battle-passive-tag" title={p.desc}>
+                {p.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Passive effects display */}
-      {passives.length > 0 && (
-        <div className="battle-passives">
-          <span className="battle-passives-label">Passives:</span>
-          {passives.map(p => (
-            <span key={p.id} className="battle-passive-tag" title={p.desc}>
-              {p.name}
-            </span>
-          ))}
-        </div>
-      )}
-
+      {/* === BATTLE LOG === */}
       <div className="battle-log" ref={logRef}>
         {battleLog.map((entry, i) => (
           <div key={i} className={`log-${entry.type}`}>{entry.text}</div>
         ))}
       </div>
 
-      {/* Skill submenu */}
+      {/* === ACTION BUTTONS === */}
       {showInspect ? (
         <div className="battle-actions battle-inspect-panel">
           <div className="inspect-stats">
@@ -736,11 +747,6 @@ export default function BattleScreen({
           </button>
         </div>
       )}
-
-      {/* Mana display */}
-      <div className="battle-mana-display">
-        Mana: {player.mana}/{getBattleMaxMana(player)}
-      </div>
     </div>
   );
 }
