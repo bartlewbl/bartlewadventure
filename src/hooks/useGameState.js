@@ -68,6 +68,63 @@ function createInitialPlayer() {
   };
 }
 
+// ---- ITEM STACKING ----
+// Returns a unique key for stackable items, or null if not stackable.
+// Equipment (items with a slot) never stack. Consumables/materials stack by matching properties.
+export function getStackKey(item) {
+  if (item.slot) return null; // gear doesn't stack
+  if (item.type === 'potion') return `potion_${item.name}_${item.rarity}_${item.healAmount}`;
+  if (item.type === 'energy-drink') return `energy_${item.name}_${item.rarity}_${item.energyAmount}`;
+  if (item.type === 'loot-chest') return `chest_${item.chestId}_${item.rarity}`;
+  if (item.type === 'incubator-food') return `food_${item.name}_${item.rarity}_${item.fuelMinutes}`;
+  if (item.type === 'material') return `mat_${item.materialId}`;
+  if (item.type === 'seed') return `seed_${item.name}_${item.rarity}`;
+  if (item.type === 'crop') return `crop_${item.name}_${item.rarity}`;
+  if (item.type === 'pet-snack') return `petsnack_${item.name}_${item.rarity}`;
+  if (item.type === 'pet-energy') return `petenergy_${item.name}_${item.rarity}`;
+  return null;
+}
+
+// Try to add an item to inventory, stacking if possible.
+// Returns the new inventory array, or null if inventory is full and can't stack.
+function addToInventory(inventory, newItem, maxInventory) {
+  const stackKey = getStackKey(newItem);
+  if (stackKey) {
+    const existingIndex = inventory.findIndex(i => getStackKey(i) === stackKey);
+    if (existingIndex !== -1) {
+      const updated = [...inventory];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        stackCount: (updated[existingIndex].stackCount || 1) + (newItem.stackCount || 1),
+      };
+      return updated;
+    }
+  }
+  if (maxInventory != null && inventory.length >= maxInventory) return null; // full
+  return [...inventory, { ...newItem, stackCount: newItem.stackCount || 1 }];
+}
+
+// Remove one from a stack (by item id). If stack reaches 0, removes the entry entirely.
+function removeOneFromStack(inventory, itemId) {
+  const index = inventory.findIndex(i => i.id === itemId);
+  if (index === -1) return inventory;
+  const item = inventory[index];
+  const count = item.stackCount || 1;
+  if (count <= 1) {
+    return inventory.filter(i => i.id !== itemId);
+  }
+  const updated = [...inventory];
+  updated[index] = { ...item, stackCount: count - 1 };
+  return updated;
+}
+
+// Check if an item can be added (either by stacking or free slot).
+function canAddToInventory(inventory, newItem, maxInventory) {
+  const stackKey = getStackKey(newItem);
+  if (stackKey && inventory.some(i => getStackKey(i) === stackKey)) return true;
+  return inventory.length < maxInventory;
+}
+
 function createInitialState() {
   return {
     screen: 'username-entry',
@@ -861,20 +918,25 @@ function gameReducer(state, action) {
         : ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'energy-drink'];
 
       // Add scavenged material to inventory
-      if (scavengedMaterial && state.player.inventory.length < state.player.maxInventory) {
-        newPlayer = { ...newPlayer, inventory: [...(newPlayer === state.player ? state.player.inventory : newPlayer.inventory), scavengedMaterial] };
-        newText = text + `\n\nYou salvage ${scavengedMaterial.name} from the wreckage.`;
-        newFoundItem = scavengedMaterial;
+      if (scavengedMaterial) {
+        const scavInv = addToInventory(newPlayer === state.player ? state.player.inventory : newPlayer.inventory, scavengedMaterial, state.player.maxInventory);
+        if (scavInv) {
+          newPlayer = { ...newPlayer, inventory: scavInv };
+          newText = text + `\n\nYou salvage ${scavengedMaterial.name} from the wreckage.`;
+          newFoundItem = scavengedMaterial;
+        }
       }
 
       // Seed drop chance (~4%, location-specific)
       const seedDrop = scavengeRegionId ? rollSeedDrop(scavengeRegionId, loc.id, loc.name) : null;
-      if (seedDrop && (newPlayer === state.player ? state.player : newPlayer).inventory.length < (newPlayer === state.player ? state.player : newPlayer).maxInventory) {
-        const currentInv = newPlayer === state.player ? state.player.inventory : newPlayer.inventory;
-        newPlayer = { ...newPlayer, inventory: [...currentInv, seedDrop] };
-        const seedMsg = `\n\nYou spot a ${seedDrop.name} nestled in the rubble.`;
-        newText = (newText !== text ? newText : text) + seedMsg;
-        if (!newFoundItem) newFoundItem = seedDrop;
+      if (seedDrop) {
+        const seedInvResult = addToInventory(newPlayer === state.player ? state.player.inventory : newPlayer.inventory, seedDrop, state.player.maxInventory);
+        if (seedInvResult) {
+          newPlayer = { ...newPlayer, inventory: seedInvResult };
+          const seedMsg = `\n\nYou spot a ${seedDrop.name} nestled in the rubble.`;
+          newText = (newText !== text ? newText : text) + seedMsg;
+          if (!newFoundItem) newFoundItem = seedDrop;
+        }
       }
 
       if (Math.random() < lootChance) {
@@ -899,9 +961,12 @@ function gameReducer(state, action) {
               newDiscovered = { ...newDiscovered, [foundItem.name]: [...existing, foundItem.foundLocation] };
             }
           }
-          newPlayer = { ...newPlayer, inventory: [...newPlayer.inventory, foundItem] };
-          newText = (scavengedMaterial ? newText : text) + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
-          newFoundItem = foundItem;
+          const lootInv = addToInventory(newPlayer.inventory, foundItem, newPlayer.maxInventory);
+          if (lootInv) {
+            newPlayer = { ...newPlayer, inventory: lootInv };
+            newText = (scavengedMaterial ? newText : text) + `\n\nYou scavenge ${foundItem.name} from a busted crate.`;
+            newFoundItem = foundItem;
+          }
         } else {
           newText = (scavengedMaterial ? newText : text) + '\n\nYou find loot but your pack is full.';
         }
@@ -1007,11 +1072,12 @@ function gameReducer(state, action) {
           break;
         }
         case 'item': {
-          if (p.inventory.length < p.maxInventory) {
-            const lootTypes = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield'];
-            const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
-            const foundItem = generateItem(dropType, lvl);
-            p = { ...p, inventory: [...p.inventory, foundItem] };
+          const lootTypes = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield'];
+          const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+          const foundItem = generateItem(dropType, lvl);
+          const itemInv = addToInventory(p.inventory, foundItem, p.maxInventory);
+          if (itemInv) {
+            p = { ...p, inventory: itemInv };
             resultText += ` (Found: ${foundItem.name})`;
             resultType = 'good';
           } else {
@@ -1021,11 +1087,12 @@ function gameReducer(state, action) {
           break;
         }
         case 'item_rare': {
-          if (p.inventory.length < p.maxInventory) {
-            const lootTypes = ['ring', 'boots', 'helmet', 'armor', 'sword', 'shield'];
-            const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
-            const foundItem = generateItem(dropType, lvl + 3);
-            p = { ...p, inventory: [...p.inventory, foundItem] };
+          const lootTypes = ['ring', 'boots', 'helmet', 'armor', 'sword', 'shield'];
+          const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+          const foundItem = generateItem(dropType, lvl + 3);
+          const rareInv = addToInventory(p.inventory, foundItem, p.maxInventory);
+          if (rareInv) {
+            p = { ...p, inventory: rareInv };
             resultText += ` (Found: ${foundItem.name})`;
             resultType = 'great';
           } else {
@@ -1035,11 +1102,12 @@ function gameReducer(state, action) {
           break;
         }
         case 'item_great': {
-          if (p.inventory.length < p.maxInventory) {
-            const lootTypes = ['ring', 'sword', 'armor', 'shield'];
-            const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
-            const foundItem = generateItem(dropType, lvl + 6);
-            p = { ...p, inventory: [...p.inventory, foundItem] };
+          const lootTypes = ['ring', 'sword', 'armor', 'shield'];
+          const dropType = lootTypes[Math.floor(Math.random() * lootTypes.length)];
+          const foundItem = generateItem(dropType, lvl + 6);
+          const greatInv = addToInventory(p.inventory, foundItem, p.maxInventory);
+          if (greatInv) {
+            p = { ...p, inventory: greatInv };
             resultText += ` (Found: ${foundItem.name})`;
             resultType = 'great';
           } else {
@@ -1051,14 +1119,17 @@ function gameReducer(state, action) {
         case 'energy_drinks': {
           const count = outcome.amount || Math.floor(Math.random() * 7) + 1;
           let awarded = 0;
-          const inv = [...p.inventory];
+          let currentInv = [...p.inventory];
           for (let i = 0; i < count; i++) {
-            if (inv.length >= p.maxInventory) break;
             const drink = generateItem('energy-drink', lvl);
-            if (drink) { inv.push(drink); awarded++; }
+            if (!drink) continue;
+            const drinkInv = addToInventory(currentInv, drink, p.maxInventory);
+            if (!drinkInv) break;
+            currentInv = drinkInv;
+            awarded++;
           }
           if (awarded > 0) {
-            p = { ...p, inventory: inv };
+            p = { ...p, inventory: currentInv };
             resultText += ` (Got ${awarded} Energy Drink${awarded > 1 ? 's' : ''}!)`;
             resultType = 'great';
           } else {
@@ -1197,11 +1268,12 @@ function gameReducer(state, action) {
       }
       p.gold += questDef.reward.gold;
       // Generate reward item if applicable
-      if (questDef.reward.item && p.inventory.length < p.maxInventory) {
+      if (questDef.reward.item) {
         const loc = state.currentLocation;
         const lvl = Math.max(loc?.levelReq || 1, p.level);
         const rewardItem = generateItem(questDef.reward.item, lvl + 2);
-        p = { ...p, inventory: [...p.inventory, rewardItem] };
+        const questInv = addToInventory(p.inventory, rewardItem, p.maxInventory);
+        if (questInv) p = { ...p, inventory: questInv };
       }
       return {
         ...state,
@@ -1268,53 +1340,60 @@ function gameReducer(state, action) {
           msg = `+${restoreAmt} energy!`;
           break;
         }
-        case 'rare_item':
-          if (p.inventory.length < p.maxInventory) {
-            const types = ['ring', 'sword', 'armor', 'shield', 'boots', 'helmet'];
-            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 3);
-            p = { ...p, inventory: [...p.inventory, item] };
-            msg = `Received: ${item.name}`;
-          } else {
-            p.gold += deal.cost; // Refund
-            msg = 'Inventory full!';
-          }
-          break;
-        case 'legendary_item':
-          if (p.inventory.length < p.maxInventory) {
-            const types = ['sword', 'armor', 'shield', 'ring'];
-            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 6);
-            p = { ...p, inventory: [...p.inventory, item] };
+        case 'rare_item': {
+          const types = ['ring', 'sword', 'armor', 'shield', 'boots', 'helmet'];
+          const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 3);
+          const rareInv = addToInventory(p.inventory, item, p.maxInventory);
+          if (rareInv) {
+            p = { ...p, inventory: rareInv };
             msg = `Received: ${item.name}`;
           } else {
             p.gold += deal.cost;
             msg = 'Inventory full!';
           }
           break;
-        case 'high_level_item':
-          if (p.inventory.length < p.maxInventory) {
-            const types = ['sword', 'armor', 'shield', 'helmet', 'boots', 'ring', 'amulet'];
-            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 4);
-            p = { ...p, inventory: [...p.inventory, item] };
+        }
+        case 'legendary_item': {
+          const types = ['sword', 'armor', 'shield', 'ring'];
+          const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 6);
+          const legInv = addToInventory(p.inventory, item, p.maxInventory);
+          if (legInv) {
+            p = { ...p, inventory: legInv };
             msg = `Received: ${item.name}`;
           } else {
             p.gold += deal.cost;
             msg = 'Inventory full!';
           }
           break;
+        }
+        case 'high_level_item': {
+          const types = ['sword', 'armor', 'shield', 'helmet', 'boots', 'ring', 'amulet'];
+          const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 4);
+          const hlInv = addToInventory(p.inventory, item, p.maxInventory);
+          if (hlInv) {
+            p = { ...p, inventory: hlInv };
+            msg = `Received: ${item.name}`;
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        }
         case 'mystery_box': {
-          if (p.inventory.length < p.maxInventory) {
-            if (Math.random() < 0.5) {
-              const item = generateItem('sword', lvl + 5);
-              p = { ...p, inventory: [...p.inventory, item] };
+          if (Math.random() < 0.5) {
+            const item = generateItem('sword', lvl + 5);
+            const mystInv = addToInventory(p.inventory, item, p.maxInventory);
+            if (mystInv) {
+              p = { ...p, inventory: mystInv };
               msg = `Amazing! Got: ${item.name}`;
             } else {
-              const dmg = Math.floor(p.maxHp * 0.2);
-              p.hp = Math.max(1, p.hp - dmg);
-              msg = `The box exploded! -${dmg} HP`;
+              p.gold += deal.cost;
+              msg = 'Inventory full!';
             }
           } else {
-            p.gold += deal.cost;
-            msg = 'Inventory full!';
+            const dmg = Math.floor(p.maxHp * 0.2);
+            p.hp = Math.max(1, p.hp - dmg);
+            msg = `The box exploded! -${dmg} HP`;
           }
           break;
         }
@@ -1356,11 +1435,12 @@ function gameReducer(state, action) {
           break;
         }
         case 'cursed_item': {
-          if (p.inventory.length < p.maxInventory) {
-            const types = ['sword', 'ring', 'armor'];
-            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 8);
-            item.name = 'Cursed ' + item.name;
-            p = { ...p, inventory: [...p.inventory, item] };
+          const types = ['sword', 'ring', 'armor'];
+          const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 8);
+          item.name = 'Cursed ' + item.name;
+          const cursedInv = addToInventory(p.inventory, item, p.maxInventory);
+          if (cursedInv) {
+            p = { ...p, inventory: cursedInv };
             const dmg = Math.floor(p.maxHp * 0.15);
             p.hp = Math.max(1, p.hp - dmg);
             msg = `Got ${item.name}! But it cursed you for ${dmg} HP!`;
@@ -1381,34 +1461,36 @@ function gameReducer(state, action) {
           break;
         }
         case 'egg': {
-          if (p.inventory.length < p.maxInventory) {
-            const eggItem = createEggItem(deal.eggId);
-            if (eggItem) {
-              p = { ...p, inventory: [...p.inventory, eggItem] };
+          const eggItem = createEggItem(deal.eggId);
+          if (eggItem) {
+            const eggInv = addToInventory(p.inventory, eggItem, p.maxInventory);
+            if (eggInv) {
+              p = { ...p, inventory: eggInv };
               msg = `Received: ${eggItem.name}!`;
             } else {
               p.gold += deal.cost;
-              msg = 'The egg crumbled...';
+              msg = 'Inventory full!';
             }
           } else {
             p.gold += deal.cost;
-            msg = 'Inventory full!';
+            msg = 'The egg crumbled...';
           }
           break;
         }
         case 'material': {
-          if (p.inventory.length < p.maxInventory) {
-            const matItem = createMaterialItem(deal.materialId, deal.quantity || 1);
-            if (matItem) {
-              p = { ...p, inventory: [...p.inventory, matItem] };
+          const matItem = createMaterialItem(deal.materialId, deal.quantity || 1);
+          if (matItem) {
+            const matInv = addToInventory(p.inventory, matItem, p.maxInventory);
+            if (matInv) {
+              p = { ...p, inventory: matInv };
               msg = `Received: ${matItem.name} x${deal.quantity || 1}!`;
             } else {
               p.gold += deal.cost;
-              msg = 'The material disintegrated...';
+              msg = 'Inventory full!';
             }
           } else {
             p.gold += deal.cost;
-            msg = 'Inventory full!';
+            msg = 'The material disintegrated...';
           }
           break;
         }
@@ -2047,17 +2129,15 @@ function gameReducer(state, action) {
     }
 
     case 'BATTLE_USE_POTION': {
-      const potionIdx = state.player.inventory.findIndex(i => i.type === 'potion');
-      if (potionIdx === -1) return { ...state, message: 'No potions!' };
-      const potion = state.player.inventory[potionIdx];
+      const potion = state.player.inventory.find(i => i.type === 'potion');
+      if (!potion) return { ...state, message: 'No potions!' };
       const bMaxHp = getBattleMaxHp(state.player);
       let potionHeal = potion.healAmount;
       if (playerHasSkill(state.player, 'thf_t5a')) potionHeal = Math.floor(potionHeal * 1.3);
       if (playerHasSkill(state.player, 'nec_t10a')) potionHeal = potionHeal * 2; // Lich Form
       const healed = Math.min(potionHeal, bMaxHp - state.player.hp);
       if (healed === 0) return { ...state, message: 'HP is already full!' };
-      const newInv = state.player.inventory.filter((_, i) => i !== potionIdx);
-      const p = { ...state.player, hp: state.player.hp + healed, inventory: newInv };
+      const p = { ...state.player, hp: state.player.hp + healed, inventory: removeOneFromStack(state.player.inventory, potion.id) };
       const b = { ...state.battle, defending: false, showSkillMenu: false, showInspect: false };
       const log = [...state.battleLog, { text: `Used ${potion.name}, healed ${healed} HP!`, type: 'heal' }];
       let newStats = addStat(state.stats, 'potionsUsed');
@@ -2925,7 +3005,7 @@ function gameReducer(state, action) {
         const p = {
           ...state.player,
           hp: state.player.hp + healed,
-          inventory: state.player.inventory.filter(i => i.id !== item.id),
+          inventory: removeOneFromStack(state.player.inventory, item.id),
         };
         let newStats = addStat(state.stats, 'potionsUsed');
         newStats = addStat(newStats, 'totalHealing', healed);
@@ -2939,7 +3019,7 @@ function gameReducer(state, action) {
         const restored = Math.min(item.energyAmount, ENERGY_MAX - currentEnergy);
         const p = {
           ...state.player,
-          inventory: state.player.inventory.filter(i => i.id !== item.id),
+          inventory: removeOneFromStack(state.player.inventory, item.id),
         };
         return {
           ...state,
@@ -2956,7 +3036,7 @@ function gameReducer(state, action) {
         const currentFood = getIncubatorFood(state.base);
         const addMinutes = item.fuelMinutes || 0;
         const newFood = Math.min(INCUBATOR_MAX_FOOD, currentFood + addMinutes);
-        const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+        const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
         return {
           ...state,
           player: p,
@@ -2978,7 +3058,7 @@ function gameReducer(state, action) {
         const qty = item.stackQuantity || 1;
         const mats = { ...state.base.materials };
         mats[matId] = (mats[matId] || 0) + qty;
-        const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+        const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
         return {
           ...state,
           player: p,
@@ -2999,18 +3079,19 @@ function gameReducer(state, action) {
       const result = openLootChest(pending.chestId, state.player.level, state.player.characterClass);
       let p = { ...state.player, inventory: [...state.player.inventory] };
 
-      // Remove the chest from inventory
-      p.inventory = p.inventory.filter(i => i.id !== pending.itemId);
+      // Remove one chest from inventory (handles stacked chests)
+      p.inventory = removeOneFromStack(p.inventory, pending.itemId);
 
       // Add gold
       const scaledGold = scaleRewardByLevel(result.gold, p.level);
       p.gold += scaledGold;
 
-      // Add items (up to inventory cap)
+      // Add items (up to inventory cap, stacking where possible)
       const addedItems = [];
       for (const item of result.items) {
-        if (p.inventory.length < p.maxInventory) {
-          p.inventory.push(item);
+        const chestInv = addToInventory(p.inventory, item, p.maxInventory);
+        if (chestInv) {
+          p.inventory = chestInv;
           addedItems.push(item);
         }
       }
@@ -3051,7 +3132,7 @@ function gameReducer(state, action) {
       const p = {
         ...state.player,
         gold: state.player.gold + adjustedSellPrice,
-        inventory: state.player.inventory.filter(i => i.id !== item.id),
+        inventory: removeOneFromStack(state.player.inventory, item.id),
       };
       let newStats = addStat(state.stats, 'itemsSold');
       newStats = addStat(newStats, 'goldEarned', item.sellPrice);
@@ -3083,7 +3164,11 @@ function gameReducer(state, action) {
       const weatherDiscount = getCurrentEffects().shopDiscount || 0;
       const adjustedBuyPrice = Math.max(1, Math.floor(item.buyPrice * (1 - charismaBuyBonus - weatherDiscount)));
       if (state.player.gold < adjustedBuyPrice) return { ...state, message: 'Not enough gold!' };
-      if (state.player.inventory.length >= state.player.maxInventory) return { ...state, message: 'Inventory full!' };
+      const newItem = { ...item, id: 'item_' + Date.now() + '_' + Math.random() };
+      delete newItem.buyPrice;
+      delete newItem.stock;
+      delete newItem.shopStockKey;
+      if (!canAddToInventory(state.player.inventory, newItem, state.player.maxInventory)) return { ...state, message: 'Inventory full!' };
       // Reset shop purchases if the shop seed has changed (stock refresh)
       const currentSeed = action.shopSeed;
       let purchases = state.shopPurchases || {};
@@ -3096,14 +3181,11 @@ function gameReducer(state, action) {
         const bought = purchases[stockKey] || 0;
         if (bought >= item.stock) return { ...state, message: 'Sold out!' };
       }
-      const newItem = { ...item, id: 'item_' + Date.now() + '_' + Math.random() };
-      delete newItem.buyPrice;
-      delete newItem.stock;
-      delete newItem.shopStockKey;
+      const newInv = addToInventory(state.player.inventory, newItem, state.player.maxInventory);
       const p = {
         ...state.player,
         gold: state.player.gold - adjustedBuyPrice,
-        inventory: [...state.player.inventory, newItem],
+        inventory: newInv,
       };
       const newStats = addStat(state.stats, 'goldSpent', item.buyPrice);
       // Track purchase for stock
@@ -3124,9 +3206,13 @@ function gameReducer(state, action) {
         const givenIds = new Set(givenItems.map(i => i.id));
         p.inventory = p.inventory.filter(i => !givenIds.has(i.id));
       }
-      // Add received items
+      // Add received items (with stacking)
       if (receivedItems && receivedItems.length > 0) {
-        p.inventory = p.inventory.concat(receivedItems);
+        for (const ri of receivedItems) {
+          const tradeInv = addToInventory(p.inventory, ri, p.maxInventory);
+          if (tradeInv) p.inventory = tradeInv;
+          else p.inventory = [...p.inventory, ri]; // fallback: add anyway for trades
+        }
       }
       // Adjust gold
       p.gold = (p.gold || 0) + (receivedGold || 0) - (givenGold || 0);
@@ -3138,7 +3224,10 @@ function gameReducer(state, action) {
       let p = { ...state.player, inventory: [...state.player.inventory] };
       if (tx.type === 'buy') {
         // Add purchased item, update gold to server-reported value
-        if (tx.item) p.inventory = [...p.inventory, tx.item];
+        if (tx.item) {
+          const txInv = addToInventory(p.inventory, tx.item, p.maxInventory);
+          p.inventory = txInv || [...p.inventory, tx.item];
+        }
         if (tx.newGold !== undefined) p.gold = tx.newGold;
       } else if (tx.type === 'list') {
         // Remove listed item, update gold (listing fee deducted)
@@ -3146,7 +3235,10 @@ function gameReducer(state, action) {
         if (tx.newGold !== undefined) p.gold = tx.newGold;
       } else if (tx.type === 'cancel') {
         // Return cancelled item to inventory
-        if (tx.returnedItem) p.inventory = [...p.inventory, tx.returnedItem];
+        if (tx.returnedItem) {
+          const retInv = addToInventory(p.inventory, tx.returnedItem, p.maxInventory);
+          p.inventory = retInv || [...p.inventory, tx.returnedItem];
+        }
       }
       return { ...state, player: p };
     }
@@ -3170,20 +3262,22 @@ function gameReducer(state, action) {
             break;
           case 'item':
           case 'potion': {
-            if (p.inventory.length < p.maxInventory) {
-              const generated = generateRewardItem(r, p.level);
-              if (generated) {
-                p.inventory.push(generated);
+            const generated = generateRewardItem(r, p.level);
+            if (generated) {
+              const rewInv = addToInventory(p.inventory, generated, p.maxInventory);
+              if (rewInv) {
+                p.inventory = rewInv;
                 itemNames.push(generated.name);
               }
             }
             break;
           }
           case 'chest': {
-            if (p.inventory.length < p.maxInventory) {
-              const chestItem = createChestItem(r.chestId);
-              if (chestItem) {
-                p.inventory.push(chestItem);
+            const chestItem = createChestItem(r.chestId);
+            if (chestItem) {
+              const chInv = addToInventory(p.inventory, chestItem, p.maxInventory);
+              if (chInv) {
+                p.inventory = chInv;
                 itemNames.push(chestItem.name);
               }
             }
@@ -3276,11 +3370,14 @@ function gameReducer(state, action) {
 
       // Award chest if the task reward includes one
       let chestMsg = '';
-      if (taskDef.reward.chestId && p.inventory.length < p.maxInventory) {
+      if (taskDef.reward.chestId) {
         const chestItem = createChestItem(taskDef.reward.chestId);
         if (chestItem) {
-          p.inventory.push(chestItem);
-          chestMsg = ` + ${chestItem.name}`;
+          const chInv = addToInventory(p.inventory, chestItem, p.maxInventory);
+          if (chInv) {
+            p.inventory = chInv;
+            chestMsg = ` + ${chestItem.name}`;
+          }
         }
       }
 
@@ -3289,12 +3386,12 @@ function gameReducer(state, action) {
       if (taskDef.reward.energyDrinks && taskDef.reward.energyDrinks > 0) {
         let awarded = 0;
         for (let i = 0; i < taskDef.reward.energyDrinks; i++) {
-          if (p.inventory.length >= p.maxInventory) break;
           const drink = generateItem('energy-drink', p.level);
-          if (drink) {
-            p.inventory.push(drink);
-            awarded++;
-          }
+          if (!drink) continue;
+          const drinkInv = addToInventory(p.inventory, drink, p.maxInventory);
+          if (!drinkInv) break;
+          p.inventory = drinkInv;
+          awarded++;
         }
         if (awarded > 0) {
           energyMsg = ` + ${awarded} Energy Drink${awarded > 1 ? 's' : ''}`;
@@ -3542,7 +3639,7 @@ function gameReducer(state, action) {
       const fuelData = FUEL_ITEMS[item.materialId];
       if (!fuelData) return { ...state, message: 'Not a valid fuel!' };
 
-      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
       const now = Date.now();
       let currentFuel = state.base.fuel || 0;
       // Recalculate elapsed fuel
@@ -3592,7 +3689,7 @@ function gameReducer(state, action) {
       const qty = item.stackQuantity || 1;
       const mats = { ...state.base.materials };
       mats[matId] = (mats[matId] || 0) + qty;
-      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
       return {
         ...state,
         player: p,
@@ -3743,11 +3840,14 @@ function gameReducer(state, action) {
         const recipe = BREWERY_RECIPES.find(r => r.id === queue.recipeId);
         if (recipe) {
           const item = generateItem(recipe.result.type, Math.max(1, state.player.level));
-          if (item && p.inventory.length < p.maxInventory) {
-            p.inventory.push(item);
-            msg = `Brewed ${item.name}!`;
-          } else {
-            return { ...state, message: 'Inventory full!' };
+          if (item) {
+            const brewInv = addToInventory(p.inventory, item, p.maxInventory);
+            if (brewInv) {
+              p.inventory = brewInv;
+              msg = `Brewed ${item.name}!`;
+            } else {
+              return { ...state, message: 'Inventory full!' };
+            }
           }
         }
       } else if (queue.building === 'smelter') {
@@ -3768,11 +3868,14 @@ function gameReducer(state, action) {
         const recipe = WORKSHOP_RECIPES.find(r => r.id === queue.recipeId);
         if (recipe?.result?.template) {
           const item = generateCraftedItem(recipe.result.template, state.player.level);
-          if (item && p.inventory.length < p.maxInventory) {
-            p.inventory.push(item);
-            msg = `Crafted ${item.name}!`;
-          } else {
-            return { ...state, message: 'Inventory full!' };
+          if (item) {
+            const craftInv = addToInventory(p.inventory, item, p.maxInventory);
+            if (craftInv) {
+              p.inventory = craftInv;
+              msg = `Crafted ${item.name}!`;
+            } else {
+              return { ...state, message: 'Inventory full!' };
+            }
           }
         }
       }
@@ -3906,7 +4009,7 @@ function gameReducer(state, action) {
       if (seedPlots[seedPlotIndex] !== null) return { ...state, message: 'Plot already planted!' };
 
       seedPlots[seedPlotIndex] = { seedId: seedItem.seedId, plantedAt: Date.now(), isSeed: true };
-      const seedInv = state.player.inventory.filter(i => i.id !== seedItemId);
+      const seedInv = removeOneFromStack(state.player.inventory, seedItemId);
       return {
         ...state,
         player: { ...state.player, inventory: seedInv },
@@ -3934,13 +4037,14 @@ function gameReducer(state, action) {
         const cropItem = createCropItem(plot.seedId, quality);
         if (!cropItem) return state;
 
-        if (state.player.inventory.length >= state.player.maxInventory) {
+        const cropInv = addToInventory(state.player.inventory, cropItem, state.player.maxInventory);
+        if (!cropInv) {
           return { ...state, base: { ...state.base, farmPlots: plots }, message: `Harvested ${cropItem.name} but your inventory is full! The crop was lost.` };
         }
 
         return {
           ...state,
-          player: { ...state.player, inventory: [...state.player.inventory, cropItem] },
+          player: { ...state.player, inventory: cropInv },
           base: { ...state.base, farmPlots: plots },
           message: `Harvested ${quality.name} ${seedDef.cropName}! (Sell value: ${cropItem.sellPrice}g)`,
         };
@@ -4050,7 +4154,7 @@ function gameReducer(state, action) {
 
       return {
         ...state,
-        player: { ...state.player, inventory: state.player.inventory.filter(i => i.id !== action.itemId) },
+        player: { ...state.player, inventory: removeOneFromStack(state.player.inventory, action.itemId) },
         base: { ...state.base, incubatorSlots: slots, incubatorFood: currentFood, incubatorFoodLastUpdate: now },
         message: `Placed ${eggItem.name} in the incubator!`,
       };
@@ -4068,7 +4172,7 @@ function gameReducer(state, action) {
 
       return {
         ...state,
-        player: { ...state.player, inventory: state.player.inventory.filter(i => i.id !== action.itemId) },
+        player: { ...state.player, inventory: removeOneFromStack(state.player.inventory, action.itemId) },
         base: { ...state.base, incubatorFood: newFood, incubatorFoodLastUpdate: now },
         message: `Fed incubator with ${foodItem.name}! +${addMinutes} min (${Math.floor(newFood)} / ${INCUBATOR_MAX_FOOD} min)`,
       };
@@ -4203,9 +4307,12 @@ function gameReducer(state, action) {
           const qty = item.stackQuantity || 1;
           mats[matId] = (mats[matId] || 0) + qty;
           addedNames.push(`${qty}x ${item.name}`);
-        } else if (p.inventory.length < p.maxInventory) {
-          p.inventory.push(item);
-          addedNames.push(item.name);
+        } else {
+          const campInv = addToInventory(p.inventory, item, p.maxInventory);
+          if (campInv) {
+            p.inventory = campInv;
+            addedNames.push(item.name);
+          }
         }
       }
 
@@ -4409,16 +4516,17 @@ function gameReducer(state, action) {
       const item = action.item;
       if (!item || !item.buyPrice) return state;
       if (state.player.gold < item.buyPrice) return { ...state, message: 'Not enough gold!' };
-      if (state.player.inventory.length >= state.player.maxInventory) return { ...state, message: 'Inventory full!' };
 
       const newItem = { ...item, id: 'petitem_' + Date.now() + '_' + Math.random() };
       delete newItem.buyPrice;
+      const petItemInv = addToInventory(state.player.inventory, newItem, state.player.maxInventory);
+      if (!petItemInv) return { ...state, message: 'Inventory full!' };
       return {
         ...state,
         player: {
           ...state.player,
           gold: state.player.gold - item.buyPrice,
-          inventory: [...state.player.inventory, newItem],
+          inventory: petItemInv,
         },
         message: `Purchased ${item.name}!`,
       };
@@ -4464,7 +4572,7 @@ function gameReducer(state, action) {
       pet.bond = Math.min(PET_MAX_BOND, pet.bond + (item.bondRestore || 10));
       pets.ownedPets[idx] = pet;
 
-      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
       // Progress feed_snack quests
       const feedPets = progressSinglePetQuest(pets, petInstanceId, 'feed_snack', 1);
       return { ...state, player: p, pets: feedPets, message: `Fed ${pet.name}! Bond +${item.bondRestore}` };
@@ -4482,7 +4590,7 @@ function gameReducer(state, action) {
       pet.energy = Math.min(PET_MAX_ENERGY, pet.energy + (item.energyRestore || 15));
       pets.ownedPets[idx] = pet;
 
-      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
       // Progress give_potion quests
       const energyPets = progressSinglePetQuest(pets, petInstanceId, 'give_potion', 1);
       return { ...state, player: p, pets: energyPets, message: `${pet.name} energy +${item.energyRestore}!` };
@@ -4637,7 +4745,7 @@ function gameReducer(state, action) {
       if (!hasQuest) return { ...state, message: 'No active item quest for this pet!' };
 
       // Remove item from inventory
-      const p = { ...state.player, inventory: state.player.inventory.filter(i => i.id !== item.id) };
+      const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
 
       // Progress quest
       const updatedQuests = (pet.activeQuests || []).map(q => {

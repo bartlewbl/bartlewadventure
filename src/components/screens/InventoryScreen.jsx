@@ -118,6 +118,10 @@ export default function InventoryScreen({
     return player.inventory.filter(item => getItemCategory(item) === category);
   }, [player.inventory, category]);
 
+  const totalItemCount = useMemo(() =>
+    player.inventory.reduce((sum, item) => sum + (item.stackCount || 1), 0),
+    [player.inventory]);
+
   const dragIndex = dragInfo?.source === 'inventory' ? dragInfo.index : null;
   const getDraggedItem = () => {
     if (dragIndex == null) return null;
@@ -264,7 +268,7 @@ export default function InventoryScreen({
           })}
         </div>
 
-        <div className="section-title">Items ({player.inventory.length}/{player.maxInventory})</div>
+        <div className="section-title">Items ({player.inventory.length}/{player.maxInventory} slots{totalItemCount !== player.inventory.length ? `, ${totalItemCount} total` : ''})</div>
         <div className="inv-categories">
           {INV_CATEGORIES.map(cat => (
             <button
@@ -331,6 +335,9 @@ export default function InventoryScreen({
                 >
                   <span className={`inv-item-name ${item.rarityClass}`}>
                     {item.name} {itemMetaTag(item)}
+                    {(item.stackCount || 1) > 1 && (
+                      <span className="inv-stack-badge">x{item.stackCount}</span>
+                    )}
                   </span>
                   <span className="inv-item-stats">
                     {itemStatLine(item)}
