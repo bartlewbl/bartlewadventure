@@ -3386,16 +3386,27 @@ export const QUEST_VILLAGES = {
         { id: 'ph-q2', name: 'Gutter Cleanup', description: 'Defeat 15 monsters in Neon Mile.', stat: 'monstersKilled', target: 15, reward: { gold: 200, item: 'sword' } },
         { id: 'ph-q3', name: 'Data Recovery', description: 'Explore 10 times.', stat: 'explorationsCompleted', target: 10, reward: { gold: 300, item: 'helmet' } },
       ],
-      trader: {
-        name: 'Byte the Fixer',
-        greeting: 'A hacker with neon-green circuit tattoos glances up from a jury-rigged terminal. "Need parts? I got parts."',
-        deals: [
-          { id: 'ph-t1', description: 'Copper Wire (x2)', cost: 40, type: 'material', materialId: 'copper-wire', quantity: 2 },
-          { id: 'ph-t2', description: 'Glass Vial (x2)', cost: 30, type: 'material', materialId: 'glass-vial', quantity: 2 },
-          { id: 'ph-t3', description: 'Restore 20 energy', cost: 45, type: 'energy_restore', amount: 20 },
-          { id: 'ph-t4', description: 'Hacked gear piece', cost: 120, type: 'rare_item' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Byte the Fixer',
+          greeting: 'A hacker with neon-green circuit tattoos glances up from a jury-rigged terminal. "Need parts? I got parts."',
+          deals: [
+            { id: 'ph-t1', description: 'Copper Wire (x2)', cost: 40, type: 'material', materialId: 'copper-wire', quantity: 2 },
+            { id: 'ph-t2', description: 'Glass Vial (x2)', cost: 30, type: 'material', materialId: 'glass-vial', quantity: 2 },
+            { id: 'ph-t3', description: 'Restore 20 energy', cost: 45, type: 'energy_restore', amount: 20 },
+            { id: 'ph-t4', description: 'Hacked gear piece', cost: 120, type: 'rare_item' },
+          ],
+        },
+        {
+          name: 'Glitch the Data Broker',
+          greeting: 'A kid in an oversized hoodie peers from behind stacks of humming hard drives. "I deal in information... and the occasional upgrade."',
+          deals: [
+            { id: 'ph-t5', description: 'Iron Ore (x2)', cost: 50, type: 'material', materialId: 'iron-ore', quantity: 2 },
+            { id: 'ph-t6', description: 'Full Mana restore', cost: 35, type: 'full_mana' },
+            { id: 'ph-t7', description: 'Weapon upgrade (+3 levels)', cost: 140, type: 'weapon_upgrade' },
+          ],
+        },
+      ],
     },
     {
       id: 'undervolt', name: 'Undervolt',
@@ -3404,16 +3415,27 @@ export const QUEST_VILLAGES = {
         { id: 'uv-q1', name: 'Blackout Patrol', description: 'Win 10 battles.', stat: 'battlesWon', target: 10, reward: { gold: 180, item: 'armor' } },
         { id: 'uv-q2', name: 'Voltage Collector', description: 'Earn 500 gold from any source.', stat: 'goldEarned', target: 500, reward: { gold: 350, item: 'amulet' } },
       ],
-      trader: {
-        name: 'Sparks the Cell Runner',
-        greeting: 'A wiry figure plugged into a wall of humming batteries grins. "Power cells, potions, you name it — all off the grid."',
-        deals: [
-          { id: 'uv-t1', description: 'Oil Canister (x1)', cost: 55, type: 'material', materialId: 'oil-canister', quantity: 1 },
-          { id: 'uv-t2', description: 'Full HP restoration', cost: 40, type: 'full_heal' },
-          { id: 'uv-t3', description: 'Scrap Wood (x3)', cost: 25, type: 'material', materialId: 'scrap-wood', quantity: 3 },
-          { id: 'uv-t4', description: 'Overclocked weapon', cost: 160, type: 'rare_item' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Sparks the Cell Runner',
+          greeting: 'A wiry figure plugged into a wall of humming batteries grins. "Power cells, potions, you name it — all off the grid."',
+          deals: [
+            { id: 'uv-t1', description: 'Oil Canister (x1)', cost: 55, type: 'material', materialId: 'oil-canister', quantity: 1 },
+            { id: 'uv-t2', description: 'Full HP restoration', cost: 40, type: 'full_heal' },
+            { id: 'uv-t3', description: 'Scrap Wood (x3)', cost: 25, type: 'material', materialId: 'scrap-wood', quantity: 3 },
+            { id: 'uv-t4', description: 'Overclocked weapon', cost: 160, type: 'rare_item' },
+          ],
+        },
+        {
+          name: 'Amp the Juice Dealer',
+          greeting: 'A twitchy figure surrounded by sparking cables beckons. "Need a recharge? I got the good stuff — pure voltage."',
+          deals: [
+            { id: 'uv-t5', description: 'Restore 30 energy', cost: 60, type: 'energy_restore', amount: 30 },
+            { id: 'uv-t6', description: 'Mysterious Egg (Common)', cost: 130, type: 'egg', eggId: 'common-egg' },
+            { id: 'uv-t7', description: 'Charcoal (x3)', cost: 35, type: 'material', materialId: 'charcoal', quantity: 3 },
+          ],
+        },
+      ],
     },
   ],
   'frozen-wastes': [
@@ -3425,16 +3447,28 @@ export const QUEST_VILLAGES = {
         { id: 'ff-q2', name: 'Icebreaker', description: 'Deal 2000 total damage.', stat: 'damageDealt', target: 2000, reward: { gold: 400, item: 'sword' } },
         { id: 'ff-q3', name: 'Avalanche Watch', description: 'Explore 15 times.', stat: 'explorationsCompleted', target: 15, reward: { gold: 500, item: 'shield' } },
       ],
-      trader: {
-        name: 'Helga the Hearthkeeper',
-        greeting: 'A broad-shouldered woman stirs a bubbling cauldron by the volcanic vent. "Warm yourself, and browse my wares."',
-        deals: [
-          { id: 'ff-t1', description: 'Herb Bundle (x2)', cost: 50, type: 'material', materialId: 'herb-bundle', quantity: 2 },
-          { id: 'ff-t2', description: 'Crystal Shard (x1)', cost: 120, type: 'material', materialId: 'crystal-shard', quantity: 1 },
-          { id: 'ff-t3', description: 'Full HP + Mana restore', cost: 70, type: 'full_heal_mana' },
-          { id: 'ff-t4', description: 'Frostforged gear piece', cost: 200, type: 'rare_item' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Helga the Hearthkeeper',
+          greeting: 'A broad-shouldered woman stirs a bubbling cauldron by the volcanic vent. "Warm yourself, and browse my wares."',
+          deals: [
+            { id: 'ff-t1', description: 'Herb Bundle (x2)', cost: 50, type: 'material', materialId: 'herb-bundle', quantity: 2 },
+            { id: 'ff-t2', description: 'Crystal Shard (x1)', cost: 120, type: 'material', materialId: 'crystal-shard', quantity: 1 },
+            { id: 'ff-t3', description: 'Full HP + Mana restore', cost: 70, type: 'full_heal_mana' },
+            { id: 'ff-t4', description: 'Frostforged gear piece', cost: 200, type: 'rare_item' },
+          ],
+        },
+        {
+          name: 'Sven the Fur Trader',
+          greeting: 'A burly man wrapped in layers of pelts slaps a frozen table. "Finest materials in the tundra! Warm and sturdy."',
+          deals: [
+            { id: 'ff-t5', description: 'Scrap Wood (x4)', cost: 30, type: 'material', materialId: 'scrap-wood', quantity: 4 },
+            { id: 'ff-t6', description: 'Stone Block (x2)', cost: 45, type: 'material', materialId: 'stone-block', quantity: 2 },
+            { id: 'ff-t7', description: 'Armor upgrade (+3 levels)', cost: 170, type: 'armor_upgrade' },
+            { id: 'ff-t8', description: 'Gleaming Egg (Uncommon)', cost: 380, type: 'egg', eggId: 'uncommon-egg' },
+          ],
+        },
+      ],
     },
   ],
   'scorched-badlands': [
@@ -3446,16 +3480,27 @@ export const QUEST_VILLAGES = {
         { id: 'oo-q2', name: 'Forge Materials', description: 'Loot 10 items.', stat: 'itemsLooted', target: 10, reward: { gold: 450, item: 'armor' } },
         { id: 'oo-q3', name: 'Mirage Runner', description: 'Explore 20 times.', stat: 'explorationsCompleted', target: 20, reward: { gold: 600, item: 'cape' } },
       ],
-      trader: {
-        name: 'Raziq the Sand Merchant',
-        greeting: 'A weathered trader in flowing desert robes spreads out a rug of goods. "The desert provides, if you know where to look."',
-        deals: [
-          { id: 'oo-t1', description: 'Iron Ore (x2)', cost: 55, type: 'material', materialId: 'iron-ore', quantity: 2 },
-          { id: 'oo-t2', description: 'Charcoal (x3)', cost: 40, type: 'material', materialId: 'charcoal', quantity: 3 },
-          { id: 'oo-t3', description: 'Weapon upgrade (+3 levels)', cost: 180, type: 'weapon_upgrade' },
-          { id: 'oo-t4', description: 'Stone Block (x3)', cost: 45, type: 'material', materialId: 'stone-block', quantity: 3 },
-        ],
-      },
+      traders: [
+        {
+          name: 'Raziq the Sand Merchant',
+          greeting: 'A weathered trader in flowing desert robes spreads out a rug of goods. "The desert provides, if you know where to look."',
+          deals: [
+            { id: 'oo-t1', description: 'Iron Ore (x2)', cost: 55, type: 'material', materialId: 'iron-ore', quantity: 2 },
+            { id: 'oo-t2', description: 'Charcoal (x3)', cost: 40, type: 'material', materialId: 'charcoal', quantity: 3 },
+            { id: 'oo-t3', description: 'Weapon upgrade (+3 levels)', cost: 180, type: 'weapon_upgrade' },
+            { id: 'oo-t4', description: 'Stone Block (x3)', cost: 45, type: 'material', materialId: 'stone-block', quantity: 3 },
+          ],
+        },
+        {
+          name: 'Mirra the Water Seller',
+          greeting: 'A woman guards a cart of glowing blue bottles. "Water is life out here. But I carry more than water..."',
+          deals: [
+            { id: 'oo-t5', description: 'Full HP restoration', cost: 45, type: 'full_heal' },
+            { id: 'oo-t6', description: 'Restore 25 energy', cost: 55, type: 'energy_restore', amount: 25 },
+            { id: 'oo-t7', description: 'High-level gear piece', cost: 140, type: 'high_level_item' },
+          ],
+        },
+      ],
     },
     {
       id: 'ember-sanctum', name: 'Ember Sanctum',
@@ -3464,16 +3509,27 @@ export const QUEST_VILLAGES = {
         { id: 'es-q1', name: 'Trial by Fire', description: 'Deal 5000 total damage.', stat: 'damageDealt', target: 5000, reward: { gold: 500, item: 'sword' } },
         { id: 'es-q2', name: 'Inner Peace', description: 'Use 10 potions.', stat: 'potionsUsed', target: 10, reward: { gold: 350, item: 'amulet' } },
       ],
-      trader: {
-        name: 'Brother Cinder',
-        greeting: 'A monk with smoldering eyes bows slightly. "The flames have tempered these offerings. Take what you need."',
-        deals: [
-          { id: 'es-t1', description: 'Coal Chunk (x2)', cost: 65, type: 'material', materialId: 'coal-chunk', quantity: 2 },
-          { id: 'es-t2', description: 'Full HP restoration', cost: 50, type: 'full_heal' },
-          { id: 'es-t3', description: 'Armor upgrade (+3 levels)', cost: 180, type: 'armor_upgrade' },
-          { id: 'es-t4', description: 'Glass Vial (x3)', cost: 35, type: 'material', materialId: 'glass-vial', quantity: 3 },
-        ],
-      },
+      traders: [
+        {
+          name: 'Brother Cinder',
+          greeting: 'A monk with smoldering eyes bows slightly. "The flames have tempered these offerings. Take what you need."',
+          deals: [
+            { id: 'es-t1', description: 'Coal Chunk (x2)', cost: 65, type: 'material', materialId: 'coal-chunk', quantity: 2 },
+            { id: 'es-t2', description: 'Full HP restoration', cost: 50, type: 'full_heal' },
+            { id: 'es-t3', description: 'Armor upgrade (+3 levels)', cost: 180, type: 'armor_upgrade' },
+            { id: 'es-t4', description: 'Glass Vial (x3)', cost: 35, type: 'material', materialId: 'glass-vial', quantity: 3 },
+          ],
+        },
+        {
+          name: 'Sister Ash',
+          greeting: 'A serene woman meditates beside a wall of glowing embers. "The volcano gives freely to those who respect it."',
+          deals: [
+            { id: 'es-t5', description: 'Iron Ore (x3)', cost: 70, type: 'material', materialId: 'iron-ore', quantity: 3 },
+            { id: 'es-t6', description: 'Full Mana restore', cost: 40, type: 'full_mana' },
+            { id: 'es-t7', description: 'Mysterious Egg (Common)', cost: 140, type: 'egg', eggId: 'common-egg' },
+          ],
+        },
+      ],
     },
   ],
   'toxic-marshlands': [
@@ -3485,16 +3541,28 @@ export const QUEST_VILLAGES = {
         { id: 'sh-q2', name: 'Antidote Run', description: 'Win 18 battles.', stat: 'battlesWon', target: 18, reward: { gold: 600, item: 'shield' } },
         { id: 'sh-q3', name: 'Marsh Surveyor', description: 'Explore 25 times.', stat: 'explorationsCompleted', target: 25, reward: { gold: 800, item: 'cape' } },
       ],
-      trader: {
-        name: 'Mireena the Apothecary',
-        greeting: 'A woman with mushroom-cap earrings tends rows of bubbling flasks. "My tonics will keep the toxins at bay."',
-        deals: [
-          { id: 'sh-t1', description: 'Toxic Resin (x2)', cost: 75, type: 'material', materialId: 'toxic-resin', quantity: 2 },
-          { id: 'sh-t2', description: 'Herb Bundle (x3)', cost: 60, type: 'material', materialId: 'herb-bundle', quantity: 3 },
-          { id: 'sh-t3', description: 'Full HP + Mana restore', cost: 80, type: 'full_heal_mana' },
-          { id: 'sh-t4', description: 'Mysterious Egg (Common)', cost: 150, type: 'egg', eggId: 'common-egg' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Mireena the Apothecary',
+          greeting: 'A woman with mushroom-cap earrings tends rows of bubbling flasks. "My tonics will keep the toxins at bay."',
+          deals: [
+            { id: 'sh-t1', description: 'Toxic Resin (x2)', cost: 75, type: 'material', materialId: 'toxic-resin', quantity: 2 },
+            { id: 'sh-t2', description: 'Herb Bundle (x3)', cost: 60, type: 'material', materialId: 'herb-bundle', quantity: 3 },
+            { id: 'sh-t3', description: 'Full HP + Mana restore', cost: 80, type: 'full_heal_mana' },
+            { id: 'sh-t4', description: 'Mysterious Egg (Common)', cost: 150, type: 'egg', eggId: 'common-egg' },
+          ],
+        },
+        {
+          name: 'Boggart the Scrap Dredger',
+          greeting: 'A squat figure in a gas mask hauls a dripping net of salvage onto the dock. "Pulled these right out of the muck. Still good!"',
+          deals: [
+            { id: 'sh-t5', description: 'Copper Wire (x3)', cost: 55, type: 'material', materialId: 'copper-wire', quantity: 3 },
+            { id: 'sh-t6', description: 'Oil Canister (x1)', cost: 60, type: 'material', materialId: 'oil-canister', quantity: 1 },
+            { id: 'sh-t7', description: 'Weapon upgrade (+3 levels)', cost: 200, type: 'weapon_upgrade' },
+            { id: 'sh-t8', description: 'Double your gold (up to 200g)', cost: 0, type: 'gold_gamble' },
+          ],
+        },
+      ],
     },
   ],
   'abyssal-depths': [
@@ -3506,16 +3574,28 @@ export const QUEST_VILLAGES = {
         { id: 'dh-q2', name: 'Pressure Test', description: 'Deal 8000 total damage.', stat: 'damageDealt', target: 8000, reward: { gold: 1000, item: 'armor' } },
         { id: 'dh-q3', name: 'Abyssal Explorer', description: 'Explore 30 times.', stat: 'explorationsCompleted', target: 30, reward: { gold: 1200, item: 'ring' } },
       ],
-      trader: {
-        name: 'Scholar Tidepool',
-        greeting: 'A figure in barnacle-studded robes adjusts luminescent goggles. "I\'ve catalogued treasures from the deepest trenches."',
-        deals: [
-          { id: 'dh-t1', description: 'Deep Coral (x2)', cost: 180, type: 'material', materialId: 'deep-coral', quantity: 2 },
-          { id: 'dh-t2', description: 'Copper Wire (x3)', cost: 60, type: 'material', materialId: 'copper-wire', quantity: 3 },
-          { id: 'dh-t3', description: 'Abyssal gear piece', cost: 300, type: 'rare_item' },
-          { id: 'dh-t4', description: 'Gleaming Egg (Uncommon)', cost: 400, type: 'egg', eggId: 'uncommon-egg' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Scholar Tidepool',
+          greeting: 'A figure in barnacle-studded robes adjusts luminescent goggles. "I\'ve catalogued treasures from the deepest trenches."',
+          deals: [
+            { id: 'dh-t1', description: 'Deep Coral (x2)', cost: 180, type: 'material', materialId: 'deep-coral', quantity: 2 },
+            { id: 'dh-t2', description: 'Copper Wire (x3)', cost: 60, type: 'material', materialId: 'copper-wire', quantity: 3 },
+            { id: 'dh-t3', description: 'Abyssal gear piece', cost: 300, type: 'rare_item' },
+            { id: 'dh-t4', description: 'Gleaming Egg (Uncommon)', cost: 400, type: 'egg', eggId: 'uncommon-egg' },
+          ],
+        },
+        {
+          name: 'Barnacle Jim',
+          greeting: 'An old diver with a cracked helmet and a crooked grin. "Found these on my last dive. Almost didn\'t make it back!"',
+          deals: [
+            { id: 'dh-t5', description: 'Deep Coral (x1)', cost: 100, type: 'material', materialId: 'deep-coral', quantity: 1 },
+            { id: 'dh-t6', description: 'Mystery Box (could be amazing... or terrible)', cost: 120, type: 'mystery_box' },
+            { id: 'dh-t7', description: 'Full HP restoration', cost: 55, type: 'full_heal' },
+            { id: 'dh-t8', description: 'Iron Ore (x3)', cost: 65, type: 'material', materialId: 'iron-ore', quantity: 3 },
+          ],
+        },
+      ],
     },
     {
       id: 'coral-refuge', name: 'Coral Refuge',
@@ -3524,15 +3604,17 @@ export const QUEST_VILLAGES = {
         { id: 'cr-q1', name: 'Coral Defense', description: 'Win 20 battles.', stat: 'battlesWon', target: 20, reward: { gold: 700, item: 'shield' } },
         { id: 'cr-q2', name: 'Deep Harvest', description: 'Loot 15 items.', stat: 'itemsLooted', target: 15, reward: { gold: 900, item: 'boots' } },
       ],
-      trader: {
-        name: 'Lumina the Signal Keeper',
-        greeting: 'Bioluminescent patterns pulse across her skin as she gestures to a shelf of coral-carved goods. "The reef offers its bounty."',
-        deals: [
-          { id: 'cr-t1', description: 'Coal Chunk (x2)', cost: 70, type: 'material', materialId: 'coal-chunk', quantity: 2 },
-          { id: 'cr-t2', description: 'Restore 30 energy', cost: 90, type: 'energy_restore', amount: 30 },
-          { id: 'cr-t3', description: 'Deep-sea weapon', cost: 350, type: 'legendary_item' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Lumina the Signal Keeper',
+          greeting: 'Bioluminescent patterns pulse across her skin as she gestures to a shelf of coral-carved goods. "The reef offers its bounty."',
+          deals: [
+            { id: 'cr-t1', description: 'Coal Chunk (x2)', cost: 70, type: 'material', materialId: 'coal-chunk', quantity: 2 },
+            { id: 'cr-t2', description: 'Restore 30 energy', cost: 90, type: 'energy_restore', amount: 30 },
+            { id: 'cr-t3', description: 'Deep-sea weapon', cost: 350, type: 'legendary_item' },
+          ],
+        },
+      ],
     },
   ],
   'celestial-highlands': [
@@ -3544,16 +3626,27 @@ export const QUEST_VILLAGES = {
         { id: 'sv-q2', name: 'Sky Warrior', description: 'Deal 10000 total damage.', stat: 'damageDealt', target: 10000, reward: { gold: 1500, item: 'sword' } },
         { id: 'sv-q3', name: 'Celestial Survey', description: 'Explore 35 times.', stat: 'explorationsCompleted', target: 35, reward: { gold: 1800, item: 'cape' } },
       ],
-      trader: {
-        name: 'Astra the Starweaver',
-        greeting: 'A woman draped in shimmering starlight fabric floats down to meet you. "The stars have guided you here for a reason."',
-        deals: [
-          { id: 'sv-t1', description: 'Starlight Dust (x2)', cost: 200, type: 'material', materialId: 'starlight-dust', quantity: 2 },
-          { id: 'sv-t2', description: 'Crystal Shard (x2)', cost: 180, type: 'material', materialId: 'crystal-shard', quantity: 2 },
-          { id: 'sv-t3', description: 'Celestial gear piece', cost: 400, type: 'legendary_item' },
-          { id: 'sv-t4', description: 'Radiant Egg (Rare)', cost: 800, type: 'egg', eggId: 'rare-egg' },
-        ],
-      },
+      traders: [
+        {
+          name: 'Astra the Starweaver',
+          greeting: 'A woman draped in shimmering starlight fabric floats down to meet you. "The stars have guided you here for a reason."',
+          deals: [
+            { id: 'sv-t1', description: 'Starlight Dust (x2)', cost: 200, type: 'material', materialId: 'starlight-dust', quantity: 2 },
+            { id: 'sv-t2', description: 'Crystal Shard (x2)', cost: 180, type: 'material', materialId: 'crystal-shard', quantity: 2 },
+            { id: 'sv-t3', description: 'Celestial gear piece', cost: 400, type: 'legendary_item' },
+            { id: 'sv-t4', description: 'Radiant Egg (Rare)', cost: 800, type: 'egg', eggId: 'rare-egg' },
+          ],
+        },
+        {
+          name: 'Orion the Cloud Shepherd',
+          greeting: 'A gentle giant tends a flock of luminous cloud-creatures. "They produce the finest materials in the highlands. Have a look."',
+          deals: [
+            { id: 'sv-t5', description: 'Herb Bundle (x4)', cost: 80, type: 'material', materialId: 'herb-bundle', quantity: 4 },
+            { id: 'sv-t6', description: 'Plasma Core (x1)', cost: 260, type: 'material', materialId: 'plasma-core', quantity: 1 },
+            { id: 'sv-t7', description: 'Full HP + Mana restore', cost: 90, type: 'full_heal_mana' },
+          ],
+        },
+      ],
     },
     {
       id: 'moonbridge-shrine', name: 'Moonbridge Shrine',
@@ -3562,15 +3655,26 @@ export const QUEST_VILLAGES = {
         { id: 'ms-q1', name: 'Cosmic Alignment', description: 'Win 25 battles.', stat: 'battlesWon', target: 25, reward: { gold: 1200, item: 'amulet' } },
         { id: 'ms-q2', name: 'Astral Meditation', description: 'Use 15 potions.', stat: 'potionsUsed', target: 15, reward: { gold: 800, item: 'helmet' } },
       ],
-      trader: {
-        name: 'Sage Moonwhisper',
-        greeting: 'An ancient monk sits cross-legged on a bridge of light. "The cosmos rewards those who seek balance."',
-        deals: [
-          { id: 'ms-t1', description: 'Plasma Core (x1)', cost: 250, type: 'material', materialId: 'plasma-core', quantity: 1 },
-          { id: 'ms-t2', description: 'Full HP + Mana restore', cost: 100, type: 'full_heal_mana' },
-          { id: 'ms-t3', description: 'Herb Bundle (x3)', cost: 70, type: 'material', materialId: 'herb-bundle', quantity: 3 },
-        ],
-      },
+      traders: [
+        {
+          name: 'Sage Moonwhisper',
+          greeting: 'An ancient monk sits cross-legged on a bridge of light. "The cosmos rewards those who seek balance."',
+          deals: [
+            { id: 'ms-t1', description: 'Plasma Core (x1)', cost: 250, type: 'material', materialId: 'plasma-core', quantity: 1 },
+            { id: 'ms-t2', description: 'Full HP + Mana restore', cost: 100, type: 'full_heal_mana' },
+            { id: 'ms-t3', description: 'Herb Bundle (x3)', cost: 70, type: 'material', materialId: 'herb-bundle', quantity: 3 },
+          ],
+        },
+        {
+          name: 'Novice Prism',
+          greeting: 'A young monk juggles glowing orbs of solidified moonlight. "Master Moonwhisper lets me sell my practice crystals. They still work, I promise!"',
+          deals: [
+            { id: 'ms-t4', description: 'Crystal Shard (x3)', cost: 250, type: 'material', materialId: 'crystal-shard', quantity: 3 },
+            { id: 'ms-t5', description: 'Restore 35 energy', cost: 100, type: 'energy_restore', amount: 35 },
+            { id: 'ms-t6', description: 'Gleaming Egg (Uncommon)', cost: 420, type: 'egg', eggId: 'uncommon-egg' },
+          ],
+        },
+      ],
     },
   ],
   'void-nexus': [
@@ -3582,16 +3686,28 @@ export const QUEST_VILLAGES = {
         { id: 'eb-q2', name: 'Void Walker', description: 'Explore 40 times.', stat: 'explorationsCompleted', target: 40, reward: { gold: 2000, item: 'ring' } },
         { id: 'eb-q3', name: 'Dimensional Rift', description: 'Deal 15000 total damage.', stat: 'damageDealt', target: 15000, reward: { gold: 2500, item: 'sword' } },
       ],
-      trader: {
-        name: 'Echo the Fragmentist',
-        greeting: 'A figure that flickers between multiple forms extends a hand. "I carry wares from realities that never were."',
-        deals: [
-          { id: 'eb-t1', description: 'Void Essence (x2)', cost: 300, type: 'material', materialId: 'void-essence', quantity: 2 },
-          { id: 'eb-t2', description: 'Plasma Core (x1)', cost: 280, type: 'material', materialId: 'plasma-core', quantity: 1 },
-          { id: 'eb-t3', description: 'Void-forged legendary gear', cost: 500, type: 'legendary_item' },
-          { id: 'eb-t4', description: 'Restore 40 energy', cost: 120, type: 'energy_restore', amount: 40 },
-        ],
-      },
+      traders: [
+        {
+          name: 'Echo the Fragmentist',
+          greeting: 'A figure that flickers between multiple forms extends a hand. "I carry wares from realities that never were."',
+          deals: [
+            { id: 'eb-t1', description: 'Void Essence (x2)', cost: 300, type: 'material', materialId: 'void-essence', quantity: 2 },
+            { id: 'eb-t2', description: 'Plasma Core (x1)', cost: 280, type: 'material', materialId: 'plasma-core', quantity: 1 },
+            { id: 'eb-t3', description: 'Void-forged legendary gear', cost: 500, type: 'legendary_item' },
+            { id: 'eb-t4', description: 'Restore 40 energy', cost: 120, type: 'energy_restore', amount: 40 },
+          ],
+        },
+        {
+          name: 'Rift the Paradox Peddler',
+          greeting: 'A merchant who appears to be both old and young simultaneously. "My wares exist in superposition. Until you buy them, they are everything at once."',
+          deals: [
+            { id: 'eb-t5', description: 'Cursed item (powerful but risky)', cost: 120, type: 'cursed_item' },
+            { id: 'eb-t6', description: 'Starlight Dust (x2)', cost: 240, type: 'material', materialId: 'starlight-dust', quantity: 2 },
+            { id: 'eb-t7', description: 'Void Essence (x1)', cost: 160, type: 'material', materialId: 'void-essence', quantity: 1 },
+            { id: 'eb-t8', description: 'Radiant Egg (Rare) — VERY RARE!', cost: 850, type: 'egg', eggId: 'rare-egg' },
+          ],
+        },
+      ],
     },
     {
       id: 'null-market', name: 'The Null Market',
@@ -3600,16 +3716,28 @@ export const QUEST_VILLAGES = {
         { id: 'nm-q1', name: 'Interdimensional Trade', description: 'Earn 3000 gold.', stat: 'goldEarned', target: 3000, reward: { gold: 2000, item: 'cape' } },
         { id: 'nm-q2', name: 'Null Zone Sweep', description: 'Win 30 battles.', stat: 'battlesWon', target: 30, reward: { gold: 1800, item: 'shield' } },
       ],
-      trader: {
-        name: 'The Null Broker',
-        greeting: 'A faceless entity behind a counter that seems to stretch infinitely. "Everything has a price. Even nothing."',
-        deals: [
-          { id: 'nm-t1', description: 'Starlight Dust (x2)', cost: 220, type: 'material', materialId: 'starlight-dust', quantity: 2 },
-          { id: 'nm-t2', description: 'Mystery Box (could be amazing... or terrible)', cost: 150, type: 'mystery_box' },
-          { id: 'nm-t3', description: 'Cursed item (powerful but risky)', cost: 100, type: 'cursed_item' },
-          { id: 'nm-t4', description: 'Radiant Egg (Rare) — VERY RARE!', cost: 900, type: 'egg', eggId: 'rare-egg' },
-        ],
-      },
+      traders: [
+        {
+          name: 'The Null Broker',
+          greeting: 'A faceless entity behind a counter that seems to stretch infinitely. "Everything has a price. Even nothing."',
+          deals: [
+            { id: 'nm-t1', description: 'Starlight Dust (x2)', cost: 220, type: 'material', materialId: 'starlight-dust', quantity: 2 },
+            { id: 'nm-t2', description: 'Mystery Box (could be amazing... or terrible)', cost: 150, type: 'mystery_box' },
+            { id: 'nm-t3', description: 'Cursed item (powerful but risky)', cost: 100, type: 'cursed_item' },
+            { id: 'nm-t4', description: 'Radiant Egg (Rare) — VERY RARE!', cost: 900, type: 'egg', eggId: 'rare-egg' },
+          ],
+        },
+        {
+          name: 'Zephyr the Probability Trader',
+          greeting: 'A translucent figure shuffles cards made of compressed spacetime. "In this market, luck is just another commodity."',
+          deals: [
+            { id: 'nm-t5', description: 'Double your gold (up to 300g)', cost: 0, type: 'gold_gamble' },
+            { id: 'nm-t6', description: 'Mystery Box (could be amazing... or terrible)', cost: 100, type: 'mystery_box' },
+            { id: 'nm-t7', description: 'Void-touched legendary weapon', cost: 600, type: 'legendary_item' },
+            { id: 'nm-t8', description: 'Full HP + Mana restore', cost: 110, type: 'full_heal_mana' },
+          ],
+        },
+      ],
     },
   ],
 };

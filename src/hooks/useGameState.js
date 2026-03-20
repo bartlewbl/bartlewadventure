@@ -1037,11 +1037,13 @@ function gameReducer(state, action) {
 
     case 'VILLAGE_TRADER_BUY': {
       const village = state.activeVillage;
-      if (!village?.trader) return state;
-      const vtDeal = village.trader.deals.find(d => d.id === action.dealId);
-      if (!vtDeal) return state;
+      const vTraders = village?.traders || (village?.trader ? [village.trader] : []);
+      if (!vTraders.length) return state;
+      // Find which trader has this deal
+      const matchedTrader = vTraders.find(t => t.deals.some(d => d.id === action.dealId));
+      if (!matchedTrader) return state;
       // Reuse TRADER_BUY logic by synthesizing an activeTrader context
-      const result = gameReducer({ ...state, activeTrader: village.trader }, { type: 'TRADER_BUY', dealId: action.dealId });
+      const result = gameReducer({ ...state, activeTrader: matchedTrader }, { type: 'TRADER_BUY', dealId: action.dealId });
       return { ...result, activeTrader: state.activeTrader };
     }
 
