@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
-import { getBattleMaxMana } from '../../engine/combat';
+import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, getPlayerResistance, getPlayerTenacity, getPlayerAggression, getPlayerLuck, getPlayerFortitude, getStanceModifiers, getComboProgress } from '../../engine/combat';
+import { STANCES, UNIVERSAL_SKILLS } from '../../data/gameData';
 import { SKILLS } from '../../data/gameData';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
 import useGameClock from '../../hooks/useGameClock';
@@ -20,8 +21,9 @@ let floatIdCounter = 0;
 
 export default function BattleScreen({
   battle, battleLog, player, pets,
-  onAttack, onSkill, onDefend, onPotion, onRun, onMonsterTurn,
+  onAttack, onSkill, onDefend, onChannel, onPotion, onRun, onMonsterTurn,
   onTreeSkill, onToggleSkillMenu, onToggleInspect,
+  onParry, onChangeStance, onUniversalSkill,
   setBattleAnim, animTick,
 }) {
   const logRef = useRef(null);
@@ -249,6 +251,10 @@ export default function BattleScreen({
     handlePlayerAction(onPotion, 'player-heal');
   }, [handlePlayerAction, onPotion]);
 
+  const handleChannel = useCallback(() => {
+    handlePlayerAction(onChannel, 'player-skill');
+  }, [handlePlayerAction, onChannel]);
+
   if (!battle?.monster) return null;
   const m = battle.monster;
   const mHpPct = (m.hp / m.maxHp) * 100;
@@ -291,6 +297,60 @@ export default function BattleScreen({
       <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
         {battle.isPlayerTurn && !pendingTurnRef.current ? 'YOUR TURN' : 'ENEMY TURN'}
       </div>
+
+      {/* Speed comparison bar */}
+      <div className="battle-speed-bar">
+        <span className={`speed-tag ${battle.playerIsFaster ? 'speed-advantage' : ''}`}>
+          SPD: {battle.playerSpeed || '?'}
+        </span>
+        <span className="speed-vs">vs</span>
+        <span className={`speed-tag ${!battle.playerIsFaster ? 'speed-advantage' : ''}`}>
+          SPD: {battle.monsterSpeed || '?'}
+        </span>
+        {battle.playerIsFaster && <span className="speed-bonus-label">You act first!</span>}
+      </div>
+
+      {/* Enemy intent preview (when player is faster) */}
+      {battle.playerIsFaster && battle.monsterNextMove && battle.isPlayerTurn && (
+        <div className="battle-enemy-intent">
+          <span className="intent-label">Enemy Intent:</span>
+          <span className={`intent-action intent-${battle.monsterNextMove.type}`}>
+            {battle.monsterNextMove.name}
+            {battle.monsterNextMove.type === 'channel' && ' (Charging!)'}
+            {battle.monsterNextMove.type === 'unleash' && ' (UNLEASH!)'}
+          </span>
+        </div>
+      )}
+
+      {/* Monster channeling warning */}
+      {battle.monsterChanneling && (
+        <div className="battle-channel-warning">
+          <span className="channel-pulse">{m.name} is channeling energy!</span>
+          <span className="channel-turns">{battle.monsterChannelTurns} turn{battle.monsterChannelTurns > 1 ? 's' : ''} until unleash!</span>
+        </div>
+      )}
+
+      {/* Player channel bonus indicator */}
+      {battle.playerChannelBonusActive && (
+        <div className="battle-channel-ready">
+          Channeled energy ready! Next attack deals 2x damage!
+        </div>
+      )}
+      {battle.playerChanneling && (
+        <div className="battle-channel-active">
+          Channeling energy...
+        </div>
+      )}
+
+      {/* Boss gimmick display */}
+      {battle.gimmick && isBoss && (
+        <div className={`battle-gimmick ${battle.gimmickActive ? 'gimmick-active' : 'gimmick-pending'}`}>
+          <span className="gimmick-icon">{battle.gimmickActive ? '!' : '?'}</span>
+          <span className="gimmick-name">{battle.gimmick.name}</span>
+          {!battle.gimmickActive && <span className="gimmick-hint">Triggers at {Math.round(battle.gimmick.triggerHpPct * 100)}% HP</span>}
+          {battle.gimmickActive && <span className="gimmick-desc">{battle.gimmick.desc}</span>}
+        </div>
+      )}
 
       {/* Weather spell buff bar */}
       {weatherBuffs.length > 0 && (
@@ -343,6 +403,11 @@ export default function BattleScreen({
             </span>
           </div>
           {isBoss && m.title && <div className="boss-subtitle">{m.title}</div>}
+          {battle.monsterElement && battle.monsterElement !== 'physical' && (
+            <div className={`monster-element element-${battle.monsterElement}`}>
+              {ELEMENTS[battle.monsterElement]?.icon} {ELEMENTS[battle.monsterElement]?.label}
+            </div>
+          )}
           <div className="stat-bar">
             <span className="bar-label">HP</span>
             <div className={`bar hp-bar monster ${isBoss ? 'boss-hp' : ''}`}>
@@ -353,6 +418,62 @@ export default function BattleScreen({
         </div>
       </div>
 
+      {/* Stance selector */}
+      <div className="battle-stance-bar">
+        {Object.entries(STANCES).map(([id, stance]) => (
+          <button
+            key={id}
+            className={`stance-btn ${battle.stance === id ? 'stance-active' : ''}`}
+            onClick={() => onChangeStance(id)}
+            disabled={disabled || battle.stance === id}
+            title={`${stance.name}: DMG ${Math.round(stance.dmgDealt * 100)}% / Taken ${Math.round(stance.dmgTaken * 100)}%`}
+          >
+            {stance.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Stance momentum indicator */}
+      {battle.stanceMomentum > 0 && battle.stance !== 'balanced' && (
+        <div className="battle-momentum-bar">
+          <span className="momentum-label">Momentum:</span>
+          <div className="momentum-fill-track">
+            <div className="momentum-fill" style={{ width: `${Math.min(100, (battle.stanceMomentum / 0.3) * 100)}%` }} />
+          </div>
+          <span className="momentum-pct">+{Math.round(battle.stanceMomentum * 100)}%</span>
+        </div>
+      )}
+
+      {/* Active combo display */}
+      {battle.activeCombo && (
+        <div className="battle-combo-display">
+          <span className="combo-label">COMBO:</span>
+          <span className="combo-name">{battle.activeCombo.name}</span>
+          {battle.comboStreak > 1 && <span className="combo-streak">x{battle.comboStreak}</span>}
+        </div>
+      )}
+
+      {/* Combo progress indicators */}
+      {battle.actionHistory?.length > 0 && (() => {
+        const comboProgress = getComboProgress(battle.actionHistory);
+        return comboProgress.length > 0 ? (
+          <div className="battle-combo-progress">
+            {comboProgress.map(cp => (
+              <span key={cp.id} className="combo-progress-item" title={`Next: ${cp.nextAction}`}>
+                {cp.name} ({cp.current}/{cp.total})
+              </span>
+            ))}
+          </div>
+        ) : null;
+      })()}
+
+      {/* Combo bleed indicator */}
+      {battle.comboBleedTurns > 0 && (
+        <div className="battle-combo-bleed">
+          <span className="bleed-label">Bleeding ({battle.comboBleedTurns})</span>
+        </div>
+      )}
+
       {/* Status effects row */}
       <div className="battle-status-row">
         {/* Monster debuffs */}
@@ -362,6 +483,15 @@ export default function BattleScreen({
           )}
           {battle.monsterDoomTurns > 0 && (
             <span className="battle-debuff doom">Doom ({battle.monsterDoomTurns})</span>
+          )}
+          {battle.monsterStunTurns > 0 && (
+            <span className="battle-debuff stun">Stunned ({battle.monsterStunTurns})</span>
+          )}
+          {battle.monsterConfusionTurns > 0 && (
+            <span className="battle-debuff confusion">Confused ({battle.monsterConfusionTurns})</span>
+          )}
+          {battle.armorShatterTurns > 0 && (
+            <span className="battle-debuff debuff">Armor Broken ({battle.armorShatterTurns})</span>
           )}
         </div>
 
@@ -387,6 +517,39 @@ export default function BattleScreen({
           )}
           {battle.defending && (
             <span className="battle-debuff buff">Defending</span>
+          )}
+          {battle.playerStunTurns > 0 && (
+            <span className="battle-debuff stun">Stunned ({battle.playerStunTurns})</span>
+          )}
+          {battle.playerConfusionTurns > 0 && (
+            <span className="battle-debuff confusion">Confused ({battle.playerConfusionTurns})</span>
+          )}
+          {battle.fortitudeUsed && (
+            <span className="battle-debuff used">Grit Used</span>
+          )}
+          {battle.parrying && (
+            <span className="battle-debuff buff">Parrying</span>
+          )}
+          {battle.warShoutTurns > 0 && (
+            <span className="battle-debuff buff">War Shout ({battle.warShoutTurns})</span>
+          )}
+          {battle.elementalWardTurns > 0 && (
+            <span className="battle-debuff buff">Elem Ward ({battle.elementalWardTurns})</span>
+          )}
+          {battle.frenzyBonusTurns > 0 && (
+            <span className="battle-debuff buff">Frenzy ({battle.frenzyBonusTurns})</span>
+          )}
+          {battle.playerInvulnTurns > 0 && (
+            <span className="battle-debuff buff">Invulnerable ({battle.playerInvulnTurns})</span>
+          )}
+          {battle.guaranteedCrit && (
+            <span className="battle-debuff buff">Crit Ready!</span>
+          )}
+          {battle.lastStandUsed && (
+            <span className="battle-debuff used">Last Stand Used</span>
+          )}
+          {battle.limitBreakUsed && (
+            <span className="battle-debuff used">Limit Break Used</span>
           )}
         </div>
       </div>
@@ -418,6 +581,20 @@ export default function BattleScreen({
             <div className="inspect-row"><span className="inspect-label">HP:</span> <span className="inspect-value">{m.hp} / {m.maxHp}</span></div>
             <div className="inspect-row"><span className="inspect-label">ATK:</span> <span className="inspect-value">{m.atk}</span></div>
             <div className="inspect-row"><span className="inspect-label">DEF:</span> <span className="inspect-value">{m.def}</span></div>
+            <div className="inspect-row"><span className="inspect-label">SPD:</span> <span className="inspect-value">{m.speed || '?'}</span></div>
+            <div className="inspect-row"><span className="inspect-label">EVA/ACC:</span> <span className="inspect-value">{m.evasion || 0}/{m.accuracy || 0}</span></div>
+            <div className="inspect-row"><span className="inspect-label">RES/TEN:</span> <span className="inspect-value">{m.resistance || 0}/{m.tenacity || 0}</span></div>
+            <div className="inspect-row"><span className="inspect-label">AGR/LCK:</span> <span className="inspect-value">{m.aggression || 0}/{m.luck || 0}</span></div>
+            <div className="inspect-row"><span className="inspect-label">GRT:</span> <span className="inspect-value">{m.fortitude || 0}</span></div>
+            {battle.monsterElement && battle.monsterElement !== 'physical' && (
+              <div className="inspect-row"><span className="inspect-label">Element:</span> <span className="inspect-value">{ELEMENTS[battle.monsterElement]?.icon} {ELEMENTS[battle.monsterElement]?.label}</span></div>
+            )}
+            {battle.monsterChanneling && (
+              <div className="inspect-row"><span className="inspect-label">Status:</span> <span className="inspect-value status-channel">Channeling ({battle.monsterChannelTurns} turns)</span></div>
+            )}
+            {isBoss && battle.gimmick && (
+              <div className="inspect-row"><span className="inspect-label">Gimmick:</span> <span className="inspect-value">{battle.gimmick.name} {battle.gimmickActive ? '(ACTIVE)' : `(at ${Math.round(battle.gimmick.triggerHpPct * 100)}% HP)`}</span></div>
+            )}
             <div className="inspect-row"><span className="inspect-label">Skills:</span> <span className="inspect-value">{m.skills?.length > 0 ? m.skills.map(s => {
               const sk = SKILLS[s];
               return sk ? sk.name : s;
@@ -472,6 +649,29 @@ export default function BattleScreen({
               </button>
             );
           })}
+          {/* Universal combat skills */}
+          {player.unlockedUniversalSkills?.filter(id => id !== 'parry').map(skillId => {
+            const uSkill = UNIVERSAL_SKILLS[skillId];
+            if (!uSkill) return null;
+            const cd = battle.universalCooldowns?.[skillId] || 0;
+            const isOnceUsed = (skillId === 'last_stand' && battle.lastStandUsed) || (skillId === 'limit_break' && battle.limitBreakUsed);
+            return (
+              <button
+                key={skillId}
+                className={`btn btn-universal-skill ${cd > 0 ? 'on-cooldown' : ''} ${isOnceUsed ? 'used-once' : ''}`}
+                disabled={disabled || player.mana < (uSkill.manaCost || 0) || cd > 0 || isOnceUsed}
+                onClick={() => handlePlayerAction(() => onUniversalSkill(skillId), 'player-skill')}
+                title={`${uSkill.name}${cd > 0 ? ` (CD: ${cd})` : ''}${isOnceUsed ? ' (Used)' : ''}`}
+              >
+                <span className="skill-btn-name">{uSkill.name}</span>
+                <span className="skill-btn-meta">
+                  <span className="skill-btn-cost">{uSkill.manaCost || 0}mp</span>
+                  {cd > 0 && <span className="skill-cooldown-badge">CD:{cd}</span>}
+                  {isOnceUsed && <span className="skill-cooldown-badge">Used</span>}
+                </span>
+              </button>
+            );
+          })}
           <button className="btn btn-back btn-sm" disabled={disabled} onClick={onToggleSkillMenu}>
             Back
           </button>
@@ -500,6 +700,24 @@ export default function BattleScreen({
             {treeActives.length > 0 ? 'Skills' : (activeSkills[0]?.name || 'Skill')}
           </button>
           <button
+            className="btn btn-battle-channel"
+            disabled={disabled || player.mana < PLAYER_CHANNEL_MANA_COST || battle.playerChanneling || battle.playerChannelBonusActive}
+            onClick={handleChannel}
+            title={`Channel energy for 2x damage on next attack (${PLAYER_CHANNEL_MANA_COST} mana)`}
+          >
+            {battle.playerChannelBonusActive ? 'Charged!' : 'Channel'}
+          </button>
+          {player.unlockedUniversalSkills?.includes('parry') && (
+            <button
+              className="btn btn-battle-parry"
+              disabled={disabled || player.mana < (UNIVERSAL_SKILLS.parry?.manaCost || 5)}
+              onClick={() => handlePlayerAction(onParry, 'player-defend')}
+              title={`Parry: Block 80% damage and counter (${UNIVERSAL_SKILLS.parry?.manaCost || 5} mana)`}
+            >
+              Parry
+            </button>
+          )}
+          <button
             className="btn btn-battle-inspect"
             disabled={disabled}
             onClick={onToggleInspect}
@@ -513,8 +731,8 @@ export default function BattleScreen({
           >
             Potion
           </button>
-          <button className="btn btn-back" disabled={disabled} onClick={handleRun}>
-            {isBoss ? 'No Escape' : 'Run'}
+          <button className="btn btn-back" disabled={disabled || battle.noRun} onClick={handleRun}>
+            {isBoss ? (battle.noRun ? 'Trapped!' : 'No Escape') : (battle.noRun ? 'Trapped!' : 'Run')}
           </button>
         </div>
       )}

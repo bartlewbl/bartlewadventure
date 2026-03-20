@@ -350,12 +350,16 @@ export default function App() {
                 onAttack={actions.battleAttack}
                 onSkill={actions.battleSkill}
                 onDefend={actions.battleDefend}
+                onChannel={actions.battleChannel}
                 onPotion={actions.battlePotion}
                 onRun={actions.battleRun}
                 onMonsterTurn={actions.monsterTurn}
                 onTreeSkill={actions.battleTreeSkill}
                 onToggleSkillMenu={actions.toggleSkillMenu}
                 onToggleInspect={actions.toggleInspectMonster}
+                onParry={actions.battleParry}
+                onChangeStance={actions.battleChangeStance}
+                onUniversalSkill={actions.battleUniversalSkill}
                 setBattleAnim={setBattleAnim}
                 animTick={animTick}
               />

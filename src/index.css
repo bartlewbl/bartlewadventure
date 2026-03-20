@@ -4079,6 +4079,236 @@ body {
   color: #4fc3f7;
 }
 
+.battle-debuff.stun {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  color: #ffd54f;
+  animation: pulse 0.8s infinite;
+}
+
+.battle-debuff.confusion {
+  background: rgba(156, 39, 176, 0.2);
+  border: 1px solid rgba(156, 39, 176, 0.4);
+  color: #ce93d8;
+  animation: pulse 1s infinite;
+}
+
+.battle-debuff.used {
+  background: rgba(120, 144, 156, 0.15);
+  border: 1px solid rgba(120, 144, 156, 0.3);
+  color: #90a4ae;
+  opacity: 0.7;
+}
+
+/* ---- STANCE SYSTEM UI ---- */
+.battle-stance-bar {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  padding: 2px 6px;
+  margin: 2px 0;
+}
+
+.stance-btn {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: #b0bec5;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.stance-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.stance-btn.stance-active {
+  background: rgba(100, 181, 246, 0.25);
+  border-color: rgba(100, 181, 246, 0.5);
+  color: #90caf9;
+  font-weight: bold;
+}
+
+.stance-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---- COMBO DISPLAY ---- */
+.battle-combo-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  background: linear-gradient(90deg, rgba(255,152,0,0.1), rgba(255,152,0,0.05));
+  border-radius: 4px;
+  animation: combo-flash 0.6s ease-out;
+}
+
+@keyframes combo-flash {
+  0% { background: rgba(255,152,0,0.4); }
+  100% { background: rgba(255,152,0,0.1); }
+}
+
+.combo-label {
+  color: #ff9800;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+}
+
+.combo-name {
+  color: #ffcc80;
+  font-weight: bold;
+}
+
+.battle-combo-bleed {
+  text-align: center;
+  font-size: 0.6rem;
+}
+
+.bleed-label {
+  color: #e53935;
+  font-weight: bold;
+}
+
+/* ---- MONSTER ELEMENT INDICATOR ---- */
+.monster-element {
+  font-size: 0.6rem;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 1px auto;
+}
+
+.element-fire { background: rgba(255,99,71,0.2); color: #ff6347; }
+.element-ice { background: rgba(79,195,247,0.2); color: #4fc3f7; }
+.element-lightning { background: rgba(255,235,59,0.2); color: #ffeb3b; }
+.element-shadow { background: rgba(156,39,176,0.2); color: #ce93d8; }
+.element-nature { background: rgba(76,175,80,0.2); color: #66bb6a; }
+.element-arcane { background: rgba(124,77,255,0.2); color: #b388ff; }
+
+/* ---- PARRY BUTTON ---- */
+.btn-battle-parry {
+  background: rgba(255,193,7,0.15);
+  border-color: rgba(255,193,7,0.3);
+  color: #ffd54f;
+}
+
+.btn-battle-parry:hover:not(:disabled) {
+  background: rgba(255,193,7,0.3);
+}
+
+/* ---- UNIVERSAL SKILL BUTTONS ---- */
+.btn-universal-skill {
+  background: rgba(124, 77, 255, 0.12);
+  border: 1px solid rgba(124, 77, 255, 0.3);
+  color: #b388ff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-universal-skill:hover:not(:disabled) {
+  background: rgba(124, 77, 255, 0.25);
+  color: #d1c4e9;
+}
+
+.btn-universal-skill:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-universal-skill.on-cooldown {
+  opacity: 0.35;
+  border-color: rgba(124, 77, 255, 0.15);
+}
+
+.btn-universal-skill.used-once {
+  opacity: 0.25;
+  text-decoration: line-through;
+}
+
+.skill-cooldown-badge {
+  font-size: 0.55rem;
+  background: rgba(255, 82, 82, 0.25);
+  color: #ff8a80;
+  padding: 0 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+/* ---- MOMENTUM BAR ---- */
+.battle-momentum-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 8px;
+  font-size: 0.6rem;
+}
+
+.momentum-label {
+  color: #80cbc4;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.momentum-fill-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.momentum-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #26a69a, #80cbc4);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.momentum-pct {
+  color: #80cbc4;
+  font-weight: bold;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ---- COMBO PROGRESS ---- */
+.battle-combo-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 1px 8px;
+  font-size: 0.55rem;
+}
+
+.combo-progress-item {
+  color: #ffcc80;
+  background: rgba(255,152,0,0.08);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,152,0,0.15);
+}
+
+.combo-streak {
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 0.65rem;
+}
+
 /* Battle skill menu */
 .battle-skill-menu {
   flex-wrap: wrap;
@@ -4187,6 +4417,139 @@ body {
   padding: 3px 8px;
   border-radius: 3px;
   border: 1px solid rgba(79, 195, 247, 0.2);
+}
+
+/* ---- SPEED BAR ---- */
+.battle-speed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 7px;
+  padding: 2px 0;
+  color: #aaa;
+}
+.speed-tag {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.speed-tag.speed-advantage {
+  color: #4fc3f7;
+  border-color: rgba(79, 195, 247, 0.4);
+  background: rgba(79, 195, 247, 0.1);
+}
+.speed-vs { color: #666; font-size: 6px; }
+.speed-bonus-label {
+  color: #4fc3f7;
+  font-size: 6px;
+  font-style: italic;
+}
+
+/* ---- ENEMY INTENT ---- */
+.battle-enemy-intent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 7px;
+  padding: 2px 8px;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 3px;
+  margin: 2px 8px;
+}
+.intent-label { color: #ff9800; }
+.intent-action { color: #ffa726; font-weight: bold; }
+.intent-action.intent-channel { color: #ff5722; }
+.intent-action.intent-unleash { color: #f44336; animation: pulse 0.8s infinite; }
+
+/* ---- CHANNEL INDICATORS ---- */
+.battle-channel-warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 8px;
+  padding: 3px 10px;
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+  border-radius: 3px;
+  margin: 2px 8px;
+  animation: pulse 1s infinite;
+}
+.channel-pulse { color: #f44336; font-weight: bold; }
+.channel-turns { color: #ff8a80; font-size: 7px; }
+
+.battle-channel-ready {
+  text-align: center;
+  font-size: 7px;
+  padding: 2px 8px;
+  color: #76ff03;
+  background: rgba(118, 255, 3, 0.1);
+  border: 1px solid rgba(118, 255, 3, 0.3);
+  border-radius: 3px;
+  margin: 2px 8px;
+  animation: pulse 1.2s infinite;
+}
+.battle-channel-active {
+  text-align: center;
+  font-size: 7px;
+  padding: 2px 8px;
+  color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.1);
+  border: 1px solid rgba(79, 195, 247, 0.3);
+  border-radius: 3px;
+  margin: 2px 8px;
+}
+
+/* ---- BOSS GIMMICK ---- */
+.battle-gimmick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 7px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin: 2px 8px;
+}
+.battle-gimmick.gimmick-pending {
+  color: #888;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.battle-gimmick.gimmick-active {
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+}
+.gimmick-icon { font-size: 10px; font-weight: bold; }
+.gimmick-name { font-weight: bold; }
+.gimmick-hint { font-size: 6px; color: #666; }
+.gimmick-desc { font-size: 6px; color: #ffa726; }
+
+/* Channel button */
+.btn-battle-channel {
+  background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+  border-color: #5c6bc0;
+  color: #b39ddb;
+}
+.btn-battle-channel:hover:not(:disabled) {
+  background: linear-gradient(135deg, #283593 0%, #4527a0 100%);
+  color: #d1c4e9;
+}
+.btn-battle-channel:disabled {
+  opacity: 0.4;
+}
+
+/* Inspect channel status */
+.status-channel { color: #ff9800; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* ---- USERNAME ENTRY SCREEN ---- */

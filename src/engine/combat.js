@@ -1,9 +1,10 @@
 // Combat calculations - damage formulas, stat modifiers, dodge/HP
 // All functions are pure (no side effects), taking player/battle state as arguments.
 
-import { CHARACTER_CLASSES } from '../data/gameData';
+import { CHARACTER_CLASSES, SKILLS, COMBO_CHAINS, STANCES, STANCE_MOMENTUM_PER_TURN, STANCE_MOMENTUM_CAP } from '../data/gameData';
 import { getTreeSkill } from '../data/skillTrees';
 import { prob } from '../data/probabilityStore';
+import { getElementCounter, getElementWeakness } from './elements';
 
 export function calcDamage(atk, def) {
   const base = Math.max(1, atk - def * 0.5);
@@ -365,4 +366,296 @@ export function getExecuteMultiplier(effect, monsterHp, monsterMaxHp) {
   if (effect === 'execute_25' && monsterHp < monsterMaxHp * 0.25) return 2.67;
   if (effect === 'counter') return 1; // handled separately with defendedLastTurn
   return 1;
+}
+
+// ---- SPEED SYSTEM ----
+
+// Get player effective speed stat (base + equipment + skill bonuses)
+export function getPlayerSpeed(player, battle) {
+  let speed = player.speed || player.baseSpeed || 5;
+  // Equipment speed bonuses (items can have speed stat)
+  for (const item of Object.values(player.equipment)) {
+    if (item?.speed) speed += item.speed;
+  }
+  // Athletics gives minor speed bonus
+  speed += Math.floor((player.athletics || 0) * 0.3);
+  // Thief class: innate +2 speed
+  const cls = getClassData(player);
+  if (cls?.id === 'thief') speed += 2;
+  // Berserker rage: +3 speed when below 40% HP
+  if (cls?.passive === 'Rage' && player.hp < player.maxHp * 0.4) speed += 3;
+  // Speed debuff from boss gimmick
+  if (battle?.speedDebuffPct) {
+    speed = Math.floor(speed * (1 - battle.speedDebuffPct));
+  }
+  return Math.max(1, speed);
+}
+
+// Determine who goes first based on speed. Returns true if player goes first.
+export function playerGoesFirst(playerSpeed, monsterSpeed) {
+  if (playerSpeed > monsterSpeed) return true;
+  if (monsterSpeed > playerSpeed) return false;
+  // Tie: 50/50
+  return Math.random() < 0.5;
+}
+
+// Pick the monster's next intended action (for preview when player is faster)
+export function pickMonsterNextMove(monster, battle) {
+  // If monster is channeling, next move is the unleash
+  if (battle?.monsterChanneling) {
+    const channelSkill = SKILLS[battle.monsterChannelSkillId];
+    if (channelSkill) {
+      return { type: 'unleash', name: channelSkill.unleashName || 'Unleash', skillId: battle.monsterChannelSkillId };
+    }
+  }
+  // Normal AI: 30% chance to use a skill, otherwise basic attack
+  if (monster.skills?.length > 0 && Math.random() < 0.3) {
+    const skillId = monster.skills[Math.floor(Math.random() * monster.skills.length)];
+    const skill = SKILLS[skillId];
+    if (skill) {
+      return { type: skill.effect === 'channel' ? 'channel' : 'skill', name: skill.name, skillId };
+    }
+  }
+  return { type: 'attack', name: 'Attack' };
+}
+
+// ---- PLAYER CHANNEL SYSTEM ----
+// Player can channel energy for 1 turn, then their next attack deals bonus damage
+export const PLAYER_CHANNEL_BONUS = 2.0; // 2x damage on next strike after channeling
+export const PLAYER_CHANNEL_MANA_COST = 8;
+
+// ---- EVASION / ACCURACY SYSTEM ----
+// Evasion gives dodge chance, accuracy reduces it. Net evasion = evasion - accuracy.
+// Each point of net evasion gives ~1.5% dodge chance, capped at 60%.
+
+export function getPlayerEvasion(player, battle) {
+  let eva = player.evasion || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.evasion) eva += item.evasion;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'thief') eva += 3;
+  if (battle?.evasionBuff) eva += battle.evasionBuff;
+  return Math.max(0, eva);
+}
+
+export function getPlayerAccuracy(player, battle) {
+  let acc = player.accuracy || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.accuracy) acc += item.accuracy;
+  }
+  if (battle?.accuracyBuff) acc += battle.accuracyBuff;
+  return Math.max(0, acc);
+}
+
+// Compute evasion-based dodge chance for a target given attacker's accuracy
+export function calcEvasionDodgeChance(targetEvasion, attackerAccuracy) {
+  const net = Math.max(0, targetEvasion - attackerAccuracy);
+  return Math.min(0.6, net * 0.015);
+}
+
+// ---- RESISTANCE SYSTEM ----
+// Reduces skill/magic damage. Each point gives ~1% reduction, capped at 50%.
+
+export function getPlayerResistance(player, battle) {
+  let res = player.resistance || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.resistance) res += item.resistance;
+  }
+  if (battle?.resistanceBuff) res += battle.resistanceBuff;
+  return Math.max(0, res);
+}
+
+export function calcResistanceReduction(resistance) {
+  return Math.min(0.5, resistance * 0.01);
+}
+
+// ---- TENACITY SYSTEM ----
+// Reduces debuff duration. Each point gives ~3% reduction (rounded down on turns).
+
+export function getPlayerTenacity(player) {
+  let ten = player.tenacity || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.tenacity) ten += item.tenacity;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'warrior') ten += 3;
+  return Math.max(0, ten);
+}
+
+export function reduceDurationByTenacity(baseTurns, tenacity) {
+  const reduction = Math.min(0.6, tenacity * 0.03);
+  return Math.max(1, Math.floor(baseTurns * (1 - reduction)));
+}
+
+// ---- AGGRESSION SYSTEM ----
+// Increases damage dealt AND taken. Each point gives +2% damage dealt, +1.5% damage taken.
+
+export function getPlayerAggression(player) {
+  let agg = player.aggression || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.aggression) agg += item.aggression;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'berserker') agg += 3;
+  return Math.max(0, agg);
+}
+
+export function calcAggressionDmgDealt(aggression) {
+  return 1 + aggression * 0.02; // multiplier on outgoing damage
+}
+
+export function calcAggressionDmgTaken(aggression) {
+  return 1 + aggression * 0.015; // multiplier on incoming damage
+}
+
+// ---- LUCK SYSTEM ----
+// Affects crit chance (+0.5% per point), enemy crit against you (-0.3% per point),
+// dodge (+0.3% per point). Capped reasonably.
+
+export function getPlayerLuck(player) {
+  let lck = player.luck || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.luck) lck += item.luck;
+  }
+  return Math.max(0, lck);
+}
+
+export function luckCritBonus(luck) {
+  return Math.min(0.15, luck * 0.005);
+}
+
+export function luckEnemyCritReduction(luck) {
+  return Math.min(0.08, luck * 0.003);
+}
+
+export function luckDodgeBonus(luck) {
+  return Math.min(0.10, luck * 0.003);
+}
+
+// ---- FORTITUDE / GRIT SYSTEM ----
+// Chance to survive a killing blow at 1 HP (once per battle).
+// Each point gives +2% chance, capped at 50%.
+
+export function getPlayerFortitude(player) {
+  let fort = player.fortitude || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.fortitude) fort += item.fortitude;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'warrior') fort += 2;
+  return Math.max(0, fort);
+}
+
+export function calcFortitudeSurviveChance(fortitude) {
+  return Math.min(0.5, fortitude * 0.02);
+}
+
+// ---- STUN SYSTEM ----
+export const STUN_BASE_CHANCE = 0.55; // base chance to land stun (before tenacity)
+
+// ---- CONFUSION SYSTEM ----
+export const CONFUSION_BASE_CHANCE = 0.5; // base chance to land confusion
+
+// ---- ELEMENTAL DAMAGE SYSTEM ----
+// Element counter: +50% damage. Weak: -25% damage.
+
+export function calcElementalDamageMultiplier(attackElement, defenderElement) {
+  if (!attackElement || !defenderElement || attackElement === 'physical' || defenderElement === 'physical') return 1.0;
+  const counter = getElementCounter(attackElement);
+  if (counter === defenderElement) return 1.5; // strong against
+  const weakness = getElementWeakness(attackElement);
+  if (weakness === defenderElement) return 0.75; // weak against
+  return 1.0;
+}
+
+// ---- COMBO CHAIN SYSTEM ----
+// Check if the action history matches any combo pattern
+export function checkComboChains(actionHistory, hasComboMaster) {
+  const completedCombos = [];
+  for (const [id, combo] of Object.entries(COMBO_CHAINS)) {
+    const seq = combo.sequence;
+    if (actionHistory.length >= seq.length) {
+      const recent = actionHistory.slice(-seq.length);
+      if (recent.every((a, i) => a === seq[i])) {
+        completedCombos.push({ id, ...combo });
+      }
+    }
+  }
+  // Apply combo master bonus if unlocked
+  if (hasComboMaster && completedCombos.length > 0) {
+    completedCombos.forEach(c => {
+      if (c.boostPct) c.boostPct *= 1.2;
+      if (c.critBoost) c.critBoost *= 1.2;
+      if (c.bleedPct) c.bleedPct *= 1.2;
+    });
+  }
+  return completedCombos;
+}
+
+// ---- STANCE SYSTEM ----
+export function getStanceModifiers(stanceId, hasStanceMaster, momentum = 0) {
+  const stance = STANCES[stanceId] || STANCES.balanced;
+  let mods = { ...stance };
+  if (hasStanceMaster) {
+    mods = {
+      name: stance.name,
+      dmgDealt: 1 + (stance.dmgDealt - 1) * 1.5,
+      dmgTaken: 1 + (stance.dmgTaken - 1) * 1.5,
+      critMod: stance.critMod * 1.5,
+      dodgeMod: stance.dodgeMod * 1.5,
+      manaMod: stance.manaMod,
+    };
+  }
+  // Apply momentum: amplifies the stance's beneficial effects
+  if (momentum > 0 && stanceId !== 'balanced') {
+    const m = Math.min(STANCE_MOMENTUM_CAP, momentum);
+    if (mods.dmgDealt > 1) mods.dmgDealt += m * 0.3; // aggressive gets more dmg
+    if (mods.dmgTaken < 1) mods.dmgTaken -= m * 0.2; // defensive takes less
+    if (mods.dodgeMod > 0) mods.dodgeMod += m * 0.3; // evasive dodges more
+  }
+  return mods;
+}
+
+// ---- STANCE MOMENTUM ----
+export function calcStanceMomentum(currentMomentum, stanceId) {
+  if (stanceId === 'balanced') return 0; // balanced doesn't build momentum
+  return Math.min(STANCE_MOMENTUM_CAP, (currentMomentum || 0) + STANCE_MOMENTUM_PER_TURN);
+}
+
+// ---- PARRY SYSTEM ----
+export const PARRY_DAMAGE_REDUCTION = 0.8; // 80% less damage when parrying
+export const PARRY_COUNTER_MULTIPLIER = 0.8; // counter for 0.8x ATK
+export const PERFECT_PARRY_COUNTER_MULTIPLIER = 1.5; // perfect parry master counter
+
+// ---- MONSTER ELEMENTAL DAMAGE ----
+// Monsters deal elemental damage with their basic attacks based on their element
+export function calcMonsterElementalDamage(dmg, monsterElement, skillElement, battle) {
+  // If player has elemental ward, reduce elemental damage
+  if (battle?.elementalWardTurns > 0 && skillElement && skillElement !== 'physical') {
+    dmg = Math.floor(dmg * 0.5);
+  }
+  return dmg;
+}
+
+// ---- COMBO PROGRESS TRACKING ----
+// Find which combos are partially completed to show progress
+export function getComboProgress(actionHistory) {
+  const progress = [];
+  for (const [id, combo] of Object.entries(COMBO_CHAINS)) {
+    const seq = combo.sequence;
+    if (actionHistory.length > 0 && actionHistory.length < seq.length) {
+      const partialSeq = seq.slice(0, actionHistory.length);
+      if (actionHistory.every((a, i) => a === partialSeq[i])) {
+        progress.push({
+          id,
+          name: combo.name,
+          current: actionHistory.length,
+          total: seq.length,
+          nextAction: seq[actionHistory.length],
+        });
+      }
+    }
+  }
+  return progress;
 }

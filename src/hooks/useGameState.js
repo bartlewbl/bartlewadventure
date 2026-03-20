@@ -1,9 +1,9 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES, getMonsterSkillElement } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER, PERFECT_PARRY_COUNTER_MULTIPLIER, calcMonsterElementalDamage, calcStanceMomentum } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -47,11 +47,23 @@ function createInitialPlayer() {
     charisma: 3,
     wisdom: 3,
     athletics: 3,
+    speed: 5,
+    evasion: 3,
+    accuracy: 4,
+    resistance: 3,
+    tenacity: 3,
+    aggression: 3,
+    luck: 3,
+    fortitude: 3,
     gold: 30,
     equipment: { weapon: null, shield: null, helmet: null, armor: null, gloves: null, boots: null, belt: null, cape: null, amulet: null, accessory: null, accessory2: null },
     inventory: [],
     maxInventory: 20,
     skillTree: [],
+    unlockedUniversalSkills: [], // universal combat skills unlocked through level milestones
+    comboMaster: false, // combo chains deal +20% bonus
+    stanceMaster: false, // stance bonuses increased by 50%
+    perfectParryMaster: false, // parry counter deals 1.5x damage
   };
 }
 
@@ -154,8 +166,38 @@ function processLevelUps(player) {
       charismaGain: (growth?.charisma ?? 0) + Math.floor(Math.random() * (growth?.charismaRand ?? 1)),
       wisdomGain: (growth?.wisdom ?? 0) + Math.floor(Math.random() * (growth?.wisdomRand ?? 1)),
       athleticsGain: (growth?.athletics ?? 0) + Math.floor(Math.random() * (growth?.athleticsRand ?? 1)),
+      speedGain: (growth?.speed ?? 0) + Math.floor(Math.random() * (growth?.speedRand ?? 1)),
+      evasionGain: (growth?.evasion ?? 0) + Math.floor(Math.random() * (growth?.evasionRand ?? 1)),
+      accuracyGain: (growth?.accuracy ?? 0) + Math.floor(Math.random() * (growth?.accuracyRand ?? 1)),
+      resistanceGain: (growth?.resistance ?? 0) + Math.floor(Math.random() * (growth?.resistanceRand ?? 1)),
+      tenacityGain: (growth?.tenacity ?? 0) + Math.floor(Math.random() * (growth?.tenacityRand ?? 1)),
+      aggressionGain: (growth?.aggression ?? 0) + Math.floor(Math.random() * (growth?.aggressionRand ?? 1)),
+      luckGain: (growth?.luck ?? 0) + Math.floor(Math.random() * (growth?.luckRand ?? 1)),
+      fortitudeGain: (growth?.fortitude ?? 0) + Math.floor(Math.random() * (growth?.fortitudeRand ?? 1)),
     };
     pendingLevels.push({ level: p.level, offers, picks: STAT_PICKS_PER_LEVEL });
+
+    // Apply level milestones
+    const milestone = LEVEL_MILESTONES[p.level];
+    if (milestone) {
+      if (milestone.reward === 'stat_boost' && milestone.stats) {
+        for (const [key, val] of Object.entries(milestone.stats)) {
+          p[key] = (p[key] || 0) + val;
+        }
+      } else if (milestone.reward.startsWith('unlock_')) {
+        const skillKey = milestone.reward.replace('unlock_', '');
+        if (!p.unlockedUniversalSkills.includes(skillKey)) {
+          p.unlockedUniversalSkills = [...p.unlockedUniversalSkills, skillKey];
+        }
+      } else if (milestone.reward === 'combo_master') {
+        p.comboMaster = true;
+      } else if (milestone.reward === 'stance_master') {
+        p.stanceMaster = true;
+      } else if (milestone.reward === 'perfect_parry_master') {
+        p.perfectParryMaster = true;
+      }
+      pendingLevels[pendingLevels.length - 1].milestone = milestone;
+    }
   }
   // Restore HP/mana on level up (even before stat choices are made)
   if (pendingLevels.length > 0) {
@@ -176,6 +218,14 @@ function applyStatChoices(player, offers, selectedStats) {
       case 'charisma': p.charisma = (p.charisma || 0) + offers.charismaGain; break;
       case 'wisdom': p.wisdom = (p.wisdom || 0) + offers.wisdomGain; break;
       case 'athletics': p.athletics = (p.athletics || 0) + offers.athleticsGain; break;
+      case 'speed': p.speed = (p.speed || 5) + offers.speedGain; break;
+      case 'evasion': p.evasion = (p.evasion || 3) + offers.evasionGain; break;
+      case 'accuracy': p.accuracy = (p.accuracy || 4) + offers.accuracyGain; break;
+      case 'resistance': p.resistance = (p.resistance || 3) + offers.resistanceGain; break;
+      case 'tenacity': p.tenacity = (p.tenacity || 3) + offers.tenacityGain; break;
+      case 'aggression': p.aggression = (p.aggression || 3) + offers.aggressionGain; break;
+      case 'luck': p.luck = (p.luck || 3) + offers.luckGain; break;
+      case 'fortitude': p.fortitude = (p.fortitude || 3) + offers.fortitudeGain; break;
     }
   }
   return p;
@@ -242,7 +292,11 @@ function extractSaveData(state) {
 }
 
 // ---- PET BATTLE HELPERS ----
-function createBattleState(monster) {
+function createBattleState(monster, player) {
+  const pSpeed = player ? getPlayerSpeed(player) : 5;
+  const mSpeed = monster.speed || 5;
+  const isPlayerFirst = playerGoesFirst(pSpeed, mSpeed);
+  const nextMove = isPlayerFirst ? pickMonsterNextMove(monster, null) : null;
   return {
     monster, isPlayerTurn: true, defending: false,
     poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
@@ -253,6 +307,77 @@ function createBattleState(monster) {
     avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
     petActions: [], // log of pet actions this turn
     petReviveUsed: false, // track phoenix revive
+    // Speed system
+    playerSpeed: pSpeed,
+    monsterSpeed: mSpeed,
+    playerIsFaster: isPlayerFirst,
+    monsterNextMove: nextMove, // shown when player is faster
+    // Channel system
+    monsterChanneling: false,
+    monsterChannelTurns: 0,
+    monsterChannelSkillId: null,
+    playerChanneling: false, // player channel state
+    playerChannelBonusActive: false, // bonus active for next attack
+    // Boss gimmick state
+    gimmick: monster.gimmick || null,
+    gimmickActive: false,
+    gimmickData: {}, // dynamic gimmick state (counters, timers, etc.)
+    turnCount: 0,
+    // Speed debuff (from boss gimmicks)
+    speedDebuffPct: 0,
+    // Gimmick-specific flags
+    playerFrozen: false, // skip player turn
+    playerMissChance: 0, // extra miss chance from gimmicks
+    monsterInvulnerable: false, // cannot take damage
+    monsterDmgReduction: 0, // % damage reduction
+    monsterReflectPct: 0, // reflect damage back
+    noDefend: false, // cannot use defend action
+    noRun: false, // cannot run
+    healReduction: 0, // reduce healing effectiveness
+    // Stun / confusion state
+    playerStunTurns: 0, // player skips turns when > 0
+    monsterStunTurns: 0, // monster skips turns when > 0
+    playerConfusionTurns: 0, // player does random action when > 0
+    monsterConfusionTurns: 0, // monster does random action when > 0
+    // Fortitude (grit) - survive lethal once
+    fortitudeUsed: false,
+    monsterFortitudeUsed: false,
+    // Stance system
+    stance: 'balanced', // current stance: balanced, aggressive, defensive
+    // Combo chain system
+    actionHistory: [], // track recent player actions for combo detection
+    activeCombo: null, // currently active combo bonus
+    comboBleedTurns: 0, // bleed effect from relentless combo
+    comboBleedPct: 0,
+    // Parry system
+    parrying: false, // player is parrying this turn
+    // Elemental system
+    monsterElement: monster.element || 'physical',
+    // War Shout buff
+    warShoutTurns: 0,
+    warShoutAtkDebuff: 0,
+    warShoutDefBuff: 0,
+    // Stance momentum
+    stanceMomentum: 0,
+    lastStance: 'balanced',
+    // Combo streak
+    comboStreak: 0,
+    // Universal skill cooldowns { skillId: turnsRemaining }
+    universalCooldowns: {},
+    // Elemental ward (from universal skill)
+    elementalWardTurns: 0,
+    // Last Stand used flag
+    lastStandUsed: false,
+    // Limit Break used flag
+    limitBreakUsed: false,
+    // Armor Shatter debuff on monster
+    armorShatterTurns: 0,
+    armorShatterPct: 0,
+    // Frenzy combo buff
+    frenzyBonusTurns: 0,
+    frenzyBonusPct: 0,
+    // Invulnerability from perfect parry combo
+    playerInvulnTurns: 0,
   };
 }
 
@@ -517,6 +642,14 @@ function gameReducer(state, action) {
         charisma: cls.baseStats.charisma,
         wisdom: cls.baseStats.wisdom,
         athletics: cls.baseStats.athletics,
+        speed: cls.baseStats.speed || 5,
+        evasion: cls.baseStats.evasion || 3,
+        accuracy: cls.baseStats.accuracy || 4,
+        resistance: cls.baseStats.resistance || 3,
+        tenacity: cls.baseStats.tenacity || 3,
+        aggression: cls.baseStats.aggression || 3,
+        luck: cls.baseStats.luck || 3,
+        fortitude: cls.baseStats.fortitude || 3,
       };
       return { ...state, screen: 'town', player: p };
     }
@@ -687,14 +820,21 @@ function gameReducer(state, action) {
         }
         const monster = scaleMonster(monsterId, encounterLevel);
         const levelInfo = loc.special ? ` (Lv.${encounterLevel})` : '';
+        const encBattle = createBattleState(monster, state.player);
+        const encLog = [{ text: `A ${monster.name}${levelInfo} appears!`, type: 'info' }];
+        if (encBattle.playerIsFaster && encBattle.monsterNextMove) {
+          encLog.push({ text: `You're faster! Enemy intends to: ${encBattle.monsterNextMove.name}`, type: 'info' });
+        } else if (!encBattle.playerIsFaster) {
+          encLog.push({ text: `${monster.name} is faster and strikes first!`, type: 'info' });
+        }
         return {
           ...state, screen: 'battle',
           exploreText: text,
           energy: exploreEnergy,
           lastEnergyUpdate: exploreLastUpdate,
           pets: petsAfterExplore,
-          battle: createBattleState(monster),
-          battleLog: [{ text: `A ${monster.name}${levelInfo} appears!`, type: 'info' }],
+          battle: encBattle,
+          battleLog: encLog,
           battleResult: null,
         };
       }
@@ -940,7 +1080,7 @@ function gameReducer(state, action) {
             lastEnergyUpdate: eventLastUpdate,
             player: p,
             randomEvent: null,
-            battle: createBattleState(monster),
+            battle: createBattleState(monster, p),
             battleLog: [{ text: `${ambushText}A ${monster.name} attacks!`, type: 'info' }],
             battleResult: null,
           };
@@ -1249,25 +1389,155 @@ function gameReducer(state, action) {
       let m = { ...b.monster };
       let p = { ...state.player };
       const cls = getClassData(p);
-      let dmg = calcDamage(getPlayerAtk(p, b), m.def);
+      let log = [...state.battleLog];
+
+      // Check if player is stunned
+      if (b.playerStunTurns > 0) {
+        b.playerStunTurns--;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: `You are stunned and cannot act! (${b.playerStunTurns} turns left)`, type: 'dmg-player' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Check if player is confused - random action
+      if (b.playerConfusionTurns > 0) {
+        b.playerConfusionTurns--;
+        const confRoll = Math.random();
+        if (confRoll < 0.3) {
+          // Skip turn entirely
+          log.push({ text: 'You are confused and stumble around!', type: 'dmg-player' });
+          return { ...state, battle: b, battleLog: log };
+        } else if (confRoll < 0.5) {
+          // Hit yourself
+          const selfDmg = Math.floor(calcDamage(getPlayerAtk(p, b), 0) * 0.3);
+          p = { ...p, hp: Math.max(1, p.hp - selfDmg) };
+          log.push({ text: `Confused! You hit yourself for ${selfDmg} damage!`, type: 'dmg-player' });
+          return { ...state, player: p, battle: b, battleLog: log };
+        }
+        // else: attack normally but with reduced accuracy
+        log.push({ text: 'You shake off some confusion...', type: 'info' });
+      }
+
+      // Check if player is frozen (boss gimmick)
+      if (b.playerFrozen) {
+        b.playerFrozen = false;
+        log.push({ text: 'You are frozen and cannot act this turn!', type: 'dmg-player' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Gimmick miss chance check
+      if (b.playerMissChance > 0 && Math.random() < b.playerMissChance) {
+        b.defending = false;
+        b.defendedLastTurn = false;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: 'Your attack misses!', type: 'info' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Monster evasion check (monster dodges based on evasion vs player accuracy)
+      const mEvasion = m.evasion || 0;
+      const pAccuracy = getPlayerAccuracy(p, b);
+      const mDodgeChance = calcEvasionDodgeChance(mEvasion, pAccuracy);
+      if (mDodgeChance > 0 && Math.random() < mDodgeChance) {
+        b.defending = false;
+        b.defendedLastTurn = false;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: `${m.name} evades your attack!`, type: 'info' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Monster invulnerability check
+      if (b.monsterInvulnerable) {
+        b.defending = false;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: `${m.name} is invulnerable! Your attack has no effect!`, type: 'info' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Apply armor shatter debuff to monster DEF
+      const effectiveMonsterDef = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      let dmg = calcDamage(getPlayerAtk(p, b), effectiveMonsterDef);
+
+      // Apply frenzy combo buff
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
+
+      // Apply channel bonus
+      if (b.playerChannelBonusActive) {
+        dmg = Math.floor(dmg * PLAYER_CHANNEL_BONUS);
+        b.playerChannelBonusActive = false;
+        log.push({ text: `Channeled energy released! ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' });
+      }
+
+      // Stance modifier on outgoing damage
+      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      dmg = Math.floor(dmg * stanceMods.dmgDealt);
+
+      // Aggression bonus: increased outgoing damage
+      const pAggression = getPlayerAggression(p);
+      if (pAggression > 0) {
+        dmg = Math.floor(dmg * calcAggressionDmgDealt(pAggression));
+      }
+
+      // Elemental damage multiplier (player attack element vs monster element)
+      const playerAttackElement = getSkillElement(null, p.characterClass);
+      const elemMult = calcElementalDamageMultiplier(playerAttackElement, b.monsterElement);
+      if (elemMult !== 1.0) {
+        dmg = Math.floor(dmg * elemMult);
+        if (elemMult > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+        else log.push({ text: 'Not very effective...', type: 'info' });
+      }
 
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
 
-      // Critical hit check (stacks with lucky strike)
+      // Critical hit check (includes luck bonus + stance crit mod + guaranteed crit)
       let playerCrit = false;
-      if (Math.random() < getPlayerCritChance(p)) {
+      const pLuck = getPlayerLuck(p);
+      const critChance = getPlayerCritChance(p) + luckCritBonus(pLuck) + stanceMods.critMod;
+      if (b.guaranteedCrit || Math.random() < critChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         playerCrit = true;
+        if (b.guaranteedCrit) {
+          b.guaranteedCrit = false;
+        }
+      }
+
+      // Monster damage reduction (boss gimmick)
+      if (b.monsterDmgReduction > 0) {
+        dmg = Math.floor(dmg * (1 - b.monsterDmgReduction));
+      }
+
+      // Monster resistance reduces skill damage (applied to basic attacks lightly)
+      const mRes = m.resistance || 0;
+      if (mRes > 0) {
+        const resReduct = calcResistanceReduction(mRes) * 0.3; // basic attacks only 30% affected
+        dmg = Math.floor(dmg * (1 - resReduct));
       }
 
       m.hp = Math.max(0, m.hp - dmg);
+
+      // Monster fortitude: survive lethal blow once at 1 HP
+      if (m.hp <= 0 && !b.monsterFortitudeUsed) {
+        const mFort = m.fortitude || 0;
+        const surviveChance = calcFortitudeSurviveChance(mFort);
+        if (surviveChance > 0 && Math.random() < surviveChance) {
+          m.hp = 1;
+          b.monsterFortitudeUsed = true;
+          log.push({ text: `${m.name} endures the lethal blow with sheer willpower!`, type: 'info' });
+        }
+      }
       b.monster = m;
       b.defending = false;
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       b.showInspect = false;
-      let log = [...state.battleLog];
+
       if (lucky.procced && playerCrit) {
         log.push({ text: `Lucky Strike + CRIT! Devastating ${dmg} damage!`, type: 'dmg-monster' });
       } else if (lucky.procced) {
@@ -1276,6 +1546,57 @@ function gameReducer(state, action) {
         log.push({ text: `CRITICAL HIT! You attack for ${dmg} damage!`, type: 'dmg-monster' });
       } else {
         log.push({ text: `You attack for ${dmg} damage!`, type: 'dmg-monster' });
+      }
+
+      // Track action in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'attack'].slice(-5);
+      // Check combo chains
+      const combos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (combos.length > 0) {
+        for (const combo of combos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          } else if (combo.bonus === 'bleed') {
+            b.comboBleedTurns = combo.bleedTurns || 2;
+            b.comboBleedPct = combo.bleedPct || 0.04;
+            log.push({ text: `Enemy is bleeding!`, type: 'info' });
+          } else if (combo.bonus === 'pierce') {
+            // Pierce: next attack ignores 50% DEF — already dealt
+          } else if (combo.bonus === 'armor_break') {
+            b.armorShatterTurns = combo.armorBreakTurns || 3;
+            b.armorShatterPct = combo.armorBreakPct || 0.4;
+            log.push({ text: `Fortress Crush! Enemy armor broken!`, type: 'info' });
+          } else if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'invuln') {
+            b.playerInvulnTurns = combo.invulnTurns || 1;
+            log.push({ text: 'Perfect Parry! You become invulnerable!', type: 'info' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Berserker frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'crit_guarantee') {
+            b.guaranteedCrit = true;
+            log.push({ text: 'Focused Strike — guaranteed critical next attack!', type: 'info' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = []; // reset after combo completes
+      }
+
+      // Monster reflect damage (boss gimmick)
+      if (b.monsterReflectPct > 0) {
+        const reflectDmg = Math.floor(dmg * b.monsterReflectPct);
+        if (reflectDmg > 0) {
+          p = { ...p, hp: Math.max(0, p.hp - reflectDmg) };
+          log.push({ text: `${m.name} reflects ${reflectDmg} damage back!`, type: 'dmg-player' });
+        }
       }
 
       // Post-attack passives (lifetap, vampiric aura, soul siphon, bloodlust, etc.)
@@ -1321,7 +1642,9 @@ function gameReducer(state, action) {
       const skillName = cls?.skillName || 'Power Strike';
       const skillMult = cls?.skillMultiplier || 1.5;
       const skillEffect = cls?.skillEffect || null;
-      const manaCost = getEffectiveManaCost(p, cls?.skillManaCost || 0, b);
+      const stanceModsSkill = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const manaCostRaw = cls?.skillManaCost || 0;
+      const manaCost = getEffectiveManaCost(p, Math.ceil(manaCostRaw * (stanceModsSkill.manaMod || 1.0)), b);
 
       if (manaCost > 0 && p.mana < manaCost) {
         return { ...state, message: `Not enough mana! (${manaCost} needed)` };
@@ -1339,12 +1662,30 @@ function gameReducer(state, action) {
 
       p = applyLifeTap(p, manaCost);
 
-      const effectiveDef = getEffectiveDef(m.def, skillEffect);
+      // Apply armor shatter debuff to monster DEF
+      const effectiveMonsterDefSkill = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      const effectiveDef = getEffectiveDef(effectiveMonsterDefSkill, skillEffect);
       let dmg = calcDamage(atkValue, effectiveDef);
 
-      // Critical hit check for skills
+      // Apply frenzy combo buff
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
+
+      // Stance modifier on outgoing damage
+      dmg = Math.floor(dmg * stanceModsSkill.dmgDealt);
+
+      // Elemental damage multiplier (skill element vs monster element)
+      const elemMultSkill = calcElementalDamageMultiplier(classElement, b.monsterElement);
+      if (elemMultSkill !== 1.0) {
+        dmg = Math.floor(dmg * elemMultSkill);
+      }
+
+      // Critical hit check for skills (includes stance crit mod)
       let skillCrit = false;
-      if (Math.random() < getPlayerCritChance(p)) {
+      const pLuckSkill = getPlayerLuck(p);
+      const skillCritChance = getPlayerCritChance(p) + luckCritBonus(pLuckSkill) + stanceModsSkill.critMod;
+      if (Math.random() < skillCritChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         skillCrit = true;
       }
@@ -1359,11 +1700,39 @@ function gameReducer(state, action) {
       const classWeatherLabel = classWeatherBuff !== 1.0
         ? ` (${classWeatherBuff > 1 ? '+' : ''}${Math.round((classWeatherBuff - 1) * 100)}% weather)`
         : '';
+      if (elemMultSkill > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+      else if (elemMultSkill < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
       const critLabel = skillCrit ? 'CRIT! ' : '';
       if (echoProc) {
         log.push({ text: `${critLabel}Spell Echo! ${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       } else {
         log.push({ text: `${critLabel}${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
+      }
+
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+      // Check combo chains
+      const skillCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (skillCombos.length > 0) {
+        for (const combo of skillCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = [];
       }
 
       // Apply class skill effect (recoil, weaken, drain, etc.)
@@ -1408,7 +1777,8 @@ function gameReducer(state, action) {
       let p = { ...state.player };
       const skill = getTreeSkill(action.skillId);
       if (!skill || skill.type !== 'active') return state;
-      const manaCost = getEffectiveManaCost(p, skill.manaCost || 0, b);
+      const stanceModsTree = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const manaCost = getEffectiveManaCost(p, Math.ceil((skill.manaCost || 0) * (stanceModsTree.manaMod || 1.0)), b);
       if (manaCost > 0 && p.mana < manaCost) {
         return { ...state, message: `Not enough mana! (${manaCost} needed)` };
       }
@@ -1426,15 +1796,33 @@ function gameReducer(state, action) {
 
       p = applyLifeTap(p, manaCost);
 
-      const effectiveDef = getEffectiveDef(m.def, skill.effect);
+      // Apply armor shatter debuff to monster DEF
+      const effectiveMonsterDefTree = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      const effectiveDef = getEffectiveDef(effectiveMonsterDefTree, skill.effect);
       let finalMult = getExecuteMultiplier(skill.effect, m.hp, m.maxHp);
       if (skill.effect === 'counter' && b.defendedLastTurn) finalMult = 1.25;
 
       let dmg = calcDamage(Math.floor(atkValue * finalMult), effectiveDef);
 
-      // Critical hit check for tree skills
+      // Apply frenzy combo buff
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
+
+      // Stance modifier on outgoing damage
+      dmg = Math.floor(dmg * stanceModsTree.dmgDealt);
+
+      // Elemental damage multiplier (skill element vs monster element)
+      const elemMultTree = calcElementalDamageMultiplier(skillElement, b.monsterElement);
+      if (elemMultTree !== 1.0) {
+        dmg = Math.floor(dmg * elemMultTree);
+      }
+
+      // Critical hit check for tree skills (includes stance crit mod + luck)
       let treeCrit = false;
-      if (Math.random() < getPlayerCritChance(p)) {
+      const pLuckTree = getPlayerLuck(p);
+      const treeCritChance = getPlayerCritChance(p) + luckCritBonus(pLuckTree) + stanceModsTree.critMod;
+      if (Math.random() < treeCritChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         treeCrit = true;
       }
@@ -1449,11 +1837,39 @@ function gameReducer(state, action) {
       const weatherBuffLabel = weatherSpellBuff !== 1.0
         ? ` (${weatherSpellBuff > 1 ? '+' : ''}${Math.round((weatherSpellBuff - 1) * 100)}% weather)`
         : '';
+      if (elemMultTree > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+      else if (elemMultTree < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
       const treeCritLabel = treeCrit ? 'CRIT! ' : '';
       if (echoProc) {
         log.push({ text: `${treeCritLabel}Spell Echo! ${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       } else {
         log.push({ text: `${treeCritLabel}${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
+      }
+
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+      // Check combo chains
+      const treeCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (treeCombos.length > 0) {
+        for (const combo of treeCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = [];
       }
 
       // Apply skill effect via data-driven registry
@@ -1544,8 +1960,32 @@ function gameReducer(state, action) {
       return { ...state, player: p, stats: newStats, tasks: newTasks };
     }
 
+    // Player channels energy for a boosted next attack
+    case 'BATTLE_CHANNEL': {
+      let b = { ...state.battle, showSkillMenu: false, showInspect: false };
+      let p = { ...state.player };
+      if (b.playerStunTurns > 0) {
+        return { ...state, message: 'You are stunned and cannot act!' };
+      }
+      const manaCost = PLAYER_CHANNEL_MANA_COST;
+      if (p.mana < manaCost) {
+        return { ...state, message: `Not enough mana to channel! (${manaCost} needed)` };
+      }
+      p = { ...p, mana: p.mana - manaCost };
+      b.playerChanneling = true;
+      b.playerChannelBonusActive = false;
+      b.defending = false;
+      b.defendedLastTurn = false;
+      b.actionHistory = [...(b.actionHistory || []), 'channel'].slice(-5);
+      const log = [...state.battleLog, { text: `You channel energy... Next attack will deal ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' }];
+      return { ...state, player: p, battle: b, battleLog: log };
+    }
+
     case 'BATTLE_DEFEND': {
-      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false };
+      if (state.battle.noDefend) {
+        return { ...state, message: 'You cannot defend right now!' };
+      }
+      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false, actionHistory: [...(state.battle.actionHistory || []), 'defend'].slice(-5) };
       let p = { ...state.player };
       const log = [...state.battleLog, { text: 'You brace for impact!', type: 'info' }];
       // Arcane Barrier: defend restores 10 mana
@@ -1580,14 +2020,22 @@ function gameReducer(state, action) {
     case 'BOSS_ACCEPT': {
       const boss = state.pendingBoss;
       if (!boss) return { ...state, screen: 'explore', pendingBoss: null };
+      const bossBattle = createBattleState(boss, state.player);
+      const bossLog = [
+        { text: `BOSS BATTLE!`, type: 'info' },
+        { text: `${boss.name} - ${boss.title} appears!`, type: 'info' },
+      ];
+      if (boss.gimmick) {
+        bossLog.push({ text: `Boss Gimmick: ${boss.gimmick.name} - ${boss.gimmick.desc}`, type: 'info' });
+      }
+      if (bossBattle.playerIsFaster && bossBattle.monsterNextMove) {
+        bossLog.push({ text: `Your speed advantage lets you see the enemy's intent: ${bossBattle.monsterNextMove.name}`, type: 'info' });
+      }
       return {
         ...state, screen: 'battle',
         pendingBoss: null,
-        battle: createBattleState(boss),
-        battleLog: [
-          { text: `BOSS BATTLE!`, type: 'info' },
-          { text: `${boss.name} - ${boss.title} appears!`, type: 'info' },
-        ],
+        battle: bossBattle,
+        battleLog: bossLog,
         battleResult: null,
       };
     }
@@ -1600,6 +2048,9 @@ function gameReducer(state, action) {
     }
 
     case 'BATTLE_RUN': {
+      if (state.battle.noRun) {
+        return { ...state, message: 'You cannot escape!' };
+      }
       const cls = getClassData(state.player);
       let escapeChance = (cls?.passive === 'Greed') ? prob('combat.escapeChanceGreed') : prob('combat.escapeChanceBase');
       if (playerHasSkill(state.player, 'thf_t7a')) escapeChance = 1.0;
@@ -1622,6 +2073,16 @@ function gameReducer(state, action) {
       let log = [...state.battleLog];
       let p = { ...state.player };
       const cls = getClassData(p);
+
+      // Increment turn counter
+      b.turnCount = (b.turnCount || 0) + 1;
+
+      // If player was channeling, activate bonus for next attack
+      if (b.playerChanneling) {
+        b.playerChanneling = false;
+        b.playerChannelBonusActive = true;
+        log.push({ text: 'Your channeled energy is ready to unleash!', type: 'info' });
+      }
 
       // Monster poison tick
       if (b.monsterPoisonTurns > 0) {
@@ -1646,91 +2107,581 @@ function gameReducer(state, action) {
         }
       }
 
+      // Stance momentum: build up if staying in same stance
+      if (b.stance === b.lastStance && b.stance !== 'balanced') {
+        b.stanceMomentum = calcStanceMomentum(b.stanceMomentum, b.stance);
+      }
+      b.lastStance = b.stance;
+
+      // Tick down universal skill cooldowns
+      const cds = { ...b.universalCooldowns };
+      for (const key of Object.keys(cds)) {
+        if (cds[key] > 0) cds[key]--;
+        if (cds[key] <= 0) delete cds[key];
+      }
+      b.universalCooldowns = cds;
+
       // Tick down buffs
       if (b.avatarTurns > 0) b.avatarTurns--;
       if (b.armorBreakTurns > 0) b.armorBreakTurns--;
+      if (b.elementalWardTurns > 0) b.elementalWardTurns--;
+      if (b.frenzyBonusTurns > 0) b.frenzyBonusTurns--;
+      if (b.playerInvulnTurns > 0) b.playerInvulnTurns--;
+      if (b.armorShatterTurns > 0) {
+        b.armorShatterTurns--;
+        if (b.armorShatterTurns <= 0) b.armorShatterPct = 0;
+      }
+      if (b.warShoutTurns > 0) {
+        b.warShoutTurns--;
+        if (b.warShoutTurns <= 0) {
+          b.warShoutAtkDebuff = 0;
+          b.warShoutDefBuff = 0;
+        }
+      }
+      // Combo bleed tick
+      if (b.comboBleedTurns > 0) {
+        const bleedDmg = Math.floor(m.maxHp * (b.comboBleedPct || 0.04));
+        m.hp = Math.max(0, m.hp - bleedDmg);
+        b.comboBleedTurns--;
+        log.push({ text: `Bleed deals ${bleedDmg} to ${m.name}!`, type: 'dmg-monster' });
+        if (m.hp <= 0) {
+          b.monster = m;
+          return handleVictory({ ...state, player: p, battle: b, battleLog: log });
+        }
+      }
+      // Reset parry flag at start of monster turn
+      b.parrying = false;
+
+      // ---- BOSS GIMMICK PROCESSING ----
+      if (b.gimmick && m.isBoss) {
+        const g = b.gimmick;
+        const gd = { ...b.gimmickData };
+        const hpPct = m.hp / m.maxHp;
+
+        // Activate gimmick when HP threshold reached
+        if (!b.gimmickActive && hpPct <= g.triggerHpPct) {
+          b.gimmickActive = true;
+          log.push({ text: `${m.name} activates ${g.name}!`, type: 'info' });
+        }
+
+        if (b.gimmickActive) {
+          switch (g.type) {
+            case 'regeneration':
+              const regenAmt = Math.floor(m.maxHp * g.healPct);
+              m = { ...m, hp: Math.min(m.maxHp, m.hp + regenAmt) };
+              log.push({ text: `${m.name} regenerates ${regenAmt} HP!`, type: 'heal' });
+              break;
+            case 'enrage':
+              if (b.turnCount % g.interval === 0) {
+                gd.enrageStacks = (gd.enrageStacks || 0) + 1;
+                const boost = Math.floor(m.atk * g.atkBoostPct);
+                m = { ...m, atk: m.atk + boost };
+                log.push({ text: `${m.name}'s rage intensifies! ATK +${boost}!`, type: 'info' });
+              }
+              break;
+            case 'hardening':
+              m = { ...m, def: m.def + g.defGainPerTurn };
+              log.push({ text: `${m.name}'s coral hardens! DEF +${g.defGainPerTurn}!`, type: 'info' });
+              break;
+            case 'frost_aura':
+              if (!gd.frostAuraApplied) {
+                b.speedDebuffPct = g.speedDebuffPct;
+                gd.frostAuraApplied = true;
+                gd.frostAuraTurns = g.duration;
+                log.push({ text: `Frost Aura slows you! Speed reduced by ${g.speedDebuffPct * 100}%!`, type: 'dmg-player' });
+              }
+              if (gd.frostAuraTurns > 0) {
+                gd.frostAuraTurns--;
+                if (gd.frostAuraTurns <= 0) b.speedDebuffPct = 0;
+              }
+              break;
+            case 'lava_pool':
+            case 'frozen_ground':
+            case 'drowned_court':
+            case 'gravity_well': {
+              gd.dotTurns = gd.dotTurns ?? g.duration ?? 99;
+              if (gd.dotTurns > 0) {
+                const dotPct = g.dmgPct || g.drainPct || 0.03;
+                const dotDmg = Math.floor(p.maxHp * dotPct);
+                p = { ...p, hp: Math.max(0, p.hp - dotDmg) };
+                gd.dotTurns--;
+                log.push({ text: `${g.name} deals ${dotDmg} damage!`, type: 'dmg-player' });
+              }
+              break;
+            }
+            case 'eruption_timer': {
+              gd.eruptionCounter = (gd.eruptionCounter || 0) + 1;
+              const remaining = g.timer - gd.eruptionCounter;
+              if (remaining > 0) {
+                log.push({ text: `Volcanic Eruption in ${remaining} turns...`, type: 'info' });
+              } else if (remaining === 0) {
+                const eruptDmg = Math.floor(p.maxHp * g.eruptDmgPct);
+                p = { ...p, hp: Math.max(0, p.hp - eruptDmg) };
+                log.push({ text: `VOLCANIC ERUPTION! ${eruptDmg} damage!`, type: 'dmg-player' });
+                gd.eruptionCounter = 0; // reset timer
+              }
+              break;
+            }
+            case 'decompose':
+              p = { ...p, baseAtk: Math.max(1, p.baseAtk - g.atkLoss), baseDef: Math.max(0, p.baseDef - g.defLoss) };
+              log.push({ text: `Decompose drains your strength! ATK -${g.atkLoss}, DEF -${g.defLoss}!`, type: 'dmg-player' });
+              break;
+            case 'entropy_decay':
+              b.entropyAtkDecay = (b.entropyAtkDecay || 0) + g.decayPct;
+              log.push({ text: `Entropy decays your power! ATK -${Math.round(g.decayPct * 100)}%!`, type: 'dmg-player' });
+              break;
+            case 'venom_stacks':
+              gd.venomStacks = (gd.venomStacks || 0) + 1;
+              log.push({ text: `Venom Stack: ${gd.venomStacks}/${g.maxStacks}`, type: 'dmg-player' });
+              if (gd.venomStacks >= g.maxStacks) {
+                const burstDmg = Math.floor(p.maxHp * g.burstDmgPct);
+                p = { ...p, hp: Math.max(0, p.hp - burstDmg) };
+                gd.venomStacks = 0;
+                log.push({ text: `Venom Burst! ${burstDmg} damage!`, type: 'dmg-player' });
+              }
+              break;
+            case 'tidal_surge':
+              if (b.turnCount % g.interval === 0) {
+                gd.tidalSurgeActive = true;
+                log.push({ text: 'Tidal Surge! Next attack deals double damage!', type: 'info' });
+              }
+              break;
+            case 'oblivion_countdown': {
+              gd.countdown = gd.countdown ?? g.countdown;
+              gd.countdown--;
+              if (gd.countdown <= 0) {
+                p = { ...p, hp: 0 };
+                log.push({ text: 'OBLIVION! The countdown reaches zero!', type: 'dmg-player' });
+              } else {
+                log.push({ text: `Oblivion Countdown: ${gd.countdown}...`, type: 'info' });
+              }
+              break;
+            }
+            case 'lightning_field':
+              gd.fieldTurns = gd.fieldTurns ?? g.duration;
+              if (gd.fieldTurns > 0) {
+                b.monsterReflectPct = g.reflectPct;
+                gd.fieldTurns--;
+              } else {
+                b.monsterReflectPct = 0;
+              }
+              break;
+            case 'sandstorm':
+            case 'whiteout':
+              gd.missTurns = gd.missTurns ?? g.duration;
+              if (gd.missTurns > 0) {
+                b.playerMissChance = g.missPct;
+                gd.missTurns--;
+              } else {
+                b.playerMissChance = 0;
+              }
+              break;
+            case 'tentacle_grab':
+              gd.grabTurns = gd.grabTurns ?? g.duration;
+              if (gd.grabTurns > 0) {
+                b.noDefend = true;
+                b.noRun = true;
+                gd.grabTurns--;
+                log.push({ text: 'Tentacles hold you! Cannot defend or run!', type: 'dmg-player' });
+              } else {
+                b.noDefend = false;
+                b.noRun = false;
+              }
+              break;
+            case 'spore_shield':
+              if (b.poisonTurns > 0) {
+                b.monsterDmgReduction = g.dmgReduction;
+              } else {
+                b.monsterDmgReduction = 0;
+              }
+              break;
+            case 'armor_up':
+              if (!gd.armorUpApplied) {
+                gd.armorUpApplied = true;
+                gd.armorUpTurns = g.duration;
+                gd.originalDef = m.def;
+                m = { ...m, def: Math.floor(m.def * g.defMult) };
+                log.push({ text: `${m.name}'s defense doubled!`, type: 'info' });
+              }
+              if (gd.armorUpTurns > 0) {
+                gd.armorUpTurns--;
+                if (gd.armorUpTurns <= 0 && gd.originalDef) {
+                  m = { ...m, def: gd.originalDef };
+                }
+              }
+              break;
+            case 'crystal_reflect':
+              gd.reflectTurns = gd.reflectTurns ?? g.duration;
+              if (gd.reflectTurns > 0) {
+                b.monsterReflectPct = g.reflectPct;
+                gd.reflectTurns--;
+              } else {
+                b.monsterReflectPct = 0;
+              }
+              break;
+            case 'null_zone':
+              gd.nullTurns = gd.nullTurns ?? g.duration;
+              if (gd.nullTurns > 0) {
+                gd.nullTurns--;
+                log.push({ text: `Null Zone active! Passives disabled! (${gd.nullTurns} turns)`, type: 'info' });
+              }
+              break;
+            default:
+              break;
+          }
+        }
+        b.gimmickData = gd;
+      }
 
       // Turn-start passives (regeneration, meditation, mana regen, dark pact)
       ({ player: p, battle: b, log } = applyTurnStartPassives({ player: p, battle: b, log }));
 
-      // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
-      let dodged;
-      ({ dodged, battle: b, log } = checkDodge(p, b, log));
-
-      if (!dodged) {
-        const useSkill = m.skills.length > 0 && Math.random() < prob('combat.monsterSkillChance');
-        const mSkillId = useSkill ? m.skills[Math.floor(Math.random() * m.skills.length)] : null;
-        const mSkill = mSkillId ? SKILLS[mSkillId] : null;
-
-        let dmg;
-        if (mSkill) {
-          const rawAtk = Math.floor(m.atk * mSkill.multiplier);
-          dmg = calcDamage(rawAtk, getPlayerDef(p, b));
-        } else {
-          dmg = calcDamage(m.atk, getPlayerDef(p, b));
+      // ---- MONSTER STUN CHECK ----
+      if (b.monsterStunTurns > 0) {
+        b.monsterStunTurns--;
+        log.push({ text: `${m.name} is stunned and cannot act! (${b.monsterStunTurns} turns left)`, type: 'info' });
+        b.monster = m;
+        b.isPlayerTurn = true;
+        b.defending = false;
+        if (b.playerIsFaster) {
+          b.monsterNextMove = pickMonsterNextMove(m, b);
         }
+        return { ...state, player: p, battle: b, battleLog: log };
+      }
 
-        // Monster critical hit check
-        let monsterCrit = false;
-        if (Math.random() < getMonsterCritChance(m)) {
-          dmg = Math.floor(dmg * getMonsterCritMultiplier());
-          monsterCrit = true;
-        }
-
-        // Damage reduction passives (defend, iron skin, thick skin, fortress)
-        dmg = applyDamageReduction(dmg, p, b, cls);
-
-        // Mana Shield absorption
-        const shield = applyManaShield(dmg, p);
-        dmg = shield.dmg;
-        if (shield.manaUsed > 0) {
-          p = { ...p, mana: p.mana - shield.manaUsed };
-          log.push({ text: `Mana Shield absorbs ${shield.manaUsed} damage!`, type: 'info' });
-        }
-
-        // Pet defense absorption
-        const petDef = applyPetDefense(state, dmg);
-        if (petDef.absorbed > 0) {
-          dmg = Math.max(1, dmg - petDef.absorbed);
-          log.push({ text: `Pet absorbs ${petDef.absorbed} damage!`, type: 'info' });
-        }
-        if (petDef.reflected > 0) {
-          m = { ...m, hp: Math.max(0, m.hp - petDef.reflected) };
-          log.push({ text: `Pet reflects ${petDef.reflected} damage back!`, type: 'dmg-monster' });
-        }
-
-        dmg = Math.max(1, dmg);
-        p = { ...p, hp: Math.max(0, p.hp - dmg) };
-
-        const critPrefix = monsterCrit ? 'CRIT! ' : '';
-        if (mSkill) {
-          log.push({ text: `${critPrefix}${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
-          if (mSkill.effect === 'poison') {
-            if (playerHasSkill(p, 'nec_t10a')) {
-              log.push({ text: 'Lich Form: immune to poison!', type: 'info' });
-            } else {
-              let dur = 3;
-              if (playerHasSkill(p, 'brs_t7a')) dur = Math.max(1, dur - 1);
-              b.poisonTurns = dur;
-            }
-            log.push({ text: 'You are poisoned!', type: 'dmg-player' });
-          } else if (mSkill.effect === 'lower_def') {
-            b.defDebuff = (b.defDebuff || 0) + 2;
-            log.push({ text: 'Your defense dropped!', type: 'dmg-player' });
-          } else if (mSkill.effect === 'lower_atk') {
-            b.atkDebuff = (b.atkDebuff || 0) + 2;
-            log.push({ text: 'Your attack dropped!', type: 'dmg-player' });
-          } else if (mSkill.effect === 'steal_gold') {
-            const stolen = Math.floor(Math.random() * 10 + 1);
-            p = { ...p, gold: Math.max(0, p.gold - stolen) };
-            log.push({ text: `Stole ${stolen} gold!`, type: 'dmg-player' });
-          } else if (mSkill.effect === 'drain_hp') {
-            const healed = Math.floor(dmg * 0.5);
-            m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
-            log.push({ text: `${m.name} drained ${healed} HP!`, type: 'dmg-player' });
+      // ---- MONSTER CONFUSION CHECK ----
+      if (b.monsterConfusionTurns > 0) {
+        b.monsterConfusionTurns--;
+        const confRoll = Math.random();
+        if (confRoll < 0.35) {
+          // Skip turn
+          log.push({ text: `${m.name} is confused and stumbles around!`, type: 'info' });
+          b.monster = m;
+          b.isPlayerTurn = true;
+          b.defending = false;
+          if (b.playerIsFaster) {
+            b.monsterNextMove = pickMonsterNextMove(m, b);
           }
+          return { ...state, player: p, battle: b, battleLog: log };
+        } else if (confRoll < 0.55) {
+          // Hit self
+          const selfDmg = Math.floor(calcDamage(m.atk, 0) * 0.25);
+          m = { ...m, hp: Math.max(1, m.hp - selfDmg) };
+          log.push({ text: `${m.name} is confused and hits itself for ${selfDmg} damage!`, type: 'dmg-monster' });
+          b.monster = m;
+          b.isPlayerTurn = true;
+          b.defending = false;
+          if (b.playerIsFaster) {
+            b.monsterNextMove = pickMonsterNextMove(m, b);
+          }
+          return { ...state, player: p, battle: b, battleLog: log };
+        }
+        // else: attack normally
+        log.push({ text: `${m.name} shakes off some confusion...`, type: 'info' });
+      }
+
+      // ---- MONSTER CHANNELING ----
+      if (b.monsterChanneling) {
+        b.monsterChannelTurns--;
+        if (b.monsterChannelTurns <= 0) {
+          // Unleash the channeled attack
+          const channelSkill = SKILLS[b.monsterChannelSkillId];
+          if (channelSkill) {
+            const unleashAtk = Math.floor(m.atk * channelSkill.unleashMult);
+            let unleashDmg = calcDamage(unleashAtk, getPlayerDef(p, b));
+            // Tidal surge doubles damage
+            if (b.gimmickData?.tidalSurgeActive) {
+              unleashDmg = Math.floor(unleashDmg * 2);
+              b.gimmickData.tidalSurgeActive = false;
+            }
+            unleashDmg = applyDamageReduction(unleashDmg, p, b, cls);
+            unleashDmg = Math.max(1, unleashDmg);
+            p = { ...p, hp: Math.max(0, p.hp - unleashDmg) };
+            log.push({ text: `${m.name} unleashes ${channelSkill.unleashName || 'Unleash'}! ${unleashDmg} damage!`, type: 'dmg-player' });
+            // Apply unleash effect
+            if (channelSkill.unleashEffect === 'poison') {
+              if (!playerHasSkill(p, 'nec_t10a')) {
+                b.poisonTurns = 3;
+                log.push({ text: 'You are poisoned!', type: 'dmg-player' });
+              }
+            } else if (channelSkill.unleashEffect === 'lower_def') {
+              b.defDebuff = (b.defDebuff || 0) + 3;
+              log.push({ text: 'Your defense shattered!', type: 'dmg-player' });
+            } else if (channelSkill.unleashEffect === 'lower_atk') {
+              b.atkDebuff = (b.atkDebuff || 0) + 3;
+              log.push({ text: 'Your attack weakened!', type: 'dmg-player' });
+            } else if (channelSkill.unleashEffect === 'drain_hp') {
+              const healed = Math.floor(unleashDmg * 0.5);
+              m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
+              log.push({ text: `${m.name} drained ${healed} HP!`, type: 'heal' });
+            }
+          }
+          b.monsterChanneling = false;
+          b.monsterChannelSkillId = null;
         } else {
-          log.push({ text: `${critPrefix}${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
+          log.push({ text: `${m.name} continues channeling energy... (${b.monsterChannelTurns} turns left)`, type: 'info' });
+        }
+      } else {
+        // Normal monster attack (not channeling)
+        // Stance dodge modifier
+        const stanceModsDefend = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+
+        // Player evasion-based dodge (separate from skill-based dodge)
+        const pEvasion = getPlayerEvasion(p, b);
+        const mAccuracy = m.accuracy || 4;
+        const pLuckVal = getPlayerLuck(p);
+        const evasionDodge = calcEvasionDodgeChance(pEvasion, mAccuracy) + luckDodgeBonus(pLuckVal) + stanceModsDefend.dodgeMod;
+
+        // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
+        let dodged;
+        ({ dodged, battle: b, log } = checkDodge(p, b, log));
+
+        // Evasion dodge if skill dodge didn't trigger
+        if (!dodged && evasionDodge > 0 && Math.random() < evasionDodge) {
+          dodged = true;
+          log.push({ text: 'You nimbly evade the attack!', type: 'info' });
+        }
+
+        if (!dodged) {
+          // Monster AI: smarter skill selection based on situation
+          let mSkillId = null;
+          let mSkill = null;
+          if (m.skills.length > 0) {
+            const mHpPctNow = m.hp / m.maxHp;
+            const pHpPctNow = p.hp / p.maxHp;
+            const skillChance = prob('combat.monsterSkillChance');
+            // Higher chance to use skills when either side is low HP
+            const adjustedChance = Math.min(0.8, skillChance + (mHpPctNow < 0.3 ? 0.2 : 0) + (pHpPctNow < 0.3 ? 0.1 : 0));
+            if (Math.random() < adjustedChance) {
+              // Prioritize stun/confusion when player is healthy (crowd control)
+              // Prioritize damage when player is low HP (finish them)
+              // Prioritize healing/drain when monster is low HP
+              const ccSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && (sk.effect === 'stun' || sk.effect === 'confusion'); });
+              const dmgSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.multiplier >= 1.2 && sk.effect !== 'channel'; });
+              const drainSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.effect === 'drain_hp'; });
+              const debuffSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && (sk.effect === 'lower_def' || sk.effect === 'lower_atk' || sk.effect === 'poison'); });
+              const channelSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.effect === 'channel'; });
+
+              // Elemental awareness: prefer skills that are strong against player's class element
+              const playerClassElem = getSkillElement(null, p.characterClass);
+              const elemStrongSkills = m.skills.filter(s => {
+                const sElem = getMonsterSkillElement(s, b.monsterElement);
+                return sElem && sElem !== 'physical' && calcElementalDamageMultiplier(sElem, playerClassElem) > 1.0;
+              });
+
+              // Stance reaction: if player is in aggressive stance, use CC; if defensive, use debuffs
+              const stanceReaction = b.stance === 'aggressive' ? ccSkills
+                : b.stance === 'defensive' ? dmgSkills
+                : b.stance === 'evasive' ? debuffSkills
+                : null;
+
+              let pool;
+              if (mHpPctNow < 0.3 && drainSkills.length > 0 && Math.random() < 0.5) {
+                pool = drainSkills;
+              } else if (pHpPctNow < 0.3 && dmgSkills.length > 0 && Math.random() < 0.6) {
+                pool = dmgSkills;
+              } else if (stanceReaction && stanceReaction.length > 0 && Math.random() < 0.35) {
+                pool = stanceReaction;
+              } else if (elemStrongSkills.length > 0 && Math.random() < 0.4) {
+                pool = elemStrongSkills;
+              } else if (pHpPctNow > 0.6 && ccSkills.length > 0 && b.playerStunTurns <= 0 && b.playerConfusionTurns <= 0 && Math.random() < 0.4) {
+                pool = ccSkills;
+              } else if (b.turnCount <= 2 && channelSkills.length > 0 && Math.random() < 0.3) {
+                pool = channelSkills;
+              } else if (debuffSkills.length > 0 && Math.random() < 0.3) {
+                pool = debuffSkills;
+              } else {
+                pool = m.skills;
+              }
+              mSkillId = pool[Math.floor(Math.random() * pool.length)];
+              mSkill = mSkillId ? SKILLS[mSkillId] : null;
+            }
+          }
+
+          // Check if monster starts channeling
+          if (mSkill && mSkill.effect === 'channel') {
+            b.monsterChanneling = true;
+            b.monsterChannelTurns = mSkill.channelTurns || 1;
+            b.monsterChannelSkillId = mSkillId;
+            log.push({ text: `${m.name} begins channeling ${mSkill.name}! (${b.monsterChannelTurns} turn${b.monsterChannelTurns > 1 ? 's' : ''})`, type: 'info' });
+          } else {
+            // Player invulnerability from perfect parry combo
+            if (b.playerInvulnTurns > 0) {
+              log.push({ text: 'You are invulnerable! The attack passes through you!', type: 'info' });
+              b.monster = m;
+              b.isPlayerTurn = true;
+              b.defending = false;
+              if (b.playerIsFaster) {
+                b.monsterNextMove = pickMonsterNextMove(m, b);
+              }
+              return { ...state, player: p, battle: b, battleLog: log };
+            }
+
+            let dmg;
+            const isSkillAttack = !!mSkill;
+            // Apply armor shatter to monster DEF for player's benefit (reversed: here reducing player def from monster perspective isn't right)
+            // Actually armor shatter reduces MONSTER def, applied in player attacks - for monster attacks, we use player DEF normally
+            if (mSkill) {
+              const rawAtk = Math.floor(m.atk * mSkill.multiplier);
+              dmg = calcDamage(rawAtk, getPlayerDef(p, b));
+            } else {
+              dmg = calcDamage(m.atk, getPlayerDef(p, b));
+            }
+
+            // Monster elemental damage bonus/penalty vs player
+            const mSkillElem = isSkillAttack ? getMonsterSkillElement(mSkillId, b.monsterElement) : b.monsterElement;
+            dmg = calcMonsterElementalDamage(dmg, b.monsterElement, mSkillElem, b);
+
+            // Monster aggression: increases outgoing damage
+            const mAgg = m.aggression || 0;
+            if (mAgg > 0) {
+              dmg = Math.floor(dmg * calcAggressionDmgDealt(mAgg));
+            }
+
+            // Tidal surge doubles damage
+            if (b.gimmickData?.tidalSurgeActive) {
+              dmg = Math.floor(dmg * 2);
+              b.gimmickData.tidalSurgeActive = false;
+              log.push({ text: 'Tidal Surge amplifies the attack!', type: 'info' });
+            }
+
+            // Monster critical hit check (reduced by player luck)
+            let monsterCrit = false;
+            const mCritChance = Math.max(0.01, getMonsterCritChance(m) + (m.luck || 0) * 0.003 - luckEnemyCritReduction(pLuckVal));
+            if (Math.random() < mCritChance) {
+              dmg = Math.floor(dmg * getMonsterCritMultiplier());
+              monsterCrit = true;
+            }
+
+            // Player resistance reduces skill damage
+            if (isSkillAttack) {
+              const pRes = getPlayerResistance(p, b);
+              if (pRes > 0) {
+                const resReduct = calcResistanceReduction(pRes);
+                dmg = Math.floor(dmg * (1 - resReduct));
+              }
+            }
+
+            // Stance modifier on incoming damage
+            dmg = Math.floor(dmg * stanceModsDefend.dmgTaken);
+
+            // Player aggression: takes more damage
+            const pAgg = getPlayerAggression(p);
+            if (pAgg > 0) {
+              dmg = Math.floor(dmg * calcAggressionDmgTaken(pAgg));
+            }
+
+            // Parry: massive damage reduction + counter attack
+            if (b.parrying) {
+              dmg = Math.floor(dmg * (1 - PARRY_DAMAGE_REDUCTION));
+              log.push({ text: `Parried! Blocked ${Math.round(PARRY_DAMAGE_REDUCTION * 100)}% of damage!`, type: 'info' });
+              // Counter attack (enhanced by perfect parry master)
+              const counterMult = p.perfectParryMaster ? PERFECT_PARRY_COUNTER_MULTIPLIER : PARRY_COUNTER_MULTIPLIER;
+              const counterDmg = Math.floor(calcDamage(Math.floor(getPlayerAtk(p, b) * counterMult), m.def));
+              m = { ...m, hp: Math.max(0, m.hp - counterDmg) };
+              log.push({ text: `${p.perfectParryMaster ? 'Perfect ' : ''}Counter attack for ${counterDmg} damage!`, type: 'dmg-monster' });
+              b.parrying = false;
+            }
+
+            // War Shout ATK debuff on monster
+            if (b.warShoutTurns > 0) {
+              dmg = Math.max(1, dmg - b.warShoutAtkDebuff);
+            }
+
+            // Damage reduction passives (defend, iron skin, thick skin, fortress)
+            dmg = applyDamageReduction(dmg, p, b, cls);
+
+            // Mana Shield absorption
+            const shield = applyManaShield(dmg, p);
+            dmg = shield.dmg;
+            if (shield.manaUsed > 0) {
+              p = { ...p, mana: p.mana - shield.manaUsed };
+              log.push({ text: `Mana Shield absorbs ${shield.manaUsed} damage!`, type: 'info' });
+            }
+
+            // Pet defense absorption
+            const petDef = applyPetDefense(state, dmg);
+            if (petDef.absorbed > 0) {
+              dmg = Math.max(1, dmg - petDef.absorbed);
+              log.push({ text: `Pet absorbs ${petDef.absorbed} damage!`, type: 'info' });
+            }
+            if (petDef.reflected > 0) {
+              m = { ...m, hp: Math.max(0, m.hp - petDef.reflected) };
+              log.push({ text: `Pet reflects ${petDef.reflected} damage back!`, type: 'dmg-monster' });
+            }
+
+            dmg = Math.max(1, dmg);
+            p = { ...p, hp: Math.max(0, p.hp - dmg) };
+
+            // Player fortitude: survive lethal blow once at 1 HP
+            if (p.hp <= 0 && !b.fortitudeUsed) {
+              const pFort = getPlayerFortitude(p);
+              const surviveChance = calcFortitudeSurviveChance(pFort);
+              if (surviveChance > 0 && Math.random() < surviveChance) {
+                p = { ...p, hp: 1 };
+                b.fortitudeUsed = true;
+                log.push({ text: 'Fortitude! You endure the lethal blow at 1 HP!', type: 'info' });
+              }
+            }
+
+            const critPrefix = monsterCrit ? 'CRIT! ' : '';
+            if (mSkill) {
+              log.push({ text: `${critPrefix}${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
+              if (mSkill.effect === 'poison') {
+                if (playerHasSkill(p, 'nec_t10a')) {
+                  log.push({ text: 'Lich Form: immune to poison!', type: 'info' });
+                } else {
+                  let dur = 3;
+                  dur = reduceDurationByTenacity(dur, getPlayerTenacity(p));
+                  if (playerHasSkill(p, 'brs_t7a')) dur = Math.max(1, dur - 1);
+                  b.poisonTurns = dur;
+                }
+                log.push({ text: 'You are poisoned!', type: 'dmg-player' });
+              } else if (mSkill.effect === 'lower_def') {
+                b.defDebuff = (b.defDebuff || 0) + 2;
+                log.push({ text: 'Your defense dropped!', type: 'dmg-player' });
+              } else if (mSkill.effect === 'lower_atk') {
+                b.atkDebuff = (b.atkDebuff || 0) + 2;
+                log.push({ text: 'Your attack dropped!', type: 'dmg-player' });
+              } else if (mSkill.effect === 'steal_gold') {
+                const stolen = Math.floor(Math.random() * 10 + 1);
+                p = { ...p, gold: Math.max(0, p.gold - stolen) };
+                log.push({ text: `Stole ${stolen} gold!`, type: 'dmg-player' });
+              } else if (mSkill.effect === 'drain_hp') {
+                const healed = Math.floor(dmg * 0.5);
+                m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
+                log.push({ text: `${m.name} drained ${healed} HP!`, type: 'dmg-player' });
+              } else if (mSkill.effect === 'stun') {
+                // Stun: chance based on STUN_BASE_CHANCE, reduced by tenacity
+                const pTen = getPlayerTenacity(p);
+                const stunChance = Math.max(0.1, STUN_BASE_CHANCE - pTen * 0.02);
+                if (Math.random() < stunChance) {
+                  const stunDur = reduceDurationByTenacity(mSkill.stunTurns || 1, pTen);
+                  b.playerStunTurns = stunDur;
+                  log.push({ text: `You are stunned for ${stunDur} turn${stunDur > 1 ? 's' : ''}!`, type: 'dmg-player' });
+                } else {
+                  log.push({ text: 'You resist the stun!', type: 'info' });
+                }
+              } else if (mSkill.effect === 'confusion') {
+                const pTen = getPlayerTenacity(p);
+                const confChance = Math.max(0.1, CONFUSION_BASE_CHANCE - pTen * 0.02);
+                if (Math.random() < confChance) {
+                  const confDur = reduceDurationByTenacity(mSkill.confusionTurns || 2, pTen);
+                  b.playerConfusionTurns = confDur;
+                  log.push({ text: `You are confused for ${confDur} turns!`, type: 'dmg-player' });
+                } else {
+                  log.push({ text: 'You resist the confusion!', type: 'info' });
+                }
+              }
+            } else {
+              log.push({ text: `${critPrefix}${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
+            }
+          }
+        }
+
+        // Cursed Blood: chance to poison attacker when hit
+        if (!dodged) {
+          ({ battle: b, log } = applyCursedBlood(p, b, log));
         }
       }
 
@@ -1746,9 +2697,15 @@ function gameReducer(state, action) {
         log.push({ text: `Poison deals ${poisonDmg} damage!`, type: 'dmg-player' });
       }
 
-      // Cursed Blood: chance to poison attacker when hit
-      if (!dodged) {
-        ({ battle: b, log } = applyCursedBlood(p, b, log));
+      // Player fortitude check after poison
+      if (p.hp <= 0 && !b.fortitudeUsed) {
+        const pFortPoison = getPlayerFortitude(p);
+        const surviveChanceP = calcFortitudeSurviveChance(pFortPoison);
+        if (surviveChanceP > 0 && Math.random() < surviveChanceP) {
+          p = { ...p, hp: 1 };
+          b.fortitudeUsed = true;
+          log.push({ text: 'Fortitude! You endure at 1 HP!', type: 'info' });
+        }
       }
 
       // Survival passives (undying will, death's embrace)
@@ -1758,11 +2715,25 @@ function gameReducer(state, action) {
       b.isPlayerTurn = true;
       b.defending = false;
 
+      // Pick next monster move for preview (if player is faster)
+      if (b.playerIsFaster) {
+        b.monsterNextMove = pickMonsterNextMove(m, b);
+      }
+
       // Track damage taken (difference from start hp)
       const hpLost = Math.max(0, state.player.hp - p.hp);
       const newStats = hpLost > 0 ? addStat(state.stats, 'damageTaken', hpLost) : state.stats;
 
       if (p.hp <= 0) {
+        // Boss resurrection gimmick check
+        if (b.gimmick?.type === 'ash_resurrection' && !b.gimmickData?.resurrected) {
+          const revHp = Math.floor(m.maxHp * b.gimmick.reviveHpPct);
+          m = { ...m, hp: revHp };
+          b.monster = m;
+          b.gimmickData = { ...b.gimmickData, resurrected: true };
+          log.push({ text: `${m.name} rises from the ashes with ${revHp} HP!`, type: 'info' });
+        }
+
         // Phoenix pet revive check
         if (!b.petReviveUsed) {
           const activePets = getActiveBattlePets(state);
@@ -1778,6 +2749,16 @@ function gameReducer(state, action) {
 
       if (p.hp <= 0) {
         return handleDefeat({ ...state, player: p, battle: b, battleLog: log, stats: newStats });
+      }
+
+      // Boss ash resurrection check (when monster dies)
+      if (m.hp <= 0 && b.gimmick?.type === 'ash_resurrection' && !b.gimmickData?.resurrected) {
+        const revHp = Math.floor(m.maxHp * b.gimmick.reviveHpPct);
+        m = { ...m, hp: revHp };
+        b.monster = m;
+        b.gimmickData = { ...b.gimmickData, resurrected: true };
+        log.push({ text: `${m.name} rises from the ashes with ${revHp} HP!`, type: 'info' });
+        return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
       }
 
       return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
@@ -3481,6 +4462,266 @@ function gameReducer(state, action) {
       return { ...state, player: p, pets, message: `Donated ${goldAmount}g to ${pet.name}!` };
     }
 
+    // ---- STANCE SYSTEM ----
+    case 'BATTLE_CHANGE_STANCE': {
+      if (!state.battle) return state;
+      const newStance = action.stance;
+      if (!STANCES[newStance]) return state;
+      const stanceLog = [...state.battleLog, { text: `Switched to ${STANCES[newStance].name} stance!`, type: 'info' }];
+      // Reset momentum when switching stances
+      const resetMomentum = newStance !== state.battle.stance ? 0 : state.battle.stanceMomentum;
+      return { ...state, battle: { ...state.battle, stance: newStance, stanceMomentum: resetMomentum, lastStance: newStance, showSkillMenu: false, showInspect: false }, battleLog: stanceLog };
+    }
+
+    // ---- PARRY SYSTEM ----
+    case 'BATTLE_PARRY': {
+      if (!state.battle) return state;
+      let b = { ...state.battle, showSkillMenu: false, showInspect: false };
+      let p = { ...state.player };
+      if (b.playerStunTurns > 0) {
+        return { ...state, message: 'You are stunned and cannot act!' };
+      }
+      if (!p.unlockedUniversalSkills?.includes('parry')) {
+        return { ...state, message: 'You have not unlocked Parry yet!' };
+      }
+      const parryCost = UNIVERSAL_SKILLS.parry.manaCost || 5;
+      if (p.mana < parryCost) {
+        return { ...state, message: `Not enough mana to parry! (${parryCost} needed)` };
+      }
+      p = { ...p, mana: p.mana - parryCost };
+      b.parrying = true;
+      b.defending = false;
+      b.defendedLastTurn = false;
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'parry'].slice(-5);
+      const parryLog = [...state.battleLog, { text: 'You ready a parry stance!', type: 'info' }];
+      return { ...state, player: p, battle: b, battleLog: parryLog };
+    }
+
+    // ---- UNIVERSAL COMBAT SKILLS ----
+    case 'BATTLE_UNIVERSAL_SKILL': {
+      if (!state.battle) return state;
+      let b = { ...state.battle, showSkillMenu: false, showInspect: false };
+      let m = { ...b.monster };
+      let p = { ...state.player };
+      let log = [...state.battleLog];
+      const uSkillId = action.skillId;
+      const uSkill = UNIVERSAL_SKILLS[uSkillId];
+      if (!uSkill) return state;
+      if (!p.unlockedUniversalSkills?.includes(uSkillId)) {
+        return { ...state, message: `You have not unlocked ${uSkill.name} yet!` };
+      }
+      if (b.playerStunTurns > 0) {
+        b.playerStunTurns--;
+        log.push({ text: `You are stunned and cannot act! (${b.playerStunTurns} turns left)`, type: 'dmg-player' });
+        return { ...state, battle: b, battleLog: log };
+      }
+      // Check cooldown
+      if (b.universalCooldowns[uSkillId] > 0) {
+        return { ...state, message: `${uSkill.name} is on cooldown! (${b.universalCooldowns[uSkillId]} turns)` };
+      }
+      // Special mana handling for mana_burst and limit_break
+      const isManaBurst = uSkillId === 'mana_burst';
+      const isLimitBreak = uSkillId === 'limit_break';
+      if (!isManaBurst && !isLimitBreak) {
+        const uCost = getEffectiveManaCost(p, uSkill.manaCost || 0, b);
+        if (p.mana < uCost) {
+          return { ...state, message: `Not enough mana! (${uCost} needed)` };
+        }
+        p = { ...p, mana: p.mana - uCost };
+      }
+
+      // Set cooldown
+      if (uSkill.cooldown > 0) {
+        b.universalCooldowns = { ...b.universalCooldowns, [uSkillId]: uSkill.cooldown };
+      }
+
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+
+      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const effectiveMDef = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+
+      switch (uSkillId) {
+        case 'stun_strike': {
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 0.8)), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Stun Strike for ${dmg} damage!`, type: 'dmg-monster' });
+          const mTen = m.tenacity || 0;
+          const stunChance = Math.max(0.1, STUN_BASE_CHANCE - mTen * 0.02);
+          if (Math.random() < stunChance) {
+            const dur = reduceDurationByTenacity(1, mTen);
+            b.monsterStunTurns = dur;
+            log.push({ text: `${m.name} is stunned for ${dur} turn!`, type: 'info' });
+          } else {
+            log.push({ text: `${m.name} resists the stun!`, type: 'info' });
+          }
+          break;
+        }
+        case 'war_shout': {
+          b.warShoutTurns = 3;
+          b.warShoutAtkDebuff = Math.floor(m.atk * 0.2);
+          b.warShoutDefBuff = Math.floor(getPlayerDef(p, b) * 0.15);
+          log.push({ text: `War Shout! Enemy ATK reduced, your DEF boosted for 3 turns!`, type: 'info' });
+          break;
+        }
+        case 'mind_blast': {
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.0)), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Mind Blast for ${dmg} damage!`, type: 'dmg-monster' });
+          const mTen = m.tenacity || 0;
+          const confChance = Math.max(0.1, CONFUSION_BASE_CHANCE - mTen * 0.02);
+          if (Math.random() < confChance) {
+            const dur = reduceDurationByTenacity(2, mTen);
+            b.monsterConfusionTurns = dur;
+            log.push({ text: `${m.name} is confused for ${dur} turns!`, type: 'info' });
+          } else {
+            log.push({ text: `${m.name} resists the confusion!`, type: 'info' });
+          }
+          break;
+        }
+        case 'life_drain': {
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.2)), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          const healed = Math.floor(dmg * 0.4);
+          p = { ...p, hp: Math.min(p.maxHp, p.hp + healed) };
+          log.push({ text: `Life Drain for ${dmg} damage! Healed ${healed} HP!`, type: 'dmg-monster' });
+          break;
+        }
+        case 'elemental_strike': {
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.5)), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          const weatherElem = getCurrentWeatherId();
+          const elemBonus = weatherElem === 'thunderstorm' || weatherElem === 'rain' ? 1.3 : 1.0;
+          dmg = Math.floor(dmg * elemBonus);
+          const atkElem = getSkillElement(null, p.characterClass);
+          const eMult = calcElementalDamageMultiplier(atkElem, b.monsterElement);
+          dmg = Math.floor(dmg * eMult);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Elemental Strike for ${dmg} damage!${elemBonus > 1 ? ' (Weather boost!)' : ''}`, type: 'dmg-monster' });
+          if (eMult > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+          else if (eMult < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
+          break;
+        }
+        case 'armor_shatter': {
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 0.6)), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          b.armorShatterTurns = 3;
+          b.armorShatterPct = 0.3;
+          log.push({ text: `Armor Shatter for ${dmg} damage! Enemy DEF reduced by 30% for 3 turns!`, type: 'dmg-monster' });
+          break;
+        }
+        case 'mana_burst': {
+          const manaSpent = Math.floor(p.mana * 0.2);
+          p = { ...p, mana: p.mana - manaSpent };
+          let dmg = Math.floor(manaSpent * 3); // 3x mana as true damage
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Mana Burst! Converted ${manaSpent} mana into ${dmg} true damage!`, type: 'dmg-monster' });
+          break;
+        }
+        case 'last_stand': {
+          if (b.lastStandUsed) {
+            return { ...state, message: 'Last Stand can only be used once per battle!' };
+          }
+          const uCostLS = getEffectiveManaCost(p, uSkill.manaCost || 15, b);
+          if (p.mana < uCostLS) return { ...state, message: `Not enough mana! (${uCostLS} needed)` };
+          p = { ...p, mana: p.mana - uCostLS };
+          const healAmt = Math.floor(p.maxHp * 0.3);
+          p = { ...p, hp: Math.min(p.maxHp, p.hp + healAmt) };
+          b.frenzyBonusTurns = 2;
+          b.frenzyBonusPct = 0.5;
+          b.lastStandUsed = true;
+          log.push({ text: `Last Stand! Healed ${healAmt} HP and gained +50% ATK for 2 turns!`, type: 'heal' });
+          break;
+        }
+        case 'elemental_ward': {
+          const uCostEW = getEffectiveManaCost(p, uSkill.manaCost || 12, b);
+          if (p.mana < uCostEW) return { ...state, message: `Not enough mana! (${uCostEW} needed)` };
+          p = { ...p, mana: p.mana - uCostEW };
+          b.elementalWardTurns = 3;
+          log.push({ text: 'Elemental Ward! Resist 50% of elemental damage for 3 turns!', type: 'info' });
+          break;
+        }
+        case 'execute': {
+          const uCostEx = getEffectiveManaCost(p, uSkill.manaCost || 15, b);
+          if (p.mana < uCostEx) return { ...state, message: `Not enough mana! (${uCostEx} needed)` };
+          p = { ...p, mana: p.mana - uCostEx };
+          const mHpPctExec = m.hp / m.maxHp;
+          const execMult = mHpPctExec < 0.25 ? 2.5 : 0.5;
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * execMult), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          if (execMult > 1) {
+            log.push({ text: `EXECUTE! Massive ${dmg} damage to weakened enemy!`, type: 'dmg-monster' });
+          } else {
+            log.push({ text: `Execute for ${dmg} damage (enemy too healthy for full effect)`, type: 'dmg-monster' });
+          }
+          break;
+        }
+        case 'limit_break': {
+          if (b.limitBreakUsed) {
+            return { ...state, message: 'Limit Break can only be used once per battle!' };
+          }
+          const manaConsumed = p.mana;
+          if (manaConsumed < 10) return { ...state, message: 'Not enough mana for Limit Break! (need at least 10)' };
+          p = { ...p, mana: 0 };
+          let dmg = Math.floor(manaConsumed * 5); // 5x mana as true damage
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          b.limitBreakUsed = true;
+          log.push({ text: `LIMIT BREAK! Consumed ${manaConsumed} mana for ${dmg} devastating damage!`, type: 'dmg-monster' });
+          break;
+        }
+        default:
+          log.push({ text: `Used ${uSkill.name}!`, type: 'info' });
+          break;
+      }
+
+      b.monster = m;
+      b.defending = false;
+      b.defendedLastTurn = false;
+
+      // Check combos
+      const uCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (uCombos.length > 0) {
+        for (const combo of uCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Berserker frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'invuln') {
+            b.playerInvulnTurns = combo.invulnTurns || 1;
+            log.push({ text: 'You become invulnerable!', type: 'info' });
+          } else if (combo.bonus === 'armor_break') {
+            b.armorShatterTurns = combo.armorBreakTurns || 3;
+            b.armorShatterPct = combo.armorBreakPct || 0.4;
+            log.push({ text: `Fortress Crush! Enemy armor broken!`, type: 'info' });
+          } else if (combo.bonus === 'crit_guarantee') {
+            log.push({ text: 'Focused Strike — guaranteed critical next attack!', type: 'info' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = [];
+      }
+
+      let newStats = addStat(state.stats, 'universalSkillsUsed');
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats });
+      }
+      return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
+    }
+
     default:
       return state;
   }
@@ -3703,6 +4944,7 @@ export function useGameState(isLoggedIn) {
     battleSkill: () => dispatch({ type: 'BATTLE_PLAYER_SKILL' }),
     battleTreeSkill: (skillId) => dispatch({ type: 'BATTLE_USE_TREE_SKILL', skillId }),
     battleDefend: () => dispatch({ type: 'BATTLE_DEFEND' }),
+    battleChannel: () => dispatch({ type: 'BATTLE_CHANNEL' }),
     battlePotion: () => dispatch({ type: 'BATTLE_USE_POTION' }),
     battleRun: () => dispatch({ type: 'BATTLE_RUN' }),
     toggleSkillMenu: () => dispatch({ type: 'TOGGLE_SKILL_MENU' }),
@@ -3711,6 +4953,9 @@ export function useGameState(isLoggedIn) {
     bossAccept: () => dispatch({ type: 'BOSS_ACCEPT' }),
     bossDecline: () => dispatch({ type: 'BOSS_DECLINE' }),
     monsterTurn: () => dispatch({ type: 'MONSTER_TURN' }),
+    battleParry: () => dispatch({ type: 'BATTLE_PARRY' }),
+    battleChangeStance: (stance) => dispatch({ type: 'BATTLE_CHANGE_STANCE', stance }),
+    battleUniversalSkill: (skillId) => dispatch({ type: 'BATTLE_UNIVERSAL_SKILL', skillId }),
     continueAfterBattle: () => dispatch({ type: 'CONTINUE_AFTER_BATTLE' }),
     applyStatChoices: (selectedStats) => dispatch({ type: 'APPLY_STAT_CHOICES', selectedStats }),
     restAtInn: () => dispatch({ type: 'REST_AT_INN' }),
