@@ -1127,6 +1127,138 @@ export const REGIONS = [
   },
 ];
 
+// ---- SPECIAL LOCATIONS (per region) ----
+// Special locations have higher encounter rates, rarer loot, and random-level encounters
+// where monster levels vary within a range rather than being fixed.
+export const SPECIAL_LOCATIONS = {
+  'neon-district': [
+    {
+      id: 'glitch-zone', name: 'Glitch Zone', description: 'A pocket of corrupted reality where digital ghosts flicker in and out.',
+      levelReq: 8, special: true,
+      monsters: ['neon-phantom', 'glitch-golem', 'void-slime', 'pixel-pest', 'wire-rat', 'signal-ghost'],
+      encounterRate: 0.8, lootRate: 0.5, bgKey: 'street',
+      boss: 'boss-void-overlord', bossRate: 0.012,
+      levelRange: [-3, 5], rareLootBonus: 1.5,
+    },
+    {
+      id: 'syndicate-vault', name: 'Syndicate Vault', description: 'A hidden underground vault guarded by the city\'s deadliest enforcers.',
+      levelReq: 14, special: true,
+      monsters: ['dark-assassin', 'neon-reaper', 'shadow-dragon', 'terminal-enforcer', 'midnight-wolf'],
+      encounterRate: 0.85, lootRate: 0.55, bgKey: 'alley',
+      boss: 'boss-shadow-lord', bossRate: 0.015,
+      levelRange: [-2, 8], rareLootBonus: 2.0,
+    },
+  ],
+  'frozen-wastes': [
+    {
+      id: 'avalanche-pass', name: 'Avalanche Pass', description: 'A treacherous mountain path where the snow itself is the enemy.',
+      levelReq: 12, special: true,
+      monsters: ['blizzard-hawk', 'ice-phantom', 'frost-wolf', 'glacial-golem', 'arctic-serpent', 'snow-wraith'],
+      encounterRate: 0.82, lootRate: 0.5, bgKey: 'tundra',
+      boss: 'boss-blizzard-lord', bossRate: 0.012,
+      levelRange: [-3, 6], rareLootBonus: 1.5,
+    },
+    {
+      id: 'frost-dragon-lair', name: 'Frost Dragon Lair', description: 'An ancient cavern encrusted with gems and dragon bones.',
+      levelReq: 20, special: true,
+      monsters: ['crystal-beetle', 'glacial-golem', 'ice-phantom', 'tundra-stalker', 'blizzard-hawk', 'permafrost-skeleton'],
+      encounterRate: 0.88, lootRate: 0.55, bgKey: 'tundra',
+      boss: 'boss-crystal-titan', bossRate: 0.018,
+      levelRange: [-2, 10], rareLootBonus: 2.0,
+    },
+  ],
+  'scorched-badlands': [
+    {
+      id: 'dragon-graveyard', name: 'Dragon Graveyard', description: 'A vast desert littered with the fossilized remains of ancient fire drakes.',
+      levelReq: 18, special: true,
+      monsters: ['ash-golem', 'cinder-wraith', 'magma-serpent', 'flame-beetle', 'heat-phantom', 'ember-wolf'],
+      encounterRate: 0.82, lootRate: 0.52, bgKey: 'desert',
+      boss: 'boss-inferno-beast', bossRate: 0.012,
+      levelRange: [-3, 7], rareLootBonus: 1.5,
+    },
+    {
+      id: 'molten-sanctum', name: 'Molten Sanctum', description: 'A temple built inside an active lava flow, worshipping the fire within.',
+      levelReq: 26, special: true,
+      monsters: ['lava-slime', 'magma-serpent', 'ash-golem', 'cinder-wraith', 'charred-skeleton', 'desert-vagrant'],
+      encounterRate: 0.88, lootRate: 0.58, bgKey: 'desert',
+      boss: 'boss-volcanic-titan', bossRate: 0.018,
+      levelRange: [-2, 10], rareLootBonus: 2.0,
+    },
+  ],
+  'toxic-marshlands': [
+    {
+      id: 'spore-nexus', name: 'Spore Nexus', description: 'The origin point of the marsh\'s toxic fungal network. The air itself is alive.',
+      levelReq: 24, special: true,
+      monsters: ['fungal-zombie', 'spore-cloud', 'rot-golem', 'vine-strangler', 'swamp-wraith', 'marsh-wolf'],
+      encounterRate: 0.82, lootRate: 0.52, bgKey: 'swamp',
+      boss: 'boss-fungal-behemoth', bossRate: 0.012,
+      levelRange: [-3, 7], rareLootBonus: 1.5,
+    },
+    {
+      id: 'plague-heart', name: 'Plague Heart', description: 'The throbbing organ at the center of the corruption — destroying it might cure the swamp.',
+      levelReq: 34, special: true,
+      monsters: ['rot-golem', 'plague-rat', 'swamp-wraith', 'fungal-zombie', 'vine-strangler', 'poison-bat'],
+      encounterRate: 0.88, lootRate: 0.58, bgKey: 'swamp',
+      boss: 'boss-rot-titan', bossRate: 0.018,
+      levelRange: [-2, 10], rareLootBonus: 2.0,
+    },
+  ],
+  'abyssal-depths': [
+    {
+      id: 'leviathan-graveyard', name: 'Leviathan Graveyard', description: 'Where colossal sea creatures come to die. Their bones hum with power.',
+      levelReq: 32, special: true,
+      monsters: ['kraken-spawn', 'depth-phantom', 'pressure-wraith', 'sea-serpent', 'trench-stalker', 'coral-golem'],
+      encounterRate: 0.84, lootRate: 0.52, bgKey: 'ocean',
+      boss: 'boss-kraken-prime', bossRate: 0.012,
+      levelRange: [-3, 8], rareLootBonus: 1.5,
+    },
+    {
+      id: 'drowned-palace', name: 'Drowned Palace', description: 'An opulent palace swallowed by the sea. Its treasures still glitter in the dark.',
+      levelReq: 42, special: true,
+      monsters: ['drowned-vagrant', 'coral-golem', 'sea-serpent', 'pressure-wraith', 'depth-phantom', 'void-fish'],
+      encounterRate: 0.9, lootRate: 0.6, bgKey: 'ocean',
+      boss: 'boss-abyssal-leviathan', bossRate: 0.02,
+      levelRange: [-2, 12], rareLootBonus: 2.0,
+    },
+  ],
+  'celestial-highlands': [
+    {
+      id: 'star-forge', name: 'Star Forge', description: 'A divine workshop where celestial weapons are hammered from starlight.',
+      levelReq: 42, special: true,
+      monsters: ['solar-elemental', 'empyrean-sentinel', 'celestial-knight', 'astral-golem', 'starfall-wraith', 'comet-shard'],
+      encounterRate: 0.84, lootRate: 0.55, bgKey: 'celestial',
+      boss: 'boss-solar-titan', bossRate: 0.012,
+      levelRange: [-3, 8], rareLootBonus: 1.5,
+    },
+    {
+      id: 'throne-of-light', name: 'Throne of Light', description: 'The seat of a forgotten god. Blinding radiance and impossible guardians.',
+      levelReq: 52, special: true,
+      monsters: ['empyrean-sentinel', 'celestial-knight', 'thunder-drake', 'light-phantom', 'comet-shard', 'astral-golem'],
+      encounterRate: 0.9, lootRate: 0.6, bgKey: 'celestial',
+      boss: 'boss-empyrean-judge', bossRate: 0.02,
+      levelRange: [-2, 12], rareLootBonus: 2.0,
+    },
+  ],
+  'void-nexus': [
+    {
+      id: 'reality-fracture', name: 'Reality Fracture', description: 'A scar in spacetime where multiple dimensions collide and merge.',
+      levelReq: 52, special: true,
+      monsters: ['reality-bender', 'paradox-golem', 'rift-stalker', 'chaos-phantom', 'null-wraith', 'singularity-shade'],
+      encounterRate: 0.86, lootRate: 0.55, bgKey: 'void',
+      boss: 'boss-paradox-king', bossRate: 0.015,
+      levelRange: [-3, 10], rareLootBonus: 1.8,
+    },
+    {
+      id: 'end-of-everything', name: 'End of Everything', description: 'Beyond the void lies this — the final frontier where existence ends.',
+      levelReq: 62, special: true,
+      monsters: ['oblivion-knight', 'abyss-watcher', 'reality-bender', 'nexus-serpent', 'singularity-shade', 'paradox-golem'],
+      encounterRate: 0.92, lootRate: 0.65, bgKey: 'void',
+      boss: 'boss-oblivion-god', bossRate: 0.025,
+      levelRange: [-2, 15], rareLootBonus: 2.5,
+    },
+  ],
+};
+
 // ---- MONSTER/BOSS SKILLS ----
 export const SKILLS = {
   bite:       { name: 'Bite',        multiplier: 1.3 },

@@ -4,7 +4,7 @@ import {
   getActiveDailyTasks, getActiveWeeklyTasks,
   getQuestProgress,
 } from '../../data/tasks';
-import { MONSTERS, BOSSES } from '../../data/gameData';
+import { MONSTERS, BOSSES, SPECIAL_LOCATIONS } from '../../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS } from '../../data/baseData';
 
 function formatNumber(n) {
@@ -133,6 +133,61 @@ function LocationSpawnInfo({ location, regionId }) {
   );
 }
 
+function LocationList({ locations, playerLevel, availableEnergy, requiredEnergy, expandedId, setExpandedId, onSelect, regionId }) {
+  return (
+    <div className="location-list">
+      {locations.map(loc => {
+        const needsLevel = playerLevel < loc.levelReq;
+        const needsEnergy = availableEnergy < requiredEnergy;
+        const locked = needsLevel || needsEnergy;
+        const expanded = expandedId === loc.id;
+        return (
+          <div key={loc.id} className="location-entry">
+            <button
+              className={`location-item ${locked ? 'locked' : ''} ${loc.special ? 'special' : ''}`}
+              onClick={() => !locked && onSelect(loc)}
+              disabled={locked}
+            >
+              <div className="location-item-left">
+                <div className="location-name">
+                  {loc.special && <span className="special-location-icon">*</span>}
+                  {loc.name}
+                  <span
+                    className={`location-info-btn ${expanded ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setExpandedId(expanded ? null : loc.id);
+                    }}
+                    title="View spawn info"
+                  >?</span>
+                </div>
+                <div className="location-desc">{loc.description}</div>
+                {loc.special && loc.levelRange && (
+                  <div className="location-special-info">
+                    Random encounters Lv.{Math.max(1, loc.levelReq + loc.levelRange[0])}-{loc.levelReq + loc.levelRange[1]} · Rare loot x{loc.rareLootBonus}
+                  </div>
+                )}
+                {(needsLevel || needsEnergy) && (
+                  <div className="location-req">
+                    {needsLevel ? `Lv.${loc.levelReq}+ required` : `Need ${requiredEnergy} energy`}
+                  </div>
+                )}
+              </div>
+              <div className="location-level">
+                Lv.{loc.levelReq}+
+              </div>
+            </button>
+            {expanded && (
+              <LocationSpawnInfo location={loc} regionId={regionId} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function LocationsScreen({
   playerLevel,
   energy,
@@ -148,9 +203,14 @@ export default function LocationsScreen({
   tasks,
 }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [activeTab, setActiveTab] = useState('normal');
   const requiredEnergy = energyCost ?? 0;
   const availableEnergy = energy ?? requiredEnergy;
   const maxEnergy = energyMax ?? Math.max(availableEnergy, requiredEnergy, 1);
+
+  const specialLocations = SPECIAL_LOCATIONS[regionId] || [];
+  const hasSpecial = specialLocations.length > 0;
+
   return (
     <div className="screen screen-locations">
       <div className="screen-header">{regionName || 'Choose Location'}</div>
@@ -162,50 +222,54 @@ export default function LocationsScreen({
         <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} />
       )}
 
-      <div className="location-list">
-        {locations.map(loc => {
-          const needsLevel = playerLevel < loc.levelReq;
-          const needsEnergy = availableEnergy < requiredEnergy;
-          const locked = needsLevel || needsEnergy;
-          const expanded = expandedId === loc.id;
-          return (
-            <div key={loc.id} className="location-entry">
-              <button
-                className={`location-item ${locked ? 'locked' : ''}`}
-                onClick={() => !locked && onSelect(loc)}
-                disabled={locked}
-              >
-                <div className="location-item-left">
-                  <div className="location-name">
-                    {loc.name}
-                    <span
-                      className={`location-info-btn ${expanded ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setExpandedId(expanded ? null : loc.id);
-                      }}
-                      title="View spawn info"
-                    >?</span>
-                  </div>
-                  <div className="location-desc">{loc.description}</div>
-                  {(needsLevel || needsEnergy) && (
-                    <div className="location-req">
-                      {needsLevel ? `Lv.${loc.levelReq}+ required` : `Need ${requiredEnergy} energy`}
-                    </div>
-                  )}
-                </div>
-                <div className="location-level">
-                  Lv.{loc.levelReq}+
-                </div>
-              </button>
-              {expanded && (
-                <LocationSpawnInfo location={loc} regionId={regionId} />
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {hasSpecial && (
+        <div className="location-subtabs">
+          <button
+            className={`location-subtab ${activeTab === 'normal' ? 'active' : ''}`}
+            onClick={() => setActiveTab('normal')}
+          >
+            Normal
+          </button>
+          <button
+            className={`location-subtab ${activeTab === 'special' ? 'active' : ''}`}
+            onClick={() => setActiveTab('special')}
+          >
+            Special
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'normal' && (
+        <LocationList
+          locations={locations}
+          playerLevel={playerLevel}
+          availableEnergy={availableEnergy}
+          requiredEnergy={requiredEnergy}
+          expandedId={expandedId}
+          setExpandedId={setExpandedId}
+          onSelect={onSelect}
+          regionId={regionId}
+        />
+      )}
+
+      {activeTab === 'special' && (
+        <>
+          <div className="special-locations-header">
+            Dangerous zones with random-level encounters and rarer drops
+          </div>
+          <LocationList
+            locations={specialLocations}
+            playerLevel={playerLevel}
+            availableEnergy={availableEnergy}
+            requiredEnergy={requiredEnergy}
+            expandedId={expandedId}
+            setExpandedId={setExpandedId}
+            onSelect={onSelect}
+            regionId={regionId}
+          />
+        </>
+      )}
+
       <button className="btn btn-back" onClick={onBack}>Change Region</button>
     </div>
   );
