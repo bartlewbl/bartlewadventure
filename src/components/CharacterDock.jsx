@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ENERGY_MAX, ENERGY_REGEN_PERCENT, ENERGY_REGEN_INTERVAL_MS } from '../hooks/useGameState';
 
 export default function CharacterDock({
@@ -6,7 +6,6 @@ export default function CharacterDock({
   playerLevel,
   energy,
   energyMax,
-  energyCost,
   exp,
   expToLevel,
   hp,
@@ -23,146 +22,147 @@ export default function CharacterDock({
   lastEnergyUpdate,
 }) {
   const safeMax = energyMax ?? Math.max(energy ?? 0, 1);
-  const current = Math.max(0, Math.min(energy ?? safeMax, safeMax));
-  const pct = (current / safeMax) * 100;
-  const strokeStyle = {
-    background: `conic-gradient(#76ffdf ${pct}%, rgba(118, 255, 223, 0.15) ${pct}% 100%)`,
-  };
+  const currentEnergy = Math.max(0, Math.min(energy ?? safeMax, safeMax));
+  const energyPct = (currentEnergy / safeMax) * 100;
 
   const safeExpToLevel = expToLevel ?? 1;
   const currentExp = Math.max(0, Math.min(exp ?? 0, safeExpToLevel));
   const expPct = (currentExp / safeExpToLevel) * 100;
-  const levelStrokeStyle = {
-    background: `conic-gradient(#ffd700 ${expPct}%, rgba(255, 215, 0, 0.15) ${expPct}% 100%)`,
-  };
 
   const heroName = playerName || 'Hero';
   const heroLevel = playerLevel ?? 1;
-  const hpValue = `${Math.max(0, hp ?? 0)}/${Math.max(1, maxHp ?? 1)}`;
-  const manaValue = `${Math.max(0, mana ?? 0)}/${Math.max(1, maxMana ?? 1)}`;
+  const currentHp = Math.max(0, hp ?? 0);
+  const safeMaxHp = Math.max(1, maxHp ?? 1);
+  const hpPct = (currentHp / safeMaxHp) * 100;
+  const currentMana = Math.max(0, mana ?? 0);
+  const safeMaxMana = Math.max(1, maxMana ?? 1);
+  const manaPct = (currentMana / safeMaxMana) * 100;
   const goldValue = gold ?? 0;
 
-  const buttons = [
-    { id: 'inventory', label: 'Inventory', action: onInventory },
-    { id: 'profile', label: 'Profile', action: onProfile },
-    { id: 'skills', label: 'Skills', action: onSkills },
-  ];
-
-  const [hovered, setHovered] = useState(false);
+  const [energyHovered, setEnergyHovered] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const wheelRef = useRef(null);
-  const [tooltipPos, setTooltipPos] = useState(null);
 
   useEffect(() => {
-    if (!hovered) return;
+    if (!energyHovered) return;
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [hovered]);
-
-  useEffect(() => {
-    if (!hovered || !wheelRef.current) {
-      setTooltipPos(null);
-      return;
-    }
-    const rect = wheelRef.current.getBoundingClientRect();
-    setTooltipPos({ top: rect.top - 6, left: rect.left + rect.width / 2 });
-  }, [hovered]);
+  }, [energyHovered]);
 
   const gainPerTick = Math.max(1, Math.round(ENERGY_MAX * ENERGY_REGEN_PERCENT));
-  const isFull = current >= safeMax;
+  const isFull = currentEnergy >= safeMax;
 
-  let tooltipText;
+  let energyTooltip;
   if (isFull) {
-    tooltipText = 'Energy is full';
+    energyTooltip = 'Energy is full';
   } else if (lastEnergyUpdate == null) {
-    tooltipText = `+${gainPerTick} every 15 min`;
+    energyTooltip = `+${gainPerTick} every 15 min`;
   } else {
     const nextTick = lastEnergyUpdate + ENERGY_REGEN_INTERVAL_MS;
     const remaining = Math.max(0, nextTick - now);
     const mins = Math.floor(remaining / 60000);
     const secs = Math.floor((remaining % 60000) / 1000);
     const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-    tooltipText = `+${gainPerTick} in ${timeStr}`;
+    energyTooltip = `+${gainPerTick} in ${timeStr}`;
   }
 
   return (
     <div className="character-dock">
-      <div className="dock-hero">
-        <div className="dock-hero-name">{heroName}</div>
-        <div className="dock-hero-meta">Lv. {heroLevel}</div>
-        <div className="dock-hero-meta">Gold: {goldValue}</div>
-      </div>
-
-      <div className="dock-wheels">
-        <div
-          ref={wheelRef}
-          className="dock-wheel-item energy-wheel-wrapper"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        >
-          <div className="energy-ring" style={strokeStyle}>
-            <div className="energy-core">
-              <div className="energy-value">{current}</div>
-              <div className="energy-max">/ {safeMax}</div>
-            </div>
+      {/* Hero identity row */}
+      <div className="dock-identity">
+        <div className="dock-avatar">
+          <span className="dock-avatar-icon">⚔</span>
+          <div className="dock-level-badge">{heroLevel}</div>
+        </div>
+        <div className="dock-identity-info">
+          <div className="dock-hero-name">{heroName}</div>
+          <div className="dock-gold-row">
+            <span className="dock-gold-icon">●</span>
+            <span className="dock-gold-value">{goldValue.toLocaleString()}</span>
           </div>
-          <div className="wheel-label energy-label">Energy</div>
-          {hovered && tooltipPos && (
-            <div
-              className="energy-tooltip"
-              style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translate(-50%, -100%)' }}
-            >
-              {tooltipText}
-            </div>
-          )}
         </div>
-
-        <div className="dock-wheel-item">
-          <div className="level-ring" style={levelStrokeStyle}>
-            <div className="level-core">
-              <div className="level-value">{heroLevel}</div>
-            </div>
-          </div>
-          <div className="wheel-label level-label">Level</div>
-        </div>
-      </div>
-
-      <div className="dock-stats">
-        <div className="dock-stat">
-          <div className="dock-stat-label">HP</div>
-          <div className="dock-stat-value">{hpValue}</div>
-        </div>
-        <div className="dock-stat">
-          <div className="dock-stat-label">Mana</div>
-          <div className="dock-stat-value">{manaValue}</div>
-        </div>
-      </div>
-
-      <div className="dock-footer">
-        <div className="dock-actions">
-          {buttons.map(btn => (
-            <button
-              key={btn.id}
-              className="dock-action"
-              type="button"
-              disabled={navLocked}
-              onClick={btn.action}
-            >
-              {btn.label}
-            </button>
-          ))}
-        </div>
-
         <button
-          className="dock-icon-button"
+          className="dock-rest-button"
           type="button"
           disabled={!canRest}
           onClick={onRest}
           aria-label="Rest at Inn"
           title="Rest at Inn (-10g)"
         >
-          <span className="heal-icon">✚</span>
+          <span className="dock-rest-icon">✚</span>
+        </button>
+      </div>
+
+      {/* Stat bars */}
+      <div className="dock-bars">
+        <div className="dock-bar-row">
+          <span className="dock-bar-label dock-bar-hp">HP</span>
+          <div className="dock-bar-track">
+            <div className="dock-bar-fill dock-bar-fill-hp" style={{ width: `${hpPct}%` }} />
+          </div>
+          <span className="dock-bar-nums">{currentHp}/{safeMaxHp}</span>
+        </div>
+
+        <div className="dock-bar-row">
+          <span className="dock-bar-label dock-bar-mana">MP</span>
+          <div className="dock-bar-track">
+            <div className="dock-bar-fill dock-bar-fill-mana" style={{ width: `${manaPct}%` }} />
+          </div>
+          <span className="dock-bar-nums">{currentMana}/{safeMaxMana}</span>
+        </div>
+
+        <div
+          className="dock-bar-row dock-bar-energy-row"
+          onMouseEnter={() => setEnergyHovered(true)}
+          onMouseLeave={() => setEnergyHovered(false)}
+        >
+          <span className="dock-bar-label dock-bar-energy">EN</span>
+          <div className="dock-bar-track">
+            <div className="dock-bar-fill dock-bar-fill-energy" style={{ width: `${energyPct}%` }} />
+          </div>
+          <span className="dock-bar-nums">{currentEnergy}/{safeMax}</span>
+          {energyHovered && (
+            <div className="dock-bar-tooltip">{energyTooltip}</div>
+          )}
+        </div>
+      </div>
+
+      {/* XP bar */}
+      <div className="dock-xp">
+        <div className="dock-xp-track">
+          <div className="dock-xp-fill" style={{ width: `${expPct}%` }} />
+        </div>
+        <span className="dock-xp-text">XP {currentExp}/{safeExpToLevel}</span>
+      </div>
+
+      {/* Quick actions */}
+      <div className="dock-quick-actions">
+        <button
+          className="dock-quick-btn"
+          type="button"
+          disabled={navLocked}
+          onClick={onInventory}
+        >
+          <span className="dock-quick-icon">▦</span>
+          <span className="dock-quick-label">Items</span>
+        </button>
+        <button
+          className="dock-quick-btn"
+          type="button"
+          disabled={navLocked}
+          onClick={onProfile}
+        >
+          <span className="dock-quick-icon">◈</span>
+          <span className="dock-quick-label">Profile</span>
+        </button>
+        <button
+          className="dock-quick-btn"
+          type="button"
+          disabled={navLocked}
+          onClick={onSkills}
+        >
+          <span className="dock-quick-icon">★</span>
+          <span className="dock-quick-label">Skills</span>
         </button>
       </div>
     </div>
