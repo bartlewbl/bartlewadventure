@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { initDb } from './db.js';
 import authRouter from './routes/auth.js';
 import saveRouter from './routes/save.js';
 import invitesRouter from './routes/invites.js';
@@ -33,6 +34,14 @@ app.get('/{*path}', (req, res) => {
   res.sendFile(join(distPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// Initialize database then start server
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  });

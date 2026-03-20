@@ -1,18 +1,7 @@
 import { Router } from 'express';
-import db from '../db.js';
+import pool from '../db.js';
 
 const router = Router();
-
-// Prepared statements
-const getAll = db.prepare('SELECT key, value, category, label, description FROM probability_config ORDER BY category, key');
-const getByKey = db.prepare('SELECT key, value, category, label, description FROM probability_config WHERE key = ?');
-const upsertConfig = db.prepare(`
-  INSERT INTO probability_config (key, value, category, label, description, updated_at)
-  VALUES (?, ?, ?, ?, ?, datetime('now'))
-  ON CONFLICT(key)
-  DO UPDATE SET value = excluded.value, updated_at = datetime('now')
-`);
-const countRows = db.prepare('SELECT COUNT(*) as cnt FROM probability_config');
 
 // Default probability values — seeded on first access
 const DEFAULTS = [
@@ -133,71 +122,128 @@ const DEFAULTS = [
 ];
 
 // Seed defaults if table is empty
-function seedDefaults() {
-  const { cnt } = countRows.get();
-  if (cnt === 0) {
-    const insert = db.transaction(() => {
+async function seedDefaults() {
+  const countResult = await pool.query('SELECT COUNT(*) as cnt FROM probability_config');
+  const { cnt } = countResult.rows[0];
+  if (parseInt(cnt) === 0) {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
       for (const d of DEFAULTS) {
-        upsertConfig.run(d.key, d.value, d.category, d.label, d.description || '');
+        await client.query(
+          `INSERT INTO probability_config (key, value, category, label, description, updated_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())
+           ON CONFLICT(key) DO UPDATE SET value = $2, updated_at = NOW()`,
+          [d.key, d.value, d.category, d.label, d.description || '']
+        );
       }
-    });
-    insert();
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      console.error('Seed defaults error:', err);
+    } finally {
+      client.release();
+    }
   }
 }
 
-seedDefaults();
+// Seed on import
+seedDefaults().catch(err => console.error('Seed error:', err));
 
 // GET all probability configs
-router.get('/', (req, res) => {
-  const rows = getAll.all();
-  res.json({ configs: rows });
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT key, value, category, label, description FROM probability_config ORDER BY category, key');
+    res.json({ configs: result.rows });
+  } catch (err) {
+    console.error('Probability config get error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // PUT update a single config value
-router.put('/:key', (req, res) => {
+router.put('/:key', async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   if (value == null || typeof value !== 'number') {
     return res.status(400).json({ error: 'Value must be a number' });
   }
-  const existing = getByKey.get(key);
-  if (!existing) {
-    return res.status(404).json({ error: 'Config key not found' });
+  try {
+    const existing = await pool.query('SELECT key, value, category, label, description FROM probability_config WHERE key = $1', [key]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Config key not found' });
+    }
+    const row = existing.rows[0];
+    await pool.query(
+      `INSERT INTO probability_config (key, value, category, label, description, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       ON CONFLICT(key) DO UPDATE SET value = $2, updated_at = NOW()`,
+      [key, value, row.category, row.label, row.description]
+    );
+    res.json({ ok: true, key, value });
+  } catch (err) {
+    console.error('Probability config update error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
-  upsertConfig.run(key, value, existing.category, existing.label, existing.description);
-  res.json({ ok: true, key, value });
 });
 
 // POST bulk update multiple configs
-router.post('/bulk', (req, res) => {
+router.post('/bulk', async (req, res) => {
   const { updates } = req.body;
   if (!Array.isArray(updates)) {
     return res.status(400).json({ error: 'Updates must be an array of { key, value }' });
   }
-  const bulkUpdate = db.transaction(() => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
     for (const { key, value } of updates) {
       if (typeof value !== 'number') continue;
-      const existing = getByKey.get(key);
-      if (existing) {
-        upsertConfig.run(key, value, existing.category, existing.label, existing.description);
+      const existing = await client.query('SELECT key, category, label, description FROM probability_config WHERE key = $1', [key]);
+      if (existing.rows.length > 0) {
+        const row = existing.rows[0];
+        await client.query(
+          `INSERT INTO probability_config (key, value, category, label, description, updated_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())
+           ON CONFLICT(key) DO UPDATE SET value = $2, updated_at = NOW()`,
+          [key, value, row.category, row.label, row.description]
+        );
       }
     }
-  });
-  bulkUpdate();
-  const rows = getAll.all();
-  res.json({ ok: true, configs: rows });
+    await client.query('COMMIT');
+    const result = await pool.query('SELECT key, value, category, label, description FROM probability_config ORDER BY category, key');
+    res.json({ ok: true, configs: result.rows });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk update error:', err);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
 });
 
 // POST reset all to defaults
-router.post('/reset', (req, res) => {
-  const resetAll = db.transaction(() => {
+router.post('/reset', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
     for (const d of DEFAULTS) {
-      upsertConfig.run(d.key, d.value, d.category, d.label, d.description || '');
+      await client.query(
+        `INSERT INTO probability_config (key, value, category, label, description, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())
+         ON CONFLICT(key) DO UPDATE SET value = $2, updated_at = NOW()`,
+        [d.key, d.value, d.category, d.label, d.description || '']
+      );
     }
-  });
-  resetAll();
-  const rows = getAll.all();
-  res.json({ ok: true, configs: rows });
+    await client.query('COMMIT');
+    const result = await pool.query('SELECT key, value, category, label, description FROM probability_config ORDER BY category, key');
+    res.json({ ok: true, configs: result.rows });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Reset error:', err);
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
+  }
 });
 
 export default router;
