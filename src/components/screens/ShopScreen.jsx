@@ -193,6 +193,7 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
                         <div className={`shop-card-name ${item.rarityClass || ''}`}>{item.name}</div>
                         <div className="shop-card-meta">
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
+                          {item.level && <span className="shop-card-level">Lv{item.level}</span>}
                           <span className="shop-card-stats">{statLine(item)}</span>
                           {item.classes && (
                             <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}
@@ -241,6 +242,7 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
                         <div className={`shop-card-name ${item.rarityClass || ''}`}>{item.name}</div>
                         <div className="shop-card-meta">
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
+                          {item.level && <span className="shop-card-level">Lv{item.level}</span>}
                           <span className="shop-card-stats">{statLine(item)}</span>
                           {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                         </div>
@@ -431,6 +433,7 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
                     <div className={`shop-card-name ${item.rarityClass || ''}`}>{item.name}</div>
                     <div className="shop-card-meta">
                       <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
+                      {item.level && <span className="shop-card-level">Lv{item.level}</span>}
                       <span className="shop-card-stats">{statLine(item)}</span>
                       {item.classes && (
                         <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}
@@ -481,6 +484,7 @@ function renderSellList(items, player, onSell) {
             </div>
             <div className="shop-card-meta">
               <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
+              {item.level && <span className="shop-card-level">Lv{item.level}</span>}
               <span className="shop-card-stats">{statLine(item)}</span>
             </div>
           </div>
