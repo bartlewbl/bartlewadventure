@@ -2954,16 +2954,48 @@ export const RANDOM_EVENTS = [
       {
         label: 'Pay Up',
         outcomes: [
-          { weight: 0.35, type: 'item_rare', text: 'They hand over something genuinely valuable. A rare find!' },
-          { weight: 0.30, type: 'item', text: 'Decent gear, roughly worth what you paid. Fair enough.' },
-          { weight: 0.25, type: 'scam', text: 'The item crumbles to dust in your hands. You\'ve been scammed!' },
+          { weight: 0.30, type: 'item_rare', text: 'They hand over something genuinely valuable. A rare find!' },
+          { weight: 0.25, type: 'item', text: 'Decent gear, roughly worth what you paid. Fair enough.' },
+          { weight: 0.20, type: 'scam', text: 'The item crumbles to dust in your hands. You\'ve been scammed!' },
           { weight: 0.10, type: 'item_great', text: 'Your eyes widen. This piece is incredible — worth ten times what you paid!' },
+          { weight: 0.15, type: 'energy_drinks', amount: 2, text: 'The merchant pulls out a stash of energy drinks from under their cloak!' },
         ],
       },
       {
         label: 'Walk Away',
         outcomes: [
           { weight: 1.0, type: 'nothing', text: 'You decline. The merchant shrugs and melts back into the dark.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'energy-peddler',
+    title: 'Neon Juice Peddler',
+    description: 'A twitchy figure with a glowing backpack rattles with cans. "Psst! You look tired. I got the good stuff — pure liquid energy!"',
+    choices: [
+      {
+        label: 'Buy the Stash',
+        outcomes: [
+          { weight: 0.30, type: 'energy_drinks', amount: 3, text: 'They hand over a small bundle of energy drinks. Three cans, ice cold!' },
+          { weight: 0.25, type: 'energy_drinks', amount: 5, text: 'The peddler grins and dumps a hefty pile of drinks into your arms!' },
+          { weight: 0.15, type: 'energy_drinks', amount: 7, text: 'Jackpot! The peddler empties their entire backpack for you. Seven cans!' },
+          { weight: 0.15, type: 'energy_drinks', amount: 1, text: 'They sheepishly hand over a single can. "That\'s all I got left, friend."' },
+          { weight: 0.15, type: 'scam', text: 'The cans are empty. Every single one. You\'ve been played.' },
+        ],
+      },
+      {
+        label: 'Haggle',
+        outcomes: [
+          { weight: 0.40, type: 'energy_drinks', amount: 2, text: 'After some back and forth, you get a couple cans at a fair price.' },
+          { weight: 0.30, type: 'energy_drinks', amount: 4, text: 'Your negotiation skills impress them. They throw in extra cans!' },
+          { weight: 0.30, type: 'nothing', text: '"No deal!" The peddler zips up their backpack and vanishes.' },
+        ],
+      },
+      {
+        label: 'Walk Away',
+        outcomes: [
+          { weight: 1.0, type: 'nothing', text: 'You pass on the offer. The peddler shrugs and disappears into the crowd.' },
         ],
       },
     ],
@@ -3366,10 +3398,11 @@ export const RANDOM_EVENTS = [
       {
         label: 'Browse Their Wares',
         outcomes: [
-          { weight: 0.30, type: 'item_great', text: 'A spectral blade materializes into solid form in your hands. Extraordinary!' },
-          { weight: 0.30, type: 'item_rare', text: 'You select an ethereal piece that solidifies when you grasp it. Quality gear!' },
-          { weight: 0.20, type: 'gold_lose', text: 'You hand over gold but the item dissolves. The phantom cackles and vanishes!' },
-          { weight: 0.20, type: 'energy_drain', amount: 5, text: 'The phantom\'s presence drains your life force just by being near it.' },
+          { weight: 0.25, type: 'item_great', text: 'A spectral blade materializes into solid form in your hands. Extraordinary!' },
+          { weight: 0.25, type: 'item_rare', text: 'You select an ethereal piece that solidifies when you grasp it. Quality gear!' },
+          { weight: 0.15, type: 'gold_lose', text: 'You hand over gold but the item dissolves. The phantom cackles and vanishes!' },
+          { weight: 0.15, type: 'energy_drain', amount: 5, text: 'The phantom\'s presence drains your life force just by being near it.' },
+          { weight: 0.20, type: 'energy_drinks', amount: 3, text: 'Ghostly energy drinks materialize in your hands. They feel ice cold and very real!' },
         ],
       },
       {
@@ -3441,17 +3474,19 @@ export const RANDOM_EVENTS = [
       {
         label: 'Browse Discounted Wares',
         outcomes: [
-          { weight: 0.40, type: 'item_rare', text: 'Desperate prices! You snag a fantastic piece of gear for a steal.' },
-          { weight: 0.30, type: 'item', text: 'Decent gear at a fair price — the rain hasn\'t ruined everything.' },
-          { weight: 0.30, type: 'gold_lose', text: 'The goods are waterlogged and useless. You wasted your gold.' },
+          { weight: 0.30, type: 'item_rare', text: 'Desperate prices! You snag a fantastic piece of gear for a steal.' },
+          { weight: 0.25, type: 'item', text: 'Decent gear at a fair price — the rain hasn\'t ruined everything.' },
+          { weight: 0.25, type: 'gold_lose', text: 'The goods are waterlogged and useless. You wasted your gold.' },
+          { weight: 0.20, type: 'energy_drinks', amount: 4, text: 'The merchant throws in a waterproof case of energy drinks as a bonus!' },
         ],
       },
       {
         label: 'Help Them Move Stock',
         outcomes: [
-          { weight: 0.40, type: 'gold', text: 'Grateful, they pay you for the help and toss in a bonus.' },
-          { weight: 0.30, type: 'item', text: '"Keep this," they say, handing you a piece they can\'t sell wet.' },
-          { weight: 0.30, type: 'energy_drain', amount: 4, text: 'Moving crates in the rain drains you. They nod thanks but offer nothing.' },
+          { weight: 0.35, type: 'gold', text: 'Grateful, they pay you for the help and toss in a bonus.' },
+          { weight: 0.25, type: 'item', text: '"Keep this," they say, handing you a piece they can\'t sell wet.' },
+          { weight: 0.15, type: 'energy_drinks', amount: 2, text: '"You look tired from all that lifting — here, have some energy drinks on the house!"' },
+          { weight: 0.25, type: 'energy_drain', amount: 4, text: 'Moving crates in the rain drains you. They nod thanks but offer nothing.' },
         ],
       },
     ],
@@ -3563,18 +3598,20 @@ export const RANDOM_EVENTS = [
       {
         label: 'Chase the Loot',
         outcomes: [
-          { weight: 0.35, type: 'item', text: 'You snatch a piece of gear from the air before it blows away!' },
-          { weight: 0.25, type: 'gold', text: 'Coins scatter across the ground — you pocket everything you can grab!' },
-          { weight: 0.20, type: 'energy_drain', amount: 6, text: 'You sprint after the goods but the wind is too strong. Exhausting!' },
+          { weight: 0.30, type: 'item', text: 'You snatch a piece of gear from the air before it blows away!' },
+          { weight: 0.20, type: 'gold', text: 'Coins scatter across the ground — you pocket everything you can grab!' },
+          { weight: 0.15, type: 'energy_drain', amount: 6, text: 'You sprint after the goods but the wind is too strong. Exhausting!' },
           { weight: 0.20, type: 'item_rare', text: 'A rare item lodges against a wall. Lucky catch!' },
+          { weight: 0.15, type: 'energy_drinks', amount: 3, text: 'A crate of energy drinks crashes at your feet. Free drinks!' },
         ],
       },
       {
         label: 'Help the Merchant',
         outcomes: [
-          { weight: 0.50, type: 'gold', text: 'The merchant rewards your kindness with a generous payment.' },
-          { weight: 0.30, type: 'item', text: '"You\'ve earned this," they say, giving you something from their stock.' },
-          { weight: 0.20, type: 'heal', amount: 0.15, text: 'The merchant shares a restorative drink with you. "For your trouble."' },
+          { weight: 0.40, type: 'gold', text: 'The merchant rewards your kindness with a generous payment.' },
+          { weight: 0.25, type: 'item', text: '"You\'ve earned this," they say, giving you something from their stock.' },
+          { weight: 0.15, type: 'heal', amount: 0.15, text: 'The merchant shares a restorative drink with you. "For your trouble."' },
+          { weight: 0.20, type: 'energy_drinks', amount: 2, text: '"Here, take some energy drinks — you earned them helping me!"' },
         ],
       },
     ],

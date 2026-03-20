@@ -457,8 +457,8 @@ export function getPetShopStock(playerLevel) {
 }
 
 export function getPetItemShop(playerLevel) {
-  const snacks = PET_SNACKS.filter((s, i) => i <= Math.floor(playerLevel / 5) + 1);
-  const potions = PET_ENERGY_POTIONS.filter((p, i) => i <= Math.floor(playerLevel / 6) + 1);
+  const snacks = PET_SNACKS.filter((s, i) => i <= Math.floor(playerLevel / 5) + 1).map(s => ({ ...s, stock: 3 }));
+  const potions = PET_ENERGY_POTIONS.filter((p, i) => i <= Math.floor(playerLevel / 6) + 1).map(p => ({ ...p, stock: 3 }));
   return [...snacks, ...potions];
 }
 

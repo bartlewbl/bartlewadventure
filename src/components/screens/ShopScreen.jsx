@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getShopItems, getShopEnergyDrinks, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
+import { getShopItems, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
 import { getChestShopStock } from '../../data/lootChests';
@@ -75,16 +75,25 @@ const ROLE_ICONS = {
   hybrid: '\u269B',
 };
 
-export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBuyPetItem, onBack }) {
+export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell, onBuyPet, onBuyPetItem, onBack }) {
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
   const clock = useGameClock();
 
+  // Helper to get remaining stock for an item
+  const getRemaining = (item) => {
+    if (item.stock == null) return Infinity;
+    const key = item.shopStockKey || item.name + '_' + item.level;
+    return Math.max(0, item.stock - (shopPurchases[key] || 0));
+  };
+
+  const handleBuy = (item) => onBuy(item, clock.shopSeed);
+
   // Armourer stock — refreshes every 10 hours
   const armourerStock = useMemo(() => getArmourerStock(player.level, clock.shopSeed, player.characterClass), [player.level, clock.shopSeed, player.characterClass]);
   // Brewer stock
-  const brewerStock = useMemo(() => [...getShopItems(player.level), ...getShopEnergyDrinks(player.level)], [player.level]);
+  const brewerStock = useMemo(() => getShopItems(player.level), [player.level]);
   // Pet shop stock
   const petStock = useMemo(() => getPetShopStock(player.level), [player.level]);
   const petItemStock = useMemo(() => getPetItemShop(player.level), [player.level]);
@@ -164,9 +173,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
             {tab === 'buy' && (
               <div className="shop-list">
                 {filteredArmour.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No items available</div></div>}
-                {filteredArmour.map(item => {
+                {filteredArmour.filter(item => getRemaining(item) > 0).map(item => {
                   const canAfford = player.gold >= item.buyPrice;
                   const invFull = player.inventory.length >= player.maxInventory;
+                  const remaining = getRemaining(item);
                   return (
                     <div key={item.id} className={`shop-card ${item.rarityClass || ''} ${!canAfford ? 'unaffordable' : ''}`}>
                       <div className="shop-card-left">
@@ -181,9 +191,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                               {item.classes.map(c => getClassShortName(c)).join('/')}
                             </span>
                           )}
+                          {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                         </div>
                       </div>
-                      <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
+                      <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}
                         title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
                         <span className="shop-btn-price">{item.buyPrice}g</span>
                         <span className="shop-btn-label">Buy</span>
@@ -210,9 +221,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
           <div className="shop-content">
             {tab === 'buy' && (
               <div className="shop-list">
-                {brewerStock.map(item => {
+                {brewerStock.filter(item => getRemaining(item) > 0).map(item => {
                   const canAfford = player.gold >= item.buyPrice;
                   const invFull = player.inventory.length >= player.maxInventory;
+                  const remaining = getRemaining(item);
                   return (
                     <div key={item.id} className={`shop-card ${item.rarityClass || ''} ${!canAfford ? 'unaffordable' : ''}`}>
                       <div className="shop-card-left">
@@ -221,9 +233,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                         <div className="shop-card-meta">
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                           <span className="shop-card-stats">{statLine(item)}</span>
+                          {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                         </div>
                       </div>
-                      <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
+                      <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}
                         title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
                         <span className="shop-btn-price">{item.buyPrice}g</span>
                         <span className="shop-btn-label">Buy</span>
@@ -251,9 +264,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
             {tab === 'buy' && (
               <div className="shop-list">
                 <div className="shop-featured-banner">Incubator Food - keeps your eggs warm and growing!</div>
-                {groceryStock.map(item => {
+                {groceryStock.filter(item => getRemaining(item) > 0).map(item => {
                   const canAfford = player.gold >= item.buyPrice;
                   const invFull = player.inventory.length >= player.maxInventory;
+                  const remaining = getRemaining(item);
                   return (
                     <div key={item.id} className={`shop-card ${item.rarity?.toLowerCase() || ''} ${!canAfford ? 'unaffordable' : ''}`}>
                       <div className="shop-card-left">
@@ -262,10 +276,11 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                         <div className="shop-card-meta">
                           <span className={`shop-rarity-badge ${item.rarity?.toLowerCase() || ''}`}>{item.rarity}</span>
                           <span className="shop-card-stats">+{item.fuelMinutes} min incubation</span>
+                          {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                         </div>
                         <div className="pet-ability-line">{item.description}</div>
                       </div>
-                      <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
+                      <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}
                         title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
                         <span className="shop-btn-price">{item.buyPrice}g</span>
                         <span className="shop-btn-label">Buy</span>
@@ -326,9 +341,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
 
             {tab === 'items' && (
               <div className="shop-list">
-                {petItemStock.map(item => {
+                {petItemStock.filter(item => getRemaining(item) > 0).map(item => {
                   const canAfford = player.gold >= item.buyPrice;
                   const invFull = player.inventory.length >= player.maxInventory;
+                  const remaining = getRemaining(item);
                   return (
                     <div key={item.id} className={`shop-card ${item.rarity?.toLowerCase() || ''} ${!canAfford ? 'unaffordable' : ''}`}>
                       <div className="shop-card-left">
@@ -339,6 +355,7 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                           <span className="shop-card-stats">
                             {item.type === 'pet-snack' ? `Bond +${item.bondRestore}` : `Energy +${item.energyRestore}`}
                           </span>
+                          {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                         </div>
                       </div>
                       <button className="shop-buy-btn" onClick={() => onBuyPetItem(item)} disabled={!canAfford || invFull}
@@ -361,9 +378,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
           <div className="shop-featured-banner">Rare Loot Chests - mostly earned through quests and daily logins!</div>
           <div className="shop-list">
             {chestStock.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No chests available at your level</div></div>}
-            {chestStock.map(item => {
+            {chestStock.filter(item => getRemaining(item) > 0).map(item => {
               const canAfford = player.gold >= item.buyPrice;
               const invFull = player.inventory.length >= player.maxInventory;
+              const remaining = getRemaining(item);
               return (
                 <div key={item.id} className={`shop-card ${item.rarityClass || ''} ${!canAfford ? 'unaffordable' : ''}`}>
                   <div className="shop-card-left">
@@ -372,9 +390,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                     <div className="shop-card-meta">
                       <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                       <span className="shop-card-stats">{item.desc}</span>
+                      {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                     </div>
                   </div>
-                  <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
+                  <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}
                     title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
                     <span className="shop-btn-price">{item.buyPrice}g</span>
                     <span className="shop-btn-label">Buy</span>
@@ -392,9 +411,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
           <div className="shop-featured-banner">Daily Featured Deals <span className="shop-featured-timer">Refreshes in {clock.shopRefreshIn}</span></div>
           <div className="shop-list">
             {featuredStock.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No featured items today</div></div>}
-            {featuredStock.map(item => {
+            {featuredStock.filter(item => getRemaining(item) > 0).map(item => {
               const canAfford = player.gold >= item.buyPrice;
               const invFull = player.inventory.length >= player.maxInventory;
+              const remaining = getRemaining(item);
               return (
                 <div key={item.id} className={`shop-card ${item.rarityClass || ''} ${!canAfford ? 'unaffordable' : ''}`}>
                   <div className="shop-card-left">
@@ -409,9 +429,10 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                           {item.classes.map(c => getClassShortName(c)).join('/')}
                         </span>
                       )}
+                      {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
                     </div>
                   </div>
-                  <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}>
+                  <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}>
                     <span className="shop-btn-price">{item.buyPrice}g</span>
                     <span className="shop-btn-label">Buy</span>
                   </button>

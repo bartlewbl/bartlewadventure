@@ -3515,6 +3515,13 @@ body {
   color: #7cfc7c;
 }
 
+.shop-card-stock {
+  font-size: 7px;
+  color: #ffaa33;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
 /* Buy / Sell buttons */
 .shop-buy-btn,
 .shop-sell-btn {

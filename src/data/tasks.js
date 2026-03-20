@@ -52,7 +52,7 @@ export const DAILY_TASKS = [
     description: 'Defeat 5 monsters',
     stat: 'monstersKilled',
     target: 5,
-    reward: { gold: 25 },
+    reward: { gold: 25, energyDrinks: 1 },
   },
   {
     id: 'daily_explore_3',
@@ -60,7 +60,7 @@ export const DAILY_TASKS = [
     description: 'Complete 3 explorations',
     stat: 'explorationsCompleted',
     target: 3,
-    reward: { gold: 15 },
+    reward: { gold: 15, energyDrinks: 1 },
   },
   {
     id: 'daily_deal_500',
@@ -68,7 +68,7 @@ export const DAILY_TASKS = [
     description: 'Deal 500 total damage',
     stat: 'damageDealt',
     target: 500,
-    reward: { gold: 20 },
+    reward: { gold: 20, energyDrinks: 1 },
   },
   {
     id: 'daily_earn_100g',
@@ -92,7 +92,7 @@ export const DAILY_TASKS = [
     description: 'Win 3 battles',
     stat: 'battlesWon',
     target: 3,
-    reward: { gold: 20 },
+    reward: { gold: 20, energyDrinks: 1 },
   },
   {
     id: 'daily_loot_2',
@@ -116,7 +116,7 @@ export const WEEKLY_TASKS = [
     description: 'Defeat 50 monsters',
     stat: 'monstersKilled',
     target: 50,
-    reward: { gold: 200, chestId: 'shadow-lockbox' },
+    reward: { gold: 200, chestId: 'shadow-lockbox', energyDrinks: 2 },
   },
   {
     id: 'weekly_boss_3',
@@ -124,7 +124,7 @@ export const WEEKLY_TASKS = [
     description: 'Defeat 3 bosses',
     stat: 'bossesKilled',
     target: 3,
-    reward: { gold: 300, chestId: 'mercenary-bounty' },
+    reward: { gold: 300, chestId: 'mercenary-bounty', energyDrinks: 2 },
   },
   {
     id: 'weekly_deal_5000',
@@ -132,7 +132,7 @@ export const WEEKLY_TASKS = [
     description: 'Deal 5,000 total damage',
     stat: 'damageDealt',
     target: 5000,
-    reward: { gold: 250 },
+    reward: { gold: 250, energyDrinks: 2 },
   },
   {
     id: 'weekly_earn_1000g',
@@ -148,7 +148,7 @@ export const WEEKLY_TASKS = [
     description: 'Complete 20 explorations',
     stat: 'explorationsCompleted',
     target: 20,
-    reward: { gold: 200 },
+    reward: { gold: 200, energyDrinks: 2 },
   },
   {
     id: 'weekly_sell_10',
@@ -156,7 +156,7 @@ export const WEEKLY_TASKS = [
     description: 'Sell 10 items',
     stat: 'itemsSold',
     target: 10,
-    reward: { gold: 150 },
+    reward: { gold: 150, energyDrinks: 1 },
   },
 ];
 
@@ -172,7 +172,7 @@ export const MONTHLY_TASKS = [
     description: 'Defeat 300 monsters',
     stat: 'monstersKilled',
     target: 300,
-    reward: { gold: 1000, chestId: 'skyline-strongbox' },
+    reward: { gold: 1000, chestId: 'skyline-strongbox', energyDrinks: 3 },
   },
   {
     id: 'monthly_boss_15',
@@ -180,7 +180,7 @@ export const MONTHLY_TASKS = [
     description: 'Defeat 15 bosses',
     stat: 'bossesKilled',
     target: 15,
-    reward: { gold: 1500, chestId: 'neon-treasure' },
+    reward: { gold: 1500, chestId: 'neon-treasure', energyDrinks: 3 },
   },
   {
     id: 'monthly_deal_50000',
@@ -188,7 +188,7 @@ export const MONTHLY_TASKS = [
     description: 'Deal 50,000 total damage',
     stat: 'damageDealt',
     target: 50000,
-    reward: { gold: 1200 },
+    reward: { gold: 1200, energyDrinks: 3 },
   },
   {
     id: 'monthly_earn_10000g',
@@ -196,7 +196,7 @@ export const MONTHLY_TASKS = [
     description: 'Earn 10,000 gold',
     stat: 'goldEarned',
     target: 10000,
-    reward: { gold: 2000, chestId: 'ironworks-coffer' },
+    reward: { gold: 2000, chestId: 'ironworks-coffer', energyDrinks: 3 },
   },
   {
     id: 'monthly_explore_100',
@@ -204,7 +204,7 @@ export const MONTHLY_TASKS = [
     description: 'Complete 100 explorations',
     stat: 'explorationsCompleted',
     target: 100,
-    reward: { gold: 800 },
+    reward: { gold: 800, energyDrinks: 3 },
   },
 ];
 
@@ -236,7 +236,7 @@ export const STORY_TASKS = [
     description: 'Defeat 100 monsters',
     stat: 'monstersKilled',
     target: 100,
-    reward: { gold: 200, chestId: 'metro-vault' },
+    reward: { gold: 200, chestId: 'metro-vault', energyDrinks: 2 },
   },
   {
     id: 'story_kill_500',
@@ -244,7 +244,7 @@ export const STORY_TASKS = [
     description: 'Defeat 500 monsters',
     stat: 'monstersKilled',
     target: 500,
-    reward: { gold: 500 },
+    reward: { gold: 500, energyDrinks: 3 },
   },
   {
     id: 'story_kill_1000',
@@ -252,7 +252,7 @@ export const STORY_TASKS = [
     description: 'Defeat 1,000 monsters',
     stat: 'monstersKilled',
     target: 1000,
-    reward: { gold: 1000, chestId: 'void-reliquary' },
+    reward: { gold: 1000, chestId: 'void-reliquary', energyDrinks: 5 },
   },
   {
     id: 'story_first_boss',
@@ -260,7 +260,7 @@ export const STORY_TASKS = [
     description: 'Defeat your first boss',
     stat: 'bossesKilled',
     target: 1,
-    reward: { gold: 100 },
+    reward: { gold: 100, energyDrinks: 1 },
   },
   {
     id: 'story_boss_10',
@@ -268,7 +268,7 @@ export const STORY_TASKS = [
     description: 'Defeat 10 bosses',
     stat: 'bossesKilled',
     target: 10,
-    reward: { gold: 500, chestId: 'skyline-strongbox' },
+    reward: { gold: 500, chestId: 'skyline-strongbox', energyDrinks: 3 },
   },
   {
     id: 'story_level_10',
@@ -276,7 +276,7 @@ export const STORY_TASKS = [
     description: 'Reach level 10',
     stat: 'levelsGained',
     target: 9,
-    reward: { gold: 100 },
+    reward: { gold: 100, energyDrinks: 2 },
   },
   {
     id: 'story_level_25',
@@ -284,7 +284,7 @@ export const STORY_TASKS = [
     description: 'Reach level 25',
     stat: 'levelsGained',
     target: 24,
-    reward: { gold: 300 },
+    reward: { gold: 300, energyDrinks: 3 },
   },
   {
     id: 'story_level_50',
@@ -292,7 +292,7 @@ export const STORY_TASKS = [
     description: 'Reach level 50',
     stat: 'levelsGained',
     target: 49,
-    reward: { gold: 1000, chestId: 'legendary-ark' },
+    reward: { gold: 1000, chestId: 'legendary-ark', energyDrinks: 5 },
   },
   {
     id: 'story_earn_5000g',
@@ -300,7 +300,7 @@ export const STORY_TASKS = [
     description: 'Earn 5,000 total gold',
     stat: 'goldEarned',
     target: 5000,
-    reward: { gold: 250 },
+    reward: { gold: 250, energyDrinks: 2 },
   },
   {
     id: 'story_earn_50000g',
@@ -316,7 +316,7 @@ export const STORY_TASKS = [
     description: 'Deal 10,000 total damage',
     stat: 'damageDealt',
     target: 10000,
-    reward: { gold: 200 },
+    reward: { gold: 200, energyDrinks: 2 },
   },
   {
     id: 'story_deal_100000',
@@ -324,7 +324,7 @@ export const STORY_TASKS = [
     description: 'Deal 100,000 total damage',
     stat: 'damageDealt',
     target: 100000,
-    reward: { gold: 1000, chestId: 'void-reliquary' },
+    reward: { gold: 1000, chestId: 'void-reliquary', energyDrinks: 4 },
   },
   {
     id: 'story_explore_50',
@@ -332,7 +332,7 @@ export const STORY_TASKS = [
     description: 'Complete 50 explorations',
     stat: 'explorationsCompleted',
     target: 50,
-    reward: { gold: 150 },
+    reward: { gold: 150, energyDrinks: 2 },
   },
   {
     id: 'story_explore_500',
@@ -340,7 +340,7 @@ export const STORY_TASKS = [
     description: 'Complete 500 explorations',
     stat: 'explorationsCompleted',
     target: 500,
-    reward: { gold: 1000 },
+    reward: { gold: 1000, energyDrinks: 5 },
   },
   {
     id: 'story_skill_5',
@@ -364,7 +364,7 @@ export const STORY_TASKS = [
     description: 'Use 20 potions',
     stat: 'potionsUsed',
     target: 20,
-    reward: { gold: 100 },
+    reward: { gold: 100, energyDrinks: 2 },
   },
   {
     id: 'story_sell_50',
@@ -553,7 +553,7 @@ export const STORY_MISSIONS = [
     description: 'Become the undisputed champion of the Neon District.',
     stat: 'battlesWon',
     target: 25,
-    reward: { gold: 250 },
+    reward: { gold: 250, energyDrinks: 2 },
     order: 5,
     regionHint: 'Neon District',
   },
@@ -615,7 +615,7 @@ export const STORY_MISSIONS = [
     description: 'Conquer the Frozen Wastes by reaching level 15.',
     stat: 'levelsGained',
     target: 14,
-    reward: { gold: 500 },
+    reward: { gold: 500, energyDrinks: 2 },
     order: 5,
     regionHint: 'Frozen Wastes',
   },
@@ -677,7 +677,7 @@ export const STORY_MISSIONS = [
     description: 'Emerge from the badlands as a hardened warrior. Reach level 25.',
     stat: 'levelsGained',
     target: 24,
-    reward: { gold: 750 },
+    reward: { gold: 750, energyDrinks: 3 },
     order: 5,
     regionHint: 'Scorched Badlands',
   },
@@ -739,7 +739,7 @@ export const STORY_MISSIONS = [
     description: 'Only the strongest survive the marshes. Reach level 35.',
     stat: 'levelsGained',
     target: 34,
-    reward: { gold: 1000 },
+    reward: { gold: 1000, energyDrinks: 3 },
     order: 5,
     regionHint: 'Toxic Marshlands',
   },
@@ -801,7 +801,7 @@ export const STORY_MISSIONS = [
     description: 'Master the depths and emerge reborn. Reach level 45.',
     stat: 'levelsGained',
     target: 44,
-    reward: { gold: 2000 },
+    reward: { gold: 2000, energyDrinks: 4 },
     order: 5,
     regionHint: 'Abyssal Depths',
   },
@@ -863,7 +863,7 @@ export const STORY_MISSIONS = [
     description: 'Transcend mortal limits. Reach level 55.',
     stat: 'levelsGained',
     target: 54,
-    reward: { gold: 3000 },
+    reward: { gold: 3000, energyDrinks: 5 },
     order: 5,
     regionHint: 'Celestial Highlands',
   },
@@ -925,7 +925,7 @@ export const STORY_MISSIONS = [
     description: 'Complete your destiny. Reach level 65 and become a true legend.',
     stat: 'levelsGained',
     target: 64,
-    reward: { gold: 5000 },
+    reward: { gold: 5000, energyDrinks: 7 },
     order: 5,
     regionHint: 'Void Nexus',
   },
@@ -947,10 +947,10 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_bh_1', name: 'Rat Catcher', description: 'The guild needs someone to handle the vermin problem. Kill 10 Gutter Rats.', stat: 'killed_rat', target: 10, reward: { gold: 60 }, order: 1 },
       { id: 'side_bh_2', name: 'Pest Exterminator', description: 'Bigger pests have emerged. Eliminate 8 Toxic Slimes.', stat: 'killed_toxic-slime', target: 8, reward: { gold: 150 }, order: 2 },
       { id: 'side_bh_3', name: 'Hunter\'s Mark', description: 'Target high-value prey. Deal 3,000 total damage.', stat: 'damageDealt', target: 3000, reward: { gold: 200 }, order: 3 },
-      { id: 'side_bh_4', name: 'Big Game', description: 'The guild has a special contract. Defeat 2 bosses.', stat: 'bossesKilled', target: 2, reward: { gold: 350 }, order: 4 },
+      { id: 'side_bh_4', name: 'Big Game', description: 'The guild has a special contract. Defeat 2 bosses.', stat: 'bossesKilled', target: 2, reward: { gold: 350, energyDrinks: 1 }, order: 4 },
       { id: 'side_bh_5', name: 'Legendary Bounty', description: 'Only the finest bounty hunters reach this rank. Kill 20 Shadow Dragons.', stat: 'killed_shadow-dragon', target: 20, reward: { gold: 500 }, order: 5 },
       { id: 'side_bh_6', name: 'Death Dealer', description: 'Your reputation precedes you. Deal 15,000 total damage.', stat: 'damageDealt', target: 15000, reward: { gold: 600 }, order: 6 },
-      { id: 'side_bh_7', name: 'Apex Hunter', description: 'Become the ultimate predator. Defeat 10 bosses.', stat: 'bossesKilled', target: 10, reward: { gold: 1000 }, order: 7 },
+      { id: 'side_bh_7', name: 'Apex Hunter', description: 'Become the ultimate predator. Defeat 10 bosses.', stat: 'bossesKilled', target: 10, reward: { gold: 1000, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -965,10 +965,10 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_ts_1', name: 'Curious Wanderer', description: 'Start your treasure-hunting career. Complete 5 explorations.', stat: 'explorationsCompleted', target: 5, reward: { gold: 40 }, order: 1 },
       { id: 'side_ts_2', name: 'Lucky Find', description: 'Fortune favors the bold. Loot 5 items.', stat: 'itemsLooted', target: 5, reward: { gold: 80 }, order: 2 },
       { id: 'side_ts_3', name: 'Dungeon Diver', description: 'Go deeper into the unknown. Complete 15 explorations.', stat: 'explorationsCompleted', target: 15, reward: { gold: 120 }, order: 3 },
-      { id: 'side_ts_4', name: 'Hoarder\'s Delight', description: 'Collect everything you can find. Loot 15 items.', stat: 'itemsLooted', target: 15, reward: { gold: 200 }, order: 4 },
+      { id: 'side_ts_4', name: 'Hoarder\'s Delight', description: 'Collect everything you can find. Loot 15 items.', stat: 'itemsLooted', target: 15, reward: { gold: 200, energyDrinks: 1 }, order: 4 },
       { id: 'side_ts_5', name: 'Cartographer\'s Dream', description: 'Leave no stone unturned. Complete 40 explorations.', stat: 'explorationsCompleted', target: 40, reward: { gold: 350 }, order: 5 },
       { id: 'side_ts_6', name: 'Treasure Vault', description: 'Your collection grows legendary. Loot 40 items.', stat: 'itemsLooted', target: 40, reward: { gold: 500 }, order: 6 },
-      { id: 'side_ts_7', name: 'World Explorer', description: 'You have seen it all. Complete 100 explorations.', stat: 'explorationsCompleted', target: 100, reward: { gold: 800 }, order: 7 },
+      { id: 'side_ts_7', name: 'World Explorer', description: 'You have seen it all. Complete 100 explorations.', stat: 'explorationsCompleted', target: 100, reward: { gold: 800, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -986,7 +986,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_mp_4', name: 'Trade Baron', description: 'Your wealth grows. Earn 1,000 gold total.', stat: 'goldEarned', target: 1000, reward: { gold: 250 }, order: 4 },
       { id: 'side_mp_5', name: 'Market Dominator', description: 'Corner the market. Sell 30 items.', stat: 'itemsSold', target: 30, reward: { gold: 400 }, order: 5 },
       { id: 'side_mp_6', name: 'Gold Magnate', description: 'Your fortune is the talk of the town. Earn 5,000 gold.', stat: 'goldEarned', target: 5000, reward: { gold: 700 }, order: 6 },
-      { id: 'side_mp_7', name: 'Merchant Prince', description: 'You rule the markets. Sell 75 items.', stat: 'itemsSold', target: 75, reward: { gold: 1200 }, order: 7 },
+      { id: 'side_mp_7', name: 'Merchant Prince', description: 'You rule the markets. Sell 75 items.', stat: 'itemsSold', target: 75, reward: { gold: 1200, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -1002,9 +1002,9 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_iw_2', name: 'Battle Scarred', description: 'Win 10 battles through sheer determination.', stat: 'battlesWon', target: 10, reward: { gold: 100 }, order: 2 },
       { id: 'side_iw_3', name: 'Potion Master', description: 'Learn the value of preparation. Use 5 potions.', stat: 'potionsUsed', target: 5, reward: { gold: 80 }, order: 3 },
       { id: 'side_iw_4', name: 'Unbreakable', description: 'Endure 2,000 total damage taken.', stat: 'damageTaken', target: 2000, reward: { gold: 200 }, order: 4 },
-      { id: 'side_iw_5', name: 'War Machine', description: 'Win 40 battles to prove your resilience.', stat: 'battlesWon', target: 40, reward: { gold: 350 }, order: 5 },
+      { id: 'side_iw_5', name: 'War Machine', description: 'Win 40 battles to prove your resilience.', stat: 'battlesWon', target: 40, reward: { gold: 350, energyDrinks: 1 }, order: 5 },
       { id: 'side_iw_6', name: 'Alchemist\'s Best Friend', description: 'Use 20 potions to sustain your fight.', stat: 'potionsUsed', target: 20, reward: { gold: 300 }, order: 6 },
-      { id: 'side_iw_7', name: 'Immortal', description: 'Absorb 10,000 damage. Nothing can stop you.', stat: 'damageTaken', target: 10000, reward: { gold: 900 }, order: 7 },
+      { id: 'side_iw_7', name: 'Immortal', description: 'Absorb 10,000 damage. Nothing can stop you.', stat: 'damageTaken', target: 10000, reward: { gold: 900, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -1022,7 +1022,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_sm_4', name: 'Technique Collector', description: 'Unlock 5 skills to broaden your arsenal.', stat: 'skillsUnlocked', target: 5, reward: { gold: 250 }, order: 4 },
       { id: 'side_sm_5', name: 'Power Spike', description: 'Reach level 20 for true power.', stat: 'levelsGained', target: 19, reward: { gold: 400 }, order: 5 },
       { id: 'side_sm_6', name: 'Grand Master', description: 'Master 8 skills to become a legend.', stat: 'skillsUnlocked', target: 8, reward: { gold: 600 }, order: 6 },
-      { id: 'side_sm_7', name: 'Transcendent', description: 'Reach level 40 and unlock your true potential.', stat: 'levelsGained', target: 39, reward: { gold: 1000 }, order: 7 },
+      { id: 'side_sm_7', name: 'Transcendent', description: 'Reach level 40 and unlock your true potential.', stat: 'levelsGained', target: 39, reward: { gold: 1000, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -1038,9 +1038,9 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_ac_2', name: 'Crowd Pleaser', description: 'Deal 1,500 damage to excite the crowd.', stat: 'damageDealt', target: 1500, reward: { gold: 80 }, order: 2 },
       { id: 'side_ac_3', name: 'Win Streak', description: 'Rack up 15 total victories.', stat: 'battlesWon', target: 15, reward: { gold: 150 }, order: 3 },
       { id: 'side_ac_4', name: 'Devastating Blow', description: 'Land a hit of at least 50 damage in a single strike.', stat: 'highestDamage', target: 50, reward: { gold: 200 }, order: 4 },
-      { id: 'side_ac_5', name: 'Arena Veteran', description: 'Win 50 battles to earn veteran status.', stat: 'battlesWon', target: 50, reward: { gold: 400 }, order: 5 },
+      { id: 'side_ac_5', name: 'Arena Veteran', description: 'Win 50 battles to earn veteran status.', stat: 'battlesWon', target: 50, reward: { gold: 400, energyDrinks: 2 }, order: 5 },
       { id: 'side_ac_6', name: 'One-Hit Wonder', description: 'Land a devastating 150+ damage single hit.', stat: 'highestDamage', target: 150, reward: { gold: 600 }, order: 6 },
-      { id: 'side_ac_7', name: 'Arena Legend', description: 'Win 100 battles. You are the undisputed champion.', stat: 'battlesWon', target: 100, reward: { gold: 1500 }, order: 7 },
+      { id: 'side_ac_7', name: 'Arena Legend', description: 'Win 100 battles. You are the undisputed champion.', stat: 'battlesWon', target: 100, reward: { gold: 1500, energyDrinks: 4 }, order: 7 },
     ],
   },
 
@@ -1056,9 +1056,9 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_hp_2', name: 'Restoration', description: 'Heal 200 total HP through any means.', stat: 'totalHealing', target: 200, reward: { gold: 70 }, order: 2 },
       { id: 'side_hp_3', name: 'Field Medic', description: 'Use 10 potions during your adventures.', stat: 'potionsUsed', target: 10, reward: { gold: 120 }, order: 3 },
       { id: 'side_hp_4', name: 'Rejuvenation', description: 'Heal 1,000 total HP. You know how to survive.', stat: 'totalHealing', target: 1000, reward: { gold: 250 }, order: 4 },
-      { id: 'side_hp_5', name: 'Potion Addict', description: 'Use 30 potions. You always come prepared.', stat: 'potionsUsed', target: 30, reward: { gold: 400 }, order: 5 },
+      { id: 'side_hp_5', name: 'Potion Addict', description: 'Use 30 potions. You always come prepared.', stat: 'potionsUsed', target: 30, reward: { gold: 400, energyDrinks: 2 }, order: 5 },
       { id: 'side_hp_6', name: 'Miracle Worker', description: 'Heal 5,000 total HP across all your adventures.', stat: 'totalHealing', target: 5000, reward: { gold: 700 }, order: 6 },
-      { id: 'side_hp_7', name: 'Undying', description: 'Heal 15,000 total HP. Death cannot claim you.', stat: 'totalHealing', target: 15000, reward: { gold: 1200 }, order: 7 },
+      { id: 'side_hp_7', name: 'Undying', description: 'Heal 15,000 total HP. Death cannot claim you.', stat: 'totalHealing', target: 15000, reward: { gold: 1200, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -1076,7 +1076,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_co_4', name: 'Conqueror', description: 'Defeat 5 bosses across all regions.', stat: 'bossesKilled', target: 5, reward: { gold: 300 }, order: 4 },
       { id: 'side_co_5', name: 'Wealthy Adventurer', description: 'Earn 3,000 gold through any means.', stat: 'goldEarned', target: 3000, reward: { gold: 500 }, order: 5 },
       { id: 'side_co_6', name: 'Globetrotter', description: 'Complete 75 explorations across all regions.', stat: 'explorationsCompleted', target: 75, reward: { gold: 800 }, order: 6 },
-      { id: 'side_co_7', name: 'True Completionist', description: 'Deal 75,000 total damage. You have done it all.', stat: 'damageDealt', target: 75000, reward: { gold: 1500 }, order: 7 },
+      { id: 'side_co_7', name: 'True Completionist', description: 'Deal 75,000 total damage. You have done it all.', stat: 'damageDealt', target: 75000, reward: { gold: 1500, energyDrinks: 4 }, order: 7 },
     ],
   },
 
@@ -1094,7 +1094,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_fw_4', name: 'Ice Shard Collector', description: 'Scavenge the frozen ruins. Loot 20 items.', stat: 'itemsLooted', target: 20, reward: { gold: 300 }, order: 4 },
       { id: 'side_fw_5', name: 'Permafrost Punisher', description: 'Crush the frozen elite. Deal 10,000 total damage.', stat: 'damageDealt', target: 10000, reward: { gold: 450 }, order: 5 },
       { id: 'side_fw_6', name: 'Glacial Guardian', description: 'Challenge the frozen lords. Defeat 6 bosses.', stat: 'bossesKilled', target: 6, reward: { gold: 600 }, order: 6 },
-      { id: 'side_fw_7', name: 'Frost Warden', description: 'Master the frozen wastes. Win 60 battles.', stat: 'battlesWon', target: 60, reward: { gold: 900 }, order: 7 },
+      { id: 'side_fw_7', name: 'Frost Warden', description: 'Master the frozen wastes. Win 60 battles.', stat: 'battlesWon', target: 60, reward: { gold: 900, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -1112,7 +1112,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_fd_4', name: 'Ashen Trader', description: 'Profit from the wastelands. Sell 20 items.', stat: 'itemsSold', target: 20, reward: { gold: 350 }, order: 4 },
       { id: 'side_fd_5', name: 'Inferno Survivor', description: 'Endure the heat. Take 4,000 total damage.', stat: 'damageTaken', target: 4000, reward: { gold: 500 }, order: 5 },
       { id: 'side_fd_6', name: 'Magma Lord Slayer', description: 'Topple the lords of fire. Defeat 8 bosses.', stat: 'bossesKilled', target: 8, reward: { gold: 700 }, order: 6 },
-      { id: 'side_fd_7', name: 'Flame Dancer', description: 'Become one with the fire. Win 80 battles.', stat: 'battlesWon', target: 80, reward: { gold: 1100 }, order: 7 },
+      { id: 'side_fd_7', name: 'Flame Dancer', description: 'Become one with the fire. Win 80 battles.', stat: 'battlesWon', target: 80, reward: { gold: 1100, energyDrinks: 3 }, order: 7 },
     ],
   },
 
@@ -1130,7 +1130,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_pb_4', name: 'Toxic Fortune', description: 'The marsh pays well for the brave. Earn 4,000 gold.', stat: 'goldEarned', target: 4000, reward: { gold: 600 }, order: 4 },
       { id: 'side_pb_5', name: 'Venomous Strike', description: 'Strike with lethal precision. Deal 35,000 total damage.', stat: 'damageDealt', target: 35000, reward: { gold: 700 }, order: 5 },
       { id: 'side_pb_6', name: 'Swamp King Slayer', description: 'Defeat the marsh overlords. Defeat 12 bosses.', stat: 'bossesKilled', target: 12, reward: { gold: 900 }, order: 6 },
-      { id: 'side_pb_7', name: 'Poison Brewer', description: 'Master the toxic arts. Heal 8,000 total HP.', stat: 'totalHealing', target: 8000, reward: { gold: 1400 }, order: 7 },
+      { id: 'side_pb_7', name: 'Poison Brewer', description: 'Master the toxic arts. Heal 8,000 total HP.', stat: 'totalHealing', target: 8000, reward: { gold: 1400, energyDrinks: 4 }, order: 7 },
     ],
   },
 
@@ -1148,7 +1148,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_ad_4', name: 'Abyssal Cartography', description: 'Map the unmappable. Complete 80 explorations.', stat: 'explorationsCompleted', target: 80, reward: { gold: 800 }, order: 4 },
       { id: 'side_ad_5', name: 'Crushing Force', description: 'Strike with the weight of the ocean. Deal 60,000 damage.', stat: 'damageDealt', target: 60000, reward: { gold: 1000 }, order: 5 },
       { id: 'side_ad_6', name: 'Kraken Killer', description: 'Slay the terrors of the deep. Defeat 18 bosses.', stat: 'bossesKilled', target: 18, reward: { gold: 1300 }, order: 6 },
-      { id: 'side_ad_7', name: 'Abyssal Diver', description: 'You have conquered the void beneath the waves. Win 120 battles.', stat: 'battlesWon', target: 120, reward: { gold: 1800 }, order: 7 },
+      { id: 'side_ad_7', name: 'Abyssal Diver', description: 'You have conquered the void beneath the waves. Win 120 battles.', stat: 'battlesWon', target: 120, reward: { gold: 1800, energyDrinks: 4 }, order: 7 },
     ],
   },
 
@@ -1166,7 +1166,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_sc_4', name: 'Star Forged', description: 'Unleash cosmic power. Deal 120,000 total damage.', stat: 'damageDealt', target: 120000, reward: { gold: 1200 }, order: 4 },
       { id: 'side_sc_5', name: 'Divine Resilience', description: 'Endure heavenly wrath. Take 12,000 total damage.', stat: 'damageTaken', target: 12000, reward: { gold: 1400 }, order: 5 },
       { id: 'side_sc_6', name: 'Constellation Breaker', description: 'Shatter the celestial order. Defeat 25 bosses.', stat: 'bossesKilled', target: 25, reward: { gold: 1800 }, order: 6 },
-      { id: 'side_sc_7', name: 'Star Chaser', description: 'You have touched the stars. Sell 60 items for your celestial collection.', stat: 'itemsSold', target: 60, reward: { gold: 2500 }, order: 7 },
+      { id: 'side_sc_7', name: 'Star Chaser', description: 'You have touched the stars. Sell 60 items for your celestial collection.', stat: 'itemsSold', target: 60, reward: { gold: 2500, energyDrinks: 5 }, order: 7 },
     ],
   },
 
@@ -1184,7 +1184,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_vw_4', name: 'Event Horizon', description: 'Nothing escapes you. Win 150 battles.', stat: 'battlesWon', target: 150, reward: { gold: 2000 }, order: 4 },
       { id: 'side_vw_5', name: 'Entropy\'s Embrace', description: 'Let chaos flow through you. Take 20,000 total damage.', stat: 'damageTaken', target: 20000, reward: { gold: 2200 }, order: 5 },
       { id: 'side_vw_6', name: 'Reality Breaker', description: 'Shatter the foundations. Defeat 40 bosses.', stat: 'bossesKilled', target: 40, reward: { gold: 3000 }, order: 6 },
-      { id: 'side_vw_7', name: 'Void Walker', description: 'You exist between worlds. Earn 25,000 total gold.', stat: 'goldEarned', target: 25000, reward: { gold: 4000 }, order: 7 },
+      { id: 'side_vw_7', name: 'Void Walker', description: 'You exist between worlds. Earn 25,000 total gold.', stat: 'goldEarned', target: 25000, reward: { gold: 4000, energyDrinks: 5 }, order: 7 },
     ],
   },
 
@@ -1202,7 +1202,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_eg_4', name: 'Market Emperor', description: 'Own every market in every region. Sell 100 items.', stat: 'itemsSold', target: 100, reward: { gold: 2000 }, order: 4 },
       { id: 'side_eg_5', name: 'Boss Annihilator', description: 'No boss is safe from you. Defeat 60 bosses.', stat: 'bossesKilled', target: 60, reward: { gold: 3500 }, order: 5 },
       { id: 'side_eg_6', name: 'Infinite Resilience', description: 'Absorb pain without end. Take 30,000 total damage.', stat: 'damageTaken', target: 30000, reward: { gold: 3000 }, order: 6 },
-      { id: 'side_eg_7', name: 'Eternal Legend', description: 'Win 200 battles. You have transcended the grind.', stat: 'battlesWon', target: 200, reward: { gold: 5000 }, order: 7 },
+      { id: 'side_eg_7', name: 'Eternal Legend', description: 'Win 200 battles. You have transcended the grind.', stat: 'battlesWon', target: 200, reward: { gold: 5000, energyDrinks: 7 }, order: 7 },
     ],
   },
 
@@ -1222,7 +1222,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_sd_1', name: 'Quick Draw', description: 'Start fast. Defeat 3 Gutter Rats.', stat: 'killed_rat', target: 3, reward: { gold: 50 }, order: 1 },
       { id: 'side_sd_2', name: 'Rampage', description: 'Keep the momentum going. Win 5 battles.', stat: 'battlesWon', target: 5, reward: { gold: 100 }, order: 2 },
       { id: 'side_sd_3', name: 'Blitz Kill', description: 'Don\'t slow down. Defeat 5 Shadow Bats.', stat: 'killed_shadow-bat', target: 5, reward: { gold: 150 }, order: 3 },
-      { id: 'side_sd_4', name: 'Speed Demon', description: 'Finish the rush. Deal 800 total damage.', stat: 'damageDealt', target: 800, reward: { gold: 300 }, order: 4 },
+      { id: 'side_sd_4', name: 'Speed Demon', description: 'Finish the rush. Deal 800 total damage.', stat: 'damageDealt', target: 800, reward: { gold: 300, energyDrinks: 2 }, order: 4 },
     ],
   },
 
@@ -1237,7 +1237,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_gf_1', name: 'Pocket Lint', description: 'Scrape together your first earnings. Earn 30 gold.', stat: 'goldEarned', target: 30, reward: { gold: 40 }, order: 1 },
       { id: 'side_gf_2', name: 'Quick Flip', description: 'Sell 2 items for a quick profit.', stat: 'itemsSold', target: 2, reward: { gold: 75 }, order: 2 },
       { id: 'side_gf_3', name: 'Cash Grab', description: 'The gold is flowing. Earn 150 gold.', stat: 'goldEarned', target: 150, reward: { gold: 150 }, order: 3 },
-      { id: 'side_gf_4', name: 'Gold Fever', description: 'Sell 5 more items to cash out big.', stat: 'itemsSold', target: 5, reward: { gold: 350 }, order: 4 },
+      { id: 'side_gf_4', name: 'Gold Fever', description: 'Sell 5 more items to cash out big.', stat: 'itemsSold', target: 5, reward: { gold: 350, energyDrinks: 2 }, order: 4 },
     ],
   },
 
@@ -1252,7 +1252,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_ds_1', name: 'Door Kicker', description: 'Bust into your first dungeon. Complete 2 explorations.', stat: 'explorationsCompleted', target: 2, reward: { gold: 40 }, order: 1 },
       { id: 'side_ds_2', name: 'Room Clearer', description: 'Keep pushing deeper. Complete 5 explorations.', stat: 'explorationsCompleted', target: 5, reward: { gold: 80 }, order: 2 },
       { id: 'side_ds_3', name: 'Speedrunner', description: 'You can\'t stop now. Loot 4 items.', stat: 'itemsLooted', target: 4, reward: { gold: 120 }, order: 3 },
-      { id: 'side_ds_4', name: 'Dungeon Sprint Champion', description: 'Finish the sprint. Complete 10 explorations.', stat: 'explorationsCompleted', target: 10, reward: { gold: 300 }, order: 4 },
+      { id: 'side_ds_4', name: 'Dungeon Sprint Champion', description: 'Finish the sprint. Complete 10 explorations.', stat: 'explorationsCompleted', target: 10, reward: { gold: 300, energyDrinks: 2 }, order: 4 },
     ],
   },
 
@@ -1268,7 +1268,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_gc_2', name: 'Pain Trade', description: 'You give and you take. Absorb 200 damage.', stat: 'damageTaken', target: 200, reward: { gold: 80 }, order: 2 },
       { id: 'side_gc_3', name: 'All In', description: 'Hold nothing back. Deal 1,000 total damage.', stat: 'damageDealt', target: 1000, reward: { gold: 150 }, order: 3 },
       { id: 'side_gc_4', name: 'Glass Cannon', description: 'Survive the carnage. Use 3 potions to stay alive.', stat: 'potionsUsed', target: 3, reward: { gold: 250 }, order: 4 },
-      { id: 'side_gc_5', name: 'Nuclear Option', description: 'End it with a bang. Deal 2,000 total damage.', stat: 'damageDealt', target: 2000, reward: { gold: 400 }, order: 5 },
+      { id: 'side_gc_5', name: 'Nuclear Option', description: 'End it with a bang. Deal 2,000 total damage.', stat: 'damageDealt', target: 2000, reward: { gold: 400, energyDrinks: 2 }, order: 5 },
     ],
   },
 
@@ -1283,7 +1283,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_lg_1', name: 'Sticky Fingers', description: 'Grab your first haul. Loot 3 items.', stat: 'itemsLooted', target: 3, reward: { gold: 50 }, order: 1 },
       { id: 'side_lg_2', name: 'Five Finger Discount', description: 'Keep looting. Grab 6 more items.', stat: 'itemsLooted', target: 6, reward: { gold: 100 }, order: 2 },
       { id: 'side_lg_3', name: 'Hoard Mode', description: 'Sell off the excess. Sell 4 items.', stat: 'itemsSold', target: 4, reward: { gold: 150 }, order: 3 },
-      { id: 'side_lg_4', name: 'Loot Goblin Supreme', description: 'Loot 12 items total. Your pockets overflow.', stat: 'itemsLooted', target: 12, reward: { gold: 350 }, order: 4 },
+      { id: 'side_lg_4', name: 'Loot Goblin Supreme', description: 'Loot 12 items total. Your pockets overflow.', stat: 'itemsLooted', target: 12, reward: { gold: 350, energyDrinks: 2 }, order: 4 },
     ],
   },
 
@@ -1298,7 +1298,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_pc_1', name: 'Taste Test', description: 'Start chugging. Use 2 potions.', stat: 'potionsUsed', target: 2, reward: { gold: 60 }, order: 1 },
       { id: 'side_pc_2', name: 'Chug Chug Chug', description: 'Keep drinking. Heal 300 total HP.', stat: 'totalHealing', target: 300, reward: { gold: 100 }, order: 2 },
       { id: 'side_pc_3', name: 'Potion Addict', description: 'You can\'t stop. Use 5 more potions.', stat: 'potionsUsed', target: 5, reward: { gold: 175 }, order: 3 },
-      { id: 'side_pc_4', name: 'Bottomless Stomach', description: 'Heal 800 total HP through sheer consumption.', stat: 'totalHealing', target: 800, reward: { gold: 350 }, order: 4 },
+      { id: 'side_pc_4', name: 'Bottomless Stomach', description: 'Heal 800 total HP through sheer consumption.', stat: 'totalHealing', target: 800, reward: { gold: 350, energyDrinks: 2 }, order: 4 },
     ],
   },
 
@@ -1313,7 +1313,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_cs_1', name: 'Lucky Hit', description: 'Land your first critical hits. Get 2 crits.', stat: 'criticalHits', target: 2, reward: { gold: 75 }, order: 1 },
       { id: 'side_cs_2', name: 'Weak Point', description: 'Exploit every weakness. Land 5 critical hits.', stat: 'criticalHits', target: 5, reward: { gold: 125 }, order: 2 },
       { id: 'side_cs_3', name: 'Surgical Precision', description: 'Make every swing count. Deal 1,500 total damage.', stat: 'damageDealt', target: 1500, reward: { gold: 200 }, order: 3 },
-      { id: 'side_cs_4', name: 'Crit Machine', description: 'You can\'t miss. Land 10 critical hits.', stat: 'criticalHits', target: 10, reward: { gold: 400 }, order: 4 },
+      { id: 'side_cs_4', name: 'Crit Machine', description: 'You can\'t miss. Land 10 critical hits.', stat: 'criticalHits', target: 10, reward: { gold: 400, energyDrinks: 2 }, order: 4 },
     ],
   },
 
@@ -1329,7 +1329,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_ck_2', name: 'Patch Up', description: 'Heal through the pain. Heal 400 HP.', stat: 'totalHealing', target: 400, reward: { gold: 120 }, order: 2 },
       { id: 'side_ck_3', name: 'Refuse to Die', description: 'Use 4 potions and keep fighting.', stat: 'potionsUsed', target: 4, reward: { gold: 175 }, order: 3 },
       { id: 'side_ck_4', name: 'The Comeback', description: 'Win 8 battles despite everything.', stat: 'battlesWon', target: 8, reward: { gold: 250 }, order: 4 },
-      { id: 'side_ck_5', name: 'Comeback Kid', description: 'Deal 3,000 damage to prove you\'re unstoppable.', stat: 'damageDealt', target: 3000, reward: { gold: 500 }, order: 5 },
+      { id: 'side_ck_5', name: 'Comeback Kid', description: 'Deal 3,000 damage to prove you\'re unstoppable.', stat: 'damageDealt', target: 3000, reward: { gold: 500, energyDrinks: 2 }, order: 5 },
     ],
   },
 
@@ -1344,7 +1344,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_br_1', name: 'Opening Act', description: 'Defeat your first boss of the day.', stat: 'bossesKilled', target: 1, reward: { gold: 150 }, order: 1 },
       { id: 'side_br_2', name: 'Double Down', description: 'Two bosses down. Keep pushing.', stat: 'bossesKilled', target: 2, reward: { gold: 250 }, order: 2 },
       { id: 'side_br_3', name: 'Boss Breaker', description: 'Deal 5,000 damage to the big ones.', stat: 'damageDealt', target: 5000, reward: { gold: 400 }, order: 3 },
-      { id: 'side_br_4', name: 'Boss Rush Complete', description: 'Defeat 4 bosses in your rush.', stat: 'bossesKilled', target: 4, reward: { gold: 750 }, order: 4 },
+      { id: 'side_br_4', name: 'Boss Rush Complete', description: 'Defeat 4 bosses in your rush.', stat: 'bossesKilled', target: 4, reward: { gold: 750, energyDrinks: 3 }, order: 4 },
     ],
   },
 
@@ -1360,7 +1360,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_er_2', name: 'Into the Zone', description: 'Hit your stride. Win 10 battles.', stat: 'battlesWon', target: 10, reward: { gold: 150 }, order: 2 },
       { id: 'side_er_3', name: 'Second Wind', description: 'Push through the wall. Deal 4,000 damage.', stat: 'damageDealt', target: 4000, reward: { gold: 250 }, order: 3 },
       { id: 'side_er_4', name: 'Runner\'s High', description: 'Loot 8 items along the way.', stat: 'itemsLooted', target: 8, reward: { gold: 300 }, order: 4 },
-      { id: 'side_er_5', name: 'Marathon Complete', description: 'Cross the finish line. Complete 15 explorations.', stat: 'explorationsCompleted', target: 15, reward: { gold: 600 }, order: 5 },
+      { id: 'side_er_5', name: 'Marathon Complete', description: 'Cross the finish line. Complete 15 explorations.', stat: 'explorationsCompleted', target: 15, reward: { gold: 600, energyDrinks: 2 }, order: 5 },
     ],
   },
 
@@ -1375,7 +1375,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_nb_1', name: 'Neon Lights', description: 'Hit the streets. Complete 3 explorations.', stat: 'explorationsCompleted', target: 3, reward: { gold: 35 }, order: 1 },
       { id: 'side_nb_2', name: 'Street Fight', description: 'Brawl in the alleyways. Win 4 battles.', stat: 'battlesWon', target: 4, reward: { gold: 65 }, order: 2 },
       { id: 'side_nb_3', name: 'Neon Hunter', description: 'Clear the district. Defeat 5 Gutter Goblins.', stat: 'killed_gutter-goblin', target: 5, reward: { gold: 100 }, order: 3 },
-      { id: 'side_nb_4', name: 'Neon Blitz', description: 'Own the night. Earn 100 gold.', stat: 'goldEarned', target: 100, reward: { gold: 250 }, order: 4 },
+      { id: 'side_nb_4', name: 'Neon Blitz', description: 'Own the night. Earn 100 gold.', stat: 'goldEarned', target: 100, reward: { gold: 250, energyDrinks: 1 }, order: 4 },
     ],
   },
 
@@ -1390,7 +1390,7 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_scr_1', name: 'Junk Collector', description: 'Loot 4 items to start your inventory.', stat: 'itemsLooted', target: 4, reward: { gold: 50 }, order: 1 },
       { id: 'side_scr_2', name: 'Yard Sale', description: 'Sell 3 items for quick cash.', stat: 'itemsSold', target: 3, reward: { gold: 100 }, order: 2 },
       { id: 'side_scr_3', name: 'Bulk Discount', description: 'Keep the deals flowing. Sell 6 items total.', stat: 'itemsSold', target: 6, reward: { gold: 200 }, order: 3 },
-      { id: 'side_scr_4', name: 'Scrap King', description: 'Cash out big. Earn 300 gold total.', stat: 'goldEarned', target: 300, reward: { gold: 400 }, order: 4 },
+      { id: 'side_scr_4', name: 'Scrap King', description: 'Cash out big. Earn 300 gold total.', stat: 'goldEarned', target: 300, reward: { gold: 400, energyDrinks: 2 }, order: 4 },
     ],
   },
 
