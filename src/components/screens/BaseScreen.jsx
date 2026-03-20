@@ -793,13 +793,28 @@ function FarmPanel({ base, player, onPlant, onPlantSeed, onHarvest }) {
               </div>
             ))}
           </div>
-          <div className="base-sub-label" style={{ marginTop: '10px' }}>Seed Types</div>
+          <div className="base-sub-label" style={{ marginTop: '10px' }}>Location Seeds</div>
           <div className="base-recipe-list">
-            {Object.values(FARM_SEEDS).map(s => (
+            {Object.values(FARM_SEEDS).filter(s => s.foundAt).map(s => (
               <div key={s.id} className="base-recipe-item">
                 <div className="base-recipe-info">
                   <div className={`base-recipe-name rarity-${s.rarity.toLowerCase()}`}>{s.name}</div>
-                  <div className="base-recipe-desc">{s.desc} (base value: {s.baseValue[0]}-{s.baseValue[1]}g)</div>
+                  <div className="base-recipe-desc">{s.desc}</div>
+                  <div className="base-recipe-mats">
+                    <span className="base-recipe-mat met">Found at: {s.foundAtName}</span>
+                    <span className="base-recipe-mat met">Value: {s.baseValue[0]}-{s.baseValue[1]}g</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="base-sub-label" style={{ marginTop: '10px' }}>Generic Seeds</div>
+          <div className="base-recipe-list">
+            {Object.values(FARM_SEEDS).filter(s => !s.foundAt).map(s => (
+              <div key={s.id} className="base-recipe-item">
+                <div className="base-recipe-info">
+                  <div className={`base-recipe-name rarity-${s.rarity.toLowerCase()}`}>{s.name}</div>
+                  <div className="base-recipe-desc">{s.desc} (found everywhere, value: {s.baseValue[0]}-{s.baseValue[1]}g)</div>
                 </div>
               </div>
             ))}

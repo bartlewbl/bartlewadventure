@@ -1227,11 +1227,47 @@ export function createEggItem(eggId) {
 // Seeds are found during exploration and planted in the farm for profit
 
 export const FARM_SEEDS = {
-  'dusty-seed':      { id: 'dusty-seed',      name: 'Dusty Seed',      rarity: 'Common',    growTime: 10 * 60 * 1000,  baseValue: [15, 25],   cropName: 'Dusty Root',      desc: '10 min - A gritty root with mild value' },
-  'vibrant-seed':    { id: 'vibrant-seed',     name: 'Vibrant Seed',    rarity: 'Uncommon',  growTime: 30 * 60 * 1000,  baseValue: [40, 70],   cropName: 'Vibrant Melon',   desc: '30 min - A bright, juicy melon' },
-  'luminous-seed':   { id: 'luminous-seed',    name: 'Luminous Seed',   rarity: 'Rare',      growTime: 60 * 60 * 1000,  baseValue: [100, 180], cropName: 'Luminous Bloom',  desc: '1 hour - A glowing flower prized by traders' },
+  // ---- Generic seeds (found across multiple locations) ----
+  'dusty-seed':      { id: 'dusty-seed',      name: 'Dusty Seed',      rarity: 'Common',    growTime: 10 * 60 * 1000,     baseValue: [15, 25],   cropName: 'Dusty Root',      desc: '10 min - A gritty root with mild value' },
+  'vibrant-seed':    { id: 'vibrant-seed',     name: 'Vibrant Seed',    rarity: 'Uncommon',  growTime: 30 * 60 * 1000,     baseValue: [40, 70],   cropName: 'Vibrant Melon',   desc: '30 min - A bright, juicy melon' },
+  'luminous-seed':   { id: 'luminous-seed',    name: 'Luminous Seed',   rarity: 'Rare',      growTime: 60 * 60 * 1000,     baseValue: [100, 180], cropName: 'Luminous Bloom',  desc: '1 hour - A glowing flower prized by traders' },
   'prismatic-seed':  { id: 'prismatic-seed',   name: 'Prismatic Seed',  rarity: 'Epic',      growTime: 2 * 60 * 60 * 1000, baseValue: [250, 400], cropName: 'Prismatic Fruit', desc: '2 hours - A shimmering fruit of great worth' },
   'celestial-seed':  { id: 'celestial-seed',   name: 'Celestial Seed',  rarity: 'Legendary', growTime: 4 * 60 * 60 * 1000, baseValue: [600, 1000], cropName: 'Celestial Peach', desc: '4 hours - An otherworldly peach of immense value' },
+
+  // ---- Neon District location-specific seeds ----
+  'neon-sprout':     { id: 'neon-sprout',     name: 'Neon Sprout',     rarity: 'Common',    growTime: 8 * 60 * 1000,      baseValue: [12, 20],   cropName: 'Neon Cabbage',     desc: '8 min - Glows faintly in the dark',        foundAt: 'neon-mile',         foundAtName: 'Neon Mile' },
+  'shadow-pip':      { id: 'shadow-pip',      name: 'Shadow Pip',      rarity: 'Uncommon',  growTime: 20 * 60 * 1000,     baseValue: [35, 55],   cropName: 'Shadow Berry',     desc: '20 min - A dark berry with a bitter taste', foundAt: 'shadow-alley',      foundAtName: 'Shadow Alley' },
+  'metro-bulb':      { id: 'metro-bulb',      name: 'Metro Bulb',      rarity: 'Uncommon',  growTime: 25 * 60 * 1000,     baseValue: [38, 60],   cropName: 'Metro Onion',      desc: '25 min - Pungent underground tuber',        foundAt: 'metro-underpass',   foundAtName: 'Metro Underpass' },
+
+  // ---- Frozen Wastes location-specific seeds ----
+  'frost-kernel':    { id: 'frost-kernel',    name: 'Frost Kernel',    rarity: 'Uncommon',  growTime: 25 * 60 * 1000,     baseValue: [30, 50],   cropName: 'Frost Apple',      desc: '25 min - An ice-cold fruit',                foundAt: 'frostbite-outpost', foundAtName: 'Frostbite Outpost' },
+  'glacier-spore':   { id: 'glacier-spore',   name: 'Glacier Spore',   rarity: 'Rare',      growTime: 50 * 60 * 1000,     baseValue: [80, 140],  cropName: 'Glacier Truffle',  desc: '50 min - Rare fungus from the ice tunnels', foundAt: 'glacier-tunnels',   foundAtName: 'Glacier Tunnels' },
+  'crystal-pip':     { id: 'crystal-pip',     name: 'Crystal Pip',     rarity: 'Rare',      growTime: 55 * 60 * 1000,     baseValue: [90, 160],  cropName: 'Crystal Grape',    desc: '55 min - Translucent fruit of the caverns', foundAt: 'crystal-caverns',   foundAtName: 'Crystal Caverns' },
+
+  // ---- Scorched Badlands location-specific seeds ----
+  'ember-pit':       { id: 'ember-pit',       name: 'Ember Pit',       rarity: 'Uncommon',  growTime: 30 * 60 * 1000,     baseValue: [45, 75],   cropName: 'Ember Pepper',     desc: '30 min - Fiery hot pepper from the flats',  foundAt: 'ember-flats',       foundAtName: 'Ember Flats' },
+  'magma-stone':     { id: 'magma-stone',     name: 'Magma Stone',     rarity: 'Rare',      growTime: 70 * 60 * 1000,     baseValue: [110, 190], cropName: 'Magma Melon',      desc: '70 min - Scorching fruit from the vents',   foundAt: 'magma-vents',       foundAtName: 'Magma Vents' },
+  'ashen-kernel':    { id: 'ashen-kernel',    name: 'Ashen Kernel',    rarity: 'Epic',      growTime: 100 * 60 * 1000,    baseValue: [200, 340], cropName: 'Ashen Pomegranate', desc: '100 min - Charred fruit of rare value',    foundAt: 'ashen-ruins',       foundAtName: 'Ashen Ruins' },
+
+  // ---- Toxic Marshlands location-specific seeds ----
+  'bog-pearl':       { id: 'bog-pearl',       name: 'Bog Pearl',       rarity: 'Uncommon',  growTime: 35 * 60 * 1000,     baseValue: [50, 80],   cropName: 'Bog Lotus',        desc: '35 min - Beautiful flower from the swamp',  foundAt: 'bogs-edge',         foundAtName: "Bog's Edge" },
+  'fungal-node':     { id: 'fungal-node',     name: 'Fungal Node',     rarity: 'Rare',      growTime: 65 * 60 * 1000,     baseValue: [95, 170],  cropName: 'Fungal Cap',       desc: '65 min - Massive mushroom cap',             foundAt: 'fungal-hollow',     foundAtName: 'Fungal Hollow' },
+  'plague-spore':    { id: 'plague-spore',    name: 'Plague Spore',    rarity: 'Epic',      growTime: 110 * 60 * 1000,    baseValue: [220, 370], cropName: 'Plague Blossom',   desc: '110 min - Toxic yet incredibly valuable',   foundAt: 'plague-ponds',      foundAtName: 'Plague Ponds' },
+
+  // ---- Abyssal Depths location-specific seeds ----
+  'tidal-bulb':      { id: 'tidal-bulb',      name: 'Tidal Bulb',      rarity: 'Rare',      growTime: 55 * 60 * 1000,     baseValue: [85, 150],  cropName: 'Tidal Kelp',       desc: '55 min - Luminescent sea plant',            foundAt: 'tidal-caves',       foundAtName: 'Tidal Caves' },
+  'coral-seed':      { id: 'coral-seed',      name: 'Coral Seed',      rarity: 'Rare',      growTime: 75 * 60 * 1000,     baseValue: [120, 200], cropName: 'Coral Pear',       desc: '75 min - Smooth pear-shaped coral fruit',   foundAt: 'coral-labyrinth',   foundAtName: 'Coral Labyrinth' },
+  'abyssal-pit':     { id: 'abyssal-pit',     name: 'Abyssal Pit',     rarity: 'Epic',      growTime: 130 * 60 * 1000,    baseValue: [280, 450], cropName: 'Abyssal Plum',     desc: '130 min - Jet-black plum from the deep',    foundAt: 'abyssal-trench',    foundAtName: 'Abyssal Trench' },
+
+  // ---- Celestial Highlands location-specific seeds ----
+  'cloud-wisp':      { id: 'cloud-wisp',      name: 'Cloud Wisp',      rarity: 'Rare',      growTime: 60 * 60 * 1000,     baseValue: [105, 185], cropName: 'Cloud Cotton',     desc: '60 min - Fluffy fiber that fetches gold',   foundAt: 'cloud-walkway',     foundAtName: 'Cloud Walkway' },
+  'solar-grain':     { id: 'solar-grain',     name: 'Solar Grain',     rarity: 'Epic',      growTime: 120 * 60 * 1000,    baseValue: [240, 380], cropName: 'Solar Wheat',      desc: '120 min - Golden grain infused with light',  foundAt: 'solar-fields',      foundAtName: 'Solar Fields' },
+  'starbloom-seed':  { id: 'starbloom-seed',  name: 'Starbloom Seed',  rarity: 'Legendary', growTime: 5 * 60 * 60 * 1000, baseValue: [700, 1200], cropName: 'Starbloom Rose',  desc: '5 hours - Legendary rose of the highlands',  foundAt: 'empyrean-gate',     foundAtName: 'Empyrean Gate' },
+
+  // ---- Void Nexus location-specific seeds ----
+  'null-spore':      { id: 'null-spore',      name: 'Null Spore',      rarity: 'Epic',      growTime: 90 * 60 * 1000,     baseValue: [260, 420], cropName: 'Null Fig',         desc: '90 min - A fig that exists between realities', foundAt: 'null-chamber',    foundAtName: 'Null Chamber' },
+  'entropy-seed':    { id: 'entropy-seed',    name: 'Entropy Seed',    rarity: 'Epic',      growTime: 150 * 60 * 1000,    baseValue: [300, 480], cropName: 'Entropy Gourd',    desc: '150 min - Decays and reforms endlessly',      foundAt: 'entropy-garden',  foundAtName: 'Entropy Garden' },
+  'void-heart':      { id: 'void-heart',      name: 'Void Heart',      rarity: 'Legendary', growTime: 6 * 60 * 60 * 1000, baseValue: [800, 1400], cropName: 'Void Dragonfruit', desc: '6 hours - The rarest crop in existence',     foundAt: 'oblivion-throne', foundAtName: 'Oblivion Throne' },
 };
 
 export const CROP_QUALITIES = [
@@ -1242,17 +1278,71 @@ export const CROP_QUALITIES = [
   { id: 'golden',      name: 'Golden',      multiplier: 3.0, weight: 2,  color: '#fa0' },
 ];
 
-// Weighted seed drop table per region (higher regions = rarer seeds more likely)
+// Location-specific seed drop tables. Each location lists which seeds can drop there with weights.
+// Locations not listed here use a fallback based on their region's generic seeds.
 export const SEED_DROP_CONFIG = {
   dropChance: 0.04, // 4% chance per explore step (when no encounter)
-  regionWeights: {
-    'neon-district':       [{ id: 'dusty-seed', weight: 70 }, { id: 'vibrant-seed', weight: 25 }, { id: 'luminous-seed', weight: 5 }],
-    'frozen-wastes':       [{ id: 'dusty-seed', weight: 50 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 12 }, { id: 'prismatic-seed', weight: 3 }],
-    'scorched-badlands':   [{ id: 'dusty-seed', weight: 40 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 18 }, { id: 'prismatic-seed', weight: 7 }],
-    'toxic-marshlands':    [{ id: 'dusty-seed', weight: 30 }, { id: 'vibrant-seed', weight: 30 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 12 }, { id: 'celestial-seed', weight: 3 }],
-    'abyssal-depths':      [{ id: 'dusty-seed', weight: 20 }, { id: 'vibrant-seed', weight: 25 }, { id: 'luminous-seed', weight: 30 }, { id: 'prismatic-seed', weight: 18 }, { id: 'celestial-seed', weight: 7 }],
-    'celestial-highlands': [{ id: 'dusty-seed', weight: 10 }, { id: 'vibrant-seed', weight: 20 }, { id: 'luminous-seed', weight: 30 }, { id: 'prismatic-seed', weight: 25 }, { id: 'celestial-seed', weight: 15 }],
-    'void-nexus':          [{ id: 'dusty-seed', weight: 5 },  { id: 'vibrant-seed', weight: 15 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 30 }, { id: 'celestial-seed', weight: 25 }],
+  // Location-specific drop tables: location seeds are exclusive to that location
+  locationSeeds: {
+    // Neon District
+    'neon-mile':         [{ id: 'dusty-seed', weight: 60 }, { id: 'neon-sprout', weight: 35 }, { id: 'vibrant-seed', weight: 5 }],
+    'shadow-alley':      [{ id: 'dusty-seed', weight: 50 }, { id: 'shadow-pip', weight: 40 }, { id: 'vibrant-seed', weight: 10 }],
+    'metro-underpass':   [{ id: 'dusty-seed', weight: 45 }, { id: 'metro-bulb', weight: 40 }, { id: 'vibrant-seed', weight: 15 }],
+    'skyline-rooftops':  [{ id: 'dusty-seed', weight: 55 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 10 }],
+    'ironworks-yard':    [{ id: 'dusty-seed', weight: 50 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 15 }],
+    'midnight-terminal': [{ id: 'dusty-seed', weight: 40 }, { id: 'vibrant-seed', weight: 40 }, { id: 'luminous-seed', weight: 20 }],
+    // Frozen Wastes
+    'frostbite-outpost': [{ id: 'dusty-seed', weight: 35 }, { id: 'frost-kernel', weight: 40 }, { id: 'vibrant-seed', weight: 20 }, { id: 'luminous-seed', weight: 5 }],
+    'glacier-tunnels':   [{ id: 'vibrant-seed', weight: 25 }, { id: 'glacier-spore', weight: 45 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 5 }],
+    'permafrost-ruins':  [{ id: 'dusty-seed', weight: 30 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 10 }],
+    'blizzard-peak':     [{ id: 'vibrant-seed', weight: 30 }, { id: 'luminous-seed', weight: 40 }, { id: 'prismatic-seed', weight: 20 }, { id: 'frost-kernel', weight: 10 }],
+    'crystal-caverns':   [{ id: 'vibrant-seed', weight: 15 }, { id: 'crystal-pip', weight: 45 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 15 }],
+    'frozen-citadel':    [{ id: 'luminous-seed', weight: 30 }, { id: 'prismatic-seed', weight: 30 }, { id: 'frost-kernel', weight: 20 }, { id: 'glacier-spore', weight: 15 }, { id: 'crystal-pip', weight: 5 }],
+    // Scorched Badlands
+    'ember-flats':       [{ id: 'dusty-seed', weight: 25 }, { id: 'ember-pit', weight: 45 }, { id: 'vibrant-seed', weight: 20 }, { id: 'luminous-seed', weight: 10 }],
+    'sunscorch-canyon':  [{ id: 'vibrant-seed', weight: 30 }, { id: 'luminous-seed', weight: 35 }, { id: 'ember-pit', weight: 20 }, { id: 'prismatic-seed', weight: 15 }],
+    'magma-vents':       [{ id: 'vibrant-seed', weight: 15 }, { id: 'magma-stone', weight: 45 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 15 }],
+    'ashen-ruins':       [{ id: 'luminous-seed', weight: 20 }, { id: 'ashen-kernel', weight: 40 }, { id: 'prismatic-seed', weight: 25 }, { id: 'magma-stone', weight: 15 }],
+    'inferno-pit':       [{ id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 35 }, { id: 'ember-pit', weight: 15 }, { id: 'ashen-kernel', weight: 20 }, { id: 'celestial-seed', weight: 5 }],
+    'volcanic-forge':    [{ id: 'luminous-seed', weight: 15 }, { id: 'prismatic-seed', weight: 35 }, { id: 'ashen-kernel', weight: 30 }, { id: 'celestial-seed', weight: 10 }, { id: 'magma-stone', weight: 10 }],
+    // Toxic Marshlands
+    'bogs-edge':         [{ id: 'vibrant-seed', weight: 25 }, { id: 'bog-pearl', weight: 45 }, { id: 'luminous-seed', weight: 20 }, { id: 'prismatic-seed', weight: 10 }],
+    'mire-depths':       [{ id: 'vibrant-seed', weight: 20 }, { id: 'luminous-seed', weight: 35 }, { id: 'bog-pearl', weight: 25 }, { id: 'prismatic-seed', weight: 15 }, { id: 'fungal-node', weight: 5 }],
+    'fungal-hollow':     [{ id: 'luminous-seed', weight: 20 }, { id: 'fungal-node', weight: 45 }, { id: 'prismatic-seed', weight: 20 }, { id: 'bog-pearl', weight: 15 }],
+    'venomous-thicket':  [{ id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 30 }, { id: 'fungal-node', weight: 25 }, { id: 'plague-spore', weight: 10 }, { id: 'celestial-seed', weight: 10 }],
+    'plague-ponds':      [{ id: 'luminous-seed', weight: 15 }, { id: 'plague-spore', weight: 40 }, { id: 'prismatic-seed', weight: 25 }, { id: 'fungal-node', weight: 15 }, { id: 'celestial-seed', weight: 5 }],
+    'rot-core':          [{ id: 'prismatic-seed', weight: 30 }, { id: 'plague-spore', weight: 30 }, { id: 'celestial-seed', weight: 15 }, { id: 'fungal-node', weight: 15 }, { id: 'luminous-seed', weight: 10 }],
+    // Abyssal Depths
+    'tidal-caves':       [{ id: 'luminous-seed', weight: 20 }, { id: 'tidal-bulb', weight: 45 }, { id: 'prismatic-seed', weight: 25 }, { id: 'celestial-seed', weight: 10 }],
+    'sunken-bazaar':     [{ id: 'luminous-seed', weight: 20 }, { id: 'prismatic-seed', weight: 35 }, { id: 'tidal-bulb', weight: 25 }, { id: 'coral-seed', weight: 15 }, { id: 'celestial-seed', weight: 5 }],
+    'coral-labyrinth':   [{ id: 'luminous-seed', weight: 10 }, { id: 'coral-seed', weight: 45 }, { id: 'prismatic-seed', weight: 25 }, { id: 'celestial-seed', weight: 10 }, { id: 'tidal-bulb', weight: 10 }],
+    'pressure-rift':     [{ id: 'prismatic-seed', weight: 35 }, { id: 'coral-seed', weight: 20 }, { id: 'abyssal-pit', weight: 15 }, { id: 'celestial-seed', weight: 15 }, { id: 'luminous-seed', weight: 15 }],
+    'krakens-rest':      [{ id: 'prismatic-seed', weight: 25 }, { id: 'abyssal-pit', weight: 30 }, { id: 'celestial-seed', weight: 20 }, { id: 'coral-seed', weight: 15 }, { id: 'tidal-bulb', weight: 10 }],
+    'abyssal-trench':    [{ id: 'prismatic-seed', weight: 20 }, { id: 'abyssal-pit', weight: 40 }, { id: 'celestial-seed', weight: 25 }, { id: 'coral-seed', weight: 10 }, { id: 'luminous-seed', weight: 5 }],
+    // Celestial Highlands
+    'cloud-walkway':     [{ id: 'luminous-seed', weight: 15 }, { id: 'cloud-wisp', weight: 45 }, { id: 'prismatic-seed', weight: 25 }, { id: 'celestial-seed', weight: 15 }],
+    'stormspire-tower':  [{ id: 'prismatic-seed', weight: 35 }, { id: 'cloud-wisp', weight: 25 }, { id: 'celestial-seed', weight: 20 }, { id: 'luminous-seed', weight: 10 }, { id: 'solar-grain', weight: 10 }],
+    'solar-fields':      [{ id: 'prismatic-seed', weight: 20 }, { id: 'solar-grain', weight: 45 }, { id: 'celestial-seed', weight: 20 }, { id: 'cloud-wisp', weight: 15 }],
+    'astral-gardens':    [{ id: 'prismatic-seed', weight: 25 }, { id: 'solar-grain', weight: 25 }, { id: 'celestial-seed', weight: 25 }, { id: 'cloud-wisp', weight: 15 }, { id: 'starbloom-seed', weight: 10 }],
+    'comets-trail':      [{ id: 'prismatic-seed', weight: 20 }, { id: 'celestial-seed', weight: 30 }, { id: 'solar-grain', weight: 20 }, { id: 'starbloom-seed', weight: 15 }, { id: 'cloud-wisp', weight: 15 }],
+    'empyrean-gate':     [{ id: 'celestial-seed', weight: 25 }, { id: 'starbloom-seed', weight: 35 }, { id: 'prismatic-seed', weight: 20 }, { id: 'solar-grain', weight: 15 }, { id: 'cloud-wisp', weight: 5 }],
+    // Void Nexus
+    'rifts-edge':        [{ id: 'prismatic-seed', weight: 25 }, { id: 'null-spore', weight: 30 }, { id: 'celestial-seed', weight: 25 }, { id: 'luminous-seed', weight: 10 }, { id: 'entropy-seed', weight: 10 }],
+    'null-chamber':      [{ id: 'prismatic-seed', weight: 15 }, { id: 'null-spore', weight: 45 }, { id: 'celestial-seed', weight: 20 }, { id: 'entropy-seed', weight: 15 }, { id: 'void-heart', weight: 5 }],
+    'entropy-garden':    [{ id: 'prismatic-seed', weight: 10 }, { id: 'entropy-seed', weight: 45 }, { id: 'celestial-seed', weight: 20 }, { id: 'null-spore', weight: 15 }, { id: 'void-heart', weight: 10 }],
+    'paradox-maze':      [{ id: 'prismatic-seed', weight: 15 }, { id: 'celestial-seed', weight: 25 }, { id: 'entropy-seed', weight: 25 }, { id: 'null-spore', weight: 20 }, { id: 'void-heart', weight: 15 }],
+    'singularity-well':  [{ id: 'celestial-seed', weight: 25 }, { id: 'void-heart', weight: 25 }, { id: 'entropy-seed', weight: 20 }, { id: 'null-spore', weight: 15 }, { id: 'prismatic-seed', weight: 15 }],
+    'oblivion-throne':   [{ id: 'void-heart', weight: 35 }, { id: 'celestial-seed', weight: 25 }, { id: 'entropy-seed', weight: 20 }, { id: 'null-spore', weight: 15 }, { id: 'starbloom-seed', weight: 5 }],
+  },
+  // Fallback for special locations or unknown locations - uses region generic weights
+  regionFallback: {
+    'neon-district':       [{ id: 'dusty-seed', weight: 60 }, { id: 'vibrant-seed', weight: 30 }, { id: 'luminous-seed', weight: 10 }],
+    'frozen-wastes':       [{ id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 35 }, { id: 'prismatic-seed', weight: 20 }, { id: 'frost-kernel', weight: 10 }],
+    'scorched-badlands':   [{ id: 'vibrant-seed', weight: 25 }, { id: 'luminous-seed', weight: 30 }, { id: 'prismatic-seed', weight: 25 }, { id: 'ember-pit', weight: 10 }, { id: 'magma-stone', weight: 10 }],
+    'toxic-marshlands':    [{ id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 30 }, { id: 'bog-pearl', weight: 15 }, { id: 'fungal-node', weight: 15 }, { id: 'celestial-seed', weight: 15 }],
+    'abyssal-depths':      [{ id: 'prismatic-seed', weight: 30 }, { id: 'celestial-seed', weight: 25 }, { id: 'tidal-bulb', weight: 15 }, { id: 'coral-seed', weight: 15 }, { id: 'abyssal-pit', weight: 15 }],
+    'celestial-highlands': [{ id: 'prismatic-seed', weight: 20 }, { id: 'celestial-seed', weight: 30 }, { id: 'cloud-wisp', weight: 20 }, { id: 'solar-grain', weight: 15 }, { id: 'starbloom-seed', weight: 15 }],
+    'void-nexus':          [{ id: 'celestial-seed', weight: 25 }, { id: 'null-spore', weight: 20 }, { id: 'entropy-seed', weight: 20 }, { id: 'void-heart', weight: 20 }, { id: 'prismatic-seed', weight: 15 }],
   },
 };
 
@@ -1266,9 +1356,10 @@ export function rollCropQuality() {
   return CROP_QUALITIES[1]; // fallback: Normal
 }
 
-export function createSeedItem(seedId) {
+export function createSeedItem(seedId, foundLocationName) {
   const seed = FARM_SEEDS[seedId];
   if (!seed) return null;
+  const locationLabel = foundLocationName || seed.foundAtName || null;
   return {
     id: uid(),
     seedId: seedId,
@@ -1279,7 +1370,10 @@ export function createSeedItem(seedId) {
     rarity: seed.rarity,
     rarityClass: seed.rarity.toLowerCase(),
     icon: 'seed',
-    description: seed.desc,
+    description: seed.foundAt
+      ? `${seed.desc} (found at: ${seed.foundAtName})`
+      : seed.desc,
+    foundAt: locationLabel,
     sellPrice: Math.floor(seed.baseValue[0] * 0.3),
   };
 }
@@ -1307,17 +1401,18 @@ export function createCropItem(seedId, quality) {
   };
 }
 
-export function rollSeedDrop(regionId) {
+export function rollSeedDrop(regionId, locationId, locationName) {
   if (Math.random() >= SEED_DROP_CONFIG.dropChance) return null;
-  const weights = SEED_DROP_CONFIG.regionWeights[regionId];
+  // Try location-specific table first, then fall back to region generic
+  const weights = SEED_DROP_CONFIG.locationSeeds[locationId] || SEED_DROP_CONFIG.regionFallback[regionId];
   if (!weights) return null;
   const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
   let roll = Math.random() * totalWeight;
   for (const entry of weights) {
     roll -= entry.weight;
-    if (roll <= 0) return createSeedItem(entry.id);
+    if (roll <= 0) return createSeedItem(entry.id, locationName);
   }
-  return createSeedItem(weights[0].id);
+  return createSeedItem(weights[0].id, locationName);
 }
 
 // Generate a material item for inventory/drops

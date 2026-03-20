@@ -864,8 +864,8 @@ function gameReducer(state, action) {
         newFoundItem = scavengedMaterial;
       }
 
-      // Seed drop chance (~4%, region-weighted)
-      const seedDrop = scavengeRegionId ? rollSeedDrop(scavengeRegionId) : null;
+      // Seed drop chance (~4%, location-specific)
+      const seedDrop = scavengeRegionId ? rollSeedDrop(scavengeRegionId, loc.id, loc.name) : null;
       if (seedDrop && (newPlayer === state.player ? state.player : newPlayer).inventory.length < (newPlayer === state.player ? state.player : newPlayer).maxInventory) {
         const currentInv = newPlayer === state.player ? state.player.inventory : newPlayer.inventory;
         newPlayer = { ...newPlayer, inventory: [...currentInv, seedDrop] };
