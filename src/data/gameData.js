@@ -1422,6 +1422,10 @@ export function getClassColor(classId) {
   return CHARACTER_CLASSES[classId]?.color || '#ccc';
 }
 
+export function getClassShortName(classId) {
+  return CHARACTER_CLASSES[classId]?.shortName || classId.charAt(0).toUpperCase();
+}
+
 // ---- ITEM LIBRARY ----
 function createGearList(slot, icon, entries) {
   return entries.map(entry => {
@@ -2447,6 +2451,7 @@ export const CHARACTER_CLASSES = {
   berserker: {
     id: 'berserker',
     name: 'Berserker',
+    shortName: 'B',
     description: 'A reckless brawler who trades defense for overwhelming aggression. Grows stronger as HP drops.',
     color: '#ff4444',
     baseStats: { maxHp: 55, maxMana: 15, baseAtk: 8, baseDef: 1, charisma: 2, wisdom: 1, athletics: 5 },
@@ -2462,6 +2467,7 @@ export const CHARACTER_CLASSES = {
   warrior: {
     id: 'warrior',
     name: 'Warrior',
+    shortName: 'W',
     description: 'A disciplined fighter with balanced offense and strong defense. Hard to kill.',
     color: '#4488ff',
     baseStats: { maxHp: 65, maxMana: 25, baseAtk: 5, baseDef: 4, charisma: 2, wisdom: 3, athletics: 4 },
@@ -2477,6 +2483,7 @@ export const CHARACTER_CLASSES = {
   thief: {
     id: 'thief',
     name: 'Thief',
+    shortName: 'T',
     description: 'A cunning rogue who strikes fast and steals more. Higher escape chance and bonus gold.',
     color: '#44dd44',
     baseStats: { maxHp: 42, maxMana: 25, baseAtk: 7, baseDef: 2, charisma: 5, wisdom: 2, athletics: 4 },
@@ -2492,6 +2499,7 @@ export const CHARACTER_CLASSES = {
   mage: {
     id: 'mage',
     name: 'Mage',
+    shortName: 'M',
     description: 'A scholar of arcane arts who channels devastating spells. High mana, fragile body.',
     color: '#bb66ff',
     baseStats: { maxHp: 38, maxMana: 50, baseAtk: 6, baseDef: 1, charisma: 3, wisdom: 5, athletics: 1 },
@@ -2507,6 +2515,7 @@ export const CHARACTER_CLASSES = {
   necromancer: {
     id: 'necromancer',
     name: 'Necromancer',
+    shortName: 'N',
     description: 'A dark caster who siphons life from enemies. Sustains through draining attacks.',
     color: '#cc44cc',
     baseStats: { maxHp: 45, maxMana: 40, baseAtk: 6, baseDef: 2, charisma: 3, wisdom: 5, athletics: 2 },

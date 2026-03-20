@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { getShopItems, getShopEnergyDrinks, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
-import { getClassName, getClassColor } from '../../data/gameData';
+import { getClassName, getClassColor, getClassShortName } from '../../data/gameData';
 import useGameClock from '../../hooks/useGameClock';
 
 const SLOT_LABELS = {
@@ -172,8 +172,9 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                           <span className="shop-card-stats">{statLine(item)}</span>
                           {item.classes && (
-                            <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}>
-                              {item.classes.map(c => getClassName(c)).join(', ')}
+                            <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}
+                              title={item.classes.map(c => getClassName(c)).join(', ')}>
+                              {item.classes.map(c => getClassShortName(c)).join('/')}
                             </span>
                           )}
                         </div>
@@ -368,8 +369,9 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
                       <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                       <span className="shop-card-stats">{statLine(item)}</span>
                       {item.classes && (
-                        <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}>
-                          {item.classes.map(c => getClassName(c)).join(', ')}
+                        <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}
+                          title={item.classes.map(c => getClassName(c)).join(', ')}>
+                          {item.classes.map(c => getClassShortName(c)).join('/')}
                         </span>
                       )}
                     </div>

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { REGIONS, canClassEquip, getClassName, getClassColor } from '../../data/gameData';
+import { REGIONS, canClassEquip, getClassName, getClassColor, getClassShortName } from '../../data/gameData';
 
 // Build a lookup from location id to location name
 const LOCATION_NAME_MAP = {};
@@ -80,7 +80,7 @@ function isItemLevelLocked(item, playerLevel) {
 
 function getItemClassText(item) {
   if (!item.classes) return null;
-  return item.classes.map(c => getClassName(c)).join(', ');
+  return item.classes.map(c => getClassShortName(c)).join('/');
 }
 
 export default function InventoryScreen({

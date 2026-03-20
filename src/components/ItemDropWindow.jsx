@@ -1,4 +1,4 @@
-import { getClassName, getClassColor } from '../data/gameData';
+import { getClassName, getClassColor, getClassShortName } from '../data/gameData';
 
 const SLOT_LABELS = {
   weapon: 'Weapon',
@@ -94,8 +94,9 @@ export default function ItemDropWindow({ item, label }) {
           </div>
           {statLine && <div className="item-drop-stats">{statLine}</div>}
           {item.classes && (
-            <div className="item-drop-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em', marginTop: '2px' }}>
-              {item.classes.map(c => getClassName(c)).join(', ')}
+            <div className="item-drop-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em', marginTop: '2px' }}
+              title={item.classes.map(c => getClassName(c)).join(', ')}>
+              {item.classes.map(c => getClassShortName(c)).join('/')}
             </div>
           )}
         </div>
