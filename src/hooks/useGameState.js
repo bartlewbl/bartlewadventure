@@ -7,7 +7,8 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
-import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
+import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, openLootChest } from '../engine/loot';
+import { createChestItem, CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
@@ -94,6 +95,8 @@ function createInitialState() {
     },
     activeTrader: null,       // current trader encounter
     activeVillage: null,      // current village encounter
+    pendingChest: null,       // { itemId, chestId } for chest opening screen
+    chestResult: null,        // result of opening a chest (displayed on screen)
   };
 }
 
@@ -2914,6 +2917,14 @@ function gameReducer(state, action) {
           message: `Fed incubator with ${item.name}! +${addMinutes} min`,
         };
       }
+      // Loot chests: "use" opens the chest (redirects to OPEN_CHEST screen)
+      if (item.type === 'loot-chest') {
+        return {
+          ...state,
+          screen: 'chest-opening',
+          pendingChest: { itemId: item.id, chestId: item.chestId },
+        };
+      }
       // Material items: "use" stores them in base
       if (item.type === 'material') {
         const matId = item.materialId;
@@ -2929,6 +2940,61 @@ function gameReducer(state, action) {
         };
       }
       return state;
+    }
+
+    case 'OPEN_CHEST': {
+      // Actually open the pending chest and generate loot
+      const pending = state.pendingChest;
+      if (!pending) return state;
+      const chestDef = CHEST_LOOKUP[pending.chestId];
+      if (!chestDef) return { ...state, pendingChest: null, screen: 'inventory' };
+
+      const result = openLootChest(pending.chestId, state.player.level, state.player.characterClass);
+      let p = { ...state.player, inventory: [...state.player.inventory] };
+
+      // Remove the chest from inventory
+      p.inventory = p.inventory.filter(i => i.id !== pending.itemId);
+
+      // Add gold
+      const scaledGold = scaleRewardByLevel(result.gold, p.level);
+      p.gold += scaledGold;
+
+      // Add items (up to inventory cap)
+      const addedItems = [];
+      for (const item of result.items) {
+        if (p.inventory.length < p.maxInventory) {
+          p.inventory.push(item);
+          addedItems.push(item);
+        }
+      }
+
+      let newStats = addStat(state.stats, 'chestsOpened');
+      newStats = addStat(newStats, 'goldEarned', scaledGold);
+      const newTasks = incrementTaskProgress(state.tasks, 'chestsOpened');
+
+      return {
+        ...state,
+        player: p,
+        stats: newStats,
+        tasks: newTasks,
+        chestResult: {
+          chestName: chestDef.name,
+          chestRarity: chestDef.rarity,
+          gold: scaledGold,
+          items: addedItems,
+          overflowCount: result.items.length - addedItems.length,
+        },
+        pendingChest: null,
+      };
+    }
+
+    case 'CLOSE_CHEST_RESULT': {
+      return {
+        ...state,
+        screen: 'inventory',
+        chestResult: null,
+        pendingChest: null,
+      };
     }
 
     case 'SELL_ITEM': {
@@ -3046,6 +3112,16 @@ function gameReducer(state, action) {
             }
             break;
           }
+          case 'chest': {
+            if (p.inventory.length < p.maxInventory) {
+              const chestItem = createChestItem(r.chestId);
+              if (chestItem) {
+                p.inventory.push(chestItem);
+                itemNames.push(chestItem.name);
+              }
+            }
+            break;
+          }
         }
       }
       const msg = itemNames.length > 0
@@ -3122,13 +3198,23 @@ function gameReducer(state, action) {
       if (!taskDef || progress < taskDef.target) return state;
 
       // Apply reward — daily and weekly gold scales with player level
-      let p = { ...state.player };
+      let p = { ...state.player, inventory: [...state.player.inventory] };
       const scaleGold = taskType === 'daily' || taskType === 'weekly';
       const goldAmount = taskDef.reward.gold
         ? (scaleGold ? scaleRewardByLevel(taskDef.reward.gold, p.level) : taskDef.reward.gold)
         : 0;
       if (goldAmount) {
         p.gold += goldAmount;
+      }
+
+      // Award chest if the task reward includes one
+      let chestMsg = '';
+      if (taskDef.reward.chestId && p.inventory.length < p.maxInventory) {
+        const chestItem = createChestItem(taskDef.reward.chestId);
+        if (chestItem) {
+          p.inventory.push(chestItem);
+          chestMsg = ` + ${chestItem.name}`;
+        }
       }
 
       const newStats = goldAmount ? addStat(state.stats, 'goldEarned', goldAmount) : state.stats;
@@ -3180,7 +3266,7 @@ function gameReducer(state, action) {
         player: p,
         stats: newStats,
         tasks: newTasks,
-        message: `Task complete: ${taskDef.name}! +${goldAmount}g`,
+        message: `Task complete: ${taskDef.name}! +${goldAmount}g${chestMsg}`,
       };
     }
 
@@ -4973,6 +5059,8 @@ export function useGameState(isLoggedIn) {
     abandonQuestLine: (lineKey) => dispatch({ type: 'ABANDON_QUEST_LINE', lineKey }),
     applyTrade: (receivedItems, receivedGold, givenItems, givenGold) => dispatch({ type: 'APPLY_TRADE', receivedItems, receivedGold, givenItems, givenGold }),
     applyMarketTransaction: (transaction) => dispatch({ type: 'MARKET_TRANSACTION', transaction }),
+    openChest: () => dispatch({ type: 'OPEN_CHEST' }),
+    closeChestResult: () => dispatch({ type: 'CLOSE_CHEST_RESULT' }),
     clearMessage: () => dispatch({ type: 'CLEAR_MESSAGE' }),
     loadSave: (saveData) => dispatch({ type: 'LOAD_SAVE', saveData }),
     // Base building actions

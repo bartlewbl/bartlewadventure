@@ -9441,3 +9441,177 @@ body {
   color: #ffd700;
   margin-top: 4px;
 }
+
+/* ===== LOOT CHEST SCREENS ===== */
+.screen-chest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.chest-presentation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  max-width: 300px;
+}
+
+.chest-icon-large {
+  font-size: 48px;
+  filter: drop-shadow(0 0 12px currentColor);
+  animation: chest-glow 2s ease-in-out infinite;
+}
+
+@keyframes chest-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
+  50% { filter: drop-shadow(0 0 20px currentColor); }
+}
+
+.chest-name {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.chest-desc {
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.chest-info {
+  font-size: 9px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.chest-open-btn {
+  width: 200px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ffa726, #ff7043);
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chest-open-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 16px rgba(255, 167, 38, 0.5);
+}
+
+.chest-open-btn.opening {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.chest-back-btn {
+  font-size: 10px;
+  padding: 6px 12px;
+}
+
+.chest-result-header {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 4px;
+  text-shadow: 0 0 12px currentColor;
+}
+
+.chest-gold-reward {
+  font-size: 16px;
+  color: #ffd700;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.chest-items-title {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.chest-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.chest-item-card {
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
+}
+
+.chest-item-card.rarity-common { border-left-color: #ccc; }
+.chest-item-card.rarity-uncommon { border-left-color: #4fc3f7; }
+.chest-item-card.rarity-rare { border-left-color: #ab47bc; }
+.chest-item-card.rarity-epic { border-left-color: #ffa726; }
+.chest-item-card.rarity-legendary { border-left-color: #ffd700; }
+
+.chest-item-name {
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.chest-item-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 2px;
+  font-size: 9px;
+}
+
+.chest-item-level {
+  color: #888;
+}
+
+.chest-item-stats {
+  color: #aaa;
+}
+
+.chest-empty-text {
+  color: #f44;
+  font-size: 10px;
+  text-align: center;
+  padding: 8px;
+}
+
+.chest-overflow-warning {
+  color: #f44;
+  font-size: 10px;
+  text-align: center;
+  background: rgba(255, 0, 0, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.chest-continue-btn {
+  margin-top: 8px;
+  width: 160px;
+}
+
+.btn-chest-open {
+  background: linear-gradient(135deg, #ffa726, #ff7043) !important;
+  color: #000 !important;
+  font-weight: bold;
+}

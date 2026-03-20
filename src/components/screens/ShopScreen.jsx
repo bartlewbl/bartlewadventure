@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { getShopItems, getShopEnergyDrinks, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
+import { getChestShopStock } from '../../data/lootChests';
 import { getClassName, getClassColor, getClassShortName } from '../../data/gameData';
 import useGameClock from '../../hooks/useGameClock';
 
@@ -17,6 +18,7 @@ const SLOT_LABELS = {
 const SHOPS = [
   { id: 'armourer', label: 'Armourer', icon: '\u2694', desc: 'Weapons & armor' },
   { id: 'brewer', label: 'Brewer', icon: '\u2697', desc: 'Potions & energy' },
+  { id: 'chests', label: 'Chests', icon: '\u{1F4E6}', desc: 'Rare loot chests' },
   { id: 'grocery', label: 'Grocery', icon: '\uD83D\uDED2', desc: 'Food for incubator' },
   { id: 'petshop', label: 'Pet Shop', icon: '\u{1F43E}', desc: 'Buy pets & pet items' },
   { id: 'featured', label: 'Featured', icon: '\u2605', desc: 'Daily deals' },
@@ -88,6 +90,8 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
   const petItemStock = useMemo(() => getPetItemShop(player.level), [player.level]);
   // Grocery stock
   const groceryStock = useMemo(() => getGroceryStock(player.level), [player.level]);
+  // Chest shop stock
+  const chestStock = useMemo(() => getChestShopStock(player.level), [player.level]);
   // Featured — refreshes every 10 hours
   const featuredStock = useMemo(() => getDailyFeaturedItems(player.level, clock.shopSeed, player.characterClass), [player.level, clock.shopSeed, player.characterClass]);
 
@@ -349,6 +353,37 @@ export default function ShopScreen({ player, pets, onBuy, onSell, onBuyPet, onBu
             )}
           </div>
         </>
+      )}
+
+      {/* ===== CHESTS ===== */}
+      {activeShop === 'chests' && (
+        <div className="shop-content">
+          <div className="shop-featured-banner">Rare Loot Chests - mostly earned through quests and daily logins!</div>
+          <div className="shop-list">
+            {chestStock.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No chests available at your level</div></div>}
+            {chestStock.map(item => {
+              const canAfford = player.gold >= item.buyPrice;
+              const invFull = player.inventory.length >= player.maxInventory;
+              return (
+                <div key={item.id} className={`shop-card ${item.rarityClass || ''} ${!canAfford ? 'unaffordable' : ''}`}>
+                  <div className="shop-card-left">
+                    <div className="shop-card-type">Loot Chest</div>
+                    <div className={`shop-card-name ${item.rarityClass || ''}`}>{item.name}</div>
+                    <div className="shop-card-meta">
+                      <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
+                      <span className="shop-card-stats">{item.desc}</span>
+                    </div>
+                  </div>
+                  <button className="shop-buy-btn" onClick={() => onBuy(item)} disabled={!canAfford || invFull}
+                    title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
+                    <span className="shop-btn-price">{item.buyPrice}g</span>
+                    <span className="shop-btn-label">Buy</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* ===== FEATURED ===== */}

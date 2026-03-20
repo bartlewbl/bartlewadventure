@@ -3,6 +3,7 @@
 
 import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS } from '../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem } from '../data/baseData';
+import { CHEST_LOOKUP, RARITY_ORDER, CHEST_MATERIAL_POOLS } from '../data/lootChests';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
 import { prob } from '../data/probabilityStore';
 
@@ -558,4 +559,93 @@ export function rollEggDrop(regionId) {
     }
   }
   return createEggItem(config.eggs[config.eggs.length - 1].id);
+}
+
+// ---- LOOT CHEST OPENING ----
+
+// Filter rarities to a min/max range
+function filterRarities(rarityMin, rarityMax) {
+  const minIdx = rarityMin ? RARITY_ORDER.indexOf(rarityMin) : 0;
+  const maxIdx = rarityMax ? RARITY_ORDER.indexOf(rarityMax) : RARITY_ORDER.length - 1;
+  return RARITIES.filter(r => {
+    const idx = RARITY_ORDER.indexOf(r.name);
+    return idx >= minIdx && idx <= maxIdx;
+  });
+}
+
+// Open a loot chest and return { items: [], gold: number }
+export function openLootChest(chestId, playerLevel, playerClass) {
+  const chest = CHEST_LOOKUP[chestId];
+  if (!chest) return { items: [], gold: 0 };
+
+  // Roll gold bonus
+  const gold = chest.goldBonus.min + Math.floor(Math.random() * (chest.goldBonus.max - chest.goldBonus.min + 1));
+
+  // Roll item count
+  const count = chest.itemCount.min + Math.floor(Math.random() * (chest.itemCount.max - chest.itemCount.min + 1));
+
+  const items = [];
+  for (let i = 0; i < count; i++) {
+    // Pick a loot table entry
+    const entry = pickWeighted(chest.lootTable);
+
+    if (entry.type === 'potion') {
+      items.push(generateItem('potion', playerLevel));
+      continue;
+    }
+
+    if (entry.type === 'energy-drink') {
+      items.push(generateItem('energy-drink', playerLevel));
+      continue;
+    }
+
+    if (entry.type === 'material') {
+      const pool = CHEST_MATERIAL_POOLS[entry.materialPool || 'common'];
+      if (pool && pool.length > 0) {
+        const matId = pool[Math.floor(Math.random() * pool.length)];
+        items.push(createMaterialItem(matId, 1));
+      }
+      continue;
+    }
+
+    // Gear item — pick from library with rarity constraints
+    const gearPool = ITEM_LIBRARY[entry.type];
+    if (!gearPool) continue;
+
+    const allowedRarities = filterRarities(entry.rarityMin, entry.rarityMax);
+    const allowedNames = new Set(allowedRarities.map(r => r.name));
+
+    // Filter candidates by rarity and level
+    let candidates = gearPool.filter(t =>
+      allowedNames.has(t.rarity) && t.level <= playerLevel + 3
+    );
+    // Fallback: relax level constraint
+    if (candidates.length === 0) {
+      candidates = gearPool.filter(t => allowedNames.has(t.rarity));
+    }
+    if (candidates.length === 0) continue;
+
+    // Prefer class-matching items (70% chance)
+    if (playerClass && Math.random() < 0.7) {
+      const classCandidates = candidates.filter(t => !t.classes || t.classes.includes(playerClass));
+      if (classCandidates.length > 0) candidates = classCandidates;
+    }
+
+    // Weight by level proximity
+    const weighted = candidates.map(t => ({
+      item: t,
+      weight: gaussianWeight(t.level, playerLevel) * (t.weight || 1),
+    }));
+    const total = weighted.reduce((sum, w) => sum + w.weight, 0);
+    let roll = Math.random() * total;
+    let template = weighted[weighted.length - 1].item;
+    for (const w of weighted) {
+      roll -= w.weight;
+      if (roll <= 0) { template = w.item; break; }
+    }
+
+    items.push(buildGearDrop(template, playerLevel, entry.type));
+  }
+
+  return { items, gold };
 }
