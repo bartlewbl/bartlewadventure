@@ -2019,7 +2019,8 @@ body {
 }
 
 .screen-profile,
-.screen-skills {
+.screen-skills,
+.screen-stats {
   padding-top: 55px;
   justify-content: flex-start;
   gap: 16px;
@@ -2097,6 +2098,76 @@ body {
 .equip-empty {
   font-size: 8px;
   color: #555a87;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-logout {
+  background: rgba(180, 40, 40, 0.7);
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  color: #ff9999;
+}
+
+.btn-logout:hover {
+  background: rgba(200, 50, 50, 0.85);
+  color: #ffcccc;
+}
+
+/* ---- PLAYER STATS SCREEN ---- */
+.stats-screen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 900px;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.stats-screen-group {
+  background: rgba(15, 16, 36, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.stats-screen-group-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffd700;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+  padding-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.stats-screen-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.stats-screen-row:last-child {
+  border-bottom: none;
+}
+
+.stats-screen-label {
+  font-size: 8px;
+  color: #888ab0;
+}
+
+.stats-screen-value {
+  font-size: 9px;
+  color: #f5f5ff;
+  font-weight: 500;
 }
 
 .skills-grid {
@@ -3870,6 +3941,8 @@ body {
   .screen-journal { padding: 44px 12px 12px; }
   .screen-skills { padding-top: 44px; }
   .screen-profile { padding-top: 44px; }
+  .screen-stats { padding-top: 44px; }
+  .stats-screen-grid { grid-template-columns: 1fr; }
   .screen-locations { padding-top: 44px; }
   .screen-regions { padding-top: 44px; }
   .screen-explore { padding-top: 44px; }

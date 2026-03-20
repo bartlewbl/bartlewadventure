@@ -12,6 +12,7 @@ export default function MobileNav({
   onJournal,
   onProfile,
   onSkills,
+  onStats,
   navLocked,
   player,
   energy,
@@ -44,6 +45,7 @@ export default function MobileNav({
     { id: 'pets', label: 'Pets', icon: '🐾', onClick: onPets },
     { id: 'profile', label: 'Profile', icon: '◈', onClick: onProfile },
     { id: 'skills', label: 'Skills', icon: '★', onClick: onSkills },
+    { id: 'player-stats', label: 'Stats', icon: '📊', onClick: onStats },
   ];
 
   const isMoreActive = moreTabs.some(t => t.id === screen || screen === t.id);

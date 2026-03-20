@@ -1,6 +1,6 @@
 import { CHARACTER_CLASSES } from '../../data/gameData';
 
-export default function ProfileScreen({ player, onBack }) {
+export default function ProfileScreen({ player, onBack, onLogout }) {
   const cls = player.characterClass ? CHARACTER_CLASSES[player.characterClass] : null;
   const stats = [
     { label: 'Level', value: player.level },
@@ -73,7 +73,12 @@ export default function ProfileScreen({ player, onBack }) {
           </div>
         </div>
       </div>
-      <button className="btn btn-back" onClick={onBack}>Back</button>
+      <div className="profile-actions">
+        <button className="btn btn-back" onClick={onBack}>Back</button>
+        {onLogout && (
+          <button className="btn btn-logout" onClick={onLogout}>Logout</button>
+        )}
+      </div>
     </div>
   );
 }

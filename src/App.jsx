@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGameState, ENERGY_COST_PER_TRIP, ENERGY_MAX } from './hooks/useGameState';
-import { login, register, getMe, loadGame, hasSavedSession } from './api';
+import { login, register, getMe, loadGame, hasSavedSession, logout } from './api';
 import GameCanvas from './components/GameCanvas';
 import AuthScreen from './components/screens/AuthScreen';
 import TownScreen from './components/screens/TownScreen';
@@ -28,6 +28,7 @@ import StatSelectScreen from './components/screens/StatSelectScreen';
 import SidePanel from './components/SidePanel';
 import RightPanel from './components/RightPanel';
 import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
+import StatsScreen from './components/screens/StatsScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import MobileNav from './components/MobileNav';
 import { loadProbabilityConfig } from './data/probabilityStore';
@@ -125,6 +126,11 @@ export default function App() {
       setAuthLoading(false);
     }
   }, [actions]);
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+    setUser(null);
+  }, []);
 
   // Show loading while checking session
   if (checkingSession) {
@@ -240,6 +246,7 @@ export default function App() {
               gold={state.player.gold}
               onProfile={() => actions.showScreen('profile')}
               onSkills={() => actions.showScreen('skills')}
+              onStats={() => actions.showScreen('player-stats')}
               canRest={canRest}
               lastEnergyUpdate={state.lastEnergyUpdate}
               lastHpManaRegenUpdate={state.lastHpManaRegenUpdate}
@@ -414,6 +421,16 @@ export default function App() {
               <ProfileScreen
                 player={state.player}
                 onBack={actions.goToTown}
+                onLogout={handleLogout}
+              />
+            )}
+
+            {state.screen === 'player-stats' && (
+              <StatsScreen
+                stats={state.stats}
+                player={state.player}
+                discoveredItemLocations={state.discoveredItemLocations}
+                onBack={actions.goToTown}
               />
             )}
 
@@ -547,6 +564,7 @@ export default function App() {
             onJournal={() => actions.showScreen('journal')}
             onProfile={() => actions.showScreen('profile')}
             onSkills={() => actions.showScreen('skills')}
+            onStats={() => actions.showScreen('player-stats')}
             navLocked={navLocked}
             player={state.player}
             energy={state.energy}

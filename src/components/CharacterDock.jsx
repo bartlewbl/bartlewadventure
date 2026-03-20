@@ -17,6 +17,7 @@ export default function CharacterDock({
   onInventory,
   onProfile,
   onSkills,
+  onStats,
   navLocked,
   onRest,
   canRest,
@@ -213,6 +214,15 @@ export default function CharacterDock({
         >
           <span className="dock-quick-icon">★</span>
           <span className="dock-quick-label">Skills</span>
+        </button>
+        <button
+          className="dock-quick-btn"
+          type="button"
+          disabled={navLocked}
+          onClick={onStats}
+        >
+          <span className="dock-quick-icon">📊</span>
+          <span className="dock-quick-label">Stats</span>
         </button>
       </div>
     </div>

@@ -10,7 +10,7 @@ import {
   getQuestProgress,
 } from '../../data/tasks';
 
-const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Story', 'Stats'];
+const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Story'];
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -812,7 +812,6 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             onUnpin={onUnpin}
           />
         )}
-        {activeTab === 'Stats' && <StatsTab stats={stats} />}
         {activeTab === 'Daily' && (
           <TasksTab
             tasks={tasks}

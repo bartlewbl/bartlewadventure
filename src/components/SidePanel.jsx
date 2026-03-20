@@ -30,6 +30,7 @@ export default function SidePanel({
   navLocked,
   onProfile,
   onSkills,
+  onStats,
   canRest,
   lastEnergyUpdate,
   lastHpManaRegenUpdate,
@@ -176,6 +177,7 @@ export default function SidePanel({
             onInventory={onInventory}
             onProfile={onProfile}
             onSkills={onSkills}
+            onStats={onStats}
             navLocked={navLocked}
             onRest={onRest}
             canRest={canRest}
