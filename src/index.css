@@ -3768,7 +3768,7 @@ body {
   .screen {
     padding: 10px;
     padding-top: 44px;
-    padding-bottom: 8px;
+    padding-bottom: 16px;
     justify-content: flex-start;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -3785,7 +3785,7 @@ body {
   .btn-sm { font-size: 7px; padding: 5px 8px; }
 
   /* Town screen */
-  .screen-town { padding: 44px 12px 12px; }
+  .screen-town { padding: 44px 12px 16px; }
   .town-hero-card { grid-column: span 1; }
   .town-hero-stats { grid-template-columns: repeat(2, minmax(80px, 1fr)); }
   .town-layout { grid-template-columns: 1fr; gap: 8px; }
@@ -3854,6 +3854,11 @@ body {
     width: 28px;
     height: 28px;
     font-size: 12px;
+  }
+
+  /* Explore actions - above bottom nav */
+  .explore-actions {
+    bottom: 64px;
   }
 
   /* Message overlay - above bottom nav */
@@ -4124,7 +4129,7 @@ body {
 @media (orientation: landscape) and (max-height: 450px) {
   .screen-town { padding: 35px 20px; }
   .town-layout { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-  .explore-actions { bottom: 8px; }
+  .explore-actions { bottom: 52px; }
   .screen-result { padding-top: 40px; }
   .result-title { font-size: 12px; margin-bottom: 6px; }
 }
