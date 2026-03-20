@@ -6,6 +6,7 @@ import {
 } from '../../data/tasks';
 import { MONSTERS, BOSSES, SPECIAL_LOCATIONS } from '../../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS } from '../../data/baseData';
+import { getHealCost } from '../../engine/combat';
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -272,22 +273,29 @@ export default function LocationsScreen({
         </>
       )}
 
-      {player && onRest && (
-        <div className="location-heal-section">
-          <div className="location-heal-cost">Heal cost: 10g</div>
-          <button
-            className={`btn btn-heal ${player.hp >= player.maxHp && player.mana >= player.maxMana ? 'full-hp' : ''}`}
-            onClick={onRest}
-            disabled={player.hp >= player.maxHp && player.mana >= player.maxMana || player.gold < 10}
-          >
-            {player.hp >= player.maxHp && player.mana >= player.maxMana
-              ? 'HP & Mana Full'
-              : player.gold < 10
-                ? 'Not enough gold'
-                : `Rest at Inn (10g) — HP: ${player.hp}/${player.maxHp} · Mana: ${player.mana}/${player.maxMana}`}
-          </button>
-        </div>
-      )}
+      {player && onRest && (() => {
+        const isFull = player.hp >= player.maxHp && player.mana >= player.maxMana;
+        const healCost = getHealCost(player);
+        const canAfford = player.gold >= healCost;
+        return (
+          <div className="location-heal-section">
+            <div className="location-heal-cost">
+              {isFull ? 'No healing needed' : `Heal cost: ${healCost}g (2g/HP + 1g/Mana)`}
+            </div>
+            <button
+              className={`btn btn-heal ${isFull ? 'full-hp' : ''}`}
+              onClick={onRest}
+              disabled={isFull || !canAfford}
+            >
+              {isFull
+                ? 'HP & Mana Full'
+                : !canAfford
+                  ? `Not enough gold (${healCost}g needed)`
+                  : `Rest at Inn (${healCost}g) — HP: ${player.hp}/${player.maxHp} · Mana: ${player.mana}/${player.maxMana}`}
+            </button>
+          </div>
+        );
+      })()}
 
       <button className="btn btn-back" onClick={onBack}>Change Region</button>
     </div>

@@ -368,6 +368,14 @@ export function getExecuteMultiplier(effect, monsterHp, monsterMaxHp) {
   return 1;
 }
 
+// ---- HEAL COST ----
+// Cost scales with missing HP and mana: 2g per missing HP + 1g per missing mana, minimum 10g
+export function getHealCost(player) {
+  const missingHp = Math.max(0, player.maxHp - player.hp);
+  const missingMana = Math.max(0, player.maxMana - player.mana);
+  return Math.max(10, Math.ceil(missingHp * 2 + missingMana * 1));
+}
+
 // ---- SPEED SYSTEM ----
 
 // Get player effective speed stat (base + equipment + skill bonuses)

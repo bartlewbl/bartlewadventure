@@ -4,6 +4,7 @@ import { getDailyFeaturedItems } from '../../engine/loot';
 import DailyRewardPanel from '../DailyRewardPanel';
 import useGameClock, { getEventWindow, getDaySeed } from '../../hooks/useGameClock';
 import { getWeatherSpellBuffList } from '../../engine/elements';
+import { getHealCost } from '../../engine/combat';
 
 const TOWN_EVENTS = [
   // Active events - rotate every 4 hours
@@ -123,7 +124,8 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
   const emptySlots = Object.entries(equipment).filter(([, item]) => !item);
 
   const hpPercent = player?.maxHp ? Math.min(100, (player.hp / player.maxHp) * 100) : 100;
-  const needsHealing = player?.hp < player?.maxHp;
+  const needsHealing = player?.hp < player?.maxHp || player?.mana < player?.maxMana;
+  const healCost = player ? getHealCost(player) : 10;
 
   const effectLabels = useMemo(
     () => getActiveEffectLabels(clock.effects, clock.effects.shopDiscount),
@@ -279,7 +281,7 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
           <button
             className={`town-quick-action town-quick-heal ${needsHealing ? '' : 'full-hp'}`}
             onClick={onRest}
-            disabled={!canRest || !needsHealing}
+            disabled={!canRest || !needsHealing || player.gold < healCost}
           >
             <div className="town-quick-icon heal-icon">+</div>
             <div className="town-quick-info">
@@ -287,9 +289,11 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
                 {needsHealing ? 'Rest at Inn' : 'HP Full'}
               </div>
               <div className="town-quick-desc">
-                {needsHealing
-                  ? `Restore HP & Mana \u00b7 10g`
-                  : 'No healing needed'}
+                {!needsHealing
+                  ? 'No healing needed'
+                  : player.gold < healCost
+                    ? `Need ${healCost}g`
+                    : `Restore HP & Mana \u00b7 ${healCost}g`}
               </div>
             </div>
           </button>

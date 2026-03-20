@@ -3,7 +3,7 @@ import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER, PERFECT_PARRY_COUNTER_MULTIPLIER, calcMonsterElementalDamage, calcStanceMomentum } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getHealCost, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER, PERFECT_PARRY_COUNTER_MULTIPLIER, calcMonsterElementalDamage, calcStanceMomentum } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -2813,18 +2813,19 @@ function gameReducer(state, action) {
     }
 
     case 'REST_AT_INN': {
-      if (state.player.gold < 10) return { ...state, message: 'Not enough gold! (10g needed)' };
+      const healCost = getHealCost(state.player);
+      if (state.player.gold < healCost) return { ...state, message: `Not enough gold! (${healCost}g needed)` };
       const chamberBuffs = getChamberBuffs(state.base);
       const healBonus = chamberBuffs.healBonus || 0;
-      const newStats = addStat(state.stats, 'goldSpent', 10);
+      const newStats = addStat(state.stats, 'goldSpent', healCost);
       const maxHpWithBuff = state.player.maxHp + (chamberBuffs.hpBuff || 0);
       const maxManaWithBuff = state.player.maxMana + (chamberBuffs.manaBuff || 0);
       return {
-        ...state, message: healBonus > 0 ? `HP restored! (+${Math.round(healBonus * 100)}% chamber bonus)` : 'HP restored!',
+        ...state, message: healBonus > 0 ? `HP restored for ${healCost}g! (+${Math.round(healBonus * 100)}% chamber bonus)` : `HP restored for ${healCost}g!`,
         stats: newStats,
         player: {
           ...state.player,
-          gold: state.player.gold - 10,
+          gold: state.player.gold - healCost,
           hp: maxHpWithBuff,
           mana: maxManaWithBuff,
         },
