@@ -446,6 +446,38 @@ body {
   letter-spacing: 0.5px;
 }
 
+.dock-potion-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(68, 170, 102, 0.3);
+  background: rgba(68, 170, 102, 0.1);
+  color: #88ff99;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.dock-potion-button:hover:not(:disabled) {
+  border-color: #66cc88;
+  background: rgba(68, 170, 102, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(68, 170, 102, 0.3);
+}
+
+.dock-potion-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dock-potion-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
 .dock-rest-button {
   width: 32px;
   height: 32px;

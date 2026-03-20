@@ -2984,6 +2984,18 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'USE_POTION_OUTSIDE_BATTLE': {
+      const potion = state.player.inventory.find(i => i.type === 'potion');
+      if (!potion) return { ...state, message: 'No potions!' };
+      const healed = Math.min(potion.healAmount, state.player.maxHp - state.player.hp);
+      if (healed === 0) return { ...state, message: 'HP is already full!' };
+      const p = { ...state.player, hp: state.player.hp + healed, inventory: removeOneFromStack(state.player.inventory, potion.id) };
+      let newStats = addStat(state.stats, 'potionsUsed');
+      newStats = addStat(newStats, 'totalHealing', healed);
+      const newTasks = incrementTaskProgress(state.tasks, 'potionsUsed');
+      return { ...state, player: p, stats: newStats, tasks: newTasks, message: `Used ${potion.name}, healed ${healed} HP!` };
+    }
+
     case 'EQUIP_ITEM': {
       const item = action.item;
       if (item.level && item.level > state.player.level) {
@@ -5337,6 +5349,7 @@ export function useGameState(isLoggedIn) {
     continueAfterBattle: () => dispatch({ type: 'CONTINUE_AFTER_BATTLE' }),
     applyStatChoices: (selectedStats) => dispatch({ type: 'APPLY_STAT_CHOICES', selectedStats }),
     restAtInn: () => dispatch({ type: 'REST_AT_INN' }),
+    usePotion: () => dispatch({ type: 'USE_POTION_OUTSIDE_BATTLE' }),
     equipItem: (item, targetSlot) => dispatch({ type: 'EQUIP_ITEM', item, targetSlot }),
     unequipItem: (slot) => dispatch({ type: 'UNEQUIP_ITEM', slot }),
     useItem: (item) => dispatch({ type: 'USE_ITEM', item }),

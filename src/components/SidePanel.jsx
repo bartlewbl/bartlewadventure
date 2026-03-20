@@ -33,6 +33,9 @@ export default function SidePanel({
   canRest,
   lastEnergyUpdate,
   lastHpManaRegenUpdate,
+  onUsePotion,
+  hasPotions,
+  needsHpHealing,
 }) {
   const clock = useGameClock();
 
@@ -181,6 +184,9 @@ export default function SidePanel({
             canRest={canRest}
             lastEnergyUpdate={lastEnergyUpdate}
             lastHpManaRegenUpdate={lastHpManaRegenUpdate}
+            onUsePotion={onUsePotion}
+            hasPotions={hasPotions}
+            needsHpHealing={needsHpHealing}
           />
 
           {navLocked && (
