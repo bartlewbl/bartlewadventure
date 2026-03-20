@@ -3,7 +3,9 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, '..', 'game.db');
+const DB_PATH = process.env.VERCEL
+  ? join('/tmp', 'game.db')
+  : join(__dirname, '..', 'game.db');
 
 const db = new Database(DB_PATH);
 
