@@ -475,6 +475,7 @@ export default function App() {
                 onSparSkill={actions.baseSparSkill}
                 onResetSpar={actions.baseResetSpar}
                 onFarmPlant={actions.baseFarmPlant}
+                onFarmPlantSeed={actions.baseFarmPlantSeed}
                 onFarmHarvest={actions.baseFarmHarvest}
                 onUpgradeWarehouse={actions.baseUpgradeWarehouse}
                 onPlaceEgg={actions.basePlaceEgg}

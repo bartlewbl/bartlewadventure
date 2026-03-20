@@ -3,6 +3,7 @@ import {
   BUILDINGS, BUILDING_MATERIALS, FUEL_ITEMS, BREWERY_RECIPES, SMELTER_RECIPES,
   WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus, getWarehouseBonus,
   EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD,
+  FARM_SEEDS, CROP_QUALITIES,
 } from '../../data/baseData';
 
 const BUILDING_ICONS = {
@@ -56,7 +57,7 @@ function getBuildingBenefits(buildingId, def) {
     case 'bank':
       return ['Safely deposit gold (10% fee, no loss on death)', 'Freeze gold for interest (1% to 5% return)', 'Borrow up to 1,000g with 15% interest', 'Manage your finances strategically'];
     case 'farm':
-      return ['Plant crops in 3 plots for passive resource gathering', 'Grow herbs, ores, crystals, and even gold', 'Crops take 30 min to 8 hours to mature', 'Great for stockpiling crafting materials'];
+      return ['Plant seeds found while exploring to grow valuable crops', 'Crops have random quality: Wilted to Golden (3x value!)', '5 seed rarities from Common to Legendary', 'Sell harvested crops for profit, or buy material crops with gold'];
     case 'incubator':
       return ['Place rare eggs found from monsters to hatch them into pets', 'Eggs hatch over time into pets of varying rarity', 'Upgrade for more slots and faster hatching', 'Rarer eggs hatch into more powerful pets'];
     case 'warehouse':
@@ -640,91 +641,207 @@ function SparringPanel({ base, onStart, onAttack, onSkill, onReset }) {
   );
 }
 
-function FarmPanel({ base, player, onPlant, onHarvest }) {
+function FarmPanel({ base, player, onPlant, onPlantSeed, onHarvest }) {
   const [selectedCrop, setSelectedCrop] = useState(null);
+  const [farmTab, setFarmTab] = useState('seeds');
   const plots = base.farmPlots || [];
   const crops = BUILDINGS.farm.crops;
   const now = Date.now();
 
+  const seeds = player.inventory.filter(i => i.type === 'seed');
+
+  const renderPlot = (plot, i) => {
+    if (!plot) {
+      return (
+        <div key={i} className="base-farm-plot empty">
+          <div className="base-farm-plot-label">Plot {i + 1} - Empty</div>
+          {farmTab === 'seeds' ? (
+            seeds.length > 0 ? (
+              <div className="base-recipe-list">
+                {seeds.map(seed => (
+                  <div key={seed.id} className="base-recipe-item">
+                    <div className="base-recipe-info">
+                      <div className={`base-recipe-name rarity-${seed.rarityClass}`}>{seed.name}</div>
+                      <div className="base-recipe-desc">{seed.description}</div>
+                    </div>
+                    <button className="btn btn-sm" onClick={() => onPlantSeed(i, seed.id)}>Plant</button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="base-empty-text">No seeds in inventory. Explore locations to find seeds!</div>
+            )
+          ) : (
+            <div className="base-farm-crop-select">
+              <select
+                className="base-bank-input"
+                value={selectedCrop || ''}
+                onChange={e => setSelectedCrop(e.target.value || null)}
+              >
+                <option value="">Select crop...</option>
+                {crops.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.cost.gold}g) - {c.desc}</option>
+                ))}
+              </select>
+              <button
+                className="btn btn-sm"
+                disabled={!selectedCrop || player.gold < (crops.find(c => c.id === selectedCrop)?.cost.gold || 999999)}
+                onClick={() => { onPlant(i, selectedCrop); setSelectedCrop(null); }}
+              >
+                Plant
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Seed-based plot
+    if (plot.isSeed) {
+      const seedDef = FARM_SEEDS[plot.seedId];
+      if (!seedDef) return null;
+      const elapsed = now - plot.plantedAt;
+      const done = elapsed >= seedDef.growTime;
+      const progress = Math.min(100, (elapsed / seedDef.growTime) * 100);
+      const remaining = Math.max(0, seedDef.growTime - elapsed);
+      const mins = Math.ceil(remaining / 60000);
+      const hours = Math.floor(mins / 60);
+      const minsLeft = mins % 60;
+
+      return (
+        <div key={i} className={`base-farm-plot ${done ? 'ready' : 'growing'}`}>
+          <div className={`base-farm-plot-label rarity-${seedDef.rarity.toLowerCase()}`}>
+            Plot {i + 1} - {seedDef.cropName}
+          </div>
+          <div className="base-craft-bar-track">
+            <div className="base-craft-bar-fill" style={{ width: `${progress}%` }} />
+          </div>
+          {done ? (
+            <button className="btn btn-sm base-collect-btn" onClick={() => onHarvest(i)}>Harvest!</button>
+          ) : (
+            <div className="base-craft-time">{hours > 0 ? `${hours}h ` : ''}{minsLeft}m remaining</div>
+          )}
+        </div>
+      );
+    }
+
+    // Gold/material crop plot (legacy)
+    const cropDef = crops.find(c => c.id === plot.cropId);
+    if (!cropDef) return null;
+    const elapsed = now - plot.plantedAt;
+    const done = elapsed >= cropDef.growTime;
+    const progress = Math.min(100, (elapsed / cropDef.growTime) * 100);
+    const remaining = Math.max(0, cropDef.growTime - elapsed);
+    const mins = Math.ceil(remaining / 60000);
+    const hours = Math.floor(mins / 60);
+    const minsLeft = mins % 60;
+
+    return (
+      <div key={i} className={`base-farm-plot ${done ? 'ready' : 'growing'}`}>
+        <div className="base-farm-plot-label">Plot {i + 1} - {cropDef.name}</div>
+        <div className="base-craft-bar-track">
+          <div className="base-craft-bar-fill" style={{ width: `${progress}%` }} />
+        </div>
+        {done ? (
+          <button className="btn btn-sm base-collect-btn" onClick={() => onHarvest(i)}>Harvest!</button>
+        ) : (
+          <div className="base-craft-time">{hours > 0 ? `${hours}h ` : ''}{minsLeft}m remaining</div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="base-building-content">
       <div className="base-section-title">Farm</div>
-      <div className="base-section-desc">Plant crops and harvest materials or gold over time.</div>
+      <div className="base-section-desc">Plant seeds found while exploring to grow crops and sell them for profit.</div>
+
+      <div className="base-farm-tabs" style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+        <button
+          className={`btn btn-sm ${farmTab === 'seeds' ? 'active' : ''}`}
+          style={{ opacity: farmTab === 'seeds' ? 1 : 0.6 }}
+          onClick={() => setFarmTab('seeds')}
+        >
+          Seeds ({seeds.length})
+        </button>
+        <button
+          className={`btn btn-sm ${farmTab === 'crops' ? 'active' : ''}`}
+          style={{ opacity: farmTab === 'crops' ? 1 : 0.6 }}
+          onClick={() => setFarmTab('crops')}
+        >
+          Buy Crops
+        </button>
+      </div>
 
       <div className="base-farm-plots">
         <div className="base-sub-label">Farm Plots</div>
-        {plots.map((plot, i) => {
-          if (!plot) {
-            return (
-              <div key={i} className="base-farm-plot empty">
-                <div className="base-farm-plot-label">Plot {i + 1} - Empty</div>
-                <div className="base-farm-crop-select">
-                  <select
-                    className="base-bank-input"
-                    value={selectedCrop || ''}
-                    onChange={e => setSelectedCrop(e.target.value || null)}
-                  >
-                    <option value="">Select crop...</option>
-                    {crops.map(c => (
-                      <option key={c.id} value={c.id}>{c.name} ({c.cost.gold}g) - {c.desc}</option>
-                    ))}
-                  </select>
-                  <button
-                    className="btn btn-sm"
-                    disabled={!selectedCrop || player.gold < (crops.find(c => c.id === selectedCrop)?.cost.gold || 999999)}
-                    onClick={() => { onPlant(i, selectedCrop); setSelectedCrop(null); }}
-                  >
-                    Plant
-                  </button>
-                </div>
-              </div>
-            );
-          }
-
-          const cropDef = crops.find(c => c.id === plot.cropId);
-          if (!cropDef) return null;
-          const elapsed = now - plot.plantedAt;
-          const done = elapsed >= cropDef.growTime;
-          const progress = Math.min(100, (elapsed / cropDef.growTime) * 100);
-          const remaining = Math.max(0, cropDef.growTime - elapsed);
-          const mins = Math.ceil(remaining / 60000);
-          const hours = Math.floor(mins / 60);
-          const minsLeft = mins % 60;
-
-          return (
-            <div key={i} className={`base-farm-plot ${done ? 'ready' : 'growing'}`}>
-              <div className="base-farm-plot-label">Plot {i + 1} - {cropDef.name}</div>
-              <div className="base-craft-bar-track">
-                <div className="base-craft-bar-fill" style={{ width: `${progress}%` }} />
-              </div>
-              {done ? (
-                <button className="btn btn-sm base-collect-btn" onClick={() => onHarvest(i)}>Harvest!</button>
-              ) : (
-                <div className="base-craft-time">{hours > 0 ? `${hours}h ` : ''}{minsLeft}m remaining</div>
-              )}
-            </div>
-          );
-        })}
+        {plots.map((plot, i) => renderPlot(plot, i))}
       </div>
 
-      <div className="base-farm-crops">
-        <div className="base-sub-label">Available Crops</div>
-        <div className="base-recipe-list">
-          {crops.map(c => (
-            <div key={c.id} className="base-recipe-item">
-              <div className="base-recipe-info">
-                <div className="base-recipe-name">{c.name}</div>
-                <div className="base-recipe-desc">{c.desc}</div>
-                <div className="base-recipe-mats">
-                  <span className={`base-recipe-mat ${player.gold >= c.cost.gold ? 'met' : 'unmet'}`}>
-                    Cost: {c.cost.gold}g
-                  </span>
+      {farmTab === 'seeds' && (
+        <div className="base-farm-crops">
+          <div className="base-sub-label">Crop Quality Guide</div>
+          <div className="base-recipe-list">
+            {CROP_QUALITIES.map(q => (
+              <div key={q.id} className="base-recipe-item">
+                <div className="base-recipe-info">
+                  <div className="base-recipe-name" style={{ color: q.color }}>{q.name}</div>
+                  <div className="base-recipe-desc">
+                    {q.multiplier}x sell value ({q.weight}% chance)
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="base-sub-label" style={{ marginTop: '10px' }}>Location Seeds</div>
+          <div className="base-recipe-list">
+            {Object.values(FARM_SEEDS).filter(s => s.foundAt).map(s => (
+              <div key={s.id} className="base-recipe-item">
+                <div className="base-recipe-info">
+                  <div className={`base-recipe-name rarity-${s.rarity.toLowerCase()}`}>{s.name}</div>
+                  <div className="base-recipe-desc">{s.desc}</div>
+                  <div className="base-recipe-mats">
+                    <span className="base-recipe-mat met">Found at: {s.foundAtName}</span>
+                    <span className="base-recipe-mat met">Value: {s.baseValue[0]}-{s.baseValue[1]}g</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="base-sub-label" style={{ marginTop: '10px' }}>Generic Seeds</div>
+          <div className="base-recipe-list">
+            {Object.values(FARM_SEEDS).filter(s => !s.foundAt).map(s => (
+              <div key={s.id} className="base-recipe-item">
+                <div className="base-recipe-info">
+                  <div className={`base-recipe-name rarity-${s.rarity.toLowerCase()}`}>{s.name}</div>
+                  <div className="base-recipe-desc">{s.desc} (found everywhere, value: {s.baseValue[0]}-{s.baseValue[1]}g)</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {farmTab === 'crops' && (
+        <div className="base-farm-crops">
+          <div className="base-sub-label">Available Crops (buy with gold)</div>
+          <div className="base-recipe-list">
+            {crops.map(c => (
+              <div key={c.id} className="base-recipe-item">
+                <div className="base-recipe-info">
+                  <div className="base-recipe-name">{c.name}</div>
+                  <div className="base-recipe-desc">{c.desc}</div>
+                  <div className="base-recipe-mats">
+                    <span className={`base-recipe-mat ${player.gold >= c.cost.gold ? 'met' : 'unmet'}`}>
+                      Cost: {c.cost.gold}g
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1072,7 +1189,7 @@ export default function BaseScreen({
   onSendMission, onCollectMission,
   onBankDeposit, onBankWithdraw, onBankFreeze, onBankCollectFrozen, onBankLoan, onBankRepay,
   onStartSpar, onSparAttack, onSparSkill, onResetSpar,
-  onFarmPlant, onFarmHarvest, onUpgradeWarehouse,
+  onFarmPlant, onFarmPlantSeed, onFarmHarvest, onUpgradeWarehouse,
   onPlaceEgg, onFeedIncubator, onCollectHatch, onUpgradeIncubator,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -1186,7 +1303,7 @@ export default function BaseScreen({
 
       case 'farm':
         if (!buildings.farm?.built) return renderBuildingOrConstruct('farm');
-        return <FarmPanel base={base} player={player} onPlant={onFarmPlant} onHarvest={onFarmHarvest} />;
+        return <FarmPanel base={base} player={player} onPlant={onFarmPlant} onPlantSeed={onFarmPlantSeed} onHarvest={onFarmHarvest} />;
 
       case 'warehouse':
         if (!buildings.warehouse?.built) return renderBuildingOrConstruct('warehouse');

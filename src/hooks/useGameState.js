@@ -9,7 +9,7 @@ import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, t
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, openLootChest } from '../engine/loot';
 import { createChestItem, CHEST_LOOKUP } from '../data/lootChests';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
@@ -865,6 +865,16 @@ function gameReducer(state, action) {
         newPlayer = { ...newPlayer, inventory: [...(newPlayer === state.player ? state.player.inventory : newPlayer.inventory), scavengedMaterial] };
         newText = text + `\n\nYou salvage ${scavengedMaterial.name} from the wreckage.`;
         newFoundItem = scavengedMaterial;
+      }
+
+      // Seed drop chance (~4%, location-specific)
+      const seedDrop = scavengeRegionId ? rollSeedDrop(scavengeRegionId, loc.id, loc.name) : null;
+      if (seedDrop && (newPlayer === state.player ? state.player : newPlayer).inventory.length < (newPlayer === state.player ? state.player : newPlayer).maxInventory) {
+        const currentInv = newPlayer === state.player ? state.player.inventory : newPlayer.inventory;
+        newPlayer = { ...newPlayer, inventory: [...currentInv, seedDrop] };
+        const seedMsg = `\n\nYou spot a ${seedDrop.name} nestled in the rubble.`;
+        newText = (newText !== text ? newText : text) + seedMsg;
+        if (!newFoundItem) newFoundItem = seedDrop;
       }
 
       if (Math.random() < lootChance) {
@@ -3809,12 +3819,59 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'BASE_FARM_PLANT_SEED': {
+      if (!state.base.buildings.farm?.built) return { ...state, message: 'Build a Farm first!' };
+      const seedPlotIndex = action.plotIndex;
+      const seedItemId = action.seedItemId;
+      const seedItem = state.player.inventory.find(i => i.id === seedItemId && i.type === 'seed');
+      if (!seedItem) return { ...state, message: 'Seed not found in inventory!' };
+      const seedDef = FARM_SEEDS[seedItem.seedId];
+      if (!seedDef) return state;
+      const seedPlots = [...(state.base.farmPlots || [])];
+      if (seedPlotIndex < 0 || seedPlotIndex >= seedPlots.length) return state;
+      if (seedPlots[seedPlotIndex] !== null) return { ...state, message: 'Plot already planted!' };
+
+      seedPlots[seedPlotIndex] = { seedId: seedItem.seedId, plantedAt: Date.now(), isSeed: true };
+      const seedInv = state.player.inventory.filter(i => i.id !== seedItemId);
+      return {
+        ...state,
+        player: { ...state.player, inventory: seedInv },
+        base: { ...state.base, farmPlots: seedPlots },
+        message: `Planted ${seedDef.name}!`,
+      };
+    }
+
     case 'BASE_FARM_HARVEST': {
       if (!state.base.buildings.farm?.built) return { ...state, message: 'Build a Farm first!' };
       const hPlotIndex = action.plotIndex;
       const plots = [...(state.base.farmPlots || [])];
       const plot = plots[hPlotIndex];
       if (!plot) return { ...state, message: 'Nothing planted here!' };
+
+      // Handle seed-based crops
+      if (plot.isSeed) {
+        const seedDef = FARM_SEEDS[plot.seedId];
+        if (!seedDef) return state;
+        const seedElapsed = Date.now() - plot.plantedAt;
+        if (seedElapsed < seedDef.growTime) return { ...state, message: 'Not ready yet!' };
+
+        plots[hPlotIndex] = null;
+        const quality = rollCropQuality();
+        const cropItem = createCropItem(plot.seedId, quality);
+        if (!cropItem) return state;
+
+        if (state.player.inventory.length >= state.player.maxInventory) {
+          return { ...state, base: { ...state.base, farmPlots: plots }, message: `Harvested ${cropItem.name} but your inventory is full! The crop was lost.` };
+        }
+
+        return {
+          ...state,
+          player: { ...state.player, inventory: [...state.player.inventory, cropItem] },
+          base: { ...state.base, farmPlots: plots },
+          message: `Harvested ${quality.name} ${seedDef.cropName}! (Sell value: ${cropItem.sellPrice}g)`,
+        };
+      }
+
       const hCropDef = BUILDINGS.farm.crops.find(c => c.id === plot.cropId);
       if (!hCropDef) return state;
       const elapsed = Date.now() - plot.plantedAt;
@@ -5088,6 +5145,7 @@ export function useGameState(isLoggedIn) {
     baseSparSkill: () => dispatch({ type: 'BASE_SPAR_SKILL' }),
     baseResetSpar: () => dispatch({ type: 'BASE_RESET_SPAR' }),
     baseFarmPlant: (plotIndex, cropId) => dispatch({ type: 'BASE_FARM_PLANT', plotIndex, cropId }),
+    baseFarmPlantSeed: (plotIndex, seedItemId) => dispatch({ type: 'BASE_FARM_PLANT_SEED', plotIndex, seedItemId }),
     baseFarmHarvest: (plotIndex) => dispatch({ type: 'BASE_FARM_HARVEST', plotIndex }),
     baseUpgradeWarehouse: () => dispatch({ type: 'BASE_UPGRADE_WAREHOUSE' }),
     basePlaceEgg: (itemId) => dispatch({ type: 'BASE_PLACE_EGG', itemId }),
