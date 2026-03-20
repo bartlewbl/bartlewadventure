@@ -82,16 +82,24 @@ export default function CharacterDock({
             <span className="dock-gold-value">{goldValue.toLocaleString()}</span>
           </div>
         </div>
-        <button
-          className="dock-rest-button"
-          type="button"
-          disabled={!canRest}
-          onClick={onRest}
-          aria-label="Rest at Inn"
-          title={`Rest at Inn (-${getHealCost({ hp, maxHp, mana, maxMana })}g)`}
-        >
-          <span className="dock-rest-icon">✚</span>
-        </button>
+        {(() => {
+          const healCost = getHealCost({ hp, maxHp, mana, maxMana });
+          const isFull = hp >= maxHp && mana >= maxMana;
+          const canAfford = gold >= healCost;
+          return (
+            <button
+              className={`dock-rest-button ${isFull ? 'full-hp' : ''}`}
+              type="button"
+              disabled={!canRest || isFull || !canAfford}
+              onClick={onRest}
+              aria-label="Rest at Inn"
+              title={isFull ? 'HP & Mana Full' : !canAfford ? `Need ${healCost}g to heal` : `Rest at Inn (-${healCost}g)`}
+            >
+              <span className="dock-rest-icon">✚</span>
+              {!isFull && <span className="dock-rest-cost">{healCost}g</span>}
+            </button>
+          );
+        })()}
       </div>
 
       {/* Stat bars */}
