@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ENERGY_MAX, ENERGY_REGEN_PERCENT, ENERGY_REGEN_INTERVAL_MS } from '../hooks/useGameState';
+import { ENERGY_MAX, ENERGY_REGEN_PERCENT, ENERGY_REGEN_INTERVAL_MS, HP_REGEN_PERCENT, MANA_REGEN_PERCENT, HP_MANA_REGEN_INTERVAL_MS } from '../hooks/useGameState';
 import { getHealCost } from '../engine/combat';
 
 export default function CharacterDock({
@@ -21,6 +21,7 @@ export default function CharacterDock({
   onRest,
   canRest,
   lastEnergyUpdate,
+  lastHpManaRegenUpdate,
 }) {
   const safeMax = energyMax ?? Math.max(energy ?? 0, 1);
   const currentEnergy = Math.max(0, Math.min(energy ?? safeMax, safeMax));
@@ -41,14 +42,16 @@ export default function CharacterDock({
   const goldValue = gold ?? 0;
 
   const [energyHovered, setEnergyHovered] = useState(false);
+  const [hpHovered, setHpHovered] = useState(false);
+  const [manaHovered, setManaHovered] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    if (!energyHovered) return;
+    if (!energyHovered && !hpHovered && !manaHovered) return;
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [energyHovered]);
+  }, [energyHovered, hpHovered, manaHovered]);
 
   const gainPerTick = Math.max(1, Math.round(ENERGY_MAX * ENERGY_REGEN_PERCENT));
   const isFull = currentEnergy >= safeMax;
@@ -65,6 +68,38 @@ export default function CharacterDock({
     const secs = Math.floor((remaining % 60000) / 1000);
     const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
     energyTooltip = `+${gainPerTick} in ${timeStr}`;
+  }
+
+  const hpRegenPerTick = Math.max(1, Math.floor(safeMaxHp * HP_REGEN_PERCENT));
+  const hpIsFull = currentHp >= safeMaxHp;
+  let hpTooltip;
+  if (hpIsFull) {
+    hpTooltip = 'HP is full';
+  } else if (lastHpManaRegenUpdate == null) {
+    hpTooltip = `+${hpRegenPerTick} every 2 min`;
+  } else {
+    const nextHpTick = lastHpManaRegenUpdate + HP_MANA_REGEN_INTERVAL_MS;
+    const hpRemaining = Math.max(0, nextHpTick - now);
+    const hpMins = Math.floor(hpRemaining / 60000);
+    const hpSecs = Math.floor((hpRemaining % 60000) / 1000);
+    const hpTimeStr = hpMins > 0 ? `${hpMins}m ${hpSecs}s` : `${hpSecs}s`;
+    hpTooltip = `+${hpRegenPerTick} in ${hpTimeStr}`;
+  }
+
+  const manaRegenPerTick = Math.max(1, Math.floor(safeMaxMana * MANA_REGEN_PERCENT));
+  const manaIsFull = currentMana >= safeMaxMana;
+  let manaTooltip;
+  if (manaIsFull) {
+    manaTooltip = 'Mana is full';
+  } else if (lastHpManaRegenUpdate == null) {
+    manaTooltip = `+${manaRegenPerTick} every 2 min`;
+  } else {
+    const nextManaTick = lastHpManaRegenUpdate + HP_MANA_REGEN_INTERVAL_MS;
+    const manaRemaining = Math.max(0, nextManaTick - now);
+    const manaMins = Math.floor(manaRemaining / 60000);
+    const manaSecs = Math.floor((manaRemaining % 60000) / 1000);
+    const manaTimeStr = manaMins > 0 ? `${manaMins}m ${manaSecs}s` : `${manaSecs}s`;
+    manaTooltip = `+${manaRegenPerTick} in ${manaTimeStr}`;
   }
 
   return (
@@ -96,20 +131,34 @@ export default function CharacterDock({
 
       {/* Stat bars */}
       <div className="dock-bars">
-        <div className="dock-bar-row">
+        <div
+          className="dock-bar-row"
+          onMouseEnter={() => setHpHovered(true)}
+          onMouseLeave={() => setHpHovered(false)}
+        >
           <span className="dock-bar-label dock-bar-hp">HP</span>
           <div className="dock-bar-track">
             <div className="dock-bar-fill dock-bar-fill-hp" style={{ width: `${hpPct}%` }} />
           </div>
           <span className="dock-bar-nums">{currentHp}/{safeMaxHp}</span>
+          {hpHovered && (
+            <div className="dock-bar-tooltip">{hpTooltip}</div>
+          )}
         </div>
 
-        <div className="dock-bar-row">
+        <div
+          className="dock-bar-row"
+          onMouseEnter={() => setManaHovered(true)}
+          onMouseLeave={() => setManaHovered(false)}
+        >
           <span className="dock-bar-label dock-bar-mana">MP</span>
           <div className="dock-bar-track">
             <div className="dock-bar-fill dock-bar-fill-mana" style={{ width: `${manaPct}%` }} />
           </div>
           <span className="dock-bar-nums">{currentMana}/{safeMaxMana}</span>
+          {manaHovered && (
+            <div className="dock-bar-tooltip">{manaTooltip}</div>
+          )}
         </div>
 
         <div

@@ -242,6 +242,7 @@ export default function App() {
               onSkills={() => actions.showScreen('skills')}
               canRest={canRest}
               lastEnergyUpdate={state.lastEnergyUpdate}
+              lastHpManaRegenUpdate={state.lastHpManaRegenUpdate}
             />
           )}
 
