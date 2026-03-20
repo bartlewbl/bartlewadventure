@@ -8760,3 +8760,321 @@ body {
   border-color: #ffd700;
   box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
 }
+
+/* ---- QUEST VILLAGE SCREEN ---- */
+.screen-quest-village {
+  gap: 10px;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.village-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.village-name {
+  font-size: 14px;
+  color: #66ffaa;
+  text-shadow: 0 0 8px rgba(102, 255, 170, 0.5);
+}
+
+.village-discovery-badge {
+  font-size: 8px;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  padding: 2px 8px;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.6); }
+}
+
+.village-description {
+  font-size: 8px;
+  line-height: 2;
+  color: #aaa;
+  max-width: 380px;
+  padding: 0 12px;
+}
+
+.village-quests-title {
+  font-size: 10px;
+  color: #ffd700;
+  margin-top: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.village-quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+  padding: 0 8px;
+}
+
+.village-quest {
+  background: rgba(30, 30, 60, 0.7);
+  border: 1px solid rgba(100, 100, 160, 0.3);
+  padding: 8px;
+  text-align: left;
+}
+
+.village-quest.completed {
+  opacity: 0.5;
+  border-color: rgba(100, 255, 100, 0.2);
+}
+
+.village-quest.ready {
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.village-quest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.village-quest-name {
+  font-size: 9px;
+  color: #e0e0e0;
+}
+
+.village-quest-badge {
+  font-size: 6px;
+  padding: 1px 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.village-quest-badge.done { color: #66ff66; border: 1px solid rgba(102, 255, 102, 0.3); }
+.village-quest-badge.turn-in { color: #ffd700; border: 1px solid rgba(255, 215, 0, 0.3); animation: pulse-glow 1.5s ease-in-out infinite; }
+.village-quest-badge.active { color: #4fc3f7; border: 1px solid rgba(79, 195, 247, 0.3); }
+
+.village-quest-desc {
+  font-size: 7px;
+  color: #999;
+  line-height: 1.8;
+  margin-bottom: 4px;
+}
+
+.village-quest-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.village-quest-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(50, 50, 80, 0.8);
+  border: 1px solid rgba(100, 100, 140, 0.3);
+}
+
+.village-quest-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #4fc3f7, #66ffaa);
+  transition: width 0.3s;
+}
+
+.village-quest-count {
+  font-size: 7px;
+  color: #aaa;
+  min-width: 50px;
+  text-align: right;
+}
+
+.village-quest-reward {
+  font-size: 7px;
+  color: #ffd700;
+  margin-bottom: 4px;
+}
+
+.village-btn-turn-in {
+  background: linear-gradient(135deg, #4caf50, #2e7d32) !important;
+  border-color: #66ff66 !important;
+}
+
+/* ---- VILLAGE TRADER SECTION ---- */
+.village-traders-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.village-trader-section {
+  margin-bottom: 10px;
+  padding: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+}
+
+.village-trader-section + .village-trader-section {
+  margin-top: 8px;
+}
+
+.village-trader-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.village-trader-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #bb86fc;
+  margin-bottom: 4px;
+}
+
+.village-trader-greeting {
+  font-size: 10px;
+  color: #999;
+  font-style: italic;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.village-trader-deals {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.village-trader-deal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+}
+
+.village-trader-deal.too-expensive {
+  opacity: 0.5;
+}
+
+.village-trader-deal-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.village-trader-deal-desc {
+  font-size: 10px;
+  color: #ccc;
+  flex: 1;
+}
+
+.village-trader-deal-cost {
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffd700;
+  white-space: nowrap;
+}
+
+.village-trader-gold {
+  font-size: 10px;
+  color: #ffd700;
+  text-align: right;
+  margin-top: 6px;
+}
+
+/* ---- EXTRAORDINARY TRADER SCREEN ---- */
+.screen-extraordinary-trader {
+  gap: 10px;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.trader-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.trader-name {
+  font-size: 13px;
+  color: #ce93d8;
+  text-shadow: 0 0 8px rgba(206, 147, 216, 0.5);
+}
+
+.trader-greeting {
+  font-size: 8px;
+  line-height: 2;
+  color: #bbb;
+  max-width: 380px;
+  padding: 0 12px;
+  font-style: italic;
+}
+
+.trader-deals-title {
+  font-size: 10px;
+  color: #ffd700;
+  margin-top: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.trader-deal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+  padding: 0 8px;
+}
+
+.trader-deal {
+  background: rgba(30, 30, 60, 0.7);
+  border: 1px solid rgba(150, 100, 200, 0.3);
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.trader-deal.too-expensive {
+  opacity: 0.5;
+}
+
+.trader-deal-info {
+  text-align: left;
+  flex: 1;
+}
+
+.trader-deal-desc {
+  font-size: 8px;
+  color: #e0e0e0;
+  line-height: 1.8;
+}
+
+.trader-deal-cost {
+  font-size: 8px;
+  color: #ffd700;
+  margin-top: 2px;
+}
+
+.trader-gold-display {
+  font-size: 9px;
+  color: #ffd700;
+  margin-top: 4px;
+}
