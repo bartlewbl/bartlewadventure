@@ -28,9 +28,19 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
 
           let progress = 0;
           let canTurnIn = false;
+          const hasItemReqs = quest.itemRequirements && quest.itemRequirements.length > 0;
+          // Check which required items the player has
+          const itemReqStatus = hasItemReqs
+            ? quest.itemRequirements.map(req => ({
+                ...req,
+                fulfilled: player.inventory.some(item => item.name === req.itemName && item.foundLocation === req.locationId),
+              }))
+            : [];
+          const allItemsFulfilled = !hasItemReqs || itemReqStatus.every(r => r.fulfilled);
           if (isAccepted) {
             progress = (stats[quest.stat] || 0) - acceptedEntry.baseline;
-            canTurnIn = progress >= quest.target;
+            const statMet = quest.target <= 0 || progress >= quest.target;
+            canTurnIn = statMet && allItemsFulfilled;
           }
 
           return (
@@ -43,7 +53,7 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
               </div>
               <div className="village-quest-desc">{quest.description}</div>
 
-              {isAccepted && !isCompleted && (
+              {isAccepted && !isCompleted && quest.target > 0 && (
                 <div className="village-quest-progress">
                   <div className="village-quest-bar-track">
                     <div
@@ -54,6 +64,19 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
                   <div className="village-quest-count">
                     {Math.min(progress, quest.target)}/{quest.target}
                   </div>
+                </div>
+              )}
+
+              {hasItemReqs && (
+                <div className="village-quest-items">
+                  <div className="village-quest-items-title">Required Items:</div>
+                  {itemReqStatus.map((req, i) => (
+                    <div key={i} className={`village-quest-item-req ${req.fulfilled ? 'fulfilled' : 'missing'}`}>
+                      <span className="village-quest-item-check">{req.fulfilled ? '[x]' : '[ ]'}</span>
+                      <span className="village-quest-item-name">{req.itemName}</span>
+                      <span className="village-quest-item-loc">from {req.locationName}</span>
+                    </div>
+                  ))}
                 </div>
               )}
 

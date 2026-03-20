@@ -1154,11 +1154,28 @@ function gameReducer(state, action) {
       const village = Object.values(QUEST_VILLAGES).flat().find(v => v.id === villageId);
       const questDef = village?.quests.find(q => q.id === questId);
       if (!questDef) return state;
-      // Check progress
+      // Check stat progress (skip check if target is 0, meaning item-only quest)
       const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
-      if (progress < questDef.target) return state;
+      if (questDef.target > 0 && progress < questDef.target) return state;
+      // Check item requirements if any
+      if (questDef.itemRequirements && questDef.itemRequirements.length > 0) {
+        const inv = state.player.inventory;
+        for (const req of questDef.itemRequirements) {
+          const hasItem = inv.some(item => item.name === req.itemName && item.foundLocation === req.locationId);
+          if (!hasItem) return state;
+        }
+      }
       // Give rewards
       let p = { ...state.player };
+      // Remove required items from inventory
+      if (questDef.itemRequirements && questDef.itemRequirements.length > 0) {
+        let newInv = [...p.inventory];
+        for (const req of questDef.itemRequirements) {
+          const idx = newInv.findIndex(item => item.name === req.itemName && item.foundLocation === req.locationId);
+          if (idx !== -1) newInv.splice(idx, 1);
+        }
+        p = { ...p, inventory: newInv };
+      }
       p.gold += questDef.reward.gold;
       // Generate reward item if applicable
       if (questDef.reward.item && p.inventory.length < p.maxInventory) {
