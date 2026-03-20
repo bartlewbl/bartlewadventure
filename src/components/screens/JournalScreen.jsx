@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CHEST_LOOKUP } from '../../data/lootChests';
 import {
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
-  STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
+  TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
   getCurrentTutorial, isTutorialComplete, getMissionsForChapter, getUnlockedChapter,
   getCurrentSideQuest, isSideChainComplete,
   isQuestLineActive, canActivateQuestLine, MAX_ACTIVE_QUEST_LINES,
@@ -10,7 +10,7 @@ import {
   getQuestProgress,
 } from '../../data/tasks';
 
-const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Story', 'Stats'];
+const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Stats'];
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -749,7 +749,6 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
     Daily: countReady(dailyTasks, tasks.dailyProgress, tasks.dailyClaimed, false),
     Weekly: countReady(weeklyTasks, tasks.weeklyProgress, tasks.weeklyClaimed, false),
     Monthly: countReady(monthlyTasks, tasks.monthlyProgress, tasks.monthlyClaimed, false),
-    Story: countReady(STORY_TASKS, {}, tasks.storyClaimed, true),
   };
 
   return (
@@ -849,20 +848,6 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             claimedList={tasks.monthlyClaimed}
             stats={stats}
             taskType="monthly"
-            onClaim={onClaim}
-            pinnedQuests={pinnedQuests}
-            onPin={onPin}
-            onUnpin={onUnpin}
-          />
-        )}
-        {activeTab === 'Story' && (
-          <TasksTab
-            tasks={tasks}
-            taskDefs={STORY_TASKS}
-            progressMap={{}}
-            claimedList={tasks.storyClaimed}
-            stats={stats}
-            taskType="story"
             onClaim={onClaim}
             pinnedQuests={pinnedQuests}
             onPin={onPin}
