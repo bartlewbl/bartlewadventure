@@ -1860,6 +1860,52 @@ body {
   background: rgba(30, 30, 60, 0.95);
 }
 
+.location-heal-section {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.location-heal-cost {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #ffd740;
+  text-align: center;
+}
+
+.btn-heal {
+  background: #1a3a2a;
+  border: 1px solid #4caf50;
+  color: #81c784;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 10px 14px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.btn-heal:hover:not(:disabled) {
+  background: #2a5a3a;
+}
+
+.btn-heal:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-heal.full-hp {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #888;
+  background: rgba(20, 20, 45, 0.6);
+}
+
 .special-locations-header {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;

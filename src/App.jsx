@@ -284,6 +284,8 @@ export default function App() {
                 pinnedQuests={state.tasks.pinnedQuests}
                 stats={state.stats}
                 tasks={state.tasks}
+                player={state.player}
+                onRest={actions.restAtInn}
               />
             )}
 

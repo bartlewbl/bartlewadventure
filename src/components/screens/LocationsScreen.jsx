@@ -201,6 +201,8 @@ export default function LocationsScreen({
   pinnedQuests,
   stats,
   tasks,
+  player,
+  onRest,
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState('normal');
@@ -268,6 +270,23 @@ export default function LocationsScreen({
             regionId={regionId}
           />
         </>
+      )}
+
+      {player && onRest && (
+        <div className="location-heal-section">
+          <div className="location-heal-cost">Heal cost: 10g</div>
+          <button
+            className={`btn btn-heal ${player.hp >= player.maxHp && player.mana >= player.maxMana ? 'full-hp' : ''}`}
+            onClick={onRest}
+            disabled={player.hp >= player.maxHp && player.mana >= player.maxMana || player.gold < 10}
+          >
+            {player.hp >= player.maxHp && player.mana >= player.maxMana
+              ? 'HP & Mana Full'
+              : player.gold < 10
+                ? 'Not enough gold'
+                : `Rest at Inn (10g) — HP: ${player.hp}/${player.maxHp} · Mana: ${player.mana}/${player.maxMana}`}
+          </button>
+        </div>
       )}
 
       <button className="btn btn-back" onClick={onBack}>Change Region</button>
