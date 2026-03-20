@@ -597,7 +597,13 @@ function gameReducer(state, action) {
 
       // Boss encounter check
       if (loc.boss && Math.random() < (loc.bossRate || prob('explore.bossRate'))) {
-        const boss = scaleBoss(loc.boss, loc.levelReq);
+        // Special locations scale bosses with random level offset
+        let bossLevel = loc.levelReq;
+        if (loc.special && loc.levelRange) {
+          const [minOff, maxOff] = loc.levelRange;
+          bossLevel = Math.max(1, loc.levelReq + Math.floor((minOff + maxOff) / 2) + Math.floor(Math.random() * Math.ceil((maxOff - minOff) / 2)));
+        }
+        const boss = scaleBoss(loc.boss, bossLevel);
         if (boss) {
           return {
             ...state, screen: 'boss-confirm',
@@ -631,7 +637,14 @@ function gameReducer(state, action) {
       const adjustedEncounterRate = loc.encounterRate * effects.encounterMult;
       if (Math.random() < adjustedEncounterRate) {
         const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
-        const monster = scaleMonster(monsterId, loc.levelReq);
+        // Special locations have random-level encounters within their levelRange
+        let encounterLevel = loc.levelReq;
+        if (loc.special && loc.levelRange) {
+          const [minOffset, maxOffset] = loc.levelRange;
+          encounterLevel = Math.max(1, loc.levelReq + minOffset + Math.floor(Math.random() * (maxOffset - minOffset + 1)));
+        }
+        const monster = scaleMonster(monsterId, encounterLevel);
+        const levelInfo = loc.special ? ` (Lv.${encounterLevel})` : '';
         return {
           ...state, screen: 'battle',
           exploreText: text,
@@ -639,7 +652,7 @@ function gameReducer(state, action) {
           lastEnergyUpdate: exploreLastUpdate,
           pets: petsAfterExplore,
           battle: createBattleState(monster),
-          battleLog: [{ text: `A ${monster.name} appears!`, type: 'info' }],
+          battleLog: [{ text: `A ${monster.name}${levelInfo} appears!`, type: 'info' }],
           battleResult: null,
         };
       }
@@ -657,7 +670,10 @@ function gameReducer(state, action) {
       let newPlayer = state.player;
       let newDiscovered = state.discoveredItemLocations;
       let newFoundItem = null;
-      const lootTable = ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'energy-drink'];
+      // Special locations have more gear-focused loot tables (no common potions/energy-drinks)
+      const lootTable = loc.special
+        ? ['ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'gloves', 'amulet', 'belt', 'cape']
+        : ['potion', 'ring', 'boots', 'helmet', 'armor', 'sword', 'shield', 'energy-drink'];
 
       // Add scavenged material to inventory
       if (scavengedMaterial && state.player.inventory.length < state.player.maxInventory) {
@@ -669,12 +685,17 @@ function gameReducer(state, action) {
       if (Math.random() < lootChance) {
         if (newPlayer.inventory.length < newPlayer.maxInventory) {
           let foundItem;
-          if (Math.random() < prob('loot.locationItemChance')) {
-            foundItem = generateLocationItem(loc.id, Math.max(loc.levelReq, state.player.level));
+          // Special locations boost effective loot level based on their rareLootBonus
+          const baseLootLevel = Math.max(loc.levelReq, state.player.level);
+          const effectiveLootLevel = loc.special && loc.rareLootBonus
+            ? Math.floor(baseLootLevel + (loc.rareLootBonus - 1) * 5)
+            : baseLootLevel;
+          if (Math.random() < prob('loot.locationItemChance') * (loc.rareLootBonus || 1)) {
+            foundItem = generateLocationItem(loc.id, effectiveLootLevel);
           }
           if (!foundItem) {
             const dropType = lootTable[Math.floor(Math.random() * lootTable.length)];
-            foundItem = generateItem(dropType, Math.max(loc.levelReq, state.player.level));
+            foundItem = generateItem(dropType, effectiveLootLevel);
           }
           // Track discovery if the item has a foundLocation
           if (foundItem.foundLocation) {
