@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ENERGY_MAX, ENERGY_REGEN_PERCENT, ENERGY_REGEN_INTERVAL_MS } from '../hooks/useGameState';
+import { getHealCost } from '../engine/combat';
 
 export default function CharacterDock({
   playerName,
@@ -87,7 +88,7 @@ export default function CharacterDock({
           disabled={!canRest}
           onClick={onRest}
           aria-label="Rest at Inn"
-          title="Rest at Inn (-10g)"
+          title={`Rest at Inn (-${getHealCost({ hp, maxHp, mana, maxMana })}g)`}
         >
           <span className="dock-rest-icon">✚</span>
         </button>
