@@ -149,17 +149,17 @@ export const MONSTERS = {
   },
   'trash-golem': {
     name: 'Trash Golem', sprite: 'golem', baseHp: 42, baseAtk: 8, baseDef: 6,
-    baseExp: 26, baseGold: 14, skills: ['bash'],
+    baseExp: 26, baseGold: 14, skills: ['bash', 'stun_bash'],
     dropTable: [{ type: 'shield', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 20 }],
   },
   'sewer-lurker': {
     name: 'Sewer Lurker', sprite: 'snake', baseHp: 26, baseAtk: 10, baseDef: 3,
-    baseExp: 19, baseGold: 11, skills: ['poison'],
+    baseExp: 19, baseGold: 11, skills: ['poison', 'confuse'],
     dropTable: [{ type: 'potion', weight: 35 }, { type: 'ring', weight: 5 }],
   },
   'neon-phantom': {
     name: 'Neon Phantom', sprite: 'ghost', baseHp: 22, baseAtk: 12, baseDef: 2,
-    baseExp: 21, baseGold: 10, skills: ['curse', 'drain', 'poison'],
+    baseExp: 21, baseGold: 10, skills: ['curse', 'drain', 'confuse'],
     dropTable: [{ type: 'ring', weight: 10 }, { type: 'potion', weight: 30 }],
   },
   'wire-rat': {
@@ -184,7 +184,7 @@ export const MONSTERS = {
   },
   'pipe-golem': {
     name: 'Pipe Golem', sprite: 'golem', baseHp: 55, baseAtk: 12, baseDef: 8,
-    baseExp: 36, baseGold: 20, skills: ['bash', 'slam'],
+    baseExp: 36, baseGold: 20, skills: ['bash', 'slam', 'stun_bash'],
     dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'belt', weight: 5 }, { type: 'potion', weight: 18 }],
   },
   'sludge-slime': {
@@ -204,7 +204,7 @@ export const MONSTERS = {
   },
   'signal-ghost': {
     name: 'Signal Ghost', sprite: 'ghost', baseHp: 34, baseAtk: 15, baseDef: 4,
-    baseExp: 31, baseGold: 16, skills: ['shock', 'curse'],
+    baseExp: 31, baseGold: 16, skills: ['shock', 'curse', 'mind_fog'],
     dropTable: [{ type: 'ring', weight: 8 }, { type: 'helmet', weight: 7 }, { type: 'potion', weight: 25 }],
   },
   'sky-hawk': {
@@ -219,12 +219,12 @@ export const MONSTERS = {
   },
   'antenna-golem': {
     name: 'Antenna Golem', sprite: 'golem', baseHp: 70, baseAtk: 16, baseDef: 10,
-    baseExp: 48, baseGold: 26, skills: ['shock', 'bash'],
+    baseExp: 48, baseGold: 26, skills: ['shock', 'bash', 'thunder_slam'],
     dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'belt', weight: 5 }, { type: 'gloves', weight: 5 }, { type: 'potion', weight: 16 }],
   },
   'wind-phantom': {
     name: 'Wind Phantom', sprite: 'ghost', baseHp: 40, baseAtk: 23, baseDef: 5,
-    baseExp: 44, baseGold: 23, skills: ['curse', 'drain'],
+    baseExp: 44, baseGold: 23, skills: ['curse', 'drain', 'hex'],
     dropTable: [{ type: 'ring', weight: 10 }, { type: 'cape', weight: 6 }, { type: 'amulet', weight: 5 }, { type: 'potion', weight: 25 }],
   },
   'drone-wasp': {
@@ -239,7 +239,7 @@ export const MONSTERS = {
   },
   'neon-gargoyle': {
     name: 'Neon Gargoyle', sprite: 'golem', baseHp: 58, baseAtk: 19, baseDef: 9,
-    baseExp: 47, baseGold: 25, skills: ['slam', 'screech'],
+    baseExp: 47, baseGold: 25, skills: ['slam', 'screech', 'concuss'],
     dropTable: [{ type: 'shield', weight: 10 }, { type: 'helmet', weight: 9 }, { type: 'potion', weight: 18 }],
   },
   'rooftop-sniper': {
@@ -259,7 +259,7 @@ export const MONSTERS = {
   },
   'scrap-golem': {
     name: 'Scrap Golem', sprite: 'golem', baseHp: 80, baseAtk: 20, baseDef: 12,
-    baseExp: 58, baseGold: 32, skills: ['bash', 'slam', 'charge'],
+    baseExp: 58, baseGold: 32, skills: ['bash', 'slam', 'charge', 'petrify'],
     dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'potion', weight: 16 }],
   },
   'molten-slime': {
@@ -284,7 +284,7 @@ export const MONSTERS = {
   },
   'chain-wraith': {
     name: 'Chain Wraith', sprite: 'ghost', baseHp: 52, baseAtk: 25, baseDef: 7,
-    baseExp: 54, baseGold: 28, skills: ['curse', 'drain', 'slash', 'deathgrip'],
+    baseExp: 54, baseGold: 28, skills: ['curse', 'drain', 'slash', 'deathgrip', 'psychic_wave'],
     dropTable: [{ type: 'ring', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 20 }],
   },
   'furnace-bat': {
@@ -299,7 +299,7 @@ export const MONSTERS = {
   },
   'terminal-enforcer': {
     name: 'Terminal Enforcer', sprite: 'vagrant', baseHp: 72, baseAtk: 28, baseDef: 10,
-    baseExp: 65, baseGold: 35, skills: ['slash', 'bash', 'charge'],
+    baseExp: 65, baseGold: 35, skills: ['slash', 'bash', 'charge', 'flash_bang'],
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 9 }, { type: 'gloves', weight: 5 }, { type: 'cape', weight: 4 }, { type: 'potion', weight: 18 }, { type: 'energy-drink', weight: 7 }],
   },
   'midnight-wolf': {
@@ -309,12 +309,12 @@ export const MONSTERS = {
   },
   'phantom-conductor': {
     name: 'Phantom Conductor', sprite: 'ghost', baseHp: 60, baseAtk: 30, baseDef: 8,
-    baseExp: 66, baseGold: 35, skills: ['shock', 'curse', 'drain'],
+    baseExp: 66, baseGold: 35, skills: ['shock', 'curse', 'drain', 'madness'],
     dropTable: [{ type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'amulet', weight: 6 }, { type: 'potion', weight: 18 }],
   },
   'glitch-golem': {
     name: 'Glitch Golem', sprite: 'golem', baseHp: 90, baseAtk: 24, baseDef: 14,
-    baseExp: 68, baseGold: 36, skills: ['slam', 'shock', 'bash'],
+    baseExp: 68, baseGold: 36, skills: ['slam', 'shock', 'bash', 'petrify'],
     dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'potion', weight: 15 }],
   },
   'void-slime': {
@@ -334,7 +334,7 @@ export const MONSTERS = {
   },
   'neon-reaper': {
     name: 'Neon Reaper', sprite: 'skeleton', baseHp: 68, baseAtk: 31, baseDef: 9,
-    baseExp: 70, baseGold: 38, skills: ['curse', 'drain', 'slash'],
+    baseExp: 70, baseGold: 38, skills: ['curse', 'drain', 'slash', 'hex'],
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 9 }, { type: 'potion', weight: 18 }],
   },
   // ---- FROZEN WASTES MONSTERS ----
@@ -355,7 +355,7 @@ export const MONSTERS = {
   },
   'glacial-golem': {
     name: 'Glacial Golem', sprite: 'golem', baseHp: 55, baseAtk: 9, baseDef: 8,
-    baseExp: 28, baseGold: 16, skills: ['bash', 'freeze'],
+    baseExp: 28, baseGold: 16, skills: ['bash', 'freeze', 'stun_bash'],
     dropTable: [{ type: 'shield', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 18 }],
   },
   'frost-spider': {
@@ -370,7 +370,7 @@ export const MONSTERS = {
   },
   'ice-phantom': {
     name: 'Ice Phantom', sprite: 'ghost', baseHp: 34, baseAtk: 16, baseDef: 3,
-    baseExp: 26, baseGold: 14, skills: ['blizzard', 'curse'],
+    baseExp: 26, baseGold: 14, skills: ['blizzard', 'curse', 'mind_fog'],
     dropTable: [{ type: 'ring', weight: 9 }, { type: 'potion', weight: 25 }],
   },
   'blizzard-hawk': {
@@ -1271,6 +1271,29 @@ export function getMonsterBaseSpeed(entry) {
   return SPRITE_BASE_SPEED[entry.sprite] || 5;
 }
 
+// ---- COMBAT STATS BY SPRITE TYPE ----
+// evasion: dodge chance base, accuracy: hit chance base, resistance: skill/magic dmg reduction
+// tenacity: debuff duration reduction, aggression: dmg dealt/taken multiplier, luck: crit/dodge/loot
+// fortitude: chance to survive lethal hit at 1 HP
+export const SPRITE_BASE_COMBAT_STATS = {
+  rat:      { evasion: 6, accuracy: 4, resistance: 1, tenacity: 2, aggression: 3, luck: 5, fortitude: 1 },
+  bat:      { evasion: 8, accuracy: 3, resistance: 1, tenacity: 1, aggression: 2, luck: 4, fortitude: 1 },
+  ghost:    { evasion: 7, accuracy: 5, resistance: 6, tenacity: 4, aggression: 2, luck: 3, fortitude: 3 },
+  slime:    { evasion: 1, accuracy: 3, resistance: 4, tenacity: 6, aggression: 1, luck: 2, fortitude: 5 },
+  snake:    { evasion: 5, accuracy: 6, resistance: 2, tenacity: 3, aggression: 5, luck: 3, fortitude: 2 },
+  vagrant:  { evasion: 4, accuracy: 5, resistance: 3, tenacity: 3, aggression: 4, luck: 3, fortitude: 3 },
+  goblin:   { evasion: 5, accuracy: 4, resistance: 2, tenacity: 2, aggression: 5, luck: 6, fortitude: 2 },
+  wolf:     { evasion: 6, accuracy: 6, resistance: 2, tenacity: 3, aggression: 6, luck: 3, fortitude: 3 },
+  golem:    { evasion: 0, accuracy: 4, resistance: 7, tenacity: 8, aggression: 3, luck: 1, fortitude: 7 },
+  skeleton: { evasion: 3, accuracy: 4, resistance: 5, tenacity: 5, aggression: 4, luck: 2, fortitude: 4 },
+  dragon:   { evasion: 4, accuracy: 7, resistance: 6, tenacity: 6, aggression: 7, luck: 4, fortitude: 5 },
+};
+
+export function getMonsterBaseCombatStats(entry) {
+  const base = SPRITE_BASE_COMBAT_STATS[entry.sprite] || { evasion: 3, accuracy: 4, resistance: 3, tenacity: 3, aggression: 3, luck: 3, fortitude: 2 };
+  return { ...base, ...(entry.combatStats || {}) };
+}
+
 // ---- MONSTER/BOSS SKILLS ----
 export const SKILLS = {
   bite:       { name: 'Bite',        multiplier: 1.3 },
@@ -1338,6 +1361,18 @@ export const SKILLS = {
   channel_plague: { name: 'Channel Plague', multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 1.8, unleashName: 'Plague Nova', unleashMult: 1.8, unleashEffect: 'poison' },
   channel_abyss:  { name: 'Channel Abyss',  multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.3, unleashName: 'Abyssal Crush', unleashMult: 2.3 },
   channel_light:  { name: 'Channel Light',  multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.4, unleashName: 'Divine Wrath', unleashMult: 2.4 },
+  // Stun skills - target skips their next turn
+  stun_bash:    { name: 'Stun Bash',     multiplier: 0.8, effect: 'stun', stunTurns: 1 },
+  thunder_slam: { name: 'Thunder Slam',  multiplier: 1.2, effect: 'stun', stunTurns: 1 },
+  petrify:      { name: 'Petrify',       multiplier: 0.5, effect: 'stun', stunTurns: 2 },
+  flash_bang:   { name: 'Flash Bang',    multiplier: 0.6, effect: 'stun', stunTurns: 1 },
+  concuss:      { name: 'Concuss',       multiplier: 1.0, effect: 'stun', stunTurns: 1 },
+  // Confusion skills - target does random/wrong action
+  confuse:      { name: 'Confuse',       multiplier: 0.4, effect: 'confusion', confusionTurns: 2 },
+  mind_fog:     { name: 'Mind Fog',      multiplier: 0.3, effect: 'confusion', confusionTurns: 3 },
+  psychic_wave: { name: 'Psychic Wave',  multiplier: 0.7, effect: 'confusion', confusionTurns: 2 },
+  hex:          { name: 'Hex',           multiplier: 0.5, effect: 'confusion', confusionTurns: 2 },
+  madness:      { name: 'Madness',       multiplier: 0.6, effect: 'confusion', confusionTurns: 3 },
 };
 
 // ---- BOSS GIMMICKS ----
@@ -2535,8 +2570,8 @@ export const CHARACTER_CLASSES = {
     shortName: 'B',
     description: 'A reckless brawler who trades defense for overwhelming aggression. Grows stronger as HP drops.',
     color: '#ff4444',
-    baseStats: { maxHp: 55, maxMana: 15, baseAtk: 8, baseDef: 1, charisma: 2, wisdom: 1, athletics: 5, speed: 5 },
-    growth: { hp: 10, hpRand: 6, atk: 2, atkRand: 2, def: 1, defRand: 1, mana: 2, manaRand: 2, charisma: 0, charismaRand: 1, wisdom: 0, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 0, speedRand: 1 },
+    baseStats: { maxHp: 55, maxMana: 15, baseAtk: 8, baseDef: 1, charisma: 2, wisdom: 1, athletics: 5, speed: 5, evasion: 2, accuracy: 5, resistance: 1, tenacity: 4, aggression: 7, luck: 3, fortitude: 5 },
+    growth: { hp: 10, hpRand: 6, atk: 2, atkRand: 2, def: 1, defRand: 1, mana: 2, manaRand: 2, charisma: 0, charismaRand: 1, wisdom: 0, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 0, resistanceRand: 1, tenacity: 1, tenacityRand: 1, aggression: 1, aggressionRand: 1, luck: 0, luckRand: 1, fortitude: 1, fortitudeRand: 1 },
     passive: 'Rage',
     passiveDesc: '+30% ATK when below 40% HP',
     skillName: 'Frenzy',
@@ -2551,8 +2586,8 @@ export const CHARACTER_CLASSES = {
     shortName: 'W',
     description: 'A disciplined fighter with balanced offense and strong defense. Hard to kill.',
     color: '#4488ff',
-    baseStats: { maxHp: 65, maxMana: 25, baseAtk: 5, baseDef: 4, charisma: 2, wisdom: 3, athletics: 4, speed: 4 },
-    growth: { hp: 10, hpRand: 4, atk: 1, atkRand: 2, def: 2, defRand: 2, mana: 3, manaRand: 2, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 0, speedRand: 1 },
+    baseStats: { maxHp: 65, maxMana: 25, baseAtk: 5, baseDef: 4, charisma: 2, wisdom: 3, athletics: 4, speed: 4, evasion: 3, accuracy: 4, resistance: 5, tenacity: 6, aggression: 3, luck: 3, fortitude: 7 },
+    growth: { hp: 10, hpRand: 4, atk: 1, atkRand: 2, def: 2, defRand: 2, mana: 3, manaRand: 2, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 1, resistanceRand: 1, tenacity: 1, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 0, luckRand: 1, fortitude: 1, fortitudeRand: 1 },
     passive: 'Fortify',
     passiveDesc: 'Defend blocks 70% damage instead of 50%',
     skillName: 'Shield Bash',
@@ -2567,8 +2602,8 @@ export const CHARACTER_CLASSES = {
     shortName: 'T',
     description: 'A cunning rogue who strikes fast and steals more. Higher escape chance and bonus gold.',
     color: '#44dd44',
-    baseStats: { maxHp: 42, maxMana: 25, baseAtk: 7, baseDef: 2, charisma: 5, wisdom: 2, athletics: 4, speed: 8 },
-    growth: { hp: 7, hpRand: 4, atk: 2, atkRand: 2, def: 1, defRand: 1, mana: 3, manaRand: 3, charisma: 1, charismaRand: 1, wisdom: 0, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 1, speedRand: 1 },
+    baseStats: { maxHp: 42, maxMana: 25, baseAtk: 7, baseDef: 2, charisma: 5, wisdom: 2, athletics: 4, speed: 8, evasion: 7, accuracy: 6, resistance: 2, tenacity: 3, aggression: 4, luck: 7, fortitude: 2 },
+    growth: { hp: 7, hpRand: 4, atk: 2, atkRand: 2, def: 1, defRand: 1, mana: 3, manaRand: 3, charisma: 1, charismaRand: 1, wisdom: 0, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 1, speedRand: 1, evasion: 1, evasionRand: 1, accuracy: 1, accuracyRand: 1, resistance: 0, resistanceRand: 1, tenacity: 0, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 1, luckRand: 1, fortitude: 0, fortitudeRand: 1 },
     passive: 'Greed',
     passiveDesc: '+25% gold from battles, 75% escape chance',
     skillName: 'Backstab',
@@ -2583,8 +2618,8 @@ export const CHARACTER_CLASSES = {
     shortName: 'M',
     description: 'A scholar of arcane arts who channels devastating spells. High mana, fragile body.',
     color: '#bb66ff',
-    baseStats: { maxHp: 38, maxMana: 50, baseAtk: 6, baseDef: 1, charisma: 3, wisdom: 5, athletics: 1, speed: 3 },
-    growth: { hp: 6, hpRand: 3, atk: 2, atkRand: 1, def: 1, defRand: 1, mana: 6, manaRand: 4, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 0, athleticsRand: 1, speed: 0, speedRand: 1 },
+    baseStats: { maxHp: 38, maxMana: 50, baseAtk: 6, baseDef: 1, charisma: 3, wisdom: 5, athletics: 1, speed: 3, evasion: 2, accuracy: 3, resistance: 6, tenacity: 3, aggression: 3, luck: 5, fortitude: 2 },
+    growth: { hp: 6, hpRand: 3, atk: 2, atkRand: 1, def: 1, defRand: 1, mana: 6, manaRand: 4, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 0, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 1, resistanceRand: 1, tenacity: 0, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 1, luckRand: 1, fortitude: 0, fortitudeRand: 1 },
     passive: 'Arcane Mind',
     passiveDesc: 'Skill attacks deal +40% damage',
     skillName: 'Arcane Blast',
@@ -2599,8 +2634,8 @@ export const CHARACTER_CLASSES = {
     shortName: 'N',
     description: 'A dark caster who siphons life from enemies. Sustains through draining attacks.',
     color: '#cc44cc',
-    baseStats: { maxHp: 45, maxMana: 40, baseAtk: 6, baseDef: 2, charisma: 3, wisdom: 5, athletics: 2, speed: 4 },
-    growth: { hp: 7, hpRand: 4, atk: 1, atkRand: 2, def: 1, defRand: 2, mana: 5, manaRand: 3, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 0, athleticsRand: 1, speed: 0, speedRand: 1 },
+    baseStats: { maxHp: 45, maxMana: 40, baseAtk: 6, baseDef: 2, charisma: 3, wisdom: 5, athletics: 2, speed: 4, evasion: 3, accuracy: 4, resistance: 5, tenacity: 5, aggression: 4, luck: 4, fortitude: 4 },
+    growth: { hp: 7, hpRand: 4, atk: 1, atkRand: 2, def: 1, defRand: 2, mana: 5, manaRand: 3, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 0, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 1, resistanceRand: 1, tenacity: 1, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 0, luckRand: 1, fortitude: 1, fortitudeRand: 1 },
     passive: 'Lifetap',
     passiveDesc: 'Normal attacks heal 15% of damage dealt',
     skillName: 'Drain Life',

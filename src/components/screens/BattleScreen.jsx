@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
-import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST } from '../../engine/combat';
+import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, getPlayerResistance, getPlayerTenacity, getPlayerAggression, getPlayerLuck, getPlayerFortitude } from '../../engine/combat';
 import { SKILLS } from '../../data/gameData';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
 import useGameClock from '../../hooks/useGameClock';
@@ -421,6 +421,12 @@ export default function BattleScreen({
           {battle.monsterDoomTurns > 0 && (
             <span className="battle-debuff doom">Doom ({battle.monsterDoomTurns})</span>
           )}
+          {battle.monsterStunTurns > 0 && (
+            <span className="battle-debuff stun">Stunned ({battle.monsterStunTurns})</span>
+          )}
+          {battle.monsterConfusionTurns > 0 && (
+            <span className="battle-debuff confusion">Confused ({battle.monsterConfusionTurns})</span>
+          )}
         </div>
 
         {/* Player status effects */}
@@ -445,6 +451,15 @@ export default function BattleScreen({
           )}
           {battle.defending && (
             <span className="battle-debuff buff">Defending</span>
+          )}
+          {battle.playerStunTurns > 0 && (
+            <span className="battle-debuff stun">Stunned ({battle.playerStunTurns})</span>
+          )}
+          {battle.playerConfusionTurns > 0 && (
+            <span className="battle-debuff confusion">Confused ({battle.playerConfusionTurns})</span>
+          )}
+          {battle.fortitudeUsed && (
+            <span className="battle-debuff used">Grit Used</span>
           )}
         </div>
       </div>
@@ -477,6 +492,10 @@ export default function BattleScreen({
             <div className="inspect-row"><span className="inspect-label">ATK:</span> <span className="inspect-value">{m.atk}</span></div>
             <div className="inspect-row"><span className="inspect-label">DEF:</span> <span className="inspect-value">{m.def}</span></div>
             <div className="inspect-row"><span className="inspect-label">SPD:</span> <span className="inspect-value">{m.speed || '?'}</span></div>
+            <div className="inspect-row"><span className="inspect-label">EVA/ACC:</span> <span className="inspect-value">{m.evasion || 0}/{m.accuracy || 0}</span></div>
+            <div className="inspect-row"><span className="inspect-label">RES/TEN:</span> <span className="inspect-value">{m.resistance || 0}/{m.tenacity || 0}</span></div>
+            <div className="inspect-row"><span className="inspect-label">AGR/LCK:</span> <span className="inspect-value">{m.aggression || 0}/{m.luck || 0}</span></div>
+            <div className="inspect-row"><span className="inspect-label">GRT:</span> <span className="inspect-value">{m.fortitude || 0}</span></div>
             {battle.monsterChanneling && (
               <div className="inspect-row"><span className="inspect-label">Status:</span> <span className="inspect-value status-channel">Channeling ({battle.monsterChannelTurns} turns)</span></div>
             )}

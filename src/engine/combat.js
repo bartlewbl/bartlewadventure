@@ -422,3 +422,136 @@ export function pickMonsterNextMove(monster, battle) {
 // Player can channel energy for 1 turn, then their next attack deals bonus damage
 export const PLAYER_CHANNEL_BONUS = 2.0; // 2x damage on next strike after channeling
 export const PLAYER_CHANNEL_MANA_COST = 8;
+
+// ---- EVASION / ACCURACY SYSTEM ----
+// Evasion gives dodge chance, accuracy reduces it. Net evasion = evasion - accuracy.
+// Each point of net evasion gives ~1.5% dodge chance, capped at 60%.
+
+export function getPlayerEvasion(player, battle) {
+  let eva = player.evasion || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.evasion) eva += item.evasion;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'thief') eva += 3;
+  if (battle?.evasionBuff) eva += battle.evasionBuff;
+  return Math.max(0, eva);
+}
+
+export function getPlayerAccuracy(player, battle) {
+  let acc = player.accuracy || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.accuracy) acc += item.accuracy;
+  }
+  if (battle?.accuracyBuff) acc += battle.accuracyBuff;
+  return Math.max(0, acc);
+}
+
+// Compute evasion-based dodge chance for a target given attacker's accuracy
+export function calcEvasionDodgeChance(targetEvasion, attackerAccuracy) {
+  const net = Math.max(0, targetEvasion - attackerAccuracy);
+  return Math.min(0.6, net * 0.015);
+}
+
+// ---- RESISTANCE SYSTEM ----
+// Reduces skill/magic damage. Each point gives ~1% reduction, capped at 50%.
+
+export function getPlayerResistance(player, battle) {
+  let res = player.resistance || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.resistance) res += item.resistance;
+  }
+  if (battle?.resistanceBuff) res += battle.resistanceBuff;
+  return Math.max(0, res);
+}
+
+export function calcResistanceReduction(resistance) {
+  return Math.min(0.5, resistance * 0.01);
+}
+
+// ---- TENACITY SYSTEM ----
+// Reduces debuff duration. Each point gives ~3% reduction (rounded down on turns).
+
+export function getPlayerTenacity(player) {
+  let ten = player.tenacity || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.tenacity) ten += item.tenacity;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'warrior') ten += 3;
+  return Math.max(0, ten);
+}
+
+export function reduceDurationByTenacity(baseTurns, tenacity) {
+  const reduction = Math.min(0.6, tenacity * 0.03);
+  return Math.max(1, Math.floor(baseTurns * (1 - reduction)));
+}
+
+// ---- AGGRESSION SYSTEM ----
+// Increases damage dealt AND taken. Each point gives +2% damage dealt, +1.5% damage taken.
+
+export function getPlayerAggression(player) {
+  let agg = player.aggression || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.aggression) agg += item.aggression;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'berserker') agg += 3;
+  return Math.max(0, agg);
+}
+
+export function calcAggressionDmgDealt(aggression) {
+  return 1 + aggression * 0.02; // multiplier on outgoing damage
+}
+
+export function calcAggressionDmgTaken(aggression) {
+  return 1 + aggression * 0.015; // multiplier on incoming damage
+}
+
+// ---- LUCK SYSTEM ----
+// Affects crit chance (+0.5% per point), enemy crit against you (-0.3% per point),
+// dodge (+0.3% per point). Capped reasonably.
+
+export function getPlayerLuck(player) {
+  let lck = player.luck || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.luck) lck += item.luck;
+  }
+  return Math.max(0, lck);
+}
+
+export function luckCritBonus(luck) {
+  return Math.min(0.15, luck * 0.005);
+}
+
+export function luckEnemyCritReduction(luck) {
+  return Math.min(0.08, luck * 0.003);
+}
+
+export function luckDodgeBonus(luck) {
+  return Math.min(0.10, luck * 0.003);
+}
+
+// ---- FORTITUDE / GRIT SYSTEM ----
+// Chance to survive a killing blow at 1 HP (once per battle).
+// Each point gives +2% chance, capped at 50%.
+
+export function getPlayerFortitude(player) {
+  let fort = player.fortitude || 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.fortitude) fort += item.fortitude;
+  }
+  const cls = getClassData(player);
+  if (cls?.id === 'warrior') fort += 2;
+  return Math.max(0, fort);
+}
+
+export function calcFortitudeSurviveChance(fortitude) {
+  return Math.min(0.5, fortitude * 0.02);
+}
+
+// ---- STUN SYSTEM ----
+export const STUN_BASE_CHANCE = 0.55; // base chance to land stun (before tenacity)
+
+// ---- CONFUSION SYSTEM ----
+export const CONFUSION_BASE_CHANCE = 0.5; // base chance to land confusion

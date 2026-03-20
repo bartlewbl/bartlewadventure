@@ -3,7 +3,7 @@ import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -48,6 +48,13 @@ function createInitialPlayer() {
     wisdom: 3,
     athletics: 3,
     speed: 5,
+    evasion: 3,
+    accuracy: 4,
+    resistance: 3,
+    tenacity: 3,
+    aggression: 3,
+    luck: 3,
+    fortitude: 3,
     gold: 30,
     equipment: { weapon: null, shield: null, helmet: null, armor: null, gloves: null, boots: null, belt: null, cape: null, amulet: null, accessory: null, accessory2: null },
     inventory: [],
@@ -149,6 +156,13 @@ function processLevelUps(player) {
       wisdomGain: (growth?.wisdom ?? 0) + Math.floor(Math.random() * (growth?.wisdomRand ?? 1)),
       athleticsGain: (growth?.athletics ?? 0) + Math.floor(Math.random() * (growth?.athleticsRand ?? 1)),
       speedGain: (growth?.speed ?? 0) + Math.floor(Math.random() * (growth?.speedRand ?? 1)),
+      evasionGain: (growth?.evasion ?? 0) + Math.floor(Math.random() * (growth?.evasionRand ?? 1)),
+      accuracyGain: (growth?.accuracy ?? 0) + Math.floor(Math.random() * (growth?.accuracyRand ?? 1)),
+      resistanceGain: (growth?.resistance ?? 0) + Math.floor(Math.random() * (growth?.resistanceRand ?? 1)),
+      tenacityGain: (growth?.tenacity ?? 0) + Math.floor(Math.random() * (growth?.tenacityRand ?? 1)),
+      aggressionGain: (growth?.aggression ?? 0) + Math.floor(Math.random() * (growth?.aggressionRand ?? 1)),
+      luckGain: (growth?.luck ?? 0) + Math.floor(Math.random() * (growth?.luckRand ?? 1)),
+      fortitudeGain: (growth?.fortitude ?? 0) + Math.floor(Math.random() * (growth?.fortitudeRand ?? 1)),
     };
     pendingLevels.push({ level: p.level, offers, picks: STAT_PICKS_PER_LEVEL });
   }
@@ -172,6 +186,13 @@ function applyStatChoices(player, offers, selectedStats) {
       case 'wisdom': p.wisdom = (p.wisdom || 0) + offers.wisdomGain; break;
       case 'athletics': p.athletics = (p.athletics || 0) + offers.athleticsGain; break;
       case 'speed': p.speed = (p.speed || 5) + offers.speedGain; break;
+      case 'evasion': p.evasion = (p.evasion || 3) + offers.evasionGain; break;
+      case 'accuracy': p.accuracy = (p.accuracy || 4) + offers.accuracyGain; break;
+      case 'resistance': p.resistance = (p.resistance || 3) + offers.resistanceGain; break;
+      case 'tenacity': p.tenacity = (p.tenacity || 3) + offers.tenacityGain; break;
+      case 'aggression': p.aggression = (p.aggression || 3) + offers.aggressionGain; break;
+      case 'luck': p.luck = (p.luck || 3) + offers.luckGain; break;
+      case 'fortitude': p.fortitude = (p.fortitude || 3) + offers.fortitudeGain; break;
     }
   }
   return p;
@@ -279,6 +300,14 @@ function createBattleState(monster, player) {
     noDefend: false, // cannot use defend action
     noRun: false, // cannot run
     healReduction: 0, // reduce healing effectiveness
+    // Stun / confusion state
+    playerStunTurns: 0, // player skips turns when > 0
+    monsterStunTurns: 0, // monster skips turns when > 0
+    playerConfusionTurns: 0, // player does random action when > 0
+    monsterConfusionTurns: 0, // monster does random action when > 0
+    // Fortitude (grit) - survive lethal once
+    fortitudeUsed: false,
+    monsterFortitudeUsed: false,
   };
 }
 
@@ -543,6 +572,13 @@ function gameReducer(state, action) {
         wisdom: cls.baseStats.wisdom,
         athletics: cls.baseStats.athletics,
         speed: cls.baseStats.speed || 5,
+        evasion: cls.baseStats.evasion || 3,
+        accuracy: cls.baseStats.accuracy || 4,
+        resistance: cls.baseStats.resistance || 3,
+        tenacity: cls.baseStats.tenacity || 3,
+        aggression: cls.baseStats.aggression || 3,
+        luck: cls.baseStats.luck || 3,
+        fortitude: cls.baseStats.fortitude || 3,
       };
       return { ...state, screen: 'town', player: p };
     }
@@ -977,6 +1013,34 @@ function gameReducer(state, action) {
       const cls = getClassData(p);
       let log = [...state.battleLog];
 
+      // Check if player is stunned
+      if (b.playerStunTurns > 0) {
+        b.playerStunTurns--;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: `You are stunned and cannot act! (${b.playerStunTurns} turns left)`, type: 'dmg-player' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Check if player is confused - random action
+      if (b.playerConfusionTurns > 0) {
+        b.playerConfusionTurns--;
+        const confRoll = Math.random();
+        if (confRoll < 0.3) {
+          // Skip turn entirely
+          log.push({ text: 'You are confused and stumble around!', type: 'dmg-player' });
+          return { ...state, battle: b, battleLog: log };
+        } else if (confRoll < 0.5) {
+          // Hit yourself
+          const selfDmg = Math.floor(calcDamage(getPlayerAtk(p, b), 0) * 0.3);
+          p = { ...p, hp: Math.max(1, p.hp - selfDmg) };
+          log.push({ text: `Confused! You hit yourself for ${selfDmg} damage!`, type: 'dmg-player' });
+          return { ...state, player: p, battle: b, battleLog: log };
+        }
+        // else: attack normally but with reduced accuracy
+        log.push({ text: 'You shake off some confusion...', type: 'info' });
+      }
+
       // Check if player is frozen (boss gimmick)
       if (b.playerFrozen) {
         b.playerFrozen = false;
@@ -991,6 +1055,19 @@ function gameReducer(state, action) {
         b.showSkillMenu = false;
         b.showInspect = false;
         log.push({ text: 'Your attack misses!', type: 'info' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Monster evasion check (monster dodges based on evasion vs player accuracy)
+      const mEvasion = m.evasion || 0;
+      const pAccuracy = getPlayerAccuracy(p, b);
+      const mDodgeChance = calcEvasionDodgeChance(mEvasion, pAccuracy);
+      if (mDodgeChance > 0 && Math.random() < mDodgeChance) {
+        b.defending = false;
+        b.defendedLastTurn = false;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: `${m.name} evades your attack!`, type: 'info' });
         return { ...state, battle: b, battleLog: log };
       }
 
@@ -1012,12 +1089,20 @@ function gameReducer(state, action) {
         log.push({ text: `Channeled energy released! ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' });
       }
 
+      // Aggression bonus: increased outgoing damage
+      const pAggression = getPlayerAggression(p);
+      if (pAggression > 0) {
+        dmg = Math.floor(dmg * calcAggressionDmgDealt(pAggression));
+      }
+
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
 
-      // Critical hit check (stacks with lucky strike)
+      // Critical hit check (includes luck bonus)
       let playerCrit = false;
-      if (Math.random() < getPlayerCritChance(p)) {
+      const pLuck = getPlayerLuck(p);
+      const critChance = getPlayerCritChance(p) + luckCritBonus(pLuck);
+      if (Math.random() < critChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         playerCrit = true;
       }
@@ -1027,7 +1112,25 @@ function gameReducer(state, action) {
         dmg = Math.floor(dmg * (1 - b.monsterDmgReduction));
       }
 
+      // Monster resistance reduces skill damage (applied to basic attacks lightly)
+      const mRes = m.resistance || 0;
+      if (mRes > 0) {
+        const resReduct = calcResistanceReduction(mRes) * 0.3; // basic attacks only 30% affected
+        dmg = Math.floor(dmg * (1 - resReduct));
+      }
+
       m.hp = Math.max(0, m.hp - dmg);
+
+      // Monster fortitude: survive lethal blow once at 1 HP
+      if (m.hp <= 0 && !b.monsterFortitudeUsed) {
+        const mFort = m.fortitude || 0;
+        const surviveChance = calcFortitudeSurviveChance(mFort);
+        if (surviveChance > 0 && Math.random() < surviveChance) {
+          m.hp = 1;
+          b.monsterFortitudeUsed = true;
+          log.push({ text: `${m.name} endures the lethal blow with sheer willpower!`, type: 'info' });
+        }
+      }
       b.monster = m;
       b.defending = false;
       b.defendedLastTurn = false;
@@ -1323,6 +1426,9 @@ function gameReducer(state, action) {
     case 'BATTLE_CHANNEL': {
       let b = { ...state.battle, showSkillMenu: false, showInspect: false };
       let p = { ...state.player };
+      if (b.playerStunTurns > 0) {
+        return { ...state, message: 'You are stunned and cannot act!' };
+      }
       const manaCost = PLAYER_CHANNEL_MANA_COST;
       if (p.mana < manaCost) {
         return { ...state, message: `Not enough mana to channel! (${manaCost} needed)` };
@@ -1650,6 +1756,50 @@ function gameReducer(state, action) {
       // Turn-start passives (regeneration, meditation, mana regen, dark pact)
       ({ player: p, battle: b, log } = applyTurnStartPassives({ player: p, battle: b, log }));
 
+      // ---- MONSTER STUN CHECK ----
+      if (b.monsterStunTurns > 0) {
+        b.monsterStunTurns--;
+        log.push({ text: `${m.name} is stunned and cannot act! (${b.monsterStunTurns} turns left)`, type: 'info' });
+        b.monster = m;
+        b.isPlayerTurn = true;
+        b.defending = false;
+        if (b.playerIsFaster) {
+          b.monsterNextMove = pickMonsterNextMove(m, b);
+        }
+        return { ...state, player: p, battle: b, battleLog: log };
+      }
+
+      // ---- MONSTER CONFUSION CHECK ----
+      if (b.monsterConfusionTurns > 0) {
+        b.monsterConfusionTurns--;
+        const confRoll = Math.random();
+        if (confRoll < 0.35) {
+          // Skip turn
+          log.push({ text: `${m.name} is confused and stumbles around!`, type: 'info' });
+          b.monster = m;
+          b.isPlayerTurn = true;
+          b.defending = false;
+          if (b.playerIsFaster) {
+            b.monsterNextMove = pickMonsterNextMove(m, b);
+          }
+          return { ...state, player: p, battle: b, battleLog: log };
+        } else if (confRoll < 0.55) {
+          // Hit self
+          const selfDmg = Math.floor(calcDamage(m.atk, 0) * 0.25);
+          m = { ...m, hp: Math.max(1, m.hp - selfDmg) };
+          log.push({ text: `${m.name} is confused and hits itself for ${selfDmg} damage!`, type: 'dmg-monster' });
+          b.monster = m;
+          b.isPlayerTurn = true;
+          b.defending = false;
+          if (b.playerIsFaster) {
+            b.monsterNextMove = pickMonsterNextMove(m, b);
+          }
+          return { ...state, player: p, battle: b, battleLog: log };
+        }
+        // else: attack normally
+        log.push({ text: `${m.name} shakes off some confusion...`, type: 'info' });
+      }
+
       // ---- MONSTER CHANNELING ----
       if (b.monsterChanneling) {
         b.monsterChannelTurns--;
@@ -1693,14 +1843,60 @@ function gameReducer(state, action) {
         }
       } else {
         // Normal monster attack (not channeling)
+        // Player evasion-based dodge (separate from skill-based dodge)
+        const pEvasion = getPlayerEvasion(p, b);
+        const mAccuracy = m.accuracy || 4;
+        const pLuckVal = getPlayerLuck(p);
+        const evasionDodge = calcEvasionDodgeChance(pEvasion, mAccuracy) + luckDodgeBonus(pLuckVal);
+
         // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
         let dodged;
         ({ dodged, battle: b, log } = checkDodge(p, b, log));
 
+        // Evasion dodge if skill dodge didn't trigger
+        if (!dodged && evasionDodge > 0 && Math.random() < evasionDodge) {
+          dodged = true;
+          log.push({ text: 'You nimbly evade the attack!', type: 'info' });
+        }
+
         if (!dodged) {
-          const useSkill = m.skills.length > 0 && Math.random() < prob('combat.monsterSkillChance');
-          const mSkillId = useSkill ? m.skills[Math.floor(Math.random() * m.skills.length)] : null;
-          const mSkill = mSkillId ? SKILLS[mSkillId] : null;
+          // Monster AI: smarter skill selection based on situation
+          let mSkillId = null;
+          let mSkill = null;
+          if (m.skills.length > 0) {
+            const mHpPctNow = m.hp / m.maxHp;
+            const pHpPctNow = p.hp / p.maxHp;
+            const skillChance = prob('combat.monsterSkillChance');
+            // Higher chance to use skills when either side is low HP
+            const adjustedChance = Math.min(0.8, skillChance + (mHpPctNow < 0.3 ? 0.2 : 0) + (pHpPctNow < 0.3 ? 0.1 : 0));
+            if (Math.random() < adjustedChance) {
+              // Prioritize stun/confusion when player is healthy (crowd control)
+              // Prioritize damage when player is low HP (finish them)
+              // Prioritize healing/drain when monster is low HP
+              const ccSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && (sk.effect === 'stun' || sk.effect === 'confusion'); });
+              const dmgSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.multiplier >= 1.2 && sk.effect !== 'channel'; });
+              const drainSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.effect === 'drain_hp'; });
+              const debuffSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && (sk.effect === 'lower_def' || sk.effect === 'lower_atk' || sk.effect === 'poison'); });
+              const channelSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.effect === 'channel'; });
+
+              let pool;
+              if (mHpPctNow < 0.3 && drainSkills.length > 0 && Math.random() < 0.5) {
+                pool = drainSkills;
+              } else if (pHpPctNow < 0.3 && dmgSkills.length > 0 && Math.random() < 0.6) {
+                pool = dmgSkills;
+              } else if (pHpPctNow > 0.6 && ccSkills.length > 0 && b.playerStunTurns <= 0 && b.playerConfusionTurns <= 0 && Math.random() < 0.4) {
+                pool = ccSkills;
+              } else if (b.turnCount <= 2 && channelSkills.length > 0 && Math.random() < 0.3) {
+                pool = channelSkills;
+              } else if (debuffSkills.length > 0 && Math.random() < 0.3) {
+                pool = debuffSkills;
+              } else {
+                pool = m.skills;
+              }
+              mSkillId = pool[Math.floor(Math.random() * pool.length)];
+              mSkill = mSkillId ? SKILLS[mSkillId] : null;
+            }
+          }
 
           // Check if monster starts channeling
           if (mSkill && mSkill.effect === 'channel') {
@@ -1710,11 +1906,18 @@ function gameReducer(state, action) {
             log.push({ text: `${m.name} begins channeling ${mSkill.name}! (${b.monsterChannelTurns} turn${b.monsterChannelTurns > 1 ? 's' : ''})`, type: 'info' });
           } else {
             let dmg;
+            const isSkillAttack = !!mSkill;
             if (mSkill) {
               const rawAtk = Math.floor(m.atk * mSkill.multiplier);
               dmg = calcDamage(rawAtk, getPlayerDef(p, b));
             } else {
               dmg = calcDamage(m.atk, getPlayerDef(p, b));
+            }
+
+            // Monster aggression: increases outgoing damage
+            const mAgg = m.aggression || 0;
+            if (mAgg > 0) {
+              dmg = Math.floor(dmg * calcAggressionDmgDealt(mAgg));
             }
 
             // Tidal surge doubles damage
@@ -1724,11 +1927,27 @@ function gameReducer(state, action) {
               log.push({ text: 'Tidal Surge amplifies the attack!', type: 'info' });
             }
 
-            // Monster critical hit check
+            // Monster critical hit check (reduced by player luck)
             let monsterCrit = false;
-            if (Math.random() < getMonsterCritChance(m)) {
+            const mCritChance = Math.max(0.01, getMonsterCritChance(m) + (m.luck || 0) * 0.003 - luckEnemyCritReduction(pLuckVal));
+            if (Math.random() < mCritChance) {
               dmg = Math.floor(dmg * getMonsterCritMultiplier());
               monsterCrit = true;
+            }
+
+            // Player resistance reduces skill damage
+            if (isSkillAttack) {
+              const pRes = getPlayerResistance(p, b);
+              if (pRes > 0) {
+                const resReduct = calcResistanceReduction(pRes);
+                dmg = Math.floor(dmg * (1 - resReduct));
+              }
+            }
+
+            // Player aggression: takes more damage
+            const pAgg = getPlayerAggression(p);
+            if (pAgg > 0) {
+              dmg = Math.floor(dmg * calcAggressionDmgTaken(pAgg));
             }
 
             // Damage reduction passives (defend, iron skin, thick skin, fortress)
@@ -1756,6 +1975,17 @@ function gameReducer(state, action) {
             dmg = Math.max(1, dmg);
             p = { ...p, hp: Math.max(0, p.hp - dmg) };
 
+            // Player fortitude: survive lethal blow once at 1 HP
+            if (p.hp <= 0 && !b.fortitudeUsed) {
+              const pFort = getPlayerFortitude(p);
+              const surviveChance = calcFortitudeSurviveChance(pFort);
+              if (surviveChance > 0 && Math.random() < surviveChance) {
+                p = { ...p, hp: 1 };
+                b.fortitudeUsed = true;
+                log.push({ text: 'Fortitude! You endure the lethal blow at 1 HP!', type: 'info' });
+              }
+            }
+
             const critPrefix = monsterCrit ? 'CRIT! ' : '';
             if (mSkill) {
               log.push({ text: `${critPrefix}${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
@@ -1764,6 +1994,7 @@ function gameReducer(state, action) {
                   log.push({ text: 'Lich Form: immune to poison!', type: 'info' });
                 } else {
                   let dur = 3;
+                  dur = reduceDurationByTenacity(dur, getPlayerTenacity(p));
                   if (playerHasSkill(p, 'brs_t7a')) dur = Math.max(1, dur - 1);
                   b.poisonTurns = dur;
                 }
@@ -1782,6 +2013,27 @@ function gameReducer(state, action) {
                 const healed = Math.floor(dmg * 0.5);
                 m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
                 log.push({ text: `${m.name} drained ${healed} HP!`, type: 'dmg-player' });
+              } else if (mSkill.effect === 'stun') {
+                // Stun: chance based on STUN_BASE_CHANCE, reduced by tenacity
+                const pTen = getPlayerTenacity(p);
+                const stunChance = Math.max(0.1, STUN_BASE_CHANCE - pTen * 0.02);
+                if (Math.random() < stunChance) {
+                  const stunDur = reduceDurationByTenacity(mSkill.stunTurns || 1, pTen);
+                  b.playerStunTurns = stunDur;
+                  log.push({ text: `You are stunned for ${stunDur} turn${stunDur > 1 ? 's' : ''}!`, type: 'dmg-player' });
+                } else {
+                  log.push({ text: 'You resist the stun!', type: 'info' });
+                }
+              } else if (mSkill.effect === 'confusion') {
+                const pTen = getPlayerTenacity(p);
+                const confChance = Math.max(0.1, CONFUSION_BASE_CHANCE - pTen * 0.02);
+                if (Math.random() < confChance) {
+                  const confDur = reduceDurationByTenacity(mSkill.confusionTurns || 2, pTen);
+                  b.playerConfusionTurns = confDur;
+                  log.push({ text: `You are confused for ${confDur} turns!`, type: 'dmg-player' });
+                } else {
+                  log.push({ text: 'You resist the confusion!', type: 'info' });
+                }
               }
             } else {
               log.push({ text: `${critPrefix}${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
@@ -1805,6 +2057,17 @@ function gameReducer(state, action) {
         }
         b.poisonTurns--;
         log.push({ text: `Poison deals ${poisonDmg} damage!`, type: 'dmg-player' });
+      }
+
+      // Player fortitude check after poison
+      if (p.hp <= 0 && !b.fortitudeUsed) {
+        const pFortPoison = getPlayerFortitude(p);
+        const surviveChanceP = calcFortitudeSurviveChance(pFortPoison);
+        if (surviveChanceP > 0 && Math.random() < surviveChanceP) {
+          p = { ...p, hp: 1 };
+          b.fortitudeUsed = true;
+          log.push({ text: 'Fortitude! You endure at 1 HP!', type: 'info' });
+        }
       }
 
       // Survival passives (undying will, death's embrace)

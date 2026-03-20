@@ -8,6 +8,13 @@ const STAT_INFO = {
   charisma: { label: 'CHA', key: 'charismaGain', color: '#ec407a', desc: 'Charisma' },
   wisdom: { label: 'WIS', key: 'wisdomGain', color: '#ab47bc', desc: 'Wisdom' },
   athletics: { label: 'ATH', key: 'athleticsGain', color: '#26c6da', desc: 'Athletics' },
+  evasion: { label: 'EVA', key: 'evasionGain', color: '#66bb6a', desc: 'Evasion' },
+  accuracy: { label: 'ACC', key: 'accuracyGain', color: '#ef5350', desc: 'Accuracy' },
+  resistance: { label: 'RES', key: 'resistanceGain', color: '#7e57c2', desc: 'Resistance' },
+  tenacity: { label: 'TEN', key: 'tenacityGain', color: '#8d6e63', desc: 'Tenacity' },
+  aggression: { label: 'AGR', key: 'aggressionGain', color: '#d32f2f', desc: 'Aggression' },
+  luck: { label: 'LCK', key: 'luckGain', color: '#ffd54f', desc: 'Luck' },
+  fortitude: { label: 'GRT', key: 'fortitudeGain', color: '#78909c', desc: 'Fortitude' },
 };
 
 const STAT_KEYS = Object.keys(STAT_INFO);
