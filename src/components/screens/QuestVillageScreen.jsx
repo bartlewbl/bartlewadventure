@@ -1,6 +1,6 @@
 import { QUEST_VILLAGES } from '../../data/gameData';
 
-export default function QuestVillageScreen({ village, villageQuests, stats, player, onAcceptQuest, onTurnInQuest, onLeave }) {
+export default function QuestVillageScreen({ village, villageQuests, stats, player, onAcceptQuest, onTurnInQuest, onTraderBuy, onLeave }) {
   if (!village) return null;
 
   const accepted = villageQuests?.acceptedQuests || [];
@@ -8,6 +8,8 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
   const discovered = villageQuests?.discoveredVillages || [];
   const isNewDiscovery = discovered.filter(id => id === village.id).length <= 1
     && !accepted.some(q => village.quests.some(vq => vq.id === q.questId));
+
+  const trader = village.trader;
 
   return (
     <div className="screen screen-quest-village">
@@ -79,6 +81,39 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
           );
         })}
       </div>
+
+      {trader && (
+        <>
+          <div className="village-trader-section">
+            <div className="village-trader-title">Village Trader</div>
+            <div className="village-trader-name">{trader.name}</div>
+            <div className="village-trader-greeting">{trader.greeting}</div>
+            <div className="village-trader-deals">
+              {trader.deals.map(deal => {
+                const canAfford = player.gold >= deal.cost;
+                return (
+                  <div key={deal.id} className={`village-trader-deal ${!canAfford ? 'too-expensive' : ''}`}>
+                    <div className="village-trader-deal-info">
+                      <div className="village-trader-deal-desc">{deal.description}</div>
+                      <div className="village-trader-deal-cost">
+                        {deal.cost > 0 ? `${deal.cost}g` : 'Free'}
+                      </div>
+                    </div>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => onTraderBuy(deal.id)}
+                      disabled={!canAfford}
+                    >
+                      {canAfford ? 'Buy' : "Can't afford"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="village-trader-gold">Your gold: {player.gold}g</div>
+          </div>
+        </>
+      )}
 
       <button className="btn btn-back" onClick={onLeave}>Leave Village</button>
     </div>

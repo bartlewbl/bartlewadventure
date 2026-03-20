@@ -319,6 +319,7 @@ export default function App() {
                 player={state.player}
                 onAcceptQuest={actions.villageAcceptQuest}
                 onTurnInQuest={actions.villageTurnInQuest}
+                onTraderBuy={actions.villageTraderBuy}
                 onLeave={actions.villageLeave}
               />
             )}

@@ -1035,6 +1035,16 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'VILLAGE_TRADER_BUY': {
+      const village = state.activeVillage;
+      if (!village?.trader) return state;
+      const vtDeal = village.trader.deals.find(d => d.id === action.dealId);
+      if (!vtDeal) return state;
+      // Reuse TRADER_BUY logic by synthesizing an activeTrader context
+      const result = gameReducer({ ...state, activeTrader: village.trader }, { type: 'TRADER_BUY', dealId: action.dealId });
+      return { ...result, activeTrader: state.activeTrader };
+    }
+
     // ---- EXTRAORDINARY TRADER ACTIONS ----
     case 'TRADER_BUY': {
       const { dealId } = action;
@@ -3683,6 +3693,7 @@ export function useGameState(isLoggedIn) {
     eventResultContinue: () => dispatch({ type: 'EVENT_RESULT_CONTINUE' }),
     villageAcceptQuest: (questId, villageId) => dispatch({ type: 'VILLAGE_ACCEPT_QUEST', questId, villageId }),
     villageTurnInQuest: (questId, villageId) => dispatch({ type: 'VILLAGE_TURN_IN_QUEST', questId, villageId }),
+    villageTraderBuy: (dealId) => dispatch({ type: 'VILLAGE_TRADER_BUY', dealId }),
     villageLeave: () => dispatch({ type: 'VILLAGE_LEAVE' }),
     traderBuy: (dealId) => dispatch({ type: 'TRADER_BUY', dealId }),
     traderLeave: () => dispatch({ type: 'TRADER_LEAVE' }),
