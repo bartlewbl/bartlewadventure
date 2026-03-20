@@ -54,13 +54,15 @@ function getTypeLabel(item) {
   if (item.type === 'energy-drink') return 'Energy Drink';
   if (item.type === 'material') return 'Material';
   if (item.type === 'egg') return 'Egg';
+  if (item.type === 'seed') return 'Seed';
+  if (item.type === 'crop') return 'Crop';
   return SLOT_LABELS[item.slot] || item.type || 'Item';
 }
 
 function getStatLine(item) {
   if (item.type === 'potion') return `Heal ${item.healAmount} HP`;
   if (item.type === 'energy-drink') return `Energy +${item.energyAmount}`;
-  if (item.type === 'material' || item.type === 'egg') return item.description || null;
+  if (item.type === 'material' || item.type === 'egg' || item.type === 'seed' || item.type === 'crop') return item.description || null;
   const parts = [];
   if (item.atk) parts.push(`ATK +${item.atk}`);
   if (item.def) parts.push(`DEF +${item.def}`);

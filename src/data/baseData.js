@@ -320,7 +320,7 @@ export const BUILDINGS = {
   farm: {
     id: 'farm',
     name: 'Farm',
-    description: 'Plant and harvest crops for gold, materials, and consumables over time.',
+    description: 'Plant seeds found while exploring, grow crops, and sell them for profit.',
     buildCost: { gold: 800, materials: { 'scrap-wood': 20, 'stone-block': 10, 'herb-bundle': 8, 'iron-ore': 5, 'glass-vial': 3 } },
     icon: 'farm',
     plots: 3,
@@ -1221,6 +1221,103 @@ export function createEggItem(eggId) {
     description: egg.description,
     sellPrice: egg.sellPrice,
   };
+}
+
+// ---- FARM SEEDS & CROP QUALITIES ----
+// Seeds are found during exploration and planted in the farm for profit
+
+export const FARM_SEEDS = {
+  'dusty-seed':      { id: 'dusty-seed',      name: 'Dusty Seed',      rarity: 'Common',    growTime: 10 * 60 * 1000,  baseValue: [15, 25],   cropName: 'Dusty Root',      desc: '10 min - A gritty root with mild value' },
+  'vibrant-seed':    { id: 'vibrant-seed',     name: 'Vibrant Seed',    rarity: 'Uncommon',  growTime: 30 * 60 * 1000,  baseValue: [40, 70],   cropName: 'Vibrant Melon',   desc: '30 min - A bright, juicy melon' },
+  'luminous-seed':   { id: 'luminous-seed',    name: 'Luminous Seed',   rarity: 'Rare',      growTime: 60 * 60 * 1000,  baseValue: [100, 180], cropName: 'Luminous Bloom',  desc: '1 hour - A glowing flower prized by traders' },
+  'prismatic-seed':  { id: 'prismatic-seed',   name: 'Prismatic Seed',  rarity: 'Epic',      growTime: 2 * 60 * 60 * 1000, baseValue: [250, 400], cropName: 'Prismatic Fruit', desc: '2 hours - A shimmering fruit of great worth' },
+  'celestial-seed':  { id: 'celestial-seed',   name: 'Celestial Seed',  rarity: 'Legendary', growTime: 4 * 60 * 60 * 1000, baseValue: [600, 1000], cropName: 'Celestial Peach', desc: '4 hours - An otherworldly peach of immense value' },
+};
+
+export const CROP_QUALITIES = [
+  { id: 'wilted',      name: 'Wilted',      multiplier: 0.5, weight: 25, color: '#888' },
+  { id: 'normal',      name: 'Normal',      multiplier: 1.0, weight: 45, color: '#ccc' },
+  { id: 'flourishing', name: 'Flourishing', multiplier: 1.5, weight: 20, color: '#5c5' },
+  { id: 'perfect',     name: 'Perfect',     multiplier: 2.0, weight: 8,  color: '#5bf' },
+  { id: 'golden',      name: 'Golden',      multiplier: 3.0, weight: 2,  color: '#fa0' },
+];
+
+// Weighted seed drop table per region (higher regions = rarer seeds more likely)
+export const SEED_DROP_CONFIG = {
+  dropChance: 0.04, // 4% chance per explore step (when no encounter)
+  regionWeights: {
+    'neon-district':       [{ id: 'dusty-seed', weight: 70 }, { id: 'vibrant-seed', weight: 25 }, { id: 'luminous-seed', weight: 5 }],
+    'frozen-wastes':       [{ id: 'dusty-seed', weight: 50 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 12 }, { id: 'prismatic-seed', weight: 3 }],
+    'scorched-badlands':   [{ id: 'dusty-seed', weight: 40 }, { id: 'vibrant-seed', weight: 35 }, { id: 'luminous-seed', weight: 18 }, { id: 'prismatic-seed', weight: 7 }],
+    'toxic-marshlands':    [{ id: 'dusty-seed', weight: 30 }, { id: 'vibrant-seed', weight: 30 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 12 }, { id: 'celestial-seed', weight: 3 }],
+    'abyssal-depths':      [{ id: 'dusty-seed', weight: 20 }, { id: 'vibrant-seed', weight: 25 }, { id: 'luminous-seed', weight: 30 }, { id: 'prismatic-seed', weight: 18 }, { id: 'celestial-seed', weight: 7 }],
+    'celestial-highlands': [{ id: 'dusty-seed', weight: 10 }, { id: 'vibrant-seed', weight: 20 }, { id: 'luminous-seed', weight: 30 }, { id: 'prismatic-seed', weight: 25 }, { id: 'celestial-seed', weight: 15 }],
+    'void-nexus':          [{ id: 'dusty-seed', weight: 5 },  { id: 'vibrant-seed', weight: 15 }, { id: 'luminous-seed', weight: 25 }, { id: 'prismatic-seed', weight: 30 }, { id: 'celestial-seed', weight: 25 }],
+  },
+};
+
+export function rollCropQuality() {
+  const totalWeight = CROP_QUALITIES.reduce((sum, q) => sum + q.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const q of CROP_QUALITIES) {
+    roll -= q.weight;
+    if (roll <= 0) return q;
+  }
+  return CROP_QUALITIES[1]; // fallback: Normal
+}
+
+export function createSeedItem(seedId) {
+  const seed = FARM_SEEDS[seedId];
+  if (!seed) return null;
+  return {
+    id: uid(),
+    seedId: seedId,
+    name: seed.name,
+    type: 'seed',
+    slot: null,
+    level: 1,
+    rarity: seed.rarity,
+    rarityClass: seed.rarity.toLowerCase(),
+    icon: 'seed',
+    description: seed.desc,
+    sellPrice: Math.floor(seed.baseValue[0] * 0.3),
+  };
+}
+
+export function createCropItem(seedId, quality) {
+  const seed = FARM_SEEDS[seedId];
+  if (!seed) return null;
+  const [minVal, maxVal] = seed.baseValue;
+  const baseGold = minVal + Math.floor(Math.random() * (maxVal - minVal + 1));
+  const sellPrice = Math.max(1, Math.floor(baseGold * quality.multiplier));
+  const qualityPrefix = quality.id === 'normal' ? '' : `${quality.name} `;
+  return {
+    id: uid(),
+    name: `${qualityPrefix}${seed.cropName}`,
+    type: 'crop',
+    slot: null,
+    level: 1,
+    rarity: seed.rarity,
+    rarityClass: seed.rarity.toLowerCase(),
+    icon: 'crop',
+    description: `${quality.name} quality crop grown from a ${seed.name}. Sell it for profit!`,
+    sellPrice,
+    cropQuality: quality.id,
+    cropQualityColor: quality.color,
+  };
+}
+
+export function rollSeedDrop(regionId) {
+  if (Math.random() >= SEED_DROP_CONFIG.dropChance) return null;
+  const weights = SEED_DROP_CONFIG.regionWeights[regionId];
+  if (!weights) return null;
+  const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const entry of weights) {
+    roll -= entry.weight;
+    if (roll <= 0) return createSeedItem(entry.id);
+  }
+  return createSeedItem(weights[0].id);
 }
 
 // Generate a material item for inventory/drops
