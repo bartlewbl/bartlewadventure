@@ -4944,6 +4944,7 @@ function handleVictory(state) {
   newStats = addStat(newStats, 'monstersKilled');
   newStats = addStat(newStats, 'battlesWon');
   newStats = addStat(newStats, 'goldEarned', goldGain);
+  if (m.id) newStats = addStat(newStats, `killed_${m.id}`);
   if (m.isBoss) newStats = addStat(newStats, 'bossesKilled');
   if (lootAdded) newStats = addStat(newStats, 'itemsLooted');
   if (leveledPlayer.level > prevLevel) {
@@ -4955,6 +4956,7 @@ function handleVictory(state) {
   newTasks = incrementTaskProgress(newTasks, 'monstersKilled');
   newTasks = incrementTaskProgress(newTasks, 'battlesWon');
   newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldGain);
+  if (m.id) newTasks = incrementTaskProgress(newTasks, `killed_${m.id}`);
   if (m.isBoss) newTasks = incrementTaskProgress(newTasks, 'bossesKilled');
   if (lootAdded) newTasks = incrementTaskProgress(newTasks, 'itemsLooted');
   if (leveledPlayer.level > prevLevel) {
