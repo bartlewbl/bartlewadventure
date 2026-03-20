@@ -1,6 +1,6 @@
 // Monster and boss scaling functions
 
-import { MONSTERS, BOSSES } from '../data/gameData';
+import { MONSTERS, BOSSES, getMonsterBaseSpeed, BOSS_GIMMICKS } from '../data/gameData';
 import { prob } from '../data/probabilityStore';
 
 // Scale a gold reward by player level.
@@ -13,6 +13,7 @@ export function scaleMonster(monsterId, areaLevel) {
   if (!base) return null;
   const scale = 1 + (areaLevel - 1) * prob('scaling.monsterLevelScale');
   const hp = Math.floor(base.baseHp * scale * prob('scaling.monsterHpMult'));
+  const baseSpeed = getMonsterBaseSpeed(base);
   return {
     id: monsterId,
     name: base.name,
@@ -21,6 +22,7 @@ export function scaleMonster(monsterId, areaLevel) {
     hp,
     atk: Math.floor(base.baseAtk * scale * prob('scaling.monsterAtkMult')),
     def: Math.floor(base.baseDef * scale * prob('scaling.monsterDefMult')),
+    speed: Math.floor(baseSpeed * (1 + (areaLevel - 1) * 0.02)),
     exp: Math.floor(base.baseExp * scale),
     gold: Math.floor(base.baseGold * scale) + Math.floor(Math.random() * prob('scaling.monsterGoldVariance')),
     skills: base.skills,
@@ -34,6 +36,8 @@ export function scaleBoss(bossId, areaLevel) {
   if (!base) return null;
   const scale = 1 + (areaLevel - 1) * prob('scaling.bossLevelScale');
   const hp = Math.floor(base.baseHp * scale * prob('scaling.monsterHpMult'));
+  const baseSpeed = getMonsterBaseSpeed(base);
+  const gimmick = BOSS_GIMMICKS[bossId] || null;
   return {
     id: bossId,
     name: base.name,
@@ -44,10 +48,12 @@ export function scaleBoss(bossId, areaLevel) {
     hp,
     atk: Math.floor(base.baseAtk * scale * prob('scaling.monsterAtkMult')),
     def: Math.floor(base.baseDef * scale * prob('scaling.monsterDefMult')),
+    speed: Math.floor(baseSpeed * (1 + (areaLevel - 1) * 0.02)),
     exp: Math.floor(base.baseExp * scale),
     gold: Math.floor(base.baseGold * scale) + Math.floor(Math.random() * prob('scaling.bossGoldVariance')),
     skills: base.skills,
     dropTable: base.dropTable,
     level: areaLevel,
+    gimmick,
   };
 }

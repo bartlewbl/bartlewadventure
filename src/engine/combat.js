@@ -1,7 +1,7 @@
 // Combat calculations - damage formulas, stat modifiers, dodge/HP
 // All functions are pure (no side effects), taking player/battle state as arguments.
 
-import { CHARACTER_CLASSES } from '../data/gameData';
+import { CHARACTER_CLASSES, SKILLS } from '../data/gameData';
 import { getTreeSkill } from '../data/skillTrees';
 import { prob } from '../data/probabilityStore';
 
@@ -366,3 +366,59 @@ export function getExecuteMultiplier(effect, monsterHp, monsterMaxHp) {
   if (effect === 'counter') return 1; // handled separately with defendedLastTurn
   return 1;
 }
+
+// ---- SPEED SYSTEM ----
+
+// Get player effective speed stat (base + equipment + skill bonuses)
+export function getPlayerSpeed(player, battle) {
+  let speed = player.speed || player.baseSpeed || 5;
+  // Equipment speed bonuses (items can have speed stat)
+  for (const item of Object.values(player.equipment)) {
+    if (item?.speed) speed += item.speed;
+  }
+  // Athletics gives minor speed bonus
+  speed += Math.floor((player.athletics || 0) * 0.3);
+  // Thief class: innate +2 speed
+  const cls = getClassData(player);
+  if (cls?.id === 'thief') speed += 2;
+  // Berserker rage: +3 speed when below 40% HP
+  if (cls?.passive === 'Rage' && player.hp < player.maxHp * 0.4) speed += 3;
+  // Speed debuff from boss gimmick
+  if (battle?.speedDebuffPct) {
+    speed = Math.floor(speed * (1 - battle.speedDebuffPct));
+  }
+  return Math.max(1, speed);
+}
+
+// Determine who goes first based on speed. Returns true if player goes first.
+export function playerGoesFirst(playerSpeed, monsterSpeed) {
+  if (playerSpeed > monsterSpeed) return true;
+  if (monsterSpeed > playerSpeed) return false;
+  // Tie: 50/50
+  return Math.random() < 0.5;
+}
+
+// Pick the monster's next intended action (for preview when player is faster)
+export function pickMonsterNextMove(monster, battle) {
+  // If monster is channeling, next move is the unleash
+  if (battle?.monsterChanneling) {
+    const channelSkill = SKILLS[battle.monsterChannelSkillId];
+    if (channelSkill) {
+      return { type: 'unleash', name: channelSkill.unleashName || 'Unleash', skillId: battle.monsterChannelSkillId };
+    }
+  }
+  // Normal AI: 30% chance to use a skill, otherwise basic attack
+  if (monster.skills?.length > 0 && Math.random() < 0.3) {
+    const skillId = monster.skills[Math.floor(Math.random() * monster.skills.length)];
+    const skill = SKILLS[skillId];
+    if (skill) {
+      return { type: skill.effect === 'channel' ? 'channel' : 'skill', name: skill.name, skillId };
+    }
+  }
+  return { type: 'attack', name: 'Attack' };
+}
+
+// ---- PLAYER CHANNEL SYSTEM ----
+// Player can channel energy for 1 turn, then their next attack deals bonus damage
+export const PLAYER_CHANNEL_BONUS = 2.0; // 2x damage on next strike after channeling
+export const PLAYER_CHANNEL_MANA_COST = 8;

@@ -3,7 +3,7 @@ import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -47,6 +47,7 @@ function createInitialPlayer() {
     charisma: 3,
     wisdom: 3,
     athletics: 3,
+    speed: 5,
     gold: 30,
     equipment: { weapon: null, shield: null, helmet: null, armor: null, gloves: null, boots: null, belt: null, cape: null, amulet: null, accessory: null, accessory2: null },
     inventory: [],
@@ -147,6 +148,7 @@ function processLevelUps(player) {
       charismaGain: (growth?.charisma ?? 0) + Math.floor(Math.random() * (growth?.charismaRand ?? 1)),
       wisdomGain: (growth?.wisdom ?? 0) + Math.floor(Math.random() * (growth?.wisdomRand ?? 1)),
       athleticsGain: (growth?.athletics ?? 0) + Math.floor(Math.random() * (growth?.athleticsRand ?? 1)),
+      speedGain: (growth?.speed ?? 0) + Math.floor(Math.random() * (growth?.speedRand ?? 1)),
     };
     pendingLevels.push({ level: p.level, offers, picks: STAT_PICKS_PER_LEVEL });
   }
@@ -169,6 +171,7 @@ function applyStatChoices(player, offers, selectedStats) {
       case 'charisma': p.charisma = (p.charisma || 0) + offers.charismaGain; break;
       case 'wisdom': p.wisdom = (p.wisdom || 0) + offers.wisdomGain; break;
       case 'athletics': p.athletics = (p.athletics || 0) + offers.athleticsGain; break;
+      case 'speed': p.speed = (p.speed || 5) + offers.speedGain; break;
     }
   }
   return p;
@@ -234,7 +237,11 @@ function extractSaveData(state) {
 }
 
 // ---- PET BATTLE HELPERS ----
-function createBattleState(monster) {
+function createBattleState(monster, player) {
+  const pSpeed = player ? getPlayerSpeed(player) : 5;
+  const mSpeed = monster.speed || 5;
+  const isPlayerFirst = playerGoesFirst(pSpeed, mSpeed);
+  const nextMove = isPlayerFirst ? pickMonsterNextMove(monster, null) : null;
   return {
     monster, isPlayerTurn: true, defending: false,
     poisonTurns: 0, atkDebuff: 0, defDebuff: 0, animating: false,
@@ -245,6 +252,33 @@ function createBattleState(monster) {
     avatarTurns: 0, armorBreakTurns: 0, cursedBloodPoison: 0,
     petActions: [], // log of pet actions this turn
     petReviveUsed: false, // track phoenix revive
+    // Speed system
+    playerSpeed: pSpeed,
+    monsterSpeed: mSpeed,
+    playerIsFaster: isPlayerFirst,
+    monsterNextMove: nextMove, // shown when player is faster
+    // Channel system
+    monsterChanneling: false,
+    monsterChannelTurns: 0,
+    monsterChannelSkillId: null,
+    playerChanneling: false, // player channel state
+    playerChannelBonusActive: false, // bonus active for next attack
+    // Boss gimmick state
+    gimmick: monster.gimmick || null,
+    gimmickActive: false,
+    gimmickData: {}, // dynamic gimmick state (counters, timers, etc.)
+    turnCount: 0,
+    // Speed debuff (from boss gimmicks)
+    speedDebuffPct: 0,
+    // Gimmick-specific flags
+    playerFrozen: false, // skip player turn
+    playerMissChance: 0, // extra miss chance from gimmicks
+    monsterInvulnerable: false, // cannot take damage
+    monsterDmgReduction: 0, // % damage reduction
+    monsterReflectPct: 0, // reflect damage back
+    noDefend: false, // cannot use defend action
+    noRun: false, // cannot run
+    healReduction: 0, // reduce healing effectiveness
   };
 }
 
@@ -508,6 +542,7 @@ function gameReducer(state, action) {
         charisma: cls.baseStats.charisma,
         wisdom: cls.baseStats.wisdom,
         athletics: cls.baseStats.athletics,
+        speed: cls.baseStats.speed || 5,
       };
       return { ...state, screen: 'town', player: p };
     }
@@ -645,14 +680,21 @@ function gameReducer(state, action) {
         }
         const monster = scaleMonster(monsterId, encounterLevel);
         const levelInfo = loc.special ? ` (Lv.${encounterLevel})` : '';
+        const encBattle = createBattleState(monster, state.player);
+        const encLog = [{ text: `A ${monster.name}${levelInfo} appears!`, type: 'info' }];
+        if (encBattle.playerIsFaster && encBattle.monsterNextMove) {
+          encLog.push({ text: `You're faster! Enemy intends to: ${encBattle.monsterNextMove.name}`, type: 'info' });
+        } else if (!encBattle.playerIsFaster) {
+          encLog.push({ text: `${monster.name} is faster and strikes first!`, type: 'info' });
+        }
         return {
           ...state, screen: 'battle',
           exploreText: text,
           energy: exploreEnergy,
           lastEnergyUpdate: exploreLastUpdate,
           pets: petsAfterExplore,
-          battle: createBattleState(monster),
-          battleLog: [{ text: `A ${monster.name}${levelInfo} appears!`, type: 'info' }],
+          battle: encBattle,
+          battleLog: encLog,
           battleResult: null,
         };
       }
@@ -898,7 +940,7 @@ function gameReducer(state, action) {
             lastEnergyUpdate: eventLastUpdate,
             player: p,
             randomEvent: null,
-            battle: createBattleState(monster),
+            battle: createBattleState(monster, p),
             battleLog: [{ text: `${ambushText}A ${monster.name} attacks!`, type: 'info' }],
             battleResult: null,
           };
@@ -933,7 +975,42 @@ function gameReducer(state, action) {
       let m = { ...b.monster };
       let p = { ...state.player };
       const cls = getClassData(p);
+      let log = [...state.battleLog];
+
+      // Check if player is frozen (boss gimmick)
+      if (b.playerFrozen) {
+        b.playerFrozen = false;
+        log.push({ text: 'You are frozen and cannot act this turn!', type: 'dmg-player' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Gimmick miss chance check
+      if (b.playerMissChance > 0 && Math.random() < b.playerMissChance) {
+        b.defending = false;
+        b.defendedLastTurn = false;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: 'Your attack misses!', type: 'info' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
+      // Monster invulnerability check
+      if (b.monsterInvulnerable) {
+        b.defending = false;
+        b.showSkillMenu = false;
+        b.showInspect = false;
+        log.push({ text: `${m.name} is invulnerable! Your attack has no effect!`, type: 'info' });
+        return { ...state, battle: b, battleLog: log };
+      }
+
       let dmg = calcDamage(getPlayerAtk(p, b), m.def);
+
+      // Apply channel bonus
+      if (b.playerChannelBonusActive) {
+        dmg = Math.floor(dmg * PLAYER_CHANNEL_BONUS);
+        b.playerChannelBonusActive = false;
+        log.push({ text: `Channeled energy released! ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' });
+      }
 
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
@@ -945,13 +1022,18 @@ function gameReducer(state, action) {
         playerCrit = true;
       }
 
+      // Monster damage reduction (boss gimmick)
+      if (b.monsterDmgReduction > 0) {
+        dmg = Math.floor(dmg * (1 - b.monsterDmgReduction));
+      }
+
       m.hp = Math.max(0, m.hp - dmg);
       b.monster = m;
       b.defending = false;
       b.defendedLastTurn = false;
       b.showSkillMenu = false;
       b.showInspect = false;
-      let log = [...state.battleLog];
+
       if (lucky.procced && playerCrit) {
         log.push({ text: `Lucky Strike + CRIT! Devastating ${dmg} damage!`, type: 'dmg-monster' });
       } else if (lucky.procced) {
@@ -960,6 +1042,15 @@ function gameReducer(state, action) {
         log.push({ text: `CRITICAL HIT! You attack for ${dmg} damage!`, type: 'dmg-monster' });
       } else {
         log.push({ text: `You attack for ${dmg} damage!`, type: 'dmg-monster' });
+      }
+
+      // Monster reflect damage (boss gimmick)
+      if (b.monsterReflectPct > 0) {
+        const reflectDmg = Math.floor(dmg * b.monsterReflectPct);
+        if (reflectDmg > 0) {
+          p = { ...p, hp: Math.max(0, p.hp - reflectDmg) };
+          log.push({ text: `${m.name} reflects ${reflectDmg} damage back!`, type: 'dmg-player' });
+        }
       }
 
       // Post-attack passives (lifetap, vampiric aura, soul siphon, bloodlust, etc.)
@@ -1228,7 +1319,27 @@ function gameReducer(state, action) {
       return { ...state, player: p, stats: newStats, tasks: newTasks };
     }
 
+    // Player channels energy for a boosted next attack
+    case 'BATTLE_CHANNEL': {
+      let b = { ...state.battle, showSkillMenu: false, showInspect: false };
+      let p = { ...state.player };
+      const manaCost = PLAYER_CHANNEL_MANA_COST;
+      if (p.mana < manaCost) {
+        return { ...state, message: `Not enough mana to channel! (${manaCost} needed)` };
+      }
+      p = { ...p, mana: p.mana - manaCost };
+      b.playerChanneling = true;
+      b.playerChannelBonusActive = false;
+      b.defending = false;
+      b.defendedLastTurn = false;
+      const log = [...state.battleLog, { text: `You channel energy... Next attack will deal ${PLAYER_CHANNEL_BONUS}x damage!`, type: 'info' }];
+      return { ...state, player: p, battle: b, battleLog: log };
+    }
+
     case 'BATTLE_DEFEND': {
+      if (state.battle.noDefend) {
+        return { ...state, message: 'You cannot defend right now!' };
+      }
       const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false };
       let p = { ...state.player };
       const log = [...state.battleLog, { text: 'You brace for impact!', type: 'info' }];
@@ -1264,14 +1375,22 @@ function gameReducer(state, action) {
     case 'BOSS_ACCEPT': {
       const boss = state.pendingBoss;
       if (!boss) return { ...state, screen: 'explore', pendingBoss: null };
+      const bossBattle = createBattleState(boss, state.player);
+      const bossLog = [
+        { text: `BOSS BATTLE!`, type: 'info' },
+        { text: `${boss.name} - ${boss.title} appears!`, type: 'info' },
+      ];
+      if (boss.gimmick) {
+        bossLog.push({ text: `Boss Gimmick: ${boss.gimmick.name} - ${boss.gimmick.desc}`, type: 'info' });
+      }
+      if (bossBattle.playerIsFaster && bossBattle.monsterNextMove) {
+        bossLog.push({ text: `Your speed advantage lets you see the enemy's intent: ${bossBattle.monsterNextMove.name}`, type: 'info' });
+      }
       return {
         ...state, screen: 'battle',
         pendingBoss: null,
-        battle: createBattleState(boss),
-        battleLog: [
-          { text: `BOSS BATTLE!`, type: 'info' },
-          { text: `${boss.name} - ${boss.title} appears!`, type: 'info' },
-        ],
+        battle: bossBattle,
+        battleLog: bossLog,
         battleResult: null,
       };
     }
@@ -1284,6 +1403,9 @@ function gameReducer(state, action) {
     }
 
     case 'BATTLE_RUN': {
+      if (state.battle.noRun) {
+        return { ...state, message: 'You cannot escape!' };
+      }
       const cls = getClassData(state.player);
       let escapeChance = (cls?.passive === 'Greed') ? prob('combat.escapeChanceGreed') : prob('combat.escapeChanceBase');
       if (playerHasSkill(state.player, 'thf_t7a')) escapeChance = 1.0;
@@ -1306,6 +1428,16 @@ function gameReducer(state, action) {
       let log = [...state.battleLog];
       let p = { ...state.player };
       const cls = getClassData(p);
+
+      // Increment turn counter
+      b.turnCount = (b.turnCount || 0) + 1;
+
+      // If player was channeling, activate bonus for next attack
+      if (b.playerChanneling) {
+        b.playerChanneling = false;
+        b.playerChannelBonusActive = true;
+        log.push({ text: 'Your channeled energy is ready to unleash!', type: 'info' });
+      }
 
       // Monster poison tick
       if (b.monsterPoisonTurns > 0) {
@@ -1334,87 +1466,332 @@ function gameReducer(state, action) {
       if (b.avatarTurns > 0) b.avatarTurns--;
       if (b.armorBreakTurns > 0) b.armorBreakTurns--;
 
+      // ---- BOSS GIMMICK PROCESSING ----
+      if (b.gimmick && m.isBoss) {
+        const g = b.gimmick;
+        const gd = { ...b.gimmickData };
+        const hpPct = m.hp / m.maxHp;
+
+        // Activate gimmick when HP threshold reached
+        if (!b.gimmickActive && hpPct <= g.triggerHpPct) {
+          b.gimmickActive = true;
+          log.push({ text: `${m.name} activates ${g.name}!`, type: 'info' });
+        }
+
+        if (b.gimmickActive) {
+          switch (g.type) {
+            case 'regeneration':
+              const regenAmt = Math.floor(m.maxHp * g.healPct);
+              m = { ...m, hp: Math.min(m.maxHp, m.hp + regenAmt) };
+              log.push({ text: `${m.name} regenerates ${regenAmt} HP!`, type: 'heal' });
+              break;
+            case 'enrage':
+              if (b.turnCount % g.interval === 0) {
+                gd.enrageStacks = (gd.enrageStacks || 0) + 1;
+                const boost = Math.floor(m.atk * g.atkBoostPct);
+                m = { ...m, atk: m.atk + boost };
+                log.push({ text: `${m.name}'s rage intensifies! ATK +${boost}!`, type: 'info' });
+              }
+              break;
+            case 'hardening':
+              m = { ...m, def: m.def + g.defGainPerTurn };
+              log.push({ text: `${m.name}'s coral hardens! DEF +${g.defGainPerTurn}!`, type: 'info' });
+              break;
+            case 'frost_aura':
+              if (!gd.frostAuraApplied) {
+                b.speedDebuffPct = g.speedDebuffPct;
+                gd.frostAuraApplied = true;
+                gd.frostAuraTurns = g.duration;
+                log.push({ text: `Frost Aura slows you! Speed reduced by ${g.speedDebuffPct * 100}%!`, type: 'dmg-player' });
+              }
+              if (gd.frostAuraTurns > 0) {
+                gd.frostAuraTurns--;
+                if (gd.frostAuraTurns <= 0) b.speedDebuffPct = 0;
+              }
+              break;
+            case 'lava_pool':
+            case 'frozen_ground':
+            case 'drowned_court':
+            case 'gravity_well': {
+              gd.dotTurns = gd.dotTurns ?? g.duration ?? 99;
+              if (gd.dotTurns > 0) {
+                const dotPct = g.dmgPct || g.drainPct || 0.03;
+                const dotDmg = Math.floor(p.maxHp * dotPct);
+                p = { ...p, hp: Math.max(0, p.hp - dotDmg) };
+                gd.dotTurns--;
+                log.push({ text: `${g.name} deals ${dotDmg} damage!`, type: 'dmg-player' });
+              }
+              break;
+            }
+            case 'eruption_timer': {
+              gd.eruptionCounter = (gd.eruptionCounter || 0) + 1;
+              const remaining = g.timer - gd.eruptionCounter;
+              if (remaining > 0) {
+                log.push({ text: `Volcanic Eruption in ${remaining} turns...`, type: 'info' });
+              } else if (remaining === 0) {
+                const eruptDmg = Math.floor(p.maxHp * g.eruptDmgPct);
+                p = { ...p, hp: Math.max(0, p.hp - eruptDmg) };
+                log.push({ text: `VOLCANIC ERUPTION! ${eruptDmg} damage!`, type: 'dmg-player' });
+                gd.eruptionCounter = 0; // reset timer
+              }
+              break;
+            }
+            case 'decompose':
+              p = { ...p, baseAtk: Math.max(1, p.baseAtk - g.atkLoss), baseDef: Math.max(0, p.baseDef - g.defLoss) };
+              log.push({ text: `Decompose drains your strength! ATK -${g.atkLoss}, DEF -${g.defLoss}!`, type: 'dmg-player' });
+              break;
+            case 'entropy_decay':
+              b.entropyAtkDecay = (b.entropyAtkDecay || 0) + g.decayPct;
+              log.push({ text: `Entropy decays your power! ATK -${Math.round(g.decayPct * 100)}%!`, type: 'dmg-player' });
+              break;
+            case 'venom_stacks':
+              gd.venomStacks = (gd.venomStacks || 0) + 1;
+              log.push({ text: `Venom Stack: ${gd.venomStacks}/${g.maxStacks}`, type: 'dmg-player' });
+              if (gd.venomStacks >= g.maxStacks) {
+                const burstDmg = Math.floor(p.maxHp * g.burstDmgPct);
+                p = { ...p, hp: Math.max(0, p.hp - burstDmg) };
+                gd.venomStacks = 0;
+                log.push({ text: `Venom Burst! ${burstDmg} damage!`, type: 'dmg-player' });
+              }
+              break;
+            case 'tidal_surge':
+              if (b.turnCount % g.interval === 0) {
+                gd.tidalSurgeActive = true;
+                log.push({ text: 'Tidal Surge! Next attack deals double damage!', type: 'info' });
+              }
+              break;
+            case 'oblivion_countdown': {
+              gd.countdown = gd.countdown ?? g.countdown;
+              gd.countdown--;
+              if (gd.countdown <= 0) {
+                p = { ...p, hp: 0 };
+                log.push({ text: 'OBLIVION! The countdown reaches zero!', type: 'dmg-player' });
+              } else {
+                log.push({ text: `Oblivion Countdown: ${gd.countdown}...`, type: 'info' });
+              }
+              break;
+            }
+            case 'lightning_field':
+              gd.fieldTurns = gd.fieldTurns ?? g.duration;
+              if (gd.fieldTurns > 0) {
+                b.monsterReflectPct = g.reflectPct;
+                gd.fieldTurns--;
+              } else {
+                b.monsterReflectPct = 0;
+              }
+              break;
+            case 'sandstorm':
+            case 'whiteout':
+              gd.missTurns = gd.missTurns ?? g.duration;
+              if (gd.missTurns > 0) {
+                b.playerMissChance = g.missPct;
+                gd.missTurns--;
+              } else {
+                b.playerMissChance = 0;
+              }
+              break;
+            case 'tentacle_grab':
+              gd.grabTurns = gd.grabTurns ?? g.duration;
+              if (gd.grabTurns > 0) {
+                b.noDefend = true;
+                b.noRun = true;
+                gd.grabTurns--;
+                log.push({ text: 'Tentacles hold you! Cannot defend or run!', type: 'dmg-player' });
+              } else {
+                b.noDefend = false;
+                b.noRun = false;
+              }
+              break;
+            case 'spore_shield':
+              if (b.poisonTurns > 0) {
+                b.monsterDmgReduction = g.dmgReduction;
+              } else {
+                b.monsterDmgReduction = 0;
+              }
+              break;
+            case 'armor_up':
+              if (!gd.armorUpApplied) {
+                gd.armorUpApplied = true;
+                gd.armorUpTurns = g.duration;
+                gd.originalDef = m.def;
+                m = { ...m, def: Math.floor(m.def * g.defMult) };
+                log.push({ text: `${m.name}'s defense doubled!`, type: 'info' });
+              }
+              if (gd.armorUpTurns > 0) {
+                gd.armorUpTurns--;
+                if (gd.armorUpTurns <= 0 && gd.originalDef) {
+                  m = { ...m, def: gd.originalDef };
+                }
+              }
+              break;
+            case 'crystal_reflect':
+              gd.reflectTurns = gd.reflectTurns ?? g.duration;
+              if (gd.reflectTurns > 0) {
+                b.monsterReflectPct = g.reflectPct;
+                gd.reflectTurns--;
+              } else {
+                b.monsterReflectPct = 0;
+              }
+              break;
+            case 'null_zone':
+              gd.nullTurns = gd.nullTurns ?? g.duration;
+              if (gd.nullTurns > 0) {
+                gd.nullTurns--;
+                log.push({ text: `Null Zone active! Passives disabled! (${gd.nullTurns} turns)`, type: 'info' });
+              }
+              break;
+            default:
+              break;
+          }
+        }
+        b.gimmickData = gd;
+      }
+
       // Turn-start passives (regeneration, meditation, mana regen, dark pact)
       ({ player: p, battle: b, log } = applyTurnStartPassives({ player: p, battle: b, log }));
 
-      // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
-      let dodged;
-      ({ dodged, battle: b, log } = checkDodge(p, b, log));
-
-      if (!dodged) {
-        const useSkill = m.skills.length > 0 && Math.random() < prob('combat.monsterSkillChance');
-        const mSkillId = useSkill ? m.skills[Math.floor(Math.random() * m.skills.length)] : null;
-        const mSkill = mSkillId ? SKILLS[mSkillId] : null;
-
-        let dmg;
-        if (mSkill) {
-          const rawAtk = Math.floor(m.atk * mSkill.multiplier);
-          dmg = calcDamage(rawAtk, getPlayerDef(p, b));
-        } else {
-          dmg = calcDamage(m.atk, getPlayerDef(p, b));
-        }
-
-        // Monster critical hit check
-        let monsterCrit = false;
-        if (Math.random() < getMonsterCritChance(m)) {
-          dmg = Math.floor(dmg * getMonsterCritMultiplier());
-          monsterCrit = true;
-        }
-
-        // Damage reduction passives (defend, iron skin, thick skin, fortress)
-        dmg = applyDamageReduction(dmg, p, b, cls);
-
-        // Mana Shield absorption
-        const shield = applyManaShield(dmg, p);
-        dmg = shield.dmg;
-        if (shield.manaUsed > 0) {
-          p = { ...p, mana: p.mana - shield.manaUsed };
-          log.push({ text: `Mana Shield absorbs ${shield.manaUsed} damage!`, type: 'info' });
-        }
-
-        // Pet defense absorption
-        const petDef = applyPetDefense(state, dmg);
-        if (petDef.absorbed > 0) {
-          dmg = Math.max(1, dmg - petDef.absorbed);
-          log.push({ text: `Pet absorbs ${petDef.absorbed} damage!`, type: 'info' });
-        }
-        if (petDef.reflected > 0) {
-          m = { ...m, hp: Math.max(0, m.hp - petDef.reflected) };
-          log.push({ text: `Pet reflects ${petDef.reflected} damage back!`, type: 'dmg-monster' });
-        }
-
-        dmg = Math.max(1, dmg);
-        p = { ...p, hp: Math.max(0, p.hp - dmg) };
-
-        const critPrefix = monsterCrit ? 'CRIT! ' : '';
-        if (mSkill) {
-          log.push({ text: `${critPrefix}${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
-          if (mSkill.effect === 'poison') {
-            if (playerHasSkill(p, 'nec_t10a')) {
-              log.push({ text: 'Lich Form: immune to poison!', type: 'info' });
-            } else {
-              let dur = 3;
-              if (playerHasSkill(p, 'brs_t7a')) dur = Math.max(1, dur - 1);
-              b.poisonTurns = dur;
+      // ---- MONSTER CHANNELING ----
+      if (b.monsterChanneling) {
+        b.monsterChannelTurns--;
+        if (b.monsterChannelTurns <= 0) {
+          // Unleash the channeled attack
+          const channelSkill = SKILLS[b.monsterChannelSkillId];
+          if (channelSkill) {
+            const unleashAtk = Math.floor(m.atk * channelSkill.unleashMult);
+            let unleashDmg = calcDamage(unleashAtk, getPlayerDef(p, b));
+            // Tidal surge doubles damage
+            if (b.gimmickData?.tidalSurgeActive) {
+              unleashDmg = Math.floor(unleashDmg * 2);
+              b.gimmickData.tidalSurgeActive = false;
             }
-            log.push({ text: 'You are poisoned!', type: 'dmg-player' });
-          } else if (mSkill.effect === 'lower_def') {
-            b.defDebuff = (b.defDebuff || 0) + 2;
-            log.push({ text: 'Your defense dropped!', type: 'dmg-player' });
-          } else if (mSkill.effect === 'lower_atk') {
-            b.atkDebuff = (b.atkDebuff || 0) + 2;
-            log.push({ text: 'Your attack dropped!', type: 'dmg-player' });
-          } else if (mSkill.effect === 'steal_gold') {
-            const stolen = Math.floor(Math.random() * 10 + 1);
-            p = { ...p, gold: Math.max(0, p.gold - stolen) };
-            log.push({ text: `Stole ${stolen} gold!`, type: 'dmg-player' });
-          } else if (mSkill.effect === 'drain_hp') {
-            const healed = Math.floor(dmg * 0.5);
-            m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
-            log.push({ text: `${m.name} drained ${healed} HP!`, type: 'dmg-player' });
+            unleashDmg = applyDamageReduction(unleashDmg, p, b, cls);
+            unleashDmg = Math.max(1, unleashDmg);
+            p = { ...p, hp: Math.max(0, p.hp - unleashDmg) };
+            log.push({ text: `${m.name} unleashes ${channelSkill.unleashName || 'Unleash'}! ${unleashDmg} damage!`, type: 'dmg-player' });
+            // Apply unleash effect
+            if (channelSkill.unleashEffect === 'poison') {
+              if (!playerHasSkill(p, 'nec_t10a')) {
+                b.poisonTurns = 3;
+                log.push({ text: 'You are poisoned!', type: 'dmg-player' });
+              }
+            } else if (channelSkill.unleashEffect === 'lower_def') {
+              b.defDebuff = (b.defDebuff || 0) + 3;
+              log.push({ text: 'Your defense shattered!', type: 'dmg-player' });
+            } else if (channelSkill.unleashEffect === 'lower_atk') {
+              b.atkDebuff = (b.atkDebuff || 0) + 3;
+              log.push({ text: 'Your attack weakened!', type: 'dmg-player' });
+            } else if (channelSkill.unleashEffect === 'drain_hp') {
+              const healed = Math.floor(unleashDmg * 0.5);
+              m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
+              log.push({ text: `${m.name} drained ${healed} HP!`, type: 'heal' });
+            }
           }
+          b.monsterChanneling = false;
+          b.monsterChannelSkillId = null;
         } else {
-          log.push({ text: `${critPrefix}${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
+          log.push({ text: `${m.name} continues channeling energy... (${b.monsterChannelTurns} turns left)`, type: 'info' });
+        }
+      } else {
+        // Normal monster attack (not channeling)
+        // Check dodge (shadow step, evasion mastery, shadow dance, aegis)
+        let dodged;
+        ({ dodged, battle: b, log } = checkDodge(p, b, log));
+
+        if (!dodged) {
+          const useSkill = m.skills.length > 0 && Math.random() < prob('combat.monsterSkillChance');
+          const mSkillId = useSkill ? m.skills[Math.floor(Math.random() * m.skills.length)] : null;
+          const mSkill = mSkillId ? SKILLS[mSkillId] : null;
+
+          // Check if monster starts channeling
+          if (mSkill && mSkill.effect === 'channel') {
+            b.monsterChanneling = true;
+            b.monsterChannelTurns = mSkill.channelTurns || 1;
+            b.monsterChannelSkillId = mSkillId;
+            log.push({ text: `${m.name} begins channeling ${mSkill.name}! (${b.monsterChannelTurns} turn${b.monsterChannelTurns > 1 ? 's' : ''})`, type: 'info' });
+          } else {
+            let dmg;
+            if (mSkill) {
+              const rawAtk = Math.floor(m.atk * mSkill.multiplier);
+              dmg = calcDamage(rawAtk, getPlayerDef(p, b));
+            } else {
+              dmg = calcDamage(m.atk, getPlayerDef(p, b));
+            }
+
+            // Tidal surge doubles damage
+            if (b.gimmickData?.tidalSurgeActive) {
+              dmg = Math.floor(dmg * 2);
+              b.gimmickData.tidalSurgeActive = false;
+              log.push({ text: 'Tidal Surge amplifies the attack!', type: 'info' });
+            }
+
+            // Monster critical hit check
+            let monsterCrit = false;
+            if (Math.random() < getMonsterCritChance(m)) {
+              dmg = Math.floor(dmg * getMonsterCritMultiplier());
+              monsterCrit = true;
+            }
+
+            // Damage reduction passives (defend, iron skin, thick skin, fortress)
+            dmg = applyDamageReduction(dmg, p, b, cls);
+
+            // Mana Shield absorption
+            const shield = applyManaShield(dmg, p);
+            dmg = shield.dmg;
+            if (shield.manaUsed > 0) {
+              p = { ...p, mana: p.mana - shield.manaUsed };
+              log.push({ text: `Mana Shield absorbs ${shield.manaUsed} damage!`, type: 'info' });
+            }
+
+            // Pet defense absorption
+            const petDef = applyPetDefense(state, dmg);
+            if (petDef.absorbed > 0) {
+              dmg = Math.max(1, dmg - petDef.absorbed);
+              log.push({ text: `Pet absorbs ${petDef.absorbed} damage!`, type: 'info' });
+            }
+            if (petDef.reflected > 0) {
+              m = { ...m, hp: Math.max(0, m.hp - petDef.reflected) };
+              log.push({ text: `Pet reflects ${petDef.reflected} damage back!`, type: 'dmg-monster' });
+            }
+
+            dmg = Math.max(1, dmg);
+            p = { ...p, hp: Math.max(0, p.hp - dmg) };
+
+            const critPrefix = monsterCrit ? 'CRIT! ' : '';
+            if (mSkill) {
+              log.push({ text: `${critPrefix}${m.name} uses ${mSkill.name} for ${dmg} damage!`, type: 'dmg-player' });
+              if (mSkill.effect === 'poison') {
+                if (playerHasSkill(p, 'nec_t10a')) {
+                  log.push({ text: 'Lich Form: immune to poison!', type: 'info' });
+                } else {
+                  let dur = 3;
+                  if (playerHasSkill(p, 'brs_t7a')) dur = Math.max(1, dur - 1);
+                  b.poisonTurns = dur;
+                }
+                log.push({ text: 'You are poisoned!', type: 'dmg-player' });
+              } else if (mSkill.effect === 'lower_def') {
+                b.defDebuff = (b.defDebuff || 0) + 2;
+                log.push({ text: 'Your defense dropped!', type: 'dmg-player' });
+              } else if (mSkill.effect === 'lower_atk') {
+                b.atkDebuff = (b.atkDebuff || 0) + 2;
+                log.push({ text: 'Your attack dropped!', type: 'dmg-player' });
+              } else if (mSkill.effect === 'steal_gold') {
+                const stolen = Math.floor(Math.random() * 10 + 1);
+                p = { ...p, gold: Math.max(0, p.gold - stolen) };
+                log.push({ text: `Stole ${stolen} gold!`, type: 'dmg-player' });
+              } else if (mSkill.effect === 'drain_hp') {
+                const healed = Math.floor(dmg * 0.5);
+                m = { ...m, hp: Math.min(m.maxHp, m.hp + healed) };
+                log.push({ text: `${m.name} drained ${healed} HP!`, type: 'dmg-player' });
+              }
+            } else {
+              log.push({ text: `${critPrefix}${m.name} attacks for ${dmg} damage!`, type: 'dmg-player' });
+            }
+          }
+        }
+
+        // Cursed Blood: chance to poison attacker when hit
+        if (!dodged) {
+          ({ battle: b, log } = applyCursedBlood(p, b, log));
         }
       }
 
@@ -1430,11 +1807,6 @@ function gameReducer(state, action) {
         log.push({ text: `Poison deals ${poisonDmg} damage!`, type: 'dmg-player' });
       }
 
-      // Cursed Blood: chance to poison attacker when hit
-      if (!dodged) {
-        ({ battle: b, log } = applyCursedBlood(p, b, log));
-      }
-
       // Survival passives (undying will, death's embrace)
       ({ player: p, battle: b, log } = applySurvivalPassives({ player: p, battle: b, log }));
 
@@ -1442,11 +1814,25 @@ function gameReducer(state, action) {
       b.isPlayerTurn = true;
       b.defending = false;
 
+      // Pick next monster move for preview (if player is faster)
+      if (b.playerIsFaster) {
+        b.monsterNextMove = pickMonsterNextMove(m, b);
+      }
+
       // Track damage taken (difference from start hp)
       const hpLost = Math.max(0, state.player.hp - p.hp);
       const newStats = hpLost > 0 ? addStat(state.stats, 'damageTaken', hpLost) : state.stats;
 
       if (p.hp <= 0) {
+        // Boss resurrection gimmick check
+        if (b.gimmick?.type === 'ash_resurrection' && !b.gimmickData?.resurrected) {
+          const revHp = Math.floor(m.maxHp * b.gimmick.reviveHpPct);
+          m = { ...m, hp: revHp };
+          b.monster = m;
+          b.gimmickData = { ...b.gimmickData, resurrected: true };
+          log.push({ text: `${m.name} rises from the ashes with ${revHp} HP!`, type: 'info' });
+        }
+
         // Phoenix pet revive check
         if (!b.petReviveUsed) {
           const activePets = getActiveBattlePets(state);
@@ -1462,6 +1848,16 @@ function gameReducer(state, action) {
 
       if (p.hp <= 0) {
         return handleDefeat({ ...state, player: p, battle: b, battleLog: log, stats: newStats });
+      }
+
+      // Boss ash resurrection check (when monster dies)
+      if (m.hp <= 0 && b.gimmick?.type === 'ash_resurrection' && !b.gimmickData?.resurrected) {
+        const revHp = Math.floor(m.maxHp * b.gimmick.reviveHpPct);
+        m = { ...m, hp: revHp };
+        b.monster = m;
+        b.gimmickData = { ...b.gimmickData, resurrected: true };
+        log.push({ text: `${m.name} rises from the ashes with ${revHp} HP!`, type: 'info' });
+        return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
       }
 
       return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
@@ -3381,6 +3777,7 @@ export function useGameState(isLoggedIn) {
     battleSkill: () => dispatch({ type: 'BATTLE_PLAYER_SKILL' }),
     battleTreeSkill: (skillId) => dispatch({ type: 'BATTLE_USE_TREE_SKILL', skillId }),
     battleDefend: () => dispatch({ type: 'BATTLE_DEFEND' }),
+    battleChannel: () => dispatch({ type: 'BATTLE_CHANNEL' }),
     battlePotion: () => dispatch({ type: 'BATTLE_USE_POTION' }),
     battleRun: () => dispatch({ type: 'BATTLE_RUN' }),
     toggleSkillMenu: () => dispatch({ type: 'TOGGLE_SKILL_MENU' }),

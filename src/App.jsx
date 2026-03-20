@@ -326,6 +326,7 @@ export default function App() {
                 onAttack={actions.battleAttack}
                 onSkill={actions.battleSkill}
                 onDefend={actions.battleDefend}
+                onChannel={actions.battleChannel}
                 onPotion={actions.battlePotion}
                 onRun={actions.battleRun}
                 onMonsterTurn={actions.monsterTurn}
