@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CHEST_LOOKUP } from '../../data/lootChests';
 import {
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
   STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
@@ -24,6 +25,18 @@ function StatRow({ label, value }) {
       <span className="journal-stat-value">{formatNumber(value)}</span>
     </div>
   );
+}
+
+function RewardLabel({ reward }) {
+  if (!reward) return null;
+  const parts = [];
+  if (reward.gold) parts.push(`+${reward.gold}g`);
+  if (reward.chestId) {
+    const ch = CHEST_LOOKUP[reward.chestId];
+    if (ch) parts.push(ch.name);
+  }
+  if (parts.length === 0) return null;
+  return <span className="journal-task-reward">{parts.join(' + ')}</span>;
 }
 
 function PinButton({ questId, pinnedQuests, onPin, onUnpin }) {
@@ -60,9 +73,7 @@ function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQu
               onUnpin={onUnpin}
             />
           )}
-          {task.reward.gold && (
-            <span className="journal-task-reward">+{task.reward.gold}g</span>
-          )}
+          <RewardLabel reward={task.reward} />
         </div>
       </div>
       <div className="journal-task-desc">{task.description}</div>
@@ -350,7 +361,7 @@ function QuestSlotsTab({ tasks, stats, playerLevel, onActivate, onAbandon }) {
                             <span className="quest-preview-order">{q.order}.</span>
                             <span className="quest-preview-name">{q.name}</span>
                             <span className="quest-preview-desc">{q.description}</span>
-                            <span className="quest-preview-reward">+{q.reward.gold}g</span>
+                            <span className="quest-preview-reward"><RewardLabel reward={q.reward} /></span>
                             {done && <span className="quest-preview-check">{'\u2713'}</span>}
                           </div>
                         );
@@ -410,9 +421,7 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
             <div key={quest.id} className="journal-task-card locked">
               <div className="journal-task-header">
                 <span className="journal-task-name">Step {quest.order}: {quest.name}</span>
-                {quest.reward.gold && (
-                  <span className="journal-task-reward">+{quest.reward.gold}g</span>
-                )}
+                <RewardLabel reward={quest.reward} />
               </div>
               <div className="journal-task-desc">{quest.description}</div>
               <div className="journal-task-locked-label">Complete previous steps to unlock</div>
@@ -534,9 +543,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
             <div key={mission.id} className="journal-task-card locked">
               <div className="journal-task-header">
                 <span className="journal-task-name">{mission.order}. {mission.name}</span>
-                {mission.reward.gold && (
-                  <span className="journal-task-reward">+{mission.reward.gold}g</span>
-                )}
+                <RewardLabel reward={mission.reward} />
               </div>
               <div className="journal-task-desc">{mission.description}</div>
               {mission.regionHint && (
@@ -653,9 +660,7 @@ function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin
             <div key={quest.id} className="journal-task-card locked">
               <div className="journal-task-header">
                 <span className="journal-task-name">{quest.order}. {quest.name}</span>
-                {quest.reward.gold && (
-                  <span className="journal-task-reward">+{quest.reward.gold}g</span>
-                )}
+                <RewardLabel reward={quest.reward} />
               </div>
               <div className="journal-task-desc">{quest.description}</div>
               <div className="journal-task-locked-label">Complete previous quests to unlock</div>

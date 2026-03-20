@@ -27,6 +27,7 @@ import PetScreen from './components/screens/PetScreen';
 import StatSelectScreen from './components/screens/StatSelectScreen';
 import SidePanel from './components/SidePanel';
 import RightPanel from './components/RightPanel';
+import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import { loadProbabilityConfig } from './data/probabilityStore';
 
@@ -392,6 +393,15 @@ export default function App() {
                 onSell={actions.sellItem}
                 onReorder={actions.reorderInventory}
                 onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'chest-opening' && (
+              <ChestOpeningScreen
+                pendingChest={state.pendingChest}
+                chestResult={state.chestResult}
+                onOpen={actions.openChest}
+                onClose={actions.closeChestResult}
               />
             )}
 
