@@ -3372,3 +3372,223 @@ export const RANDOM_EVENTS = [
     ],
   },
 ];
+
+// ---- QUEST VILLAGES ----
+// Hidden villages/towns that can only be found via random events while exploring specific regions.
+// Each village has a set of quests. To turn in a quest, you must find the village again.
+export const QUEST_VILLAGES = {
+  'neon-district': [
+    {
+      id: 'pixel-haven', name: 'Pixel Haven',
+      description: 'A tiny community of rogue hackers hidden behind a holographic wall in Neon Mile.',
+      quests: [
+        { id: 'ph-q1', name: 'Debug the Grid', description: 'Defeat 8 Neon Beetles to clear the power grid.', stat: 'monstersKilled', target: 8, reward: { gold: 120, item: 'ring' } },
+        { id: 'ph-q2', name: 'Gutter Cleanup', description: 'Defeat 15 monsters in Neon Mile.', stat: 'monstersKilled', target: 15, reward: { gold: 200, item: 'sword' } },
+        { id: 'ph-q3', name: 'Data Recovery', description: 'Explore 10 times.', stat: 'explorationsCompleted', target: 10, reward: { gold: 300, item: 'helmet' } },
+      ],
+    },
+    {
+      id: 'undervolt', name: 'Undervolt',
+      description: 'An underground bazaar powered by stolen energy cells, tucked beneath Shadow Alley.',
+      quests: [
+        { id: 'uv-q1', name: 'Blackout Patrol', description: 'Win 10 battles.', stat: 'battlesWon', target: 10, reward: { gold: 180, item: 'armor' } },
+        { id: 'uv-q2', name: 'Voltage Collector', description: 'Earn 500 gold from any source.', stat: 'goldEarned', target: 500, reward: { gold: 350, item: 'amulet' } },
+      ],
+    },
+  ],
+  'frozen-wastes': [
+    {
+      id: 'frostfire-camp', name: 'Frostfire Camp',
+      description: 'A warm encampment built around a volcanic vent in the middle of the frozen tundra.',
+      quests: [
+        { id: 'ff-q1', name: 'Thaw the Passage', description: 'Defeat 12 Frost Wolves to clear the mountain pass.', stat: 'monstersKilled', target: 12, reward: { gold: 250, item: 'boots' } },
+        { id: 'ff-q2', name: 'Icebreaker', description: 'Deal 2000 total damage.', stat: 'damageDealt', target: 2000, reward: { gold: 400, item: 'sword' } },
+        { id: 'ff-q3', name: 'Avalanche Watch', description: 'Explore 15 times.', stat: 'explorationsCompleted', target: 15, reward: { gold: 500, item: 'shield' } },
+      ],
+    },
+  ],
+  'scorched-badlands': [
+    {
+      id: 'oasis-outpost', name: 'Oasis Outpost',
+      description: 'A hidden oasis town where desert traders gather to exchange rare goods and stories.',
+      quests: [
+        { id: 'oo-q1', name: 'Sand Viper Hunt', description: 'Win 15 battles in the badlands.', stat: 'battlesWon', target: 15, reward: { gold: 350, item: 'ring' } },
+        { id: 'oo-q2', name: 'Forge Materials', description: 'Loot 10 items.', stat: 'itemsLooted', target: 10, reward: { gold: 450, item: 'armor' } },
+        { id: 'oo-q3', name: 'Mirage Runner', description: 'Explore 20 times.', stat: 'explorationsCompleted', target: 20, reward: { gold: 600, item: 'cape' } },
+      ],
+    },
+    {
+      id: 'ember-sanctum', name: 'Ember Sanctum',
+      description: 'A monastery built into a dormant volcano, home to fire monks who seek balance.',
+      quests: [
+        { id: 'es-q1', name: 'Trial by Fire', description: 'Deal 5000 total damage.', stat: 'damageDealt', target: 5000, reward: { gold: 500, item: 'sword' } },
+        { id: 'es-q2', name: 'Inner Peace', description: 'Use 10 potions.', stat: 'potionsUsed', target: 10, reward: { gold: 350, item: 'amulet' } },
+      ],
+    },
+  ],
+  'toxic-marshlands': [
+    {
+      id: 'sporehaven', name: 'Sporehaven',
+      description: 'A village of mushroom houses built on stilts above the toxic mire. Surprisingly cozy.',
+      quests: [
+        { id: 'sh-q1', name: 'Fungal Purge', description: 'Defeat 20 monsters.', stat: 'monstersKilled', target: 20, reward: { gold: 500, item: 'boots' } },
+        { id: 'sh-q2', name: 'Antidote Run', description: 'Win 18 battles.', stat: 'battlesWon', target: 18, reward: { gold: 600, item: 'shield' } },
+        { id: 'sh-q3', name: 'Marsh Surveyor', description: 'Explore 25 times.', stat: 'explorationsCompleted', target: 25, reward: { gold: 800, item: 'cape' } },
+      ],
+    },
+  ],
+  'abyssal-depths': [
+    {
+      id: 'deep-haven', name: 'Deep Haven',
+      description: 'A bioluminescent city in an air pocket deep beneath the waves, inhabited by reclusive scholars.',
+      quests: [
+        { id: 'dh-q1', name: 'Leviathan Slayer', description: 'Defeat 25 monsters in the depths.', stat: 'monstersKilled', target: 25, reward: { gold: 800, item: 'sword' } },
+        { id: 'dh-q2', name: 'Pressure Test', description: 'Deal 8000 total damage.', stat: 'damageDealt', target: 8000, reward: { gold: 1000, item: 'armor' } },
+        { id: 'dh-q3', name: 'Abyssal Explorer', description: 'Explore 30 times.', stat: 'explorationsCompleted', target: 30, reward: { gold: 1200, item: 'ring' } },
+      ],
+    },
+    {
+      id: 'coral-refuge', name: 'Coral Refuge',
+      description: 'A settlement built inside a massive living coral formation, its inhabitants communicate through bioluminescent signals.',
+      quests: [
+        { id: 'cr-q1', name: 'Coral Defense', description: 'Win 20 battles.', stat: 'battlesWon', target: 20, reward: { gold: 700, item: 'shield' } },
+        { id: 'cr-q2', name: 'Deep Harvest', description: 'Loot 15 items.', stat: 'itemsLooted', target: 15, reward: { gold: 900, item: 'boots' } },
+      ],
+    },
+  ],
+  'celestial-highlands': [
+    {
+      id: 'starfall-village', name: 'Starfall Village',
+      description: 'A floating village built on cloud platforms, illuminated by perpetual starlight.',
+      quests: [
+        { id: 'sv-q1', name: 'Star Collector', description: 'Defeat 30 monsters.', stat: 'monstersKilled', target: 30, reward: { gold: 1000, item: 'ring' } },
+        { id: 'sv-q2', name: 'Sky Warrior', description: 'Deal 10000 total damage.', stat: 'damageDealt', target: 10000, reward: { gold: 1500, item: 'sword' } },
+        { id: 'sv-q3', name: 'Celestial Survey', description: 'Explore 35 times.', stat: 'explorationsCompleted', target: 35, reward: { gold: 1800, item: 'cape' } },
+      ],
+    },
+    {
+      id: 'moonbridge-shrine', name: 'Moonbridge Shrine',
+      description: 'An ancient temple connected by bridges of solidified moonlight. The monks here study cosmic energy.',
+      quests: [
+        { id: 'ms-q1', name: 'Cosmic Alignment', description: 'Win 25 battles.', stat: 'battlesWon', target: 25, reward: { gold: 1200, item: 'amulet' } },
+        { id: 'ms-q2', name: 'Astral Meditation', description: 'Use 15 potions.', stat: 'potionsUsed', target: 15, reward: { gold: 800, item: 'helmet' } },
+      ],
+    },
+  ],
+  'void-nexus': [
+    {
+      id: 'echoing-bastion', name: 'Echoing Bastion',
+      description: 'A fortress that exists in multiple dimensions simultaneously. Its inhabitants are fragments of lost travelers.',
+      quests: [
+        { id: 'eb-q1', name: 'Reality Anchor', description: 'Defeat 35 monsters.', stat: 'monstersKilled', target: 35, reward: { gold: 1500, item: 'armor' } },
+        { id: 'eb-q2', name: 'Void Walker', description: 'Explore 40 times.', stat: 'explorationsCompleted', target: 40, reward: { gold: 2000, item: 'ring' } },
+        { id: 'eb-q3', name: 'Dimensional Rift', description: 'Deal 15000 total damage.', stat: 'damageDealt', target: 15000, reward: { gold: 2500, item: 'sword' } },
+      ],
+    },
+    {
+      id: 'null-market', name: 'The Null Market',
+      description: 'A bazaar where space folds in on itself. Merchants from every dimension peddle impossible wares.',
+      quests: [
+        { id: 'nm-q1', name: 'Interdimensional Trade', description: 'Earn 3000 gold.', stat: 'goldEarned', target: 3000, reward: { gold: 2000, item: 'cape' } },
+        { id: 'nm-q2', name: 'Null Zone Sweep', description: 'Win 30 battles.', stat: 'battlesWon', target: 30, reward: { gold: 1800, item: 'shield' } },
+      ],
+    },
+  ],
+};
+
+// ---- EXTRAORDINARY TRADERS ----
+// Rare traders with unique deals, encountered via random events
+export const EXTRAORDINARY_TRADERS = [
+  {
+    id: 'trader-nyx', name: 'Nyx the Shadow Dealer',
+    greeting: 'A cloaked figure with glowing purple eyes materializes from thin air. "I deal in things others cannot find..."',
+    deals: [
+      { id: 'nyx-1', description: 'Mystery Box (could be amazing... or terrible)', cost: 100, type: 'mystery_box' },
+      { id: 'nyx-2', description: 'Full HP restoration', cost: 50, type: 'full_heal' },
+      { id: 'nyx-3', description: 'Rare equipment piece', cost: 250, type: 'rare_item' },
+    ],
+  },
+  {
+    id: 'trader-grizzle', name: 'Grizzle the Wandering Smith',
+    greeting: 'A grizzled dwarf with a portable anvil strapped to his back waves you over. "Best prices this side of the wasteland!"',
+    deals: [
+      { id: 'grz-1', description: 'Weapon upgrade (+3 levels)', cost: 150, type: 'weapon_upgrade' },
+      { id: 'grz-2', description: 'Armor upgrade (+3 levels)', cost: 150, type: 'armor_upgrade' },
+      { id: 'grz-3', description: 'Random legendary-tier gear', cost: 500, type: 'legendary_item' },
+    ],
+  },
+  {
+    id: 'trader-luna', name: 'Luna the Energy Witch',
+    greeting: 'A woman with crackling electricity arcing between her fingers smiles. "Need a pick-me-up, traveler?"',
+    deals: [
+      { id: 'luna-1', description: 'Restore 30 energy', cost: 80, type: 'energy_restore' },
+      { id: 'luna-2', description: 'Mana crystal (full mana restore)', cost: 60, type: 'full_mana' },
+      { id: 'luna-3', description: 'Lucky charm (boosted loot next 5 fights)', cost: 200, type: 'lucky_charm' },
+    ],
+  },
+  {
+    id: 'trader-bones', name: 'Old Bones the Collector',
+    greeting: 'A skeletal figure in tattered robes rattles a bag of trinkets. "Trade you... something nice for something shiny..."',
+    deals: [
+      { id: 'bones-1', description: 'Trade 100g for a high-level item', cost: 100, type: 'high_level_item' },
+      { id: 'bones-2', description: 'Double your gold (up to 200g)', cost: 0, type: 'gold_gamble' },
+      { id: 'bones-3', description: 'Cursed item (powerful but risky)', cost: 75, type: 'cursed_item' },
+    ],
+  },
+  {
+    id: 'trader-flora', name: 'Flora the Egg Keeper',
+    greeting: 'A woman in leaf-woven robes cradles something warm and glowing. "I\'ve been nurturing these for months... perhaps one needs a new home?"',
+    deals: [
+      { id: 'flora-1', description: 'Mysterious Egg (Common)', cost: 150, type: 'egg', eggId: 'common-egg' },
+      { id: 'flora-2', description: 'Gleaming Egg (Uncommon) — RARE!', cost: 400, type: 'egg', eggId: 'uncommon-egg' },
+      { id: 'flora-3', description: 'Full HP restoration', cost: 40, type: 'full_heal' },
+    ],
+  },
+  {
+    id: 'trader-anvil', name: 'Krag the Material Hoarder',
+    greeting: 'A massive figure with arms like tree trunks drops a sack of clinking materials. "Need building supplies? I got the good stuff."',
+    deals: [
+      { id: 'krag-1', description: 'Bundle of Scrap Wood (x3)', cost: 30, type: 'material', materialId: 'scrap-wood', quantity: 3 },
+      { id: 'krag-2', description: 'Iron Ore (x2)', cost: 60, type: 'material', materialId: 'iron-ore', quantity: 2 },
+      { id: 'krag-3', description: 'Crystal Shard (x1) — RARE!', cost: 200, type: 'material', materialId: 'crystal-shard', quantity: 1 },
+      { id: 'krag-4', description: 'Stone Block (x3)', cost: 40, type: 'material', materialId: 'stone-block', quantity: 3 },
+    ],
+  },
+  {
+    id: 'trader-whisper', name: 'Whisper the Void Merchant',
+    greeting: 'The air shimmers and a figure steps out of nowhere. Their voice echoes strangely. "I carry things from... elsewhere."',
+    deals: [
+      { id: 'whsp-1', description: 'Radiant Egg (Rare) — VERY RARE!', cost: 800, type: 'egg', eggId: 'rare-egg' },
+      { id: 'whsp-2', description: 'Deep Coral (x1)', cost: 150, type: 'material', materialId: 'deep-coral', quantity: 1 },
+      { id: 'whsp-3', description: 'Void-touched weapon', cost: 350, type: 'legendary_item' },
+    ],
+  },
+  {
+    id: 'trader-patch', name: 'Patch the Scavenger',
+    greeting: 'A scrappy kid with an oversized backpack grins up at you. "Found all this stuff! Wanna trade?"',
+    deals: [
+      { id: 'patch-1', description: 'Charcoal (x2)', cost: 35, type: 'material', materialId: 'charcoal', quantity: 2 },
+      { id: 'patch-2', description: 'Copper Wire (x2)', cost: 50, type: 'material', materialId: 'copper-wire', quantity: 2 },
+      { id: 'patch-3', description: 'Random gear piece', cost: 80, type: 'rare_item' },
+      { id: 'patch-4', description: 'Restore 20 energy', cost: 50, type: 'energy_restore' },
+    ],
+  },
+  {
+    id: 'trader-ember', name: 'Ember the Fire Dancer',
+    greeting: 'Flames dance around her hands as she twirls to face you. "The fire speaks to me... it says you need something."',
+    deals: [
+      { id: 'ember-1', description: 'Toxic Resin (x2)', cost: 80, type: 'material', materialId: 'toxic-resin', quantity: 2 },
+      { id: 'ember-2', description: 'Mysterious Egg (Common)', cost: 120, type: 'egg', eggId: 'common-egg' },
+      { id: 'ember-3', description: 'Blazing weapon (high level)', cost: 300, type: 'legendary_item' },
+    ],
+  },
+  {
+    id: 'trader-deep', name: 'Captain Murk the Deep Diver',
+    greeting: 'A barnacle-encrusted figure emerges from the shadows, dripping wet. "From the depths I bring treasures unseen..."',
+    deals: [
+      { id: 'murk-1', description: 'Deep Coral (x2)', cost: 250, type: 'material', materialId: 'deep-coral', quantity: 2 },
+      { id: 'murk-2', description: 'Gleaming Egg (Uncommon)', cost: 350, type: 'egg', eggId: 'uncommon-egg' },
+      { id: 'murk-3', description: 'Full HP + Mana restore', cost: 100, type: 'full_heal_mana' },
+    ],
+  },
+];

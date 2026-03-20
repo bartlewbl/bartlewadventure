@@ -16,6 +16,8 @@ import ClassSelectScreen from './components/screens/ClassSelectScreen';
 import BossConfirmScreen from './components/screens/BossConfirmScreen';
 import RandomEventScreen from './components/screens/RandomEventScreen';
 import EventResultScreen from './components/screens/EventResultScreen';
+import QuestVillageScreen from './components/screens/QuestVillageScreen';
+import ExtraordinaryTraderScreen from './components/screens/ExtraordinaryTraderScreen';
 import UsernameScreen from './components/screens/UsernameScreen';
 import RegionsScreen from './components/screens/RegionsScreen';
 import JournalScreen from './components/screens/JournalScreen';
@@ -306,6 +308,27 @@ export default function App() {
               <EventResultScreen
                 result={state.eventResult}
                 onContinue={actions.eventResultContinue}
+              />
+            )}
+
+            {state.screen === 'quest-village' && (
+              <QuestVillageScreen
+                village={state.activeVillage}
+                villageQuests={state.villageQuests}
+                stats={state.stats}
+                player={state.player}
+                onAcceptQuest={actions.villageAcceptQuest}
+                onTurnInQuest={actions.villageTurnInQuest}
+                onLeave={actions.villageLeave}
+              />
+            )}
+
+            {state.screen === 'extraordinary-trader' && (
+              <ExtraordinaryTraderScreen
+                trader={state.activeTrader}
+                playerGold={state.player.gold}
+                onBuy={actions.traderBuy}
+                onLeave={actions.traderLeave}
               />
             )}
 

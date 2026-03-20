@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
@@ -8,7 +8,7 @@ import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop } from '../engine/loot';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
@@ -75,6 +75,13 @@ function createInitialState() {
     base: createInitialBase(),
     pets: createInitialPetState(),
     discoveredItemLocations: {}, // { itemName: [locationId, ...] }
+    villageQuests: {
+      discoveredVillages: [], // [villageId, ...]
+      acceptedQuests: [],     // [{ questId, villageId, baseline }]
+      completedQuests: [],    // [questId, ...]
+    },
+    activeTrader: null,       // current trader encounter
+    activeVillage: null,      // current village encounter
   };
 }
 
@@ -219,7 +226,7 @@ function extractSaveData(state) {
   return {
     player: state.player,
     screen: (state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm') ? 'town'
-      : (state.screen === 'explore' || state.screen === 'random-event' || state.screen === 'event-result') ? 'locations'
+      : (state.screen === 'explore' || state.screen === 'random-event' || state.screen === 'event-result' || state.screen === 'quest-village' || state.screen === 'extraordinary-trader') ? 'locations'
       : state.screen,
     pendingLevelUps: state.pendingLevelUps || [],
     energy: state.energy,
@@ -230,6 +237,7 @@ function extractSaveData(state) {
     base: state.base,
     pets: state.pets,
     discoveredItemLocations: state.discoveredItemLocations,
+    villageQuests: state.villageQuests,
   };
 }
 
@@ -434,7 +442,7 @@ function progressSinglePetQuest(pets, petInstanceId, questType, amount = 1) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -477,6 +485,7 @@ function gameReducer(state, action) {
         pets: mergedPets,
         pendingLevelUps: mergedPending,
         discoveredItemLocations: savedDiscovered || {},
+        villageQuests: { ...baseState.villageQuests, ...savedVillageQuests },
       };
     }
 
@@ -631,6 +640,39 @@ function gameReducer(state, action) {
           lastEnergyUpdate: exploreLastUpdate,
           randomEvent: event,
           pets: petsAfterExplore,
+        };
+      }
+
+      // Quest village discovery check (~2% chance, only in regions with villages)
+      const regionId = state.currentRegion?.id;
+      const regionVillages = regionId ? (QUEST_VILLAGES[regionId] || []) : [];
+      if (regionVillages.length > 0 && Math.random() < 0.02) {
+        const village = regionVillages[Math.floor(Math.random() * regionVillages.length)];
+        const isNewDiscovery = !(state.villageQuests.discoveredVillages || []).includes(village.id);
+        const newDiscovered = isNewDiscovery
+          ? [...(state.villageQuests.discoveredVillages || []), village.id]
+          : state.villageQuests.discoveredVillages || [];
+        return {
+          ...state, screen: 'quest-village',
+          exploreText: text,
+          energy: exploreEnergy,
+          lastEnergyUpdate: exploreLastUpdate,
+          pets: petsAfterExplore,
+          activeVillage: village,
+          villageQuests: { ...state.villageQuests, discoveredVillages: newDiscovered },
+        };
+      }
+
+      // Extraordinary trader encounter check (~1.5% chance)
+      if (Math.random() < 0.015) {
+        const trader = EXTRAORDINARY_TRADERS[Math.floor(Math.random() * EXTRAORDINARY_TRADERS.length)];
+        return {
+          ...state, screen: 'extraordinary-trader',
+          exploreText: text,
+          energy: exploreEnergy,
+          lastEnergyUpdate: exploreLastUpdate,
+          pets: petsAfterExplore,
+          activeTrader: trader,
         };
       }
 
@@ -925,6 +967,268 @@ function gameReducer(state, action) {
         screen: 'explore',
         randomEvent: null,
         eventResult: null,
+      };
+    }
+
+    // ---- QUEST VILLAGE ACTIONS ----
+    case 'VILLAGE_ACCEPT_QUEST': {
+      const { questId, villageId } = action;
+      const vq = state.villageQuests;
+      // Don't accept duplicates
+      if ((vq.acceptedQuests || []).some(q => q.questId === questId)) return state;
+      if ((vq.completedQuests || []).includes(questId)) return state;
+      // Set baseline from current stats so progress counts from now
+      const village = Object.values(QUEST_VILLAGES).flat().find(v => v.id === villageId);
+      const questDef = village?.quests.find(q => q.id === questId);
+      if (!questDef) return state;
+      const baseline = state.stats[questDef.stat] || 0;
+      return {
+        ...state,
+        villageQuests: {
+          ...vq,
+          acceptedQuests: [...(vq.acceptedQuests || []), { questId, villageId, baseline }],
+        },
+        message: `Quest accepted: ${questDef.name}`,
+      };
+    }
+
+    case 'VILLAGE_TURN_IN_QUEST': {
+      const { questId, villageId } = action;
+      const vq = state.villageQuests;
+      const accepted = (vq.acceptedQuests || []).find(q => q.questId === questId);
+      if (!accepted) return state;
+      // Find quest definition
+      const village = Object.values(QUEST_VILLAGES).flat().find(v => v.id === villageId);
+      const questDef = village?.quests.find(q => q.id === questId);
+      if (!questDef) return state;
+      // Check progress
+      const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
+      if (progress < questDef.target) return state;
+      // Give rewards
+      let p = { ...state.player };
+      p.gold += questDef.reward.gold;
+      // Generate reward item if applicable
+      if (questDef.reward.item && p.inventory.length < p.maxInventory) {
+        const loc = state.currentLocation;
+        const lvl = Math.max(loc?.levelReq || 1, p.level);
+        const rewardItem = generateItem(questDef.reward.item, lvl + 2);
+        p = { ...p, inventory: [...p.inventory, rewardItem] };
+      }
+      return {
+        ...state,
+        player: p,
+        villageQuests: {
+          ...vq,
+          acceptedQuests: (vq.acceptedQuests || []).filter(q => q.questId !== questId),
+          completedQuests: [...(vq.completedQuests || []), questId],
+        },
+        stats: addStat(state.stats, 'goldEarned', questDef.reward.gold),
+        message: `Quest complete: ${questDef.name}! +${questDef.reward.gold}g`,
+      };
+    }
+
+    case 'VILLAGE_LEAVE': {
+      return {
+        ...state,
+        screen: 'explore',
+        activeVillage: null,
+      };
+    }
+
+    // ---- EXTRAORDINARY TRADER ACTIONS ----
+    case 'TRADER_BUY': {
+      const { dealId } = action;
+      const trader = state.activeTrader;
+      if (!trader) return state;
+      const deal = trader.deals.find(d => d.id === dealId);
+      if (!deal) return state;
+      let p = { ...state.player };
+      if (deal.cost > 0 && p.gold < deal.cost) {
+        return { ...state, message: 'Not enough gold!' };
+      }
+      p.gold -= deal.cost;
+      let newEnergy = state.energy;
+      const loc = state.currentLocation;
+      const lvl = Math.max(loc?.levelReq || 1, p.level);
+      let msg = '';
+
+      switch (deal.type) {
+        case 'full_heal':
+          p.hp = p.maxHp;
+          msg = 'HP fully restored!';
+          break;
+        case 'full_mana':
+          p.mana = p.maxMana;
+          msg = 'Mana fully restored!';
+          break;
+        case 'energy_restore': {
+          const restoreAmt = deal.amount || 30;
+          newEnergy = Math.min(ENERGY_MAX, newEnergy + restoreAmt);
+          msg = `+${restoreAmt} energy!`;
+          break;
+        }
+        case 'rare_item':
+          if (p.inventory.length < p.maxInventory) {
+            const types = ['ring', 'sword', 'armor', 'shield', 'boots', 'helmet'];
+            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 3);
+            p = { ...p, inventory: [...p.inventory, item] };
+            msg = `Received: ${item.name}`;
+          } else {
+            p.gold += deal.cost; // Refund
+            msg = 'Inventory full!';
+          }
+          break;
+        case 'legendary_item':
+          if (p.inventory.length < p.maxInventory) {
+            const types = ['sword', 'armor', 'shield', 'ring'];
+            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 6);
+            p = { ...p, inventory: [...p.inventory, item] };
+            msg = `Received: ${item.name}`;
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        case 'high_level_item':
+          if (p.inventory.length < p.maxInventory) {
+            const types = ['sword', 'armor', 'shield', 'helmet', 'boots', 'ring', 'amulet'];
+            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 4);
+            p = { ...p, inventory: [...p.inventory, item] };
+            msg = `Received: ${item.name}`;
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        case 'mystery_box': {
+          if (p.inventory.length < p.maxInventory) {
+            if (Math.random() < 0.5) {
+              const item = generateItem('sword', lvl + 5);
+              p = { ...p, inventory: [...p.inventory, item] };
+              msg = `Amazing! Got: ${item.name}`;
+            } else {
+              const dmg = Math.floor(p.maxHp * 0.2);
+              p.hp = Math.max(1, p.hp - dmg);
+              msg = `The box exploded! -${dmg} HP`;
+            }
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        }
+        case 'weapon_upgrade': {
+          if (p.equipment.weapon) {
+            const w = { ...p.equipment.weapon };
+            w.atk = (w.atk || 0) + Math.floor(3 + lvl * 0.5);
+            w.name = w.name + '+';
+            p = { ...p, equipment: { ...p.equipment, weapon: w } };
+            msg = `${w.name} upgraded!`;
+          } else {
+            p.gold += deal.cost;
+            msg = 'No weapon equipped!';
+          }
+          break;
+        }
+        case 'armor_upgrade': {
+          if (p.equipment.armor) {
+            const a = { ...p.equipment.armor };
+            a.def = (a.def || 0) + Math.floor(3 + lvl * 0.5);
+            a.name = a.name + '+';
+            p = { ...p, equipment: { ...p.equipment, armor: a } };
+            msg = `${a.name} upgraded!`;
+          } else {
+            p.gold += deal.cost;
+            msg = 'No armor equipped!';
+          }
+          break;
+        }
+        case 'gold_gamble': {
+          const wager = Math.min(p.gold, 200);
+          if (Math.random() < 0.45) {
+            p.gold += wager;
+            msg = `Doubled! +${wager}g`;
+          } else {
+            p.gold = Math.max(0, p.gold - Math.floor(wager * 0.5));
+            msg = `Lost the gamble! -${Math.floor(wager * 0.5)}g`;
+          }
+          break;
+        }
+        case 'cursed_item': {
+          if (p.inventory.length < p.maxInventory) {
+            const types = ['sword', 'ring', 'armor'];
+            const item = generateItem(types[Math.floor(Math.random() * types.length)], lvl + 8);
+            item.name = 'Cursed ' + item.name;
+            p = { ...p, inventory: [...p.inventory, item] };
+            const dmg = Math.floor(p.maxHp * 0.15);
+            p.hp = Math.max(1, p.hp - dmg);
+            msg = `Got ${item.name}! But it cursed you for ${dmg} HP!`;
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        }
+        case 'lucky_charm': {
+          msg = 'A lucky glow surrounds you! (Boosted loot for next encounters)';
+          break;
+        }
+        case 'full_heal_mana': {
+          p.hp = p.maxHp;
+          p.mana = p.maxMana;
+          msg = 'HP and Mana fully restored!';
+          break;
+        }
+        case 'egg': {
+          if (p.inventory.length < p.maxInventory) {
+            const eggItem = createEggItem(deal.eggId);
+            if (eggItem) {
+              p = { ...p, inventory: [...p.inventory, eggItem] };
+              msg = `Received: ${eggItem.name}!`;
+            } else {
+              p.gold += deal.cost;
+              msg = 'The egg crumbled...';
+            }
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        }
+        case 'material': {
+          if (p.inventory.length < p.maxInventory) {
+            const matItem = createMaterialItem(deal.materialId, deal.quantity || 1);
+            if (matItem) {
+              p = { ...p, inventory: [...p.inventory, matItem] };
+              msg = `Received: ${matItem.name} x${deal.quantity || 1}!`;
+            } else {
+              p.gold += deal.cost;
+              msg = 'The material disintegrated...';
+            }
+          } else {
+            p.gold += deal.cost;
+            msg = 'Inventory full!';
+          }
+          break;
+        }
+        default:
+          msg = 'The trader nods and hands you something.';
+      }
+
+      return {
+        ...state,
+        player: p,
+        energy: newEnergy,
+        stats: deal.cost > 0 ? addStat(state.stats, 'goldSpent', deal.cost) : state.stats,
+        message: msg,
+      };
+    }
+
+    case 'TRADER_LEAVE': {
+      return {
+        ...state,
+        screen: 'explore',
+        activeTrader: null,
       };
     }
 
@@ -3377,6 +3681,11 @@ export function useGameState(isLoggedIn) {
     exploreStep: () => dispatch({ type: 'EXPLORE_STEP' }),
     randomEventChoose: (choiceIndex) => dispatch({ type: 'RANDOM_EVENT_CHOOSE', choiceIndex }),
     eventResultContinue: () => dispatch({ type: 'EVENT_RESULT_CONTINUE' }),
+    villageAcceptQuest: (questId, villageId) => dispatch({ type: 'VILLAGE_ACCEPT_QUEST', questId, villageId }),
+    villageTurnInQuest: (questId, villageId) => dispatch({ type: 'VILLAGE_TURN_IN_QUEST', questId, villageId }),
+    villageLeave: () => dispatch({ type: 'VILLAGE_LEAVE' }),
+    traderBuy: (dealId) => dispatch({ type: 'TRADER_BUY', dealId }),
+    traderLeave: () => dispatch({ type: 'TRADER_LEAVE' }),
     battleAttack: () => dispatch({ type: 'BATTLE_PLAYER_ATTACK' }),
     battleSkill: () => dispatch({ type: 'BATTLE_PLAYER_SKILL' }),
     battleTreeSkill: (skillId) => dispatch({ type: 'BATTLE_USE_TREE_SKILL', skillId }),
