@@ -116,7 +116,7 @@ export const WEEKLY_TASKS = [
     description: 'Defeat 50 monsters',
     stat: 'monstersKilled',
     target: 50,
-    reward: { gold: 200 },
+    reward: { gold: 200, chestId: 'shadow-lockbox' },
   },
   {
     id: 'weekly_boss_3',
@@ -124,7 +124,7 @@ export const WEEKLY_TASKS = [
     description: 'Defeat 3 bosses',
     stat: 'bossesKilled',
     target: 3,
-    reward: { gold: 300 },
+    reward: { gold: 300, chestId: 'mercenary-bounty' },
   },
   {
     id: 'weekly_deal_5000',
@@ -140,7 +140,7 @@ export const WEEKLY_TASKS = [
     description: 'Earn 1,000 gold',
     stat: 'goldEarned',
     target: 1000,
-    reward: { gold: 350 },
+    reward: { gold: 350, chestId: 'street-crate' },
   },
   {
     id: 'weekly_explore_20',
@@ -172,7 +172,7 @@ export const MONTHLY_TASKS = [
     description: 'Defeat 300 monsters',
     stat: 'monstersKilled',
     target: 300,
-    reward: { gold: 1000 },
+    reward: { gold: 1000, chestId: 'skyline-strongbox' },
   },
   {
     id: 'monthly_boss_15',
@@ -180,7 +180,7 @@ export const MONTHLY_TASKS = [
     description: 'Defeat 15 bosses',
     stat: 'bossesKilled',
     target: 15,
-    reward: { gold: 1500 },
+    reward: { gold: 1500, chestId: 'neon-treasure' },
   },
   {
     id: 'monthly_deal_50000',
@@ -196,7 +196,7 @@ export const MONTHLY_TASKS = [
     description: 'Earn 10,000 gold',
     stat: 'goldEarned',
     target: 10000,
-    reward: { gold: 2000 },
+    reward: { gold: 2000, chestId: 'ironworks-coffer' },
   },
   {
     id: 'monthly_explore_100',
@@ -236,7 +236,7 @@ export const STORY_TASKS = [
     description: 'Defeat 100 monsters',
     stat: 'monstersKilled',
     target: 100,
-    reward: { gold: 200 },
+    reward: { gold: 200, chestId: 'metro-vault' },
   },
   {
     id: 'story_kill_500',
@@ -252,7 +252,7 @@ export const STORY_TASKS = [
     description: 'Defeat 1,000 monsters',
     stat: 'monstersKilled',
     target: 1000,
-    reward: { gold: 1000 },
+    reward: { gold: 1000, chestId: 'void-reliquary' },
   },
   {
     id: 'story_first_boss',
@@ -268,7 +268,7 @@ export const STORY_TASKS = [
     description: 'Defeat 10 bosses',
     stat: 'bossesKilled',
     target: 10,
-    reward: { gold: 500 },
+    reward: { gold: 500, chestId: 'skyline-strongbox' },
   },
   {
     id: 'story_level_10',
@@ -292,7 +292,7 @@ export const STORY_TASKS = [
     description: 'Reach level 50',
     stat: 'levelsGained',
     target: 49,
-    reward: { gold: 1000 },
+    reward: { gold: 1000, chestId: 'legendary-ark' },
   },
   {
     id: 'story_earn_5000g',
@@ -308,7 +308,7 @@ export const STORY_TASKS = [
     description: 'Earn 50,000 total gold',
     stat: 'goldEarned',
     target: 50000,
-    reward: { gold: 2000 },
+    reward: { gold: 2000, chestId: 'neon-treasure' },
   },
   {
     id: 'story_deal_10000',
@@ -324,7 +324,7 @@ export const STORY_TASKS = [
     description: 'Deal 100,000 total damage',
     stat: 'damageDealt',
     target: 100000,
-    reward: { gold: 1000 },
+    reward: { gold: 1000, chestId: 'void-reliquary' },
   },
   {
     id: 'story_explore_50',
@@ -1704,5 +1704,6 @@ export function createInitialStats() {
     levelsGained: 0,
     highestDamage: 0,
     totalHealing: 0,
+    chestsOpened: 0,
   };
 }

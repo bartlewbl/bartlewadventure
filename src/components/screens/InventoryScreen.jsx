@@ -29,9 +29,11 @@ const INV_CATEGORIES = [
   { id: 'accessories', label: 'Rings', icon: '\u25C7' },
   { id: 'potions', label: 'Potions', icon: '\u2661' },
   { id: 'energy-drinks', label: 'Energy', icon: '\u26A1' },
+  { id: 'chests', label: 'Chests', icon: '\u{1F4E6}' },
 ];
 
 function getItemCategory(item) {
+  if (item.type === 'loot-chest') return 'chests';
   if (item.type === 'potion') return 'potions';
   if (item.type === 'energy-drink') return 'energy-drinks';
   if (item.slot === 'weapon') return 'weapons';
@@ -57,6 +59,7 @@ function itemMetaTag(item) {
 
 function itemStatLine(item) {
   if (!item) return '';
+  if (item.type === 'loot-chest') return item.desc || 'Open to reveal loot!';
   if (item.slot) {
     const stats = [];
     if (item.atk) stats.push('ATK+' + item.atk);
@@ -333,6 +336,8 @@ export default function InventoryScreen({
                       title={locked ? `Requires Level ${item.level}` : classLocked ? 'Wrong class' : ''}>
                       {cantEquip ? 'Locked' : 'Equip'}
                     </button>
+                  ) : item.type === 'loot-chest' ? (
+                    <button className="btn btn-sm btn-chest-open" onClick={() => onUse(item)}>Open</button>
                   ) : (
                     <button className="btn btn-sm" onClick={() => onUse(item)}>Use</button>
                   )}

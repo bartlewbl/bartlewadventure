@@ -7,10 +7,13 @@
 //   energy(amount)                     - energy restore
 //   item(type, rarity, minLevel?)      - gear/accessory scaled to player level
 //   potion(rarity?)                    - healing potion scaled to player level
+//   chest(chestId)                     - loot chest added to inventory
 //
 // The `milestone` flag highlights a day in the calendar UI.
 // Labels are auto-generated from the rewards array.
 // ============================================================
+
+import { CHEST_LOOKUP } from './lootChests';
 
 // --- Reward builder helpers ---
 
@@ -30,6 +33,10 @@ function potion(rarity = 'Uncommon') {
   return { kind: 'potion', rarity };
 }
 
+function chest(chestId) {
+  return { kind: 'chest', chestId };
+}
+
 // --- Auto-label generation ---
 
 const LABEL_MAP = {
@@ -37,6 +44,7 @@ const LABEL_MAP = {
   energy: (r) => `${r.amount} Energy`,
   item: (r) => `${r.rarity} ${r.type}`,
   potion: (r) => `${r.rarity} Potion`,
+  chest: (r) => CHEST_LOOKUP[r.chestId]?.name || 'Loot Chest',
 };
 
 function buildLabel(rewards) {
@@ -57,37 +65,37 @@ export const DAILY_REWARDS = [
   day(4,  [item('helmet', 'Uncommon')]),
   day(5,  [potion('Rare'), gold(25)]),
   day(6,  [item('boots', 'Uncommon'), gold(20)]),
-  day(7,  [item('armor', 'Rare'), gold(50)], true),
+  day(7,  [chest('street-crate'), item('armor', 'Rare'), gold(50)], true),
 
-  // Week 2 - Ramp up quality
+  // Week 2 - Ramp up quality, first shadow lockbox
   day(8,  [gold(40), potion()]),
   day(9,  [item('ring', 'Uncommon'), energy(30)]),
   day(10, [item('shield', 'Rare')]),
   day(11, [potion('Rare'), gold(40)]),
   day(12, [item('sword', 'Rare')]),
   day(13, [item('boots', 'Rare'), energy(40)]),
-  day(14, [item('armor', 'Rare'), item('ring', 'Rare'), gold(75)], true),
+  day(14, [chest('shadow-lockbox'), item('armor', 'Rare'), gold(75)], true),
 
-  // Week 3 - Epic items start appearing
+  // Week 3 - Epic items start appearing, metro vault chest
   day(15, [gold(60), potion('Rare')]),
   day(16, [item('helmet', 'Rare'), energy(30)]),
   day(17, [item('shield', 'Rare'), gold(50)]),
   day(18, [item('sword', 'Epic')]),
   day(19, [potion('Epic'), gold(60)]),
   day(20, [item('ring', 'Epic'), energy(50)]),
-  day(21, [item('armor', 'Epic'), gold(100)], true),
+  day(21, [chest('metro-vault'), item('armor', 'Epic'), gold(100)], true),
 
-  // Week 4 - Premium rewards, legendary on day 30
+  // Week 4 - Premium rewards, legendary on day 30 with legendary chest
   day(22, [item('boots', 'Epic'), potion('Rare')]),
   day(23, [item('helmet', 'Epic'), gold(75)]),
-  day(24, [item('shield', 'Epic'), energy(50)]),
+  day(24, [chest('cyberpunk-cache'), energy(50)]),
   day(25, [gold(100), potion('Epic'), energy(40)]),
   day(26, [item('sword', 'Epic'), item('ring', 'Rare')]),
-  day(27, [item('armor', 'Epic'), gold(100)]),
+  day(27, [chest('skyline-strongbox'), gold(100)]),
   day(28, [item('shield', 'Epic'), item('boots', 'Epic'), gold(100)], true),
-  day(29, [item('ring', 'Epic'), gold(150), energy(80)]),
-  day(30, [item('sword', 'Legendary'), item('armor', 'Legendary'), gold(200), energy(100)], true),
+  day(29, [chest('neon-treasure'), gold(150), energy(80)]),
+  day(30, [chest('legendary-ark'), item('sword', 'Legendary'), gold(200), energy(100)], true),
 ];
 
 // Re-export helpers for external use (e.g. server-side reward definitions)
-export { gold, energy, item, potion };
+export { gold, energy, item, potion, chest };
