@@ -1,9 +1,9 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES, getMonsterSkillElement } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER, PERFECT_PARRY_COUNTER_MULTIPLIER, calcMonsterElementalDamage, calcStanceMomentum } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -63,6 +63,7 @@ function createInitialPlayer() {
     unlockedUniversalSkills: [], // universal combat skills unlocked through level milestones
     comboMaster: false, // combo chains deal +20% bonus
     stanceMaster: false, // stance bonuses increased by 50%
+    perfectParryMaster: false, // parry counter deals 1.5x damage
   };
 }
 
@@ -185,6 +186,8 @@ function processLevelUps(player) {
         p.comboMaster = true;
       } else if (milestone.reward === 'stance_master') {
         p.stanceMaster = true;
+      } else if (milestone.reward === 'perfect_parry_master') {
+        p.perfectParryMaster = true;
       }
       pendingLevels[pendingLevels.length - 1].milestone = milestone;
     }
@@ -346,6 +349,27 @@ function createBattleState(monster, player) {
     warShoutTurns: 0,
     warShoutAtkDebuff: 0,
     warShoutDefBuff: 0,
+    // Stance momentum
+    stanceMomentum: 0,
+    lastStance: 'balanced',
+    // Combo streak
+    comboStreak: 0,
+    // Universal skill cooldowns { skillId: turnsRemaining }
+    universalCooldowns: {},
+    // Elemental ward (from universal skill)
+    elementalWardTurns: 0,
+    // Last Stand used flag
+    lastStandUsed: false,
+    // Limit Break used flag
+    limitBreakUsed: false,
+    // Armor Shatter debuff on monster
+    armorShatterTurns: 0,
+    armorShatterPct: 0,
+    // Frenzy combo buff
+    frenzyBonusTurns: 0,
+    frenzyBonusPct: 0,
+    // Invulnerability from perfect parry combo
+    playerInvulnTurns: 0,
   };
 }
 
@@ -1118,7 +1142,14 @@ function gameReducer(state, action) {
         return { ...state, battle: b, battleLog: log };
       }
 
-      let dmg = calcDamage(getPlayerAtk(p, b), m.def);
+      // Apply armor shatter debuff to monster DEF
+      const effectiveMonsterDef = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      let dmg = calcDamage(getPlayerAtk(p, b), effectiveMonsterDef);
+
+      // Apply frenzy combo buff
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
 
       // Apply channel bonus
       if (b.playerChannelBonusActive) {
@@ -1128,7 +1159,7 @@ function gameReducer(state, action) {
       }
 
       // Stance modifier on outgoing damage
-      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
+      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
       dmg = Math.floor(dmg * stanceMods.dmgDealt);
 
       // Aggression bonus: increased outgoing damage
@@ -1149,13 +1180,16 @@ function gameReducer(state, action) {
       const lucky = tryLuckyStrike(p, dmg);
       dmg = lucky.dmg;
 
-      // Critical hit check (includes luck bonus + stance crit mod)
+      // Critical hit check (includes luck bonus + stance crit mod + guaranteed crit)
       let playerCrit = false;
       const pLuck = getPlayerLuck(p);
       const critChance = getPlayerCritChance(p) + luckCritBonus(pLuck) + stanceMods.critMod;
-      if (Math.random() < critChance) {
+      if (b.guaranteedCrit || Math.random() < critChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         playerCrit = true;
+        if (b.guaranteedCrit) {
+          b.guaranteedCrit = false;
+        }
       }
 
       // Monster damage reduction (boss gimmick)
@@ -1215,8 +1249,27 @@ function gameReducer(state, action) {
             log.push({ text: `Enemy is bleeding!`, type: 'info' });
           } else if (combo.bonus === 'pierce') {
             // Pierce: next attack ignores 50% DEF — already dealt
+          } else if (combo.bonus === 'armor_break') {
+            b.armorShatterTurns = combo.armorBreakTurns || 3;
+            b.armorShatterPct = combo.armorBreakPct || 0.4;
+            log.push({ text: `Fortress Crush! Enemy armor broken!`, type: 'info' });
+          } else if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'invuln') {
+            b.playerInvulnTurns = combo.invulnTurns || 1;
+            log.push({ text: 'Perfect Parry! You become invulnerable!', type: 'info' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Berserker frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'crit_guarantee') {
+            b.guaranteedCrit = true;
+            log.push({ text: 'Focused Strike — guaranteed critical next attack!', type: 'info' });
           }
           b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
         }
         b.actionHistory = []; // reset after combo completes
       }
@@ -1273,7 +1326,9 @@ function gameReducer(state, action) {
       const skillName = cls?.skillName || 'Power Strike';
       const skillMult = cls?.skillMultiplier || 1.5;
       const skillEffect = cls?.skillEffect || null;
-      const manaCost = getEffectiveManaCost(p, cls?.skillManaCost || 0, b);
+      const stanceModsSkill = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const manaCostRaw = cls?.skillManaCost || 0;
+      const manaCost = getEffectiveManaCost(p, Math.ceil(manaCostRaw * (stanceModsSkill.manaMod || 1.0)), b);
 
       if (manaCost > 0 && p.mana < manaCost) {
         return { ...state, message: `Not enough mana! (${manaCost} needed)` };
@@ -1291,12 +1346,30 @@ function gameReducer(state, action) {
 
       p = applyLifeTap(p, manaCost);
 
-      const effectiveDef = getEffectiveDef(m.def, skillEffect);
+      // Apply armor shatter debuff to monster DEF
+      const effectiveMonsterDefSkill = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      const effectiveDef = getEffectiveDef(effectiveMonsterDefSkill, skillEffect);
       let dmg = calcDamage(atkValue, effectiveDef);
 
-      // Critical hit check for skills
+      // Apply frenzy combo buff
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
+
+      // Stance modifier on outgoing damage
+      dmg = Math.floor(dmg * stanceModsSkill.dmgDealt);
+
+      // Elemental damage multiplier (skill element vs monster element)
+      const elemMultSkill = calcElementalDamageMultiplier(classElement, b.monsterElement);
+      if (elemMultSkill !== 1.0) {
+        dmg = Math.floor(dmg * elemMultSkill);
+      }
+
+      // Critical hit check for skills (includes stance crit mod)
       let skillCrit = false;
-      if (Math.random() < getPlayerCritChance(p)) {
+      const pLuckSkill = getPlayerLuck(p);
+      const skillCritChance = getPlayerCritChance(p) + luckCritBonus(pLuckSkill) + stanceModsSkill.critMod;
+      if (Math.random() < skillCritChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         skillCrit = true;
       }
@@ -1311,11 +1384,39 @@ function gameReducer(state, action) {
       const classWeatherLabel = classWeatherBuff !== 1.0
         ? ` (${classWeatherBuff > 1 ? '+' : ''}${Math.round((classWeatherBuff - 1) * 100)}% weather)`
         : '';
+      if (elemMultSkill > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+      else if (elemMultSkill < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
       const critLabel = skillCrit ? 'CRIT! ' : '';
       if (echoProc) {
         log.push({ text: `${critLabel}Spell Echo! ${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
       } else {
         log.push({ text: `${critLabel}${skillName} for ${dmg} damage!${classWeatherLabel}`, type: 'dmg-monster' });
+      }
+
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+      // Check combo chains
+      const skillCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (skillCombos.length > 0) {
+        for (const combo of skillCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = [];
       }
 
       // Apply class skill effect (recoil, weaken, drain, etc.)
@@ -1360,7 +1461,8 @@ function gameReducer(state, action) {
       let p = { ...state.player };
       const skill = getTreeSkill(action.skillId);
       if (!skill || skill.type !== 'active') return state;
-      const manaCost = getEffectiveManaCost(p, skill.manaCost || 0, b);
+      const stanceModsTree = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const manaCost = getEffectiveManaCost(p, Math.ceil((skill.manaCost || 0) * (stanceModsTree.manaMod || 1.0)), b);
       if (manaCost > 0 && p.mana < manaCost) {
         return { ...state, message: `Not enough mana! (${manaCost} needed)` };
       }
@@ -1378,15 +1480,33 @@ function gameReducer(state, action) {
 
       p = applyLifeTap(p, manaCost);
 
-      const effectiveDef = getEffectiveDef(m.def, skill.effect);
+      // Apply armor shatter debuff to monster DEF
+      const effectiveMonsterDefTree = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      const effectiveDef = getEffectiveDef(effectiveMonsterDefTree, skill.effect);
       let finalMult = getExecuteMultiplier(skill.effect, m.hp, m.maxHp);
       if (skill.effect === 'counter' && b.defendedLastTurn) finalMult = 1.25;
 
       let dmg = calcDamage(Math.floor(atkValue * finalMult), effectiveDef);
 
-      // Critical hit check for tree skills
+      // Apply frenzy combo buff
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
+
+      // Stance modifier on outgoing damage
+      dmg = Math.floor(dmg * stanceModsTree.dmgDealt);
+
+      // Elemental damage multiplier (skill element vs monster element)
+      const elemMultTree = calcElementalDamageMultiplier(skillElement, b.monsterElement);
+      if (elemMultTree !== 1.0) {
+        dmg = Math.floor(dmg * elemMultTree);
+      }
+
+      // Critical hit check for tree skills (includes stance crit mod + luck)
       let treeCrit = false;
-      if (Math.random() < getPlayerCritChance(p)) {
+      const pLuckTree = getPlayerLuck(p);
+      const treeCritChance = getPlayerCritChance(p) + luckCritBonus(pLuckTree) + stanceModsTree.critMod;
+      if (Math.random() < treeCritChance) {
         dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
         treeCrit = true;
       }
@@ -1401,11 +1521,39 @@ function gameReducer(state, action) {
       const weatherBuffLabel = weatherSpellBuff !== 1.0
         ? ` (${weatherSpellBuff > 1 ? '+' : ''}${Math.round((weatherSpellBuff - 1) * 100)}% weather)`
         : '';
+      if (elemMultTree > 1.0) log.push({ text: 'Super effective!', type: 'info' });
+      else if (elemMultTree < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
       const treeCritLabel = treeCrit ? 'CRIT! ' : '';
       if (echoProc) {
         log.push({ text: `${treeCritLabel}Spell Echo! ${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
       } else {
         log.push({ text: `${treeCritLabel}${skill.name} for ${dmg} damage!${weatherBuffLabel}`, type: 'dmg-monster' });
+      }
+
+      // Track in combo history
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+      // Check combo chains
+      const treeCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (treeCombos.length > 0) {
+        for (const combo of treeCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = [];
       }
 
       // Apply skill effect via data-driven registry
@@ -1643,9 +1791,30 @@ function gameReducer(state, action) {
         }
       }
 
+      // Stance momentum: build up if staying in same stance
+      if (b.stance === b.lastStance && b.stance !== 'balanced') {
+        b.stanceMomentum = calcStanceMomentum(b.stanceMomentum, b.stance);
+      }
+      b.lastStance = b.stance;
+
+      // Tick down universal skill cooldowns
+      const cds = { ...b.universalCooldowns };
+      for (const key of Object.keys(cds)) {
+        if (cds[key] > 0) cds[key]--;
+        if (cds[key] <= 0) delete cds[key];
+      }
+      b.universalCooldowns = cds;
+
       // Tick down buffs
       if (b.avatarTurns > 0) b.avatarTurns--;
       if (b.armorBreakTurns > 0) b.armorBreakTurns--;
+      if (b.elementalWardTurns > 0) b.elementalWardTurns--;
+      if (b.frenzyBonusTurns > 0) b.frenzyBonusTurns--;
+      if (b.playerInvulnTurns > 0) b.playerInvulnTurns--;
+      if (b.armorShatterTurns > 0) {
+        b.armorShatterTurns--;
+        if (b.armorShatterTurns <= 0) b.armorShatterPct = 0;
+      }
       if (b.warShoutTurns > 0) {
         b.warShoutTurns--;
         if (b.warShoutTurns <= 0) {
@@ -1939,7 +2108,7 @@ function gameReducer(state, action) {
       } else {
         // Normal monster attack (not channeling)
         // Stance dodge modifier
-        const stanceModsDefend = getStanceModifiers(b.stance, p.stanceMaster);
+        const stanceModsDefend = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
 
         // Player evasion-based dodge (separate from skill-based dodge)
         const pEvasion = getPlayerEvasion(p, b);
@@ -1977,11 +2146,28 @@ function gameReducer(state, action) {
               const debuffSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && (sk.effect === 'lower_def' || sk.effect === 'lower_atk' || sk.effect === 'poison'); });
               const channelSkills = m.skills.filter(s => { const sk = SKILLS[s]; return sk && sk.effect === 'channel'; });
 
+              // Elemental awareness: prefer skills that are strong against player's class element
+              const playerClassElem = getSkillElement(null, p.characterClass);
+              const elemStrongSkills = m.skills.filter(s => {
+                const sElem = getMonsterSkillElement(s, b.monsterElement);
+                return sElem && sElem !== 'physical' && calcElementalDamageMultiplier(sElem, playerClassElem) > 1.0;
+              });
+
+              // Stance reaction: if player is in aggressive stance, use CC; if defensive, use debuffs
+              const stanceReaction = b.stance === 'aggressive' ? ccSkills
+                : b.stance === 'defensive' ? dmgSkills
+                : b.stance === 'evasive' ? debuffSkills
+                : null;
+
               let pool;
               if (mHpPctNow < 0.3 && drainSkills.length > 0 && Math.random() < 0.5) {
                 pool = drainSkills;
               } else if (pHpPctNow < 0.3 && dmgSkills.length > 0 && Math.random() < 0.6) {
                 pool = dmgSkills;
+              } else if (stanceReaction && stanceReaction.length > 0 && Math.random() < 0.35) {
+                pool = stanceReaction;
+              } else if (elemStrongSkills.length > 0 && Math.random() < 0.4) {
+                pool = elemStrongSkills;
               } else if (pHpPctNow > 0.6 && ccSkills.length > 0 && b.playerStunTurns <= 0 && b.playerConfusionTurns <= 0 && Math.random() < 0.4) {
                 pool = ccSkills;
               } else if (b.turnCount <= 2 && channelSkills.length > 0 && Math.random() < 0.3) {
@@ -2003,14 +2189,32 @@ function gameReducer(state, action) {
             b.monsterChannelSkillId = mSkillId;
             log.push({ text: `${m.name} begins channeling ${mSkill.name}! (${b.monsterChannelTurns} turn${b.monsterChannelTurns > 1 ? 's' : ''})`, type: 'info' });
           } else {
+            // Player invulnerability from perfect parry combo
+            if (b.playerInvulnTurns > 0) {
+              log.push({ text: 'You are invulnerable! The attack passes through you!', type: 'info' });
+              b.monster = m;
+              b.isPlayerTurn = true;
+              b.defending = false;
+              if (b.playerIsFaster) {
+                b.monsterNextMove = pickMonsterNextMove(m, b);
+              }
+              return { ...state, player: p, battle: b, battleLog: log };
+            }
+
             let dmg;
             const isSkillAttack = !!mSkill;
+            // Apply armor shatter to monster DEF for player's benefit (reversed: here reducing player def from monster perspective isn't right)
+            // Actually armor shatter reduces MONSTER def, applied in player attacks - for monster attacks, we use player DEF normally
             if (mSkill) {
               const rawAtk = Math.floor(m.atk * mSkill.multiplier);
               dmg = calcDamage(rawAtk, getPlayerDef(p, b));
             } else {
               dmg = calcDamage(m.atk, getPlayerDef(p, b));
             }
+
+            // Monster elemental damage bonus/penalty vs player
+            const mSkillElem = isSkillAttack ? getMonsterSkillElement(mSkillId, b.monsterElement) : b.monsterElement;
+            dmg = calcMonsterElementalDamage(dmg, b.monsterElement, mSkillElem, b);
 
             // Monster aggression: increases outgoing damage
             const mAgg = m.aggression || 0;
@@ -2055,10 +2259,11 @@ function gameReducer(state, action) {
             if (b.parrying) {
               dmg = Math.floor(dmg * (1 - PARRY_DAMAGE_REDUCTION));
               log.push({ text: `Parried! Blocked ${Math.round(PARRY_DAMAGE_REDUCTION * 100)}% of damage!`, type: 'info' });
-              // Counter attack
-              const counterDmg = Math.floor(calcDamage(Math.floor(getPlayerAtk(p, b) * PARRY_COUNTER_MULTIPLIER), m.def));
+              // Counter attack (enhanced by perfect parry master)
+              const counterMult = p.perfectParryMaster ? PERFECT_PARRY_COUNTER_MULTIPLIER : PARRY_COUNTER_MULTIPLIER;
+              const counterDmg = Math.floor(calcDamage(Math.floor(getPlayerAtk(p, b) * counterMult), m.def));
               m = { ...m, hp: Math.max(0, m.hp - counterDmg) };
-              log.push({ text: `Counter attack for ${counterDmg} damage!`, type: 'dmg-monster' });
+              log.push({ text: `${p.perfectParryMaster ? 'Perfect ' : ''}Counter attack for ${counterDmg} damage!`, type: 'dmg-monster' });
               b.parrying = false;
             }
 
@@ -3947,7 +4152,9 @@ function gameReducer(state, action) {
       const newStance = action.stance;
       if (!STANCES[newStance]) return state;
       const stanceLog = [...state.battleLog, { text: `Switched to ${STANCES[newStance].name} stance!`, type: 'info' }];
-      return { ...state, battle: { ...state.battle, stance: newStance, showSkillMenu: false, showInspect: false }, battleLog: stanceLog };
+      // Reset momentum when switching stances
+      const resetMomentum = newStance !== state.battle.stance ? 0 : state.battle.stanceMomentum;
+      return { ...state, battle: { ...state.battle, stance: newStance, stanceMomentum: resetMomentum, lastStance: newStance, showSkillMenu: false, showInspect: false }, battleLog: stanceLog };
     }
 
     // ---- PARRY SYSTEM ----
@@ -3993,23 +4200,38 @@ function gameReducer(state, action) {
         log.push({ text: `You are stunned and cannot act! (${b.playerStunTurns} turns left)`, type: 'dmg-player' });
         return { ...state, battle: b, battleLog: log };
       }
-      const uCost = getEffectiveManaCost(p, uSkill.manaCost || 0, b);
-      if (p.mana < uCost) {
-        return { ...state, message: `Not enough mana! (${uCost} needed)` };
+      // Check cooldown
+      if (b.universalCooldowns[uSkillId] > 0) {
+        return { ...state, message: `${uSkill.name} is on cooldown! (${b.universalCooldowns[uSkillId]} turns)` };
       }
-      p = { ...p, mana: p.mana - uCost };
+      // Special mana handling for mana_burst and limit_break
+      const isManaBurst = uSkillId === 'mana_burst';
+      const isLimitBreak = uSkillId === 'limit_break';
+      if (!isManaBurst && !isLimitBreak) {
+        const uCost = getEffectiveManaCost(p, uSkill.manaCost || 0, b);
+        if (p.mana < uCost) {
+          return { ...state, message: `Not enough mana! (${uCost} needed)` };
+        }
+        p = { ...p, mana: p.mana - uCost };
+      }
+
+      // Set cooldown
+      if (uSkill.cooldown > 0) {
+        b.universalCooldowns = { ...b.universalCooldowns, [uSkillId]: uSkill.cooldown };
+      }
 
       // Track in combo history
       b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
 
+      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const effectiveMDef = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+
       switch (uSkillId) {
         case 'stun_strike': {
-          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
-          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 0.8)), m.def);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 0.8)), effectiveMDef);
           dmg = Math.floor(dmg * stanceMods.dmgDealt);
           m.hp = Math.max(0, m.hp - dmg);
           log.push({ text: `Stun Strike for ${dmg} damage!`, type: 'dmg-monster' });
-          // Stun chance
           const mTen = m.tenacity || 0;
           const stunChance = Math.max(0.1, STUN_BASE_CHANCE - mTen * 0.02);
           if (Math.random() < stunChance) {
@@ -4029,8 +4251,7 @@ function gameReducer(state, action) {
           break;
         }
         case 'mind_blast': {
-          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
-          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.0)), m.def);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.0)), effectiveMDef);
           dmg = Math.floor(dmg * stanceMods.dmgDealt);
           m.hp = Math.max(0, m.hp - dmg);
           log.push({ text: `Mind Blast for ${dmg} damage!`, type: 'dmg-monster' });
@@ -4046,8 +4267,7 @@ function gameReducer(state, action) {
           break;
         }
         case 'life_drain': {
-          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
-          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.2)), m.def);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.2)), effectiveMDef);
           dmg = Math.floor(dmg * stanceMods.dmgDealt);
           m.hp = Math.max(0, m.hp - dmg);
           const healed = Math.floor(dmg * 0.4);
@@ -4056,14 +4276,11 @@ function gameReducer(state, action) {
           break;
         }
         case 'elemental_strike': {
-          const stanceMods = getStanceModifiers(b.stance, p.stanceMaster);
-          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.5)), m.def);
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 1.5)), effectiveMDef);
           dmg = Math.floor(dmg * stanceMods.dmgDealt);
-          // Element matching: use weather element for bonus
           const weatherElem = getCurrentWeatherId();
           const elemBonus = weatherElem === 'thunderstorm' || weatherElem === 'rain' ? 1.3 : 1.0;
           dmg = Math.floor(dmg * elemBonus);
-          // Elemental advantage
           const atkElem = getSkillElement(null, p.characterClass);
           const eMult = calcElementalDamageMultiplier(atkElem, b.monsterElement);
           dmg = Math.floor(dmg * eMult);
@@ -4071,6 +4288,77 @@ function gameReducer(state, action) {
           log.push({ text: `Elemental Strike for ${dmg} damage!${elemBonus > 1 ? ' (Weather boost!)' : ''}`, type: 'dmg-monster' });
           if (eMult > 1.0) log.push({ text: 'Super effective!', type: 'info' });
           else if (eMult < 1.0) log.push({ text: 'Not very effective...', type: 'info' });
+          break;
+        }
+        case 'armor_shatter': {
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * (uSkill.multiplier || 0.6)), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          b.armorShatterTurns = 3;
+          b.armorShatterPct = 0.3;
+          log.push({ text: `Armor Shatter for ${dmg} damage! Enemy DEF reduced by 30% for 3 turns!`, type: 'dmg-monster' });
+          break;
+        }
+        case 'mana_burst': {
+          const manaSpent = Math.floor(p.mana * 0.2);
+          p = { ...p, mana: p.mana - manaSpent };
+          let dmg = Math.floor(manaSpent * 3); // 3x mana as true damage
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          log.push({ text: `Mana Burst! Converted ${manaSpent} mana into ${dmg} true damage!`, type: 'dmg-monster' });
+          break;
+        }
+        case 'last_stand': {
+          if (b.lastStandUsed) {
+            return { ...state, message: 'Last Stand can only be used once per battle!' };
+          }
+          const uCostLS = getEffectiveManaCost(p, uSkill.manaCost || 15, b);
+          if (p.mana < uCostLS) return { ...state, message: `Not enough mana! (${uCostLS} needed)` };
+          p = { ...p, mana: p.mana - uCostLS };
+          const healAmt = Math.floor(p.maxHp * 0.3);
+          p = { ...p, hp: Math.min(p.maxHp, p.hp + healAmt) };
+          b.frenzyBonusTurns = 2;
+          b.frenzyBonusPct = 0.5;
+          b.lastStandUsed = true;
+          log.push({ text: `Last Stand! Healed ${healAmt} HP and gained +50% ATK for 2 turns!`, type: 'heal' });
+          break;
+        }
+        case 'elemental_ward': {
+          const uCostEW = getEffectiveManaCost(p, uSkill.manaCost || 12, b);
+          if (p.mana < uCostEW) return { ...state, message: `Not enough mana! (${uCostEW} needed)` };
+          p = { ...p, mana: p.mana - uCostEW };
+          b.elementalWardTurns = 3;
+          log.push({ text: 'Elemental Ward! Resist 50% of elemental damage for 3 turns!', type: 'info' });
+          break;
+        }
+        case 'execute': {
+          const uCostEx = getEffectiveManaCost(p, uSkill.manaCost || 15, b);
+          if (p.mana < uCostEx) return { ...state, message: `Not enough mana! (${uCostEx} needed)` };
+          p = { ...p, mana: p.mana - uCostEx };
+          const mHpPctExec = m.hp / m.maxHp;
+          const execMult = mHpPctExec < 0.25 ? 2.5 : 0.5;
+          let dmg = calcDamage(Math.floor(getPlayerAtk(p, b) * execMult), effectiveMDef);
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          if (execMult > 1) {
+            log.push({ text: `EXECUTE! Massive ${dmg} damage to weakened enemy!`, type: 'dmg-monster' });
+          } else {
+            log.push({ text: `Execute for ${dmg} damage (enemy too healthy for full effect)`, type: 'dmg-monster' });
+          }
+          break;
+        }
+        case 'limit_break': {
+          if (b.limitBreakUsed) {
+            return { ...state, message: 'Limit Break can only be used once per battle!' };
+          }
+          const manaConsumed = p.mana;
+          if (manaConsumed < 10) return { ...state, message: 'Not enough mana for Limit Break! (need at least 10)' };
+          p = { ...p, mana: 0 };
+          let dmg = Math.floor(manaConsumed * 5); // 5x mana as true damage
+          dmg = Math.floor(dmg * stanceMods.dmgDealt);
+          m.hp = Math.max(0, m.hp - dmg);
+          b.limitBreakUsed = true;
+          log.push({ text: `LIMIT BREAK! Consumed ${manaConsumed} mana for ${dmg} devastating damage!`, type: 'dmg-monster' });
           break;
         }
         default:
@@ -4087,7 +4375,26 @@ function gameReducer(state, action) {
       if (uCombos.length > 0) {
         for (const combo of uCombos) {
           log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Berserker frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'invuln') {
+            b.playerInvulnTurns = combo.invulnTurns || 1;
+            log.push({ text: 'You become invulnerable!', type: 'info' });
+          } else if (combo.bonus === 'armor_break') {
+            b.armorShatterTurns = combo.armorBreakTurns || 3;
+            b.armorShatterPct = combo.armorBreakPct || 0.4;
+            log.push({ text: `Fortress Crush! Enemy armor broken!`, type: 'info' });
+          } else if (combo.bonus === 'crit_guarantee') {
+            log.push({ text: 'Focused Strike — guaranteed critical next attack!', type: 'info' });
+          }
           b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
         }
         b.actionHistory = [];
       }

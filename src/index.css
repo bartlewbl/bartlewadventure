@@ -4230,6 +4230,85 @@ body {
   cursor: default;
 }
 
+.btn-universal-skill.on-cooldown {
+  opacity: 0.35;
+  border-color: rgba(124, 77, 255, 0.15);
+}
+
+.btn-universal-skill.used-once {
+  opacity: 0.25;
+  text-decoration: line-through;
+}
+
+.skill-cooldown-badge {
+  font-size: 0.55rem;
+  background: rgba(255, 82, 82, 0.25);
+  color: #ff8a80;
+  padding: 0 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+/* ---- MOMENTUM BAR ---- */
+.battle-momentum-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 8px;
+  font-size: 0.6rem;
+}
+
+.momentum-label {
+  color: #80cbc4;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.momentum-fill-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.momentum-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #26a69a, #80cbc4);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.momentum-pct {
+  color: #80cbc4;
+  font-weight: bold;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ---- COMBO PROGRESS ---- */
+.battle-combo-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 1px 8px;
+  font-size: 0.55rem;
+}
+
+.combo-progress-item {
+  color: #ffcc80;
+  background: rgba(255,152,0,0.08);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,152,0,0.15);
+}
+
+.combo-streak {
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 0.65rem;
+}
+
 /* Battle skill menu */
 .battle-skill-menu {
   flex-wrap: wrap;

@@ -1,7 +1,7 @@
 // Combat calculations - damage formulas, stat modifiers, dodge/HP
 // All functions are pure (no side effects), taking player/battle state as arguments.
 
-import { CHARACTER_CLASSES, SKILLS, COMBO_CHAINS, STANCES } from '../data/gameData';
+import { CHARACTER_CLASSES, SKILLS, COMBO_CHAINS, STANCES, STANCE_MOMENTUM_PER_TURN, STANCE_MOMENTUM_CAP } from '../data/gameData';
 import { getTreeSkill } from '../data/skillTrees';
 import { prob } from '../data/probabilityStore';
 import { getElementCounter, getElementWeakness } from './elements';
@@ -594,19 +594,68 @@ export function checkComboChains(actionHistory, hasComboMaster) {
 }
 
 // ---- STANCE SYSTEM ----
-export function getStanceModifiers(stanceId, hasStanceMaster) {
+export function getStanceModifiers(stanceId, hasStanceMaster, momentum = 0) {
   const stance = STANCES[stanceId] || STANCES.balanced;
-  if (!hasStanceMaster) return stance;
-  // Stance master: bonuses increased by 50% (both positive and negative amplified)
-  return {
-    name: stance.name,
-    dmgDealt: 1 + (stance.dmgDealt - 1) * 1.5,
-    dmgTaken: 1 + (stance.dmgTaken - 1) * 1.5,
-    critMod: stance.critMod * 1.5,
-    dodgeMod: stance.dodgeMod * 1.5,
-  };
+  let mods = { ...stance };
+  if (hasStanceMaster) {
+    mods = {
+      name: stance.name,
+      dmgDealt: 1 + (stance.dmgDealt - 1) * 1.5,
+      dmgTaken: 1 + (stance.dmgTaken - 1) * 1.5,
+      critMod: stance.critMod * 1.5,
+      dodgeMod: stance.dodgeMod * 1.5,
+      manaMod: stance.manaMod,
+    };
+  }
+  // Apply momentum: amplifies the stance's beneficial effects
+  if (momentum > 0 && stanceId !== 'balanced') {
+    const m = Math.min(STANCE_MOMENTUM_CAP, momentum);
+    if (mods.dmgDealt > 1) mods.dmgDealt += m * 0.3; // aggressive gets more dmg
+    if (mods.dmgTaken < 1) mods.dmgTaken -= m * 0.2; // defensive takes less
+    if (mods.dodgeMod > 0) mods.dodgeMod += m * 0.3; // evasive dodges more
+  }
+  return mods;
+}
+
+// ---- STANCE MOMENTUM ----
+export function calcStanceMomentum(currentMomentum, stanceId) {
+  if (stanceId === 'balanced') return 0; // balanced doesn't build momentum
+  return Math.min(STANCE_MOMENTUM_CAP, (currentMomentum || 0) + STANCE_MOMENTUM_PER_TURN);
 }
 
 // ---- PARRY SYSTEM ----
 export const PARRY_DAMAGE_REDUCTION = 0.8; // 80% less damage when parrying
 export const PARRY_COUNTER_MULTIPLIER = 0.8; // counter for 0.8x ATK
+export const PERFECT_PARRY_COUNTER_MULTIPLIER = 1.5; // perfect parry master counter
+
+// ---- MONSTER ELEMENTAL DAMAGE ----
+// Monsters deal elemental damage with their basic attacks based on their element
+export function calcMonsterElementalDamage(dmg, monsterElement, skillElement, battle) {
+  // If player has elemental ward, reduce elemental damage
+  if (battle?.elementalWardTurns > 0 && skillElement && skillElement !== 'physical') {
+    dmg = Math.floor(dmg * 0.5);
+  }
+  return dmg;
+}
+
+// ---- COMBO PROGRESS TRACKING ----
+// Find which combos are partially completed to show progress
+export function getComboProgress(actionHistory) {
+  const progress = [];
+  for (const [id, combo] of Object.entries(COMBO_CHAINS)) {
+    const seq = combo.sequence;
+    if (actionHistory.length > 0 && actionHistory.length < seq.length) {
+      const partialSeq = seq.slice(0, actionHistory.length);
+      if (actionHistory.every((a, i) => a === partialSeq[i])) {
+        progress.push({
+          id,
+          name: combo.name,
+          current: actionHistory.length,
+          total: seq.length,
+          nextAction: seq[actionHistory.length],
+        });
+      }
+    }
+  }
+  return progress;
+}

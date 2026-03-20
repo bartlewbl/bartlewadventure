@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { getPlayerPassiveSkills, getPlayerActiveSkills, getTreeSkill } from '../../data/skillTrees';
-import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, getPlayerResistance, getPlayerTenacity, getPlayerAggression, getPlayerLuck, getPlayerFortitude, getStanceModifiers } from '../../engine/combat';
+import { getBattleMaxMana, getPlayerSpeed, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, getPlayerResistance, getPlayerTenacity, getPlayerAggression, getPlayerLuck, getPlayerFortitude, getStanceModifiers, getComboProgress } from '../../engine/combat';
 import { STANCES, UNIVERSAL_SKILLS } from '../../data/gameData';
 import { SKILLS } from '../../data/gameData';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
@@ -433,13 +433,39 @@ export default function BattleScreen({
         ))}
       </div>
 
+      {/* Stance momentum indicator */}
+      {battle.stanceMomentum > 0 && battle.stance !== 'balanced' && (
+        <div className="battle-momentum-bar">
+          <span className="momentum-label">Momentum:</span>
+          <div className="momentum-fill-track">
+            <div className="momentum-fill" style={{ width: `${Math.min(100, (battle.stanceMomentum / 0.3) * 100)}%` }} />
+          </div>
+          <span className="momentum-pct">+{Math.round(battle.stanceMomentum * 100)}%</span>
+        </div>
+      )}
+
       {/* Active combo display */}
       {battle.activeCombo && (
         <div className="battle-combo-display">
           <span className="combo-label">COMBO:</span>
           <span className="combo-name">{battle.activeCombo.name}</span>
+          {battle.comboStreak > 1 && <span className="combo-streak">x{battle.comboStreak}</span>}
         </div>
       )}
+
+      {/* Combo progress indicators */}
+      {battle.actionHistory?.length > 0 && (() => {
+        const comboProgress = getComboProgress(battle.actionHistory);
+        return comboProgress.length > 0 ? (
+          <div className="battle-combo-progress">
+            {comboProgress.map(cp => (
+              <span key={cp.id} className="combo-progress-item" title={`Next: ${cp.nextAction}`}>
+                {cp.name} ({cp.current}/{cp.total})
+              </span>
+            ))}
+          </div>
+        ) : null;
+      })()}
 
       {/* Combo bleed indicator */}
       {battle.comboBleedTurns > 0 && (
@@ -463,6 +489,9 @@ export default function BattleScreen({
           )}
           {battle.monsterConfusionTurns > 0 && (
             <span className="battle-debuff confusion">Confused ({battle.monsterConfusionTurns})</span>
+          )}
+          {battle.armorShatterTurns > 0 && (
+            <span className="battle-debuff debuff">Armor Broken ({battle.armorShatterTurns})</span>
           )}
         </div>
 
@@ -503,6 +532,24 @@ export default function BattleScreen({
           )}
           {battle.warShoutTurns > 0 && (
             <span className="battle-debuff buff">War Shout ({battle.warShoutTurns})</span>
+          )}
+          {battle.elementalWardTurns > 0 && (
+            <span className="battle-debuff buff">Elem Ward ({battle.elementalWardTurns})</span>
+          )}
+          {battle.frenzyBonusTurns > 0 && (
+            <span className="battle-debuff buff">Frenzy ({battle.frenzyBonusTurns})</span>
+          )}
+          {battle.playerInvulnTurns > 0 && (
+            <span className="battle-debuff buff">Invulnerable ({battle.playerInvulnTurns})</span>
+          )}
+          {battle.guaranteedCrit && (
+            <span className="battle-debuff buff">Crit Ready!</span>
+          )}
+          {battle.lastStandUsed && (
+            <span className="battle-debuff used">Last Stand Used</span>
+          )}
+          {battle.limitBreakUsed && (
+            <span className="battle-debuff used">Limit Break Used</span>
           )}
         </div>
       </div>
@@ -606,17 +653,21 @@ export default function BattleScreen({
           {player.unlockedUniversalSkills?.filter(id => id !== 'parry').map(skillId => {
             const uSkill = UNIVERSAL_SKILLS[skillId];
             if (!uSkill) return null;
+            const cd = battle.universalCooldowns?.[skillId] || 0;
+            const isOnceUsed = (skillId === 'last_stand' && battle.lastStandUsed) || (skillId === 'limit_break' && battle.limitBreakUsed);
             return (
               <button
                 key={skillId}
-                className="btn btn-universal-skill"
-                disabled={disabled || player.mana < (uSkill.manaCost || 0)}
+                className={`btn btn-universal-skill ${cd > 0 ? 'on-cooldown' : ''} ${isOnceUsed ? 'used-once' : ''}`}
+                disabled={disabled || player.mana < (uSkill.manaCost || 0) || cd > 0 || isOnceUsed}
                 onClick={() => handlePlayerAction(() => onUniversalSkill(skillId), 'player-skill')}
-                title={uSkill.desc}
+                title={`${uSkill.name}${cd > 0 ? ` (CD: ${cd})` : ''}${isOnceUsed ? ' (Used)' : ''}`}
               >
                 <span className="skill-btn-name">{uSkill.name}</span>
                 <span className="skill-btn-meta">
                   <span className="skill-btn-cost">{uSkill.manaCost || 0}mp</span>
+                  {cd > 0 && <span className="skill-cooldown-badge">CD:{cd}</span>}
+                  {isOnceUsed && <span className="skill-cooldown-badge">Used</span>}
                 </span>
               </button>
             );

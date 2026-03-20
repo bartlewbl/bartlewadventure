@@ -1354,41 +1354,109 @@ export const COMBO_CHAINS = {
     name: 'Counter Rush', sequence: ['parry', 'attack'], bonus: 'pierce',
     piercePct: 0.5, desc: 'Parry → ATK: Attack ignores 50% DEF',
   },
+  'fortress_crush': {
+    name: 'Fortress Crush', sequence: ['defend', 'defend', 'attack'], bonus: 'armor_break',
+    armorBreakPct: 0.4, armorBreakTurns: 3, desc: 'Defend × 2 → ATK: Break enemy armor -40% DEF for 3 turns',
+  },
+  'arcane_surge': {
+    name: 'Arcane Surge', sequence: ['skill', 'skill', 'skill'], bonus: 'mana_restore',
+    restorePct: 0.25, desc: 'Skill × 3: Restore 25% max mana',
+  },
+  'perfect_parry': {
+    name: 'Perfect Parry', sequence: ['parry', 'parry'], bonus: 'invuln',
+    invulnTurns: 1, desc: 'Parry × 2: Become invulnerable for 1 turn',
+  },
+  'berserker_chain': {
+    name: 'Berserker Chain', sequence: ['attack', 'skill', 'attack'], bonus: 'frenzy',
+    frenzyBonus: 0.35, desc: 'ATK → Skill → ATK: +35% damage for 2 turns',
+  },
+  'channel_strike': {
+    name: 'Focused Strike', sequence: ['channel', 'attack'], bonus: 'crit_guarantee',
+    desc: 'Channel → ATK: Guaranteed critical hit',
+  },
 };
 
 // ---- STANCE DEFINITIONS ----
 export const STANCES = {
-  balanced: { name: 'Balanced', dmgDealt: 1.0, dmgTaken: 1.0, critMod: 0, dodgeMod: 0 },
-  aggressive: { name: 'Aggressive', dmgDealt: 1.3, dmgTaken: 1.2, critMod: 0.1, dodgeMod: -0.05 },
-  defensive: { name: 'Defensive', dmgDealt: 0.7, dmgTaken: 0.6, critMod: -0.05, dodgeMod: 0.1 },
+  balanced: { name: 'Balanced', dmgDealt: 1.0, dmgTaken: 1.0, critMod: 0, dodgeMod: 0, manaMod: 1.0 },
+  aggressive: { name: 'Aggressive', dmgDealt: 1.3, dmgTaken: 1.2, critMod: 0.1, dodgeMod: -0.05, manaMod: 1.15 },
+  defensive: { name: 'Defensive', dmgDealt: 0.7, dmgTaken: 0.6, critMod: -0.05, dodgeMod: 0.1, manaMod: 0.9 },
+  evasive: { name: 'Evasive', dmgDealt: 0.85, dmgTaken: 0.9, critMod: 0, dodgeMod: 0.2, manaMod: 1.0 },
 };
+
+// ---- STANCE MOMENTUM ----
+// Staying in the same stance builds momentum, increasing bonuses
+export const STANCE_MOMENTUM_PER_TURN = 0.05; // +5% per turn staying in same stance
+export const STANCE_MOMENTUM_CAP = 0.3; // max +30%
 
 // ---- UNIVERSAL COMBAT SKILLS (learnable by all classes through progression) ----
 export const UNIVERSAL_SKILLS = {
-  parry: { name: 'Parry', desc: 'Block and counter — take 80% less damage, counter for 0.8x ATK if hit', manaCost: 5, unlockLevel: 5 },
-  stun_strike: { name: 'Stun Strike', desc: 'Attack for 0.8x damage with 55% chance to stun for 1 turn', manaCost: 8, multiplier: 0.8, unlockLevel: 8 },
-  war_shout: { name: 'War Shout', desc: 'Reduce enemy ATK by 20% and boost your DEF by 15% for 3 turns', manaCost: 10, unlockLevel: 12 },
-  mind_blast: { name: 'Mind Blast', desc: '1.0x damage with 50% chance to confuse enemy for 2 turns', manaCost: 10, multiplier: 1.0, unlockLevel: 15 },
-  life_drain: { name: 'Life Drain', desc: '1.2x damage, heal 40% of damage dealt', manaCost: 12, multiplier: 1.2, unlockLevel: 18 },
-  elemental_strike: { name: 'Elemental Strike', desc: '1.5x damage matching weather element, +30% in matching weather', manaCost: 14, multiplier: 1.5, unlockLevel: 22 },
+  parry: { name: 'Parry', desc: 'Block and counter — take 80% less damage, counter for 0.8x ATK if hit', manaCost: 5, unlockLevel: 5, cooldown: 0 },
+  stun_strike: { name: 'Stun Strike', desc: 'Attack for 0.8x damage with 55% chance to stun for 1 turn', manaCost: 8, multiplier: 0.8, unlockLevel: 8, cooldown: 2 },
+  war_shout: { name: 'War Shout', desc: 'Reduce enemy ATK by 20% and boost your DEF by 15% for 3 turns', manaCost: 10, unlockLevel: 12, cooldown: 4 },
+  mind_blast: { name: 'Mind Blast', desc: '1.0x damage with 50% chance to confuse enemy for 2 turns', manaCost: 10, multiplier: 1.0, unlockLevel: 15, cooldown: 3 },
+  life_drain: { name: 'Life Drain', desc: '1.2x damage, heal 40% of damage dealt', manaCost: 12, multiplier: 1.2, unlockLevel: 18, cooldown: 2 },
+  elemental_strike: { name: 'Elemental Strike', desc: '1.5x damage matching weather element, +30% in matching weather', manaCost: 14, multiplier: 1.5, unlockLevel: 22, cooldown: 2 },
+  armor_shatter: { name: 'Armor Shatter', desc: '0.6x damage but reduces enemy DEF by 30% for 3 turns', manaCost: 10, multiplier: 0.6, unlockLevel: 26, cooldown: 4 },
+  mana_burst: { name: 'Mana Burst', desc: 'Convert 20% of current mana into pure damage (ignores DEF)', manaCost: 0, unlockLevel: 28, cooldown: 3 },
+  last_stand: { name: 'Last Stand', desc: 'Heal 30% max HP and gain +50% ATK for 2 turns (once per battle)', manaCost: 15, unlockLevel: 32, cooldown: 99 },
+  elemental_ward: { name: 'Elemental Ward', desc: 'Resist 50% of elemental damage for 3 turns', manaCost: 12, unlockLevel: 36, cooldown: 5 },
+  execute: { name: 'Execute', desc: '2.5x damage to enemies below 25% HP, otherwise 0.5x', manaCost: 15, multiplier: 0.5, unlockLevel: 38, cooldown: 3 },
+  limit_break: { name: 'Limit Break', desc: 'Consume all mana for massive damage (scales with mana consumed)', manaCost: 0, unlockLevel: 42, cooldown: 99 },
+};
+
+// ---- SKILL ELEMENT MAPPING FOR MONSTER SKILLS ----
+// Maps monster skill IDs to their element for elemental damage calculations
+export const MONSTER_SKILL_ELEMENTS = {
+  firebreath: 'fire', inferno: 'fire', scorch: 'fire', heatwave: 'fire', eruption: 'fire',
+  channel_flame: 'fire', channel_storm: 'lightning',
+  blizzard: 'ice', freeze: 'ice', frostbite: 'ice', icicle: 'ice', channel_ice: 'ice',
+  shock: 'lightning', thunderclap: 'lightning', flash_bang: 'lightning', thunder_slam: 'lightning',
+  voidblast: 'arcane', voidrift: 'arcane', nullify: 'arcane', oblivion: 'arcane', channel_void: 'arcane',
+  shadowstrike: 'shadow', deathgrip: 'shadow', entropy: 'shadow', hex: 'shadow',
+  madness: 'shadow', mind_fog: 'shadow', psychic_wave: 'arcane', confuse: 'arcane',
+  poison: 'nature', venom: 'nature', toxicspore: 'nature', plague: 'nature', rotburst: 'nature',
+  channel_plague: 'nature', fungalslam: 'nature',
+  tidalwave: 'ice', drown: 'ice', abyssalgrip: 'shadow', crushingdepth: 'ice', channel_abyss: 'shadow',
+  smite: 'arcane', holybeam: 'arcane', starfall: 'arcane', judgment: 'arcane', channel_light: 'arcane',
+  sandblast: 'physical', petrify: 'nature', stun_bash: 'physical', concuss: 'physical',
 };
 
 // ---- MILESTONE PROGRESSION REWARDS ----
 // Permanent bonuses at specific levels
 export const LEVEL_MILESTONES = {
+  3:  { reward: 'stat_boost', stats: { maxHp: 5, maxMana: 5 }, desc: '+5 HP, +5 Mana' },
   5:  { reward: 'unlock_parry', desc: 'Parry unlocked — block and counter in combat' },
+  7:  { reward: 'stat_boost', stats: { maxHp: 10, baseAtk: 1 }, desc: '+10 HP, +1 ATK' },
   8:  { reward: 'unlock_stun_strike', desc: 'Stun Strike unlocked — stun enemies in combat' },
   10: { reward: 'stat_boost', stats: { maxHp: 15, maxMana: 10 }, desc: '+15 HP, +10 Mana' },
   12: { reward: 'unlock_war_shout', desc: 'War Shout unlocked — buff DEF and debuff enemy ATK' },
+  14: { reward: 'stat_boost', stats: { maxHp: 10, baseDef: 2, resistance: 2 }, desc: '+10 HP, +2 DEF, +2 RES' },
   15: { reward: 'unlock_mind_blast', desc: 'Mind Blast unlocked — confuse enemies' },
+  17: { reward: 'stat_boost', stats: { maxMana: 10, accuracy: 2, evasion: 2 }, desc: '+10 Mana, +2 ACC, +2 EVA' },
   18: { reward: 'unlock_life_drain', desc: 'Life Drain unlocked — heal through damage' },
   20: { reward: 'stat_boost', stats: { maxHp: 25, maxMana: 15, baseAtk: 3, baseDef: 2 }, desc: '+25 HP, +15 Mana, +3 ATK, +2 DEF' },
   22: { reward: 'unlock_elemental_strike', desc: 'Elemental Strike unlocked — element-based attack' },
+  24: { reward: 'stat_boost', stats: { speed: 2, luck: 3, tenacity: 2 }, desc: '+2 SPD, +3 LCK, +2 TEN' },
   25: { reward: 'combo_master', desc: 'Combo Master — combo chains deal +20% bonus damage' },
+  26: { reward: 'unlock_armor_shatter', desc: 'Armor Shatter unlocked — reduce enemy DEF' },
+  28: { reward: 'unlock_mana_burst', desc: 'Mana Burst unlocked — convert mana to pure damage' },
   30: { reward: 'stat_boost', stats: { maxHp: 40, maxMana: 20, baseAtk: 5, baseDef: 3, speed: 2 }, desc: '+40 HP, +20 Mana, +5 ATK, +3 DEF, +2 SPD' },
+  32: { reward: 'unlock_last_stand', desc: 'Last Stand unlocked — emergency heal and damage boost' },
   35: { reward: 'stance_master', desc: 'Stance Master — stance bonuses increased by 50%' },
+  36: { reward: 'unlock_elemental_ward', desc: 'Elemental Ward unlocked — resist elemental damage' },
+  38: { reward: 'unlock_execute', desc: 'Execute unlocked — massive damage to low HP enemies' },
   40: { reward: 'stat_boost', stats: { maxHp: 50, maxMana: 30, baseAtk: 8, baseDef: 5, speed: 3, evasion: 3, accuracy: 3 }, desc: 'Major stat boost at level 40' },
+  42: { reward: 'unlock_limit_break', desc: 'Limit Break unlocked — consume all mana for massive damage' },
+  45: { reward: 'stat_boost', stats: { maxHp: 60, maxMana: 40, baseAtk: 10, baseDef: 7, fortitude: 5, aggression: 3 }, desc: 'Ultimate stat boost at level 45' },
+  48: { reward: 'perfect_parry_master', desc: 'Perfect Parry — parry counter deals 1.5x damage' },
+  50: { reward: 'stat_boost', stats: { maxHp: 100, maxMana: 50, baseAtk: 15, baseDef: 10, speed: 5, luck: 5 }, desc: 'Legendary stat boost at level 50' },
 };
+
+export function getMonsterSkillElement(skillId, monsterElement) {
+  if (MONSTER_SKILL_ELEMENTS[skillId]) return MONSTER_SKILL_ELEMENTS[skillId];
+  return monsterElement || 'physical';
+}
 
 // ---- MONSTER/BOSS SKILLS ----
 export const SKILLS = {
