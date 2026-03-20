@@ -3540,6 +3540,12 @@ body {
   background: rgba(255, 215, 0, 0.08);
 }
 
+.shop-card-level {
+  font-size: 7px;
+  color: #aaccff;
+  font-weight: bold;
+}
+
 .shop-card-stats {
   font-size: 7px;
   color: #7cfc7c;
