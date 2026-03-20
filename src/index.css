@@ -10151,3 +10151,299 @@ body {
   color: #000 !important;
   font-weight: bold;
 }
+
+/* ---- ARENA SCREEN ---- */
+.screen-arena {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.arena-info {
+  font-size: 9px;
+  color: #bbb;
+  text-align: center;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.arena-gold-info {
+  font-size: 9px;
+  color: #ffd700;
+  text-align: center;
+}
+
+.arena-tier-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arena-tier-entry {
+  width: 100%;
+}
+
+.arena-tier-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #d7d7ff;
+  background: rgba(20, 20, 45, 0.85);
+  border: 1px solid #444;
+  border-left: 3px solid #ffd700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.arena-tier-item:hover:not(.locked) {
+  background: rgba(35, 35, 68, 0.95);
+  border-left-color: #ffab00;
+}
+
+.arena-tier-item.selected {
+  background: rgba(40, 35, 60, 0.95);
+  border-left-color: #ff8a65;
+  border-color: #ff8a65;
+}
+
+.arena-tier-item.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-left-color: #555;
+}
+
+.arena-tier-item.highstakes {
+  border-left-color: #ff4444;
+}
+
+.arena-tier-item.highstakes:hover:not(.locked) {
+  border-left-color: #ff6666;
+}
+
+.arena-tier-item.highstakes.selected {
+  border-left-color: #ff4444;
+  border-color: #ff4444;
+}
+
+.arena-tier-left {
+  flex: 1;
+}
+
+.arena-tier-name {
+  font-size: 10px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.arena-tier-desc {
+  font-size: 7px;
+  color: #999;
+  line-height: 1.6;
+}
+
+.arena-tier-req {
+  font-size: 7px;
+  color: #ff6666;
+  margin-top: 4px;
+}
+
+.arena-tier-level {
+  font-size: 9px;
+  color: #888;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+.arena-wager-panel {
+  background: rgba(25, 25, 50, 0.9);
+  border: 1px solid #555;
+  border-top: none;
+  padding: 12px 14px;
+  width: 100%;
+}
+
+.arena-wager-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wager-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  color: #ccc;
+}
+
+.wager-input-row label {
+  white-space: nowrap;
+}
+
+.wager-input {
+  flex: 1;
+  background: rgba(15, 15, 35, 0.9);
+  border: 1px solid #555;
+  color: #ffd700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 6px 8px;
+  max-width: 120px;
+}
+
+.wager-input:focus {
+  outline: none;
+  border-color: #ffd700;
+}
+
+.wager-quick-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.wager-quick-btns .btn-sm {
+  padding: 4px 10px;
+  font-size: 7px;
+  background: rgba(40, 40, 70, 0.8);
+  border: 1px solid #555;
+  color: #aaa;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.wager-quick-btns .btn-sm:hover {
+  background: rgba(50, 50, 80, 0.9);
+  color: #ffd700;
+}
+
+.arena-highstakes-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.highstakes-warning {
+  color: #ff6666;
+  font-size: 9px;
+  text-align: center;
+}
+
+.highstakes-detail {
+  color: #999;
+  font-size: 7px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #d32f2f, #c62828) !important;
+  color: #fff !important;
+  border: 1px solid #ff5252 !important;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e53935, #d32f2f) !important;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Arena Gauntlet Status */
+.arena-gauntlet-status {
+  text-align: center;
+  padding: 16px;
+  background: rgba(25, 25, 50, 0.9);
+  border: 1px solid #ffd700;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.gauntlet-streak {
+  font-size: 14px;
+  color: #ffd700;
+  margin-bottom: 8px;
+}
+
+.gauntlet-pot {
+  font-size: 11px;
+  color: #4fc3f7;
+  margin-bottom: 8px;
+}
+
+.gauntlet-info {
+  font-size: 8px;
+  color: #999;
+  line-height: 1.6;
+}
+
+.arena-gauntlet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.btn-secondary {
+  background: rgba(40, 40, 70, 0.8) !important;
+  color: #ccc !important;
+  border: 1px solid #666 !important;
+}
+
+.btn-secondary:hover {
+  background: rgba(50, 50, 80, 0.9) !important;
+  color: #fff !important;
+}
+
+/* Arena subtab in locations */
+.arena-subtab {
+  color: #ff8a65 !important;
+}
+
+.arena-subtab.active {
+  border-bottom-color: #ff8a65 !important;
+  color: #ff8a65 !important;
+}
+
+/* Arena battle result */
+.arena-result {
+  border-bottom: 2px solid #ff8a65;
+}
+
+.arena-opponent-info {
+  font-size: 9px;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.gauntlet-win-info {
+  font-size: 11px;
+  color: #ffd700;
+  margin: 4px 0;
+}
+
+.gauntlet-hint {
+  font-size: 8px;
+  color: #4fc3f7;
+  margin-top: 4px;
+}
+
+.highstakes-win-info {
+  font-size: 8px;
+  color: #ff8a65;
+  margin-top: 2px;
+}

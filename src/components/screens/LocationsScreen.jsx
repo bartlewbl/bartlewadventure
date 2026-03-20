@@ -203,6 +203,7 @@ export default function LocationsScreen({
   tasks,
   player,
   onRest,
+  onArena,
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState('normal');
@@ -212,6 +213,8 @@ export default function LocationsScreen({
 
   const specialLocations = SPECIAL_LOCATIONS[regionId] || [];
   const hasSpecial = specialLocations.length > 0;
+  const hasArena = playerLevel >= 5;
+  const hasTabs = hasSpecial || hasArena;
 
   return (
     <div className="screen screen-locations">
@@ -224,7 +227,7 @@ export default function LocationsScreen({
         <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} />
       )}
 
-      {hasSpecial && (
+      {hasTabs && (
         <div className="location-subtabs">
           <button
             className={`location-subtab ${activeTab === 'normal' ? 'active' : ''}`}
@@ -232,12 +235,25 @@ export default function LocationsScreen({
           >
             Normal
           </button>
-          <button
-            className={`location-subtab ${activeTab === 'special' ? 'active' : ''}`}
-            onClick={() => setActiveTab('special')}
-          >
-            Special
-          </button>
+          {hasSpecial && (
+            <button
+              className={`location-subtab ${activeTab === 'special' ? 'active' : ''}`}
+              onClick={() => setActiveTab('special')}
+            >
+              Special
+            </button>
+          )}
+          {hasArena && (
+            <button
+              className={`location-subtab arena-subtab ${activeTab === 'arena' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('arena');
+                onArena();
+              }}
+            >
+              Arena
+            </button>
+          )}
         </div>
       )}
 

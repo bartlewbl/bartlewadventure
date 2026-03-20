@@ -13,6 +13,7 @@ import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHO
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
+import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
@@ -160,6 +161,7 @@ function createInitialState() {
     activeVillage: null,      // current village encounter
     pendingChest: null,       // { itemId, chestId } for chest opening screen
     chestResult: null,        // result of opening a chest (displayed on screen)
+    arena: null,              // { tierId, wager, gauntletActive, gauntletWins, gauntletWager }
   };
 }
 
@@ -368,6 +370,7 @@ function extractSaveData(state) {
     player: state.player,
     screen: (state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm') ? 'town'
       : (state.screen === 'explore' || state.screen === 'random-event' || state.screen === 'event-result' || state.screen === 'quest-village' || state.screen === 'extraordinary-trader') ? 'locations'
+      : state.screen === 'arena' ? 'locations'
       : state.screen,
     pendingLevelUps: state.pendingLevelUps || [],
     energy: state.energy,
@@ -2930,6 +2933,16 @@ function gameReducer(state, action) {
     }
 
     case 'CONTINUE_AFTER_BATTLE': {
+      // Arena battle return
+      if (state.battleResult?.isArena) {
+        if (state.arena?.gauntletActive) {
+          // Gauntlet win: go to arena screen to continue or cash out
+          return { ...state, screen: 'arena', battle: null, battleResult: null, battleLog: [] };
+        }
+        // Arena done (win/lose): go back to arena screen
+        return { ...state, screen: 'arena', battle: null, battleResult: null, battleLog: [], arena: null };
+      }
+
       if (state.battleResult?.defeated) {
         return { ...state, screen: 'town', battle: null, battleResult: null, battleLog: [], currentLocation: null };
       }
@@ -5098,6 +5111,92 @@ function gameReducer(state, action) {
       return { ...state, player: p, battle: b, battleLog: log, stats: newStats };
     }
 
+    // ---- ARENA ACTIONS ----
+    case 'ARENA_START_DUEL': {
+      const { tierId, wager } = action;
+      const tier = ARENA_TIERS.find(t => t.id === tierId);
+      if (!tier) return state;
+
+      const minW = getMinWager(state.player.level);
+      if (state.player.level < tier.levelReq) return { ...state, message: `Reach level ${tier.levelReq} to enter this arena.` };
+      if (wager < minW || wager > state.player.gold) return { ...state, message: `Invalid wager amount.` };
+
+      const offset = tier.levelOffset();
+      const opponent = generateArenaOpponent(state.player.level, offset);
+      const battle = { ...createBattleState(opponent, state.player), noRun: true };
+      const log = [
+        { text: `Arena Match: ${opponent.name} (Lv.${opponent.arenaLevel})`, type: 'info' },
+        { text: `Class: ${opponent.arenaClassName} · ${opponent.arenaEquipMode}`, type: 'info' },
+        { text: `Wager: ${wager}g`, type: 'info' },
+      ];
+      if (battle.playerIsFaster && battle.monsterNextMove) {
+        log.push({ text: `You're faster! Enemy intends to: ${battle.monsterNextMove.name}`, type: 'info' });
+      } else if (!battle.playerIsFaster) {
+        log.push({ text: `${opponent.name} is faster and strikes first!`, type: 'info' });
+      }
+
+      return {
+        ...state,
+        screen: 'battle',
+        player: { ...state.player, gold: state.player.gold - wager },
+        battle,
+        battleLog: log,
+        battleResult: null,
+        arena: {
+          tierId,
+          wager,
+          gauntletActive: false,
+          gauntletWins: 0,
+          gauntletWager: 0,
+        },
+      };
+    }
+
+    case 'ARENA_GAUNTLET_CONTINUE': {
+      const arena = state.arena;
+      if (!arena || !arena.gauntletActive) return state;
+
+      const tier = ARENA_TIERS.find(t => t.id === 'gauntlet');
+      const offset = tier ? tier.levelOffset() : 0;
+      const opponent = generateArenaOpponent(state.player.level, offset);
+      const battle = { ...createBattleState(opponent, state.player), noRun: true };
+      const log = [
+        { text: `Gauntlet Round ${arena.gauntletWins + 1}: ${opponent.name} (Lv.${opponent.arenaLevel})`, type: 'info' },
+        { text: `Class: ${opponent.arenaClassName} · ${opponent.arenaEquipMode}`, type: 'info' },
+        { text: `Current Pot: ${arena.gauntletWager}g`, type: 'info' },
+      ];
+      if (battle.playerIsFaster && battle.monsterNextMove) {
+        log.push({ text: `You're faster! Enemy intends to: ${battle.monsterNextMove.name}`, type: 'info' });
+      } else if (!battle.playerIsFaster) {
+        log.push({ text: `${opponent.name} is faster and strikes first!`, type: 'info' });
+      }
+
+      return {
+        ...state,
+        screen: 'battle',
+        battle,
+        battleLog: log,
+        battleResult: null,
+        arena: { ...arena, gauntletActive: false },
+      };
+    }
+
+    case 'ARENA_GAUNTLET_CASHOUT': {
+      const arena = state.arena;
+      if (!arena) return state;
+      const payout = arena.gauntletWager;
+      return {
+        ...state,
+        screen: 'arena',
+        player: { ...state.player, gold: state.player.gold + payout },
+        battle: null,
+        battleResult: null,
+        battleLog: [],
+        arena: null,
+        message: `Cashed out ${payout}g from the Gauntlet!`,
+      };
+    }
+
     default:
       return state;
   }
@@ -5105,6 +5204,12 @@ function gameReducer(state, action) {
 
 function handleVictory(state) {
   const m = state.battle.monster;
+
+  // Arena victory handling
+  if (m.isArenaOpponent && state.arena) {
+    return handleArenaVictory(state);
+  }
+
   const innBonus = getInnExpBonus(state.base);
   const worldEffects = getCurrentEffects();
   const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult);
@@ -5233,6 +5338,12 @@ function handleVictory(state) {
 
 function handleDefeat(state) {
   const m = state.battle.monster;
+
+  // Arena defeat handling - you already paid the wager, just lose
+  if (m.isArenaOpponent && state.arena) {
+    return handleArenaDefeat(state);
+  }
+
   const goldLost = Math.floor(state.player.gold * 0.2);
   const p = {
     ...state.player,
@@ -5252,6 +5363,136 @@ function handleDefeat(state) {
       defeated: true, goldLost,
       isBoss: !!m?.isBoss,
       bossName: m?.isBoss ? m.name : null,
+    },
+  };
+}
+
+function handleArenaVictory(state) {
+  const arena = state.arena;
+  const m = state.battle.monster;
+  const wager = arena.wager;
+
+  let newStats = state.stats || createInitialStats();
+  newStats = addStat(newStats, 'arenaWins');
+  newStats = addStat(newStats, 'battlesWon');
+
+  if (arena.tierId === 'normal') {
+    // Normal arena: win back wager + earn same amount
+    const winnings = wager * 2;
+    return {
+      ...state,
+      screen: 'battle-result',
+      player: { ...state.player, gold: state.player.gold + winnings },
+      stats: newStats,
+      battleResult: {
+        victory: true,
+        isArena: true,
+        arenaType: 'normal',
+        goldGain: winnings,
+        expGain: 0,
+        opponentName: m.name,
+        opponentClass: m.arenaClassName,
+        wager,
+      },
+    };
+  }
+
+  if (arena.tierId === 'gauntlet') {
+    // Gauntlet: keep doubling
+    const newWager = (arena.gauntletWager || wager) * 2;
+    const wins = (arena.gauntletWins || 0) + 1;
+    return {
+      ...state,
+      screen: 'battle-result',
+      stats: newStats,
+      arena: {
+        ...arena,
+        gauntletActive: true,
+        gauntletWins: wins,
+        gauntletWager: newWager,
+      },
+      battleResult: {
+        victory: true,
+        isArena: true,
+        arenaType: 'gauntlet',
+        goldGain: 0,
+        expGain: 0,
+        opponentName: m.name,
+        opponentClass: m.arenaClassName,
+        gauntletWins: wins,
+        gauntletPot: newWager,
+        wager,
+      },
+    };
+  }
+
+  if (arena.tierId === 'highstakes') {
+    // High stakes: win back wager + 1.5x bonus + possible item
+    const reward = getHighStakesReward(wager, state.player.level);
+    const totalGold = wager + wager + reward.bonusGold;
+    let p = { ...state.player, gold: state.player.gold + totalGold };
+
+    let rewardItem = null;
+    if (reward.rewardItem && p.inventory.length < p.maxInventory) {
+      p = { ...p, inventory: [...p.inventory, reward.rewardItem] };
+      rewardItem = reward.rewardItem;
+    }
+
+    return {
+      ...state,
+      screen: 'battle-result',
+      player: p,
+      stats: newStats,
+      battleResult: {
+        victory: true,
+        isArena: true,
+        arenaType: 'highstakes',
+        goldGain: totalGold,
+        expGain: 0,
+        opponentName: m.name,
+        opponentClass: m.arenaClassName,
+        wager,
+        bonusGold: reward.bonusGold,
+        droppedItem: rewardItem,
+      },
+    };
+  }
+
+  return state;
+}
+
+function handleArenaDefeat(state) {
+  const arena = state.arena;
+  const m = state.battle.monster;
+  const wagerLost = arena.wager;
+
+  // In gauntlet, lose the accumulated pot
+  const gauntletLoss = arena.gauntletWager || 0;
+
+  let newStats = state.stats || createInitialStats();
+  newStats = addStat(newStats, 'arenaLosses');
+  newStats = addStat(newStats, 'battlesLost');
+
+  // Restore HP/Mana partially (arena isn't lethal)
+  const p = {
+    ...state.player,
+    hp: Math.floor(state.player.maxHp * 0.5),
+    mana: Math.floor(state.player.maxMana * 0.5),
+  };
+
+  return {
+    ...state,
+    screen: 'battle-result',
+    player: p,
+    stats: newStats,
+    battleResult: {
+      defeated: true,
+      isArena: true,
+      arenaType: arena.tierId,
+      goldLost: wagerLost,
+      gauntletLoss,
+      opponentName: m.name,
+      opponentClass: m.arenaClassName,
     },
   };
 }
@@ -5402,6 +5643,10 @@ export function useGameState(isLoggedIn) {
     completePetQuest: (petInstanceId, questId) => dispatch({ type: 'COMPLETE_PET_QUEST', petInstanceId, questId }),
     petQuestGiveItem: (petInstanceId, item) => dispatch({ type: 'PET_QUEST_GIVE_ITEM', petInstanceId, item }),
     petQuestGiveGold: (petInstanceId, amount) => dispatch({ type: 'PET_QUEST_GIVE_GOLD', petInstanceId, amount }),
+    // Arena actions
+    arenaStartDuel: (tierId, wager) => dispatch({ type: 'ARENA_START_DUEL', tierId, wager }),
+    arenaGauntletContinue: () => dispatch({ type: 'ARENA_GAUNTLET_CONTINUE' }),
+    arenaGauntletCashout: () => dispatch({ type: 'ARENA_GAUNTLET_CASHOUT' }),
   }), []);
 
   return { state, actions, playerAtk, playerDef };
