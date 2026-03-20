@@ -5,3 +5,4 @@ dist
 game.db
 game.db-shm
 game.db-wal
+.env
