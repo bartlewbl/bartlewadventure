@@ -974,7 +974,7 @@ export const GROCERY_ITEMS = [
 ];
 
 export function getGroceryStock(playerLevel) {
-  return GROCERY_ITEMS.filter(item => playerLevel >= item.levelReq);
+  return GROCERY_ITEMS.filter(item => playerLevel >= item.levelReq).map(item => ({ ...item, stock: 5 }));
 }
 
 // ---- SHOP MATERIAL ITEMS (rarely available) ----

@@ -427,6 +427,7 @@ export default function App() {
               <ShopScreen
                 player={state.player}
                 pets={state.pets}
+                shopPurchases={state.shopPurchases || {}}
                 onBuy={actions.buyItem}
                 onSell={actions.sellItem}
                 onBuyPet={actions.buyPet}

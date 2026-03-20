@@ -1048,6 +1048,25 @@ function gameReducer(state, action) {
           }
           break;
         }
+        case 'energy_drinks': {
+          const count = outcome.amount || Math.floor(Math.random() * 7) + 1;
+          let awarded = 0;
+          const inv = [...p.inventory];
+          for (let i = 0; i < count; i++) {
+            if (inv.length >= p.maxInventory) break;
+            const drink = generateItem('energy-drink', lvl);
+            if (drink) { inv.push(drink); awarded++; }
+          }
+          if (awarded > 0) {
+            p = { ...p, inventory: inv };
+            resultText += ` (Got ${awarded} Energy Drink${awarded > 1 ? 's' : ''}!)`;
+            resultType = 'great';
+          } else {
+            resultText += ' But your inventory is full!';
+            resultType = 'neutral';
+          }
+          break;
+        }
         case 'damage': {
           const dmg = Math.max(1, Math.floor(p.maxHp * (outcome.amount || 0.25)));
           p = { ...p, hp: Math.max(1, p.hp - dmg) };
@@ -3048,15 +3067,35 @@ function gameReducer(state, action) {
       const adjustedBuyPrice = Math.max(1, Math.floor(item.buyPrice * (1 - charismaBuyBonus - weatherDiscount)));
       if (state.player.gold < adjustedBuyPrice) return { ...state, message: 'Not enough gold!' };
       if (state.player.inventory.length >= state.player.maxInventory) return { ...state, message: 'Inventory full!' };
+      // Reset shop purchases if the shop seed has changed (stock refresh)
+      const currentSeed = action.shopSeed;
+      let purchases = state.shopPurchases || {};
+      if (currentSeed != null && state.shopPurchaseSeed !== currentSeed) {
+        purchases = {};
+      }
+      // Check stock limit
+      if (item.stock != null) {
+        const stockKey = item.shopStockKey || item.name + '_' + item.level;
+        const bought = purchases[stockKey] || 0;
+        if (bought >= item.stock) return { ...state, message: 'Sold out!' };
+      }
       const newItem = { ...item, id: 'item_' + Date.now() + '_' + Math.random() };
       delete newItem.buyPrice;
+      delete newItem.stock;
+      delete newItem.shopStockKey;
       const p = {
         ...state.player,
         gold: state.player.gold - adjustedBuyPrice,
         inventory: [...state.player.inventory, newItem],
       };
       const newStats = addStat(state.stats, 'goldSpent', item.buyPrice);
-      return { ...state, player: p, message: `Purchased ${item.name}!`, stats: newStats };
+      // Track purchase for stock
+      let shopPurchases = { ...purchases };
+      if (item.stock != null) {
+        const stockKey = item.shopStockKey || item.name + '_' + item.level;
+        shopPurchases[stockKey] = (shopPurchases[stockKey] || 0) + 1;
+      }
+      return { ...state, player: p, shopPurchases, shopPurchaseSeed: currentSeed ?? state.shopPurchaseSeed, message: `Purchased ${item.name}!`, stats: newStats };
     }
 
     case 'APPLY_TRADE': {
@@ -3228,6 +3267,23 @@ function gameReducer(state, action) {
         }
       }
 
+      // Award energy drinks if the task reward includes them
+      let energyMsg = '';
+      if (taskDef.reward.energyDrinks && taskDef.reward.energyDrinks > 0) {
+        let awarded = 0;
+        for (let i = 0; i < taskDef.reward.energyDrinks; i++) {
+          if (p.inventory.length >= p.maxInventory) break;
+          const drink = generateItem('energy-drink', p.level);
+          if (drink) {
+            p.inventory.push(drink);
+            awarded++;
+          }
+        }
+        if (awarded > 0) {
+          energyMsg = ` + ${awarded} Energy Drink${awarded > 1 ? 's' : ''}`;
+        }
+      }
+
       const newStats = goldAmount ? addStat(state.stats, 'goldEarned', goldAmount) : state.stats;
       const newTasks = {
         ...tasks,
@@ -3277,7 +3333,7 @@ function gameReducer(state, action) {
         player: p,
         stats: newStats,
         tasks: newTasks,
-        message: `Task complete: ${taskDef.name}! +${goldAmount}g${chestMsg}`,
+        message: `Task complete: ${taskDef.name}! +${goldAmount}g${chestMsg}${energyMsg}`,
       };
     }
 
@@ -5110,7 +5166,7 @@ export function useGameState(isLoggedIn) {
     useItem: (item) => dispatch({ type: 'USE_ITEM', item }),
     sellItem: (item) => dispatch({ type: 'SELL_ITEM', item }),
     reorderInventory: (fromIndex, toIndex) => dispatch({ type: 'REORDER_INVENTORY', fromIndex, toIndex }),
-    buyItem: (item) => dispatch({ type: 'BUY_ITEM', item }),
+    buyItem: (item, shopSeed) => dispatch({ type: 'BUY_ITEM', item, shopSeed }),
     claimDailyReward: (rewards, label) => dispatch({ type: 'CLAIM_DAILY_REWARD', rewards, label }),
     claimTask: (taskId, taskType, chainId) => dispatch({ type: 'CLAIM_TASK', taskId, taskType, chainId }),
     pinQuest: (questId) => dispatch({ type: 'PIN_QUEST', questId }),

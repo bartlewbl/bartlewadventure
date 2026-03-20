@@ -230,6 +230,7 @@ export function getShopItems(playerLevel) {
       icon: 'potion',
       buyPrice,
       sellPrice: Math.floor(healAmount * 0.6),
+      stock: 3 + Math.floor(Math.random() * 3),
     };
   });
 }
@@ -324,6 +325,7 @@ export function getDailyFeaturedItems(playerLevel, shopSeed, playerClass) {
       classes: template.classes || null,
       buyPrice,
       sellPrice: Math.max(10, Math.floor((atk + def) * 4 + template.level * 3 + rarityData.multiplier * 10)),
+      stock: 1,
     });
   }
 
@@ -389,6 +391,7 @@ export function getArmourerStock(playerLevel, shopSeed, playerClass) {
         classes: template.classes || null,
         buyPrice,
         sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
+        stock: 1,
       });
       count++;
     }

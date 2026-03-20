@@ -288,5 +288,6 @@ export function getChestShopStock(playerLevel) {
   return levelFiltered.map(c => ({
     ...createChestItem(c.id),
     buyPrice: c.buyPrice,
+    stock: 2,
   }));
 }
