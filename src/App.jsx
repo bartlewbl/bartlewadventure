@@ -29,6 +29,7 @@ import SidePanel from './components/SidePanel';
 import RightPanel from './components/RightPanel';
 import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
+import MobileNav from './components/MobileNav';
 import { loadProbabilityConfig } from './data/probabilityStore';
 
 export default function App() {
@@ -529,6 +530,28 @@ export default function App() {
             />
           )}
         </div>
+
+        {!hidePanels && (
+          <MobileNav
+            screen={state.screen}
+            onGoToTown={actions.goToTown}
+            onExplore={() => actions.showScreen(state.currentRegion ? 'locations' : 'regions')}
+            onInventory={() => actions.showScreen('inventory')}
+            onShop={() => actions.showScreen('shop')}
+            onMarket={() => actions.showScreen('market')}
+            onBase={() => actions.showScreen('base')}
+            onPets={() => actions.showScreen('pets')}
+            onJournal={() => actions.showScreen('journal')}
+            onProfile={() => actions.showScreen('profile')}
+            onSkills={() => actions.showScreen('skills')}
+            navLocked={navLocked}
+            player={state.player}
+            energy={state.energy}
+            energyMax={ENERGY_MAX}
+            canRest={canRest}
+            onRest={actions.restAtInn}
+          />
+        )}
 
         {state.message && (
           <div className="message-overlay">
