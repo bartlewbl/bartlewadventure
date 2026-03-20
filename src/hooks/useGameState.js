@@ -31,6 +31,11 @@ const ENERGY_COST_PER_STEP = 2;
 export const ENERGY_REGEN_PERCENT = 0.1;
 export const ENERGY_REGEN_INTERVAL_MS = 15 * 60 * 1000;
 
+// Passive HP/Mana regeneration (out of combat)
+export const HP_REGEN_PERCENT = 0.05;     // 5% of max HP per tick
+export const MANA_REGEN_PERCENT = 0.08;   // 8% of max Mana per tick
+export const HP_MANA_REGEN_INTERVAL_MS = 2 * 60 * 1000; // every 2 minutes
+
 // ---- INITIAL STATE ----
 function createInitialPlayer() {
   return {
@@ -138,6 +143,7 @@ function createInitialState() {
     message: null,
     energy: ENERGY_MAX,
     lastEnergyUpdate: Date.now(),
+    lastHpManaRegenUpdate: Date.now(),
     pendingBoss: null,
     pendingLevelUps: [],
     stats: createInitialStats(),
@@ -312,6 +318,31 @@ function regenEnergy(currentEnergy, lastEnergyUpdate, now = Date.now()) {
   return { energy: nextEnergy, lastEnergyUpdate: last + consumed };
 }
 
+// Passive HP/Mana regen (out of combat, time-based like energy)
+function regenHpMana(player, lastHpManaRegenUpdate, now = Date.now()) {
+  const last = lastHpManaRegenUpdate ?? now;
+  const hpFull = player.hp >= player.maxHp;
+  const manaFull = player.mana >= player.maxMana;
+  if (hpFull && manaFull) {
+    return { player, lastHpManaRegenUpdate: now };
+  }
+  const elapsed = Math.max(0, now - last);
+  const ticks = Math.floor(elapsed / HP_MANA_REGEN_INTERVAL_MS);
+  if (ticks <= 0) {
+    return { player, lastHpManaRegenUpdate: last };
+  }
+  const hpGain = Math.max(1, Math.floor(player.maxHp * HP_REGEN_PERCENT)) * ticks;
+  const manaGain = Math.max(1, Math.floor(player.maxMana * MANA_REGEN_PERCENT)) * ticks;
+  const newHp = Math.min(player.maxHp, player.hp + hpGain);
+  const newMana = Math.min(player.maxMana, player.mana + manaGain);
+  const consumed = ticks * HP_MANA_REGEN_INTERVAL_MS;
+  const updatedPlayer = { ...player, hp: newHp, mana: newMana };
+  if (newHp >= player.maxHp && newMana >= player.maxMana) {
+    return { player: updatedPlayer, lastHpManaRegenUpdate: now };
+  }
+  return { player: updatedPlayer, lastHpManaRegenUpdate: last + consumed };
+}
+
 // Get the current combined time + weather gameplay effects
 function getCurrentEffects() {
   const now = new Date();
@@ -341,6 +372,7 @@ function extractSaveData(state) {
     pendingLevelUps: state.pendingLevelUps || [],
     energy: state.energy,
     lastEnergyUpdate: state.lastEnergyUpdate,
+    lastHpManaRegenUpdate: state.lastHpManaRegenUpdate,
     currentRegionId: state.currentRegion?.id || null,
     stats: state.stats,
     tasks: state.tasks,
@@ -627,13 +659,16 @@ function progressSinglePetQuest(pets, petInstanceId, questType, amount = 1) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
         lastEnergyUpdate ?? baseState.lastEnergyUpdate,
       );
-      const mergedPlayer = { ...baseState.player, ...player };
+      let mergedPlayer = { ...baseState.player, ...player };
+      // Apply passive HP/Mana regen accumulated while offline
+      const hpManaRegen = regenHpMana(mergedPlayer, lastHpManaRegenUpdate ?? baseState.lastHpManaRegenUpdate);
+      mergedPlayer = hpManaRegen.player;
       // Migrate equipment: ensure new slots exist for old saves
       if (mergedPlayer.equipment) {
         mergedPlayer.equipment = { ...baseState.player.equipment, ...mergedPlayer.equipment };
@@ -663,6 +698,7 @@ function gameReducer(state, action) {
         player: mergedPlayer,
         energy: regen.energy,
         lastEnergyUpdate: regen.lastEnergyUpdate,
+        lastHpManaRegenUpdate: hpManaRegen.lastHpManaRegenUpdate,
         currentRegion: savedRegion,
         stats: mergedStats,
         tasks: mergedTasks,
@@ -3572,8 +3608,23 @@ function gameReducer(state, action) {
     case 'ENERGY_TICK': {
       const now = action.now ?? Date.now();
       const { energy, lastEnergyUpdate } = regenEnergy(state.energy, state.lastEnergyUpdate, now);
-      if (energy === state.energy && lastEnergyUpdate === state.lastEnergyUpdate) return state;
-      return { ...state, energy, lastEnergyUpdate };
+      // Passive HP/Mana regen only when not in battle
+      const inBattle = state.screen === 'battle' || state.screen === 'boss-confirm';
+      let newPlayer = state.player;
+      let newLastHpManaRegen = state.lastHpManaRegenUpdate;
+      if (!inBattle) {
+        const hmRegen = regenHpMana(state.player, state.lastHpManaRegenUpdate, now);
+        newPlayer = hmRegen.player;
+        newLastHpManaRegen = hmRegen.lastHpManaRegenUpdate;
+      } else {
+        // Reset timer while in battle so it doesn't accumulate
+        newLastHpManaRegen = now;
+      }
+      const energyChanged = energy !== state.energy || lastEnergyUpdate !== state.lastEnergyUpdate;
+      const playerChanged = newPlayer !== state.player;
+      const hpManaTimerChanged = newLastHpManaRegen !== state.lastHpManaRegenUpdate;
+      if (!energyChanged && !playerChanged && !hpManaTimerChanged) return state;
+      return { ...state, energy, lastEnergyUpdate, player: newPlayer, lastHpManaRegenUpdate: newLastHpManaRegen };
     }
 
     // ========== BASE BUILDING SYSTEM ==========
