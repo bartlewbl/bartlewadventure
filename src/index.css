@@ -7681,16 +7681,16 @@ body {
 .base-mat-qty { color: #ffd700; font-weight: bold; font-size: 7px; }
 
 .base-withdraw-btn {
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
   padding: 0;
-  font-size: 8px;
+  font-size: 6px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .base-store-section {
