@@ -398,7 +398,6 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
       {/* ===== CHESTS ===== */}
       {activeShop === 'chests' && (
         <div className="shop-content">
-          <div className="shop-featured-banner">Rare Loot Chests - mostly earned through quests and daily logins!</div>
           <div className="shop-list">
             {chestStock.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No chests available at your level</div></div>}
             {chestStock.filter(item => getRemaining(item) > 0).map(item => {
