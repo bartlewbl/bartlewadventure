@@ -1001,6 +1001,13 @@ export const REGIONS = [
     ],
   },
   {
+    id: 'arena', name: 'The Arena',
+    description: 'A lawless fighting pit where warriors wager gold and test their mettle.',
+    levelReq: 5, travelCost: 0, bgKey: 'street',
+    isArena: true,
+    locations: [],
+  },
+  {
     id: 'scorched-badlands', name: 'Scorched Badlands',
     description: 'Sun-blasted deserts and volcanic wastelands of searing heat.',
     levelReq: 10, travelCost: 1000, bgKey: 'scorched-badlands',
@@ -1124,13 +1131,6 @@ export const REGIONS = [
         monsters: ['oblivion-knight', 'abyss-watcher', 'reality-bender', 'singularity-shade', 'nexus-serpent', 'paradox-golem', 'null-wraith'],
         encounterRate: 0.75, lootRate: 0.4, bgKey: 'void', boss: 'boss-oblivion-god', bossRate: 0.005 },
     ],
-  },
-  {
-    id: 'arena', name: 'The Arena',
-    description: 'A lawless fighting pit where warriors wager gold and test their mettle.',
-    levelReq: 5, travelCost: 0, bgKey: 'street',
-    isArena: true,
-    locations: [],
   },
 ];
 
