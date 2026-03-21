@@ -556,6 +556,7 @@ export default function App() {
                 pinnedQuests={state.tasks.pinnedQuests}
                 stats={state.stats}
                 tasks={state.tasks}
+                onClaim={(taskId, taskType, chainId) => actions.claimTask(taskId, taskType, chainId)}
               />
             )}
           </div>
