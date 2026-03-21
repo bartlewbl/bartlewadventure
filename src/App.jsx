@@ -281,6 +281,7 @@ export default function App() {
                 locations={state.currentRegion.locations}
                 regionName={state.currentRegion.name}
                 regionId={state.currentRegion.id}
+                isArenaRegion={!!state.currentRegion.isArena}
                 onSelect={actions.enterLocation}
                 onBack={actions.backToRegions}
                 pinnedQuests={state.tasks.pinnedQuests}
@@ -291,6 +292,7 @@ export default function App() {
                 onArenaStartDuel={actions.arenaStartDuel}
                 onArenaGauntletContinue={actions.arenaGauntletContinue}
                 onArenaGauntletCashout={actions.arenaGauntletCashout}
+                onArenaLeave={actions.arenaLeave}
                 arenaState={state.arena}
               />
             )}

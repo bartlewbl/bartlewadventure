@@ -1987,6 +1987,13 @@ body {
   border-left-color: #555;
 }
 
+.region-item.arena-region {
+  border-left-color: #ff8a65;
+}
+.region-item.arena-region:hover:not(:disabled) {
+  border-left-color: #ff8a65;
+}
+
 .region-name {
   font-size: 10px;
   color: #fff;
@@ -10405,16 +10412,6 @@ body {
 .btn-secondary:hover {
   background: rgba(50, 50, 80, 0.9) !important;
   color: #fff !important;
-}
-
-/* Arena subtab in locations */
-.arena-subtab {
-  color: #ff8a65 !important;
-}
-
-.arena-subtab.active {
-  border-bottom-color: #ff8a65 !important;
-  color: #ff8a65 !important;
 }
 
 /* Arena battle result */

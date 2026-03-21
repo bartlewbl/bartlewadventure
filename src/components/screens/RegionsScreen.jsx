@@ -14,9 +14,10 @@ export default function RegionsScreen({
         {REGIONS.map(region => {
           const isCurrentRegion = currentRegionId === region.id;
           const needsLevel = playerLevel < region.levelReq;
+          const isArena = !!region.isArena;
           const cost = region.travelCost || 0;
-          // No cost if already in this region; first travel (no current region) is free
-          const effectiveCost = isCurrentRegion ? 0 : (currentRegionId ? cost : 0);
+          // No cost if already in this region; first travel (no current region) is free; arena is always free
+          const effectiveCost = isArena ? 0 : (isCurrentRegion ? 0 : (currentRegionId ? cost : 0));
           const needsGold = effectiveCost > 0 && playerGold < effectiveCost;
           const locked = needsLevel || needsGold;
           const locationCount = region.locations.length;
@@ -24,7 +25,7 @@ export default function RegionsScreen({
           return (
             <button
               key={region.id}
-              className={`region-item ${locked ? 'locked' : ''} ${isCurrentRegion ? 'current' : ''}`}
+              className={`region-item ${locked ? 'locked' : ''} ${isCurrentRegion ? 'current' : ''} ${isArena ? 'arena-region' : ''}`}
               onClick={() => !locked && onSelect(region)}
               disabled={locked}
             >
@@ -42,8 +43,15 @@ export default function RegionsScreen({
                 )}
                 {!locked && (
                   <div className="region-progress">
-                    {unlocked}/{locationCount} locations
-                    {isCurrentRegion ? ' · You are here' : (effectiveCost > 0 ? ` · Ticket: ${effectiveCost}g` : ' · Free travel')}
+                    {isArena
+                      ? 'Free travel · PvP Dueling'
+                      : (
+                        <>
+                          {unlocked}/{locationCount} locations
+                          {isCurrentRegion ? ' · You are here' : (effectiveCost > 0 ? ` · Ticket: ${effectiveCost}g` : ' · Free travel')}
+                        </>
+                      )
+                    }
                   </div>
                 )}
               </div>

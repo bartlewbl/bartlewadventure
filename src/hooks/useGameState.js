@@ -162,6 +162,7 @@ function createInitialState() {
     pendingChest: null,       // { itemId, chestId } for chest opening screen
     chestResult: null,        // result of opening a chest (displayed on screen)
     arena: null,              // { tierId, wager, gauntletActive, gauntletWins, gauntletWager }
+    previousRegionId: null,   // saved when entering arena so player can return
   };
 }
 
@@ -382,6 +383,7 @@ function extractSaveData(state) {
     pets: state.pets,
     discoveredItemLocations: state.discoveredItemLocations,
     villageQuests: state.villageQuests,
+    previousRegionId: state.previousRegionId || null,
   };
 }
 
@@ -661,7 +663,7 @@ function progressSinglePetQuest(pets, petInstanceId, questType, amount = 1) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests, previousRegionId: savedPreviousRegionId } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -709,6 +711,7 @@ function gameReducer(state, action) {
         pendingLevelUps: mergedPending,
         discoveredItemLocations: savedDiscovered || {},
         villageQuests: { ...baseState.villageQuests, ...savedVillageQuests },
+        previousRegionId: savedPreviousRegionId || null,
       };
     }
 
@@ -765,6 +768,15 @@ function gameReducer(state, action) {
       if (state.currentRegion?.id === region.id) {
         return { ...state, screen: 'locations' };
       }
+      // Arena is always free to travel to; save previous region so player can return
+      if (region.isArena) {
+        return {
+          ...state,
+          screen: 'locations',
+          currentRegion: region,
+          previousRegionId: state.currentRegion?.id || null,
+        };
+      }
       // First region selection (new player, no current region) is free
       const cost = state.currentRegion ? (region.travelCost || 0) : 0;
       if (cost > 0 && state.player.gold < cost) {
@@ -774,6 +786,7 @@ function gameReducer(state, action) {
         ...state,
         screen: 'locations',
         currentRegion: region,
+        previousRegionId: null,
         player: cost > 0
           ? { ...state.player, gold: state.player.gold - cost }
           : state.player,
@@ -2932,13 +2945,13 @@ function gameReducer(state, action) {
     }
 
     case 'CONTINUE_AFTER_BATTLE': {
-      // Arena battle return - go back to locations (arena is a tab within locations)
+      // Arena battle return
       if (state.battleResult?.isArena) {
         if (state.arena?.gauntletActive) {
-          // Gauntlet win: go to locations so player can continue or cash out via arena tab
+          // Gauntlet win: stay in arena region so player can continue or cash out
           return { ...state, screen: 'locations', battle: null, battleResult: null, battleLog: [] };
         }
-        // Arena done (win/lose): go back to locations
+        // Arena done (win/lose): stay in arena region
         return { ...state, screen: 'locations', battle: null, battleResult: null, battleLog: [], arena: null };
       }
 
@@ -5180,6 +5193,23 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'ARENA_LEAVE': {
+      // Return to previous region (free travel back)
+      const prevId = state.previousRegionId;
+      const prevRegion = prevId ? REGIONS.find(r => r.id === prevId) : null;
+      if (prevRegion) {
+        return {
+          ...state,
+          screen: 'locations',
+          currentRegion: prevRegion,
+          previousRegionId: null,
+          arena: null,
+        };
+      }
+      // No previous region, go to region select
+      return { ...state, screen: 'regions', arena: null, previousRegionId: null };
+    }
+
     case 'ARENA_GAUNTLET_CASHOUT': {
       const arena = state.arena;
       if (!arena) return state;
@@ -5646,6 +5676,7 @@ export function useGameState(isLoggedIn) {
     arenaStartDuel: (tierId, wager) => dispatch({ type: 'ARENA_START_DUEL', tierId, wager }),
     arenaGauntletContinue: () => dispatch({ type: 'ARENA_GAUNTLET_CONTINUE' }),
     arenaGauntletCashout: () => dispatch({ type: 'ARENA_GAUNTLET_CASHOUT' }),
+    arenaLeave: () => dispatch({ type: 'ARENA_LEAVE' }),
   }), []);
 
   return { state, actions, playerAtk, playerDef };

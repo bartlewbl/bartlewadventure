@@ -1125,6 +1125,13 @@ export const REGIONS = [
         encounterRate: 0.75, lootRate: 0.4, bgKey: 'void', boss: 'boss-oblivion-god', bossRate: 0.005 },
     ],
   },
+  {
+    id: 'arena', name: 'The Arena',
+    description: 'A lawless fighting pit where warriors wager gold and test their mettle.',
+    levelReq: 5, travelCost: 0, bgKey: 'street',
+    isArena: true,
+    locations: [],
+  },
 ];
 
 // ---- SPECIAL LOCATIONS (per region) ----

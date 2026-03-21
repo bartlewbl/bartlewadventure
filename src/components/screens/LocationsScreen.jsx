@@ -326,6 +326,7 @@ export default function LocationsScreen({
   locations,
   regionName,
   regionId,
+  isArenaRegion,
   onSelect,
   onBack,
   pinnedQuests,
@@ -336,6 +337,7 @@ export default function LocationsScreen({
   onArenaStartDuel,
   onArenaGauntletContinue,
   onArenaGauntletCashout,
+  onArenaLeave,
   arenaState,
 }) {
   const [expandedId, setExpandedId] = useState(null);
@@ -344,10 +346,25 @@ export default function LocationsScreen({
   const availableEnergy = energy ?? requiredEnergy;
   const maxEnergy = energyMax ?? Math.max(availableEnergy, requiredEnergy, 1);
 
+  // Arena region: render arena content instead of normal locations
+  if (isArenaRegion) {
+    return (
+      <div className="screen screen-locations">
+        <div className="screen-header">The Arena</div>
+        <ArenaPanel
+          player={player}
+          arenaState={arenaState}
+          onStartDuel={onArenaStartDuel}
+          onGauntletContinue={onArenaGauntletContinue}
+          onGauntletCashout={onArenaGauntletCashout}
+        />
+        <button className="btn btn-back" onClick={onArenaLeave}>Leave Arena</button>
+      </div>
+    );
+  }
+
   const specialLocations = SPECIAL_LOCATIONS[regionId] || [];
   const hasSpecial = specialLocations.length > 0;
-  const hasArena = playerLevel >= 5;
-  const hasTabs = hasSpecial || hasArena;
 
   return (
     <div className="screen screen-locations">
@@ -360,7 +377,7 @@ export default function LocationsScreen({
         <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} />
       )}
 
-      {hasTabs && (
+      {hasSpecial && (
         <div className="location-subtabs">
           <button
             className={`location-subtab ${activeTab === 'normal' ? 'active' : ''}`}
@@ -368,22 +385,12 @@ export default function LocationsScreen({
           >
             Normal
           </button>
-          {hasSpecial && (
-            <button
-              className={`location-subtab ${activeTab === 'special' ? 'active' : ''}`}
-              onClick={() => setActiveTab('special')}
-            >
-              Special
-            </button>
-          )}
-          {hasArena && (
-            <button
-              className={`location-subtab arena-subtab ${activeTab === 'arena' ? 'active' : ''}`}
-              onClick={() => setActiveTab('arena')}
-            >
-              Arena
-            </button>
-          )}
+          <button
+            className={`location-subtab ${activeTab === 'special' ? 'active' : ''}`}
+            onClick={() => setActiveTab('special')}
+          >
+            Special
+          </button>
         </div>
       )}
 
@@ -416,16 +423,6 @@ export default function LocationsScreen({
             regionId={regionId}
           />
         </>
-      )}
-
-      {activeTab === 'arena' && (
-        <ArenaPanel
-          player={player}
-          arenaState={arenaState}
-          onStartDuel={onArenaStartDuel}
-          onGauntletContinue={onArenaGauntletContinue}
-          onGauntletCashout={onArenaGauntletCashout}
-        />
       )}
 
       <button className="btn btn-back" onClick={onBack}>Change Region</button>
