@@ -488,6 +488,8 @@ export default function App() {
                 onAddFuel={actions.baseAddFuel}
                 onAddFuelFromStorage={actions.baseAddFuelFromStorage}
                 onStoreMaterial={actions.baseStoreMaterial}
+                onStoreSeed={actions.baseStoreSeed}
+                onFarmPlantStoredSeed={actions.baseFarmPlantStoredSeed}
                 onBrew={actions.baseBrew}
                 onSmelt={actions.baseSmelt}
                 onCraft={actions.baseCraft}

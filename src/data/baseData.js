@@ -1104,6 +1104,7 @@ export function createInitialBase() {
     craftingQueue: null, // { recipeId, building, startTime, craftTime }
     // Farm
     farmPlots: [],       // [{ cropId, plantedAt } | null, ...]
+    seeds: {},           // { seedId: quantity } - seeds stored at base
     // Warehouse
     warehouseLevel: 0,
     // Incubator

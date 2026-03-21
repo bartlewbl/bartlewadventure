@@ -3173,6 +3173,20 @@ function gameReducer(state, action) {
           pendingChest: { itemId: item.id, chestId: item.chestId },
         };
       }
+      // Seed items: "use" stores them in base
+      if (item.type === 'seed') {
+        const seedId = item.seedId;
+        const qty = item.stackQuantity || 1;
+        const seeds = { ...state.base.seeds };
+        seeds[seedId] = (seeds[seedId] || 0) + qty;
+        const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
+        return {
+          ...state,
+          player: p,
+          base: { ...state.base, seeds },
+          message: `Stored ${qty}x ${item.name} in base.`,
+        };
+      }
       // Material items: "use" stores them in base
       if (item.type === 'material') {
         const matId = item.materialId;
@@ -3838,6 +3852,22 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'BASE_STORE_SEED': {
+      const item = action.item;
+      if (!item || item.type !== 'seed') return state;
+      const seedId = item.seedId;
+      const qty = item.stackQuantity || 1;
+      const seeds = { ...state.base.seeds };
+      seeds[seedId] = (seeds[seedId] || 0) + qty;
+      const p = { ...state.player, inventory: removeOneFromStack(state.player.inventory, item.id) };
+      return {
+        ...state,
+        player: p,
+        base: { ...state.base, seeds },
+        message: `Stored ${qty}x ${item.name}.`,
+      };
+    }
+
     case 'BASE_BREW': {
       if (!state.base.buildings.brewery?.built) return { ...state, message: 'Build a Brewery first!' };
       if (state.base.craftingQueue) return { ...state, message: 'Already crafting something!' };
@@ -4167,6 +4197,28 @@ function gameReducer(state, action) {
         player: { ...state.player, inventory: seedInv },
         base: { ...state.base, farmPlots: seedPlots },
         message: `Planted ${seedDef.name}!`,
+      };
+    }
+
+    case 'BASE_FARM_PLANT_STORED_SEED': {
+      if (!state.base.buildings.farm?.built) return { ...state, message: 'Build a Farm first!' };
+      const stPlotIndex = action.plotIndex;
+      const stSeedId = action.seedId;
+      const stSeeds = { ...state.base.seeds };
+      if ((stSeeds[stSeedId] || 0) < 1) return { ...state, message: 'No seeds in storage!' };
+      const stSeedDef = FARM_SEEDS[stSeedId];
+      if (!stSeedDef) return state;
+      const stPlots = [...(state.base.farmPlots || [])];
+      if (stPlotIndex < 0 || stPlotIndex >= stPlots.length) return state;
+      if (stPlots[stPlotIndex] !== null) return { ...state, message: 'Plot already planted!' };
+
+      stPlots[stPlotIndex] = { seedId: stSeedId, plantedAt: Date.now(), isSeed: true };
+      stSeeds[stSeedId] = stSeeds[stSeedId] - 1;
+      if (stSeeds[stSeedId] <= 0) delete stSeeds[stSeedId];
+      return {
+        ...state,
+        base: { ...state.base, farmPlots: stPlots, seeds: stSeeds },
+        message: `Planted ${stSeedDef.name} from storage!`,
       };
     }
 
@@ -5730,6 +5782,8 @@ export function useGameState(isLoggedIn) {
     baseAddFuel: (item) => dispatch({ type: 'BASE_ADD_FUEL', item }),
     baseAddFuelFromStorage: (materialId) => dispatch({ type: 'BASE_ADD_FUEL_FROM_STORAGE', materialId }),
     baseStoreMaterial: (item) => dispatch({ type: 'BASE_STORE_MATERIAL', item }),
+    baseStoreSeed: (item) => dispatch({ type: 'BASE_STORE_SEED', item }),
+    baseFarmPlantStoredSeed: (plotIndex, seedId) => dispatch({ type: 'BASE_FARM_PLANT_STORED_SEED', plotIndex, seedId }),
     baseBrew: (recipeId) => dispatch({ type: 'BASE_BREW', recipeId }),
     baseSmelt: (recipeId, gearItem) => dispatch({ type: 'BASE_SMELT', recipeId, gearItem }),
     baseCraft: (recipeId) => dispatch({ type: 'BASE_CRAFT', recipeId }),

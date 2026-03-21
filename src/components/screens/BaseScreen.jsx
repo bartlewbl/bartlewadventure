@@ -223,6 +223,43 @@ function MaterialStoragePanel({ base, player, onStoreMaterial }) {
   );
 }
 
+function SeedStoragePanel({ base, player, onStoreSeed }) {
+  const seeds = base.seeds || {};
+  const invSeeds = player.inventory.filter(i => i.type === 'seed');
+
+  return (
+    <div className="base-storage-panel">
+      <div className="base-section-title">{'\uD83C\uDF31'} Seed Storage</div>
+      <div className="base-material-grid">
+        {Object.entries(seeds).filter(([, qty]) => qty > 0).map(([id, qty]) => {
+          const seed = FARM_SEEDS[id];
+          return (
+            <div key={id} className={`base-material-item rarity-${(seed?.rarity || 'common').toLowerCase()}`}>
+              <span className="base-mat-name">{seed?.name || id}</span>
+              <span className="base-mat-qty">x{qty}</span>
+            </div>
+          );
+        })}
+        {Object.entries(seeds).filter(([, qty]) => qty > 0).length === 0 && (
+          <div className="base-empty-text">No seeds stored. Explore locations to find seeds.</div>
+        )}
+      </div>
+      {invSeeds.length > 0 && (
+        <div className="base-store-section">
+          <div className="base-sub-label">Store from inventory:</div>
+          <div className="base-store-list">
+            {invSeeds.map(item => (
+              <button key={item.id} className="btn btn-sm base-store-btn" onClick={() => onStoreSeed(item)}>
+                Store {item.name} {item.stackQuantity > 1 ? `x${item.stackQuantity}` : ''}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CraftingQueuePanel({ base, onCollect }) {
   const queue = base.craftingQueue;
   if (!queue) return null;
@@ -641,7 +678,7 @@ function SparringPanel({ base, onStart, onAttack, onSkill, onReset }) {
   );
 }
 
-function FarmPanel({ base, player, onPlant, onPlantSeed, onHarvest }) {
+function FarmPanel({ base, player, onPlant, onPlantSeed, onPlantStoredSeed, onHarvest }) {
   const [selectedCrop, setSelectedCrop] = useState(null);
   const [farmTab, setFarmTab] = useState('seeds');
   const plots = base.farmPlots || [];
@@ -649,6 +686,7 @@ function FarmPanel({ base, player, onPlant, onPlantSeed, onHarvest }) {
   const now = Date.now();
 
   const seeds = player.inventory.filter(i => i.type === 'seed');
+  const storedSeeds = Object.entries(base.seeds || {}).filter(([, qty]) => qty > 0);
 
   const renderPlot = (plot, i) => {
     if (!plot) {
@@ -656,8 +694,21 @@ function FarmPanel({ base, player, onPlant, onPlantSeed, onHarvest }) {
         <div key={i} className="base-farm-plot empty">
           <div className="base-farm-plot-label">Plot {i + 1} - Empty</div>
           {farmTab === 'seeds' ? (
-            seeds.length > 0 ? (
+            (seeds.length > 0 || storedSeeds.length > 0) ? (
               <div className="base-recipe-list">
+                {storedSeeds.map(([seedId, qty]) => {
+                  const seedDef = FARM_SEEDS[seedId];
+                  if (!seedDef) return null;
+                  return (
+                    <div key={`stored-${seedId}`} className="base-recipe-item">
+                      <div className="base-recipe-info">
+                        <div className={`base-recipe-name rarity-${seedDef.rarity.toLowerCase()}`}>{seedDef.name} (stored x{qty})</div>
+                        <div className="base-recipe-desc">{seedDef.desc}</div>
+                      </div>
+                      <button className="btn btn-sm" onClick={() => onPlantStoredSeed(i, seedId)}>Plant</button>
+                    </div>
+                  );
+                })}
                 {seeds.map(seed => (
                   <div key={seed.id} className="base-recipe-item">
                     <div className="base-recipe-info">
@@ -669,7 +720,7 @@ function FarmPanel({ base, player, onPlant, onPlantSeed, onHarvest }) {
                 ))}
               </div>
             ) : (
-              <div className="base-empty-text">No seeds in inventory. Explore locations to find seeds!</div>
+              <div className="base-empty-text">No seeds in inventory or storage. Explore locations to find seeds!</div>
             )
           ) : (
             <div className="base-farm-crop-select">
@@ -1183,13 +1234,13 @@ const TABS = [
 
 export default function BaseScreen({
   player, base, onBack,
-  onBuild, onAddFuel, onAddFuelFromStorage, onStoreMaterial,
+  onBuild, onAddFuel, onAddFuelFromStorage, onStoreMaterial, onStoreSeed,
   onBrew, onSmelt, onCraft, onCollectCraft,
   onUpgradeInn, onBuyInnBoost, onUpgradeChamber,
   onSendMission, onCollectMission,
   onBankDeposit, onBankWithdraw, onBankFreeze, onBankCollectFrozen, onBankLoan, onBankRepay,
   onStartSpar, onSparAttack, onSparSkill, onResetSpar,
-  onFarmPlant, onFarmPlantSeed, onFarmHarvest, onUpgradeWarehouse,
+  onFarmPlant, onFarmPlantSeed, onFarmPlantStoredSeed, onFarmHarvest, onUpgradeWarehouse,
   onPlaceEgg, onFeedIncubator, onCollectHatch, onUpgradeIncubator,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -1230,6 +1281,7 @@ export default function BaseScreen({
               onAddFuel={onAddFuel} onAddFuelFromStorage={onAddFuelFromStorage}
             />
             <MaterialStoragePanel base={base} player={player} onStoreMaterial={onStoreMaterial} />
+            <SeedStoragePanel base={base} player={player} onStoreSeed={onStoreSeed} />
 
             <div className="base-section-title">{'🏗️'} Buildings</div>
             <div className="base-buildings-grid">
@@ -1303,7 +1355,7 @@ export default function BaseScreen({
 
       case 'farm':
         if (!buildings.farm?.built) return renderBuildingOrConstruct('farm');
-        return <FarmPanel base={base} player={player} onPlant={onFarmPlant} onPlantSeed={onFarmPlantSeed} onHarvest={onFarmHarvest} />;
+        return <FarmPanel base={base} player={player} onPlant={onFarmPlant} onPlantSeed={onFarmPlantSeed} onPlantStoredSeed={onFarmPlantStoredSeed} onHarvest={onFarmHarvest} />;
 
       case 'warehouse':
         if (!buildings.warehouse?.built) return renderBuildingOrConstruct('warehouse');
