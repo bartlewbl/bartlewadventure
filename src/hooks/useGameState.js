@@ -3838,6 +3838,25 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'BASE_WITHDRAW_MATERIAL': {
+      const wMatId = action.materialId;
+      const wMats = { ...state.base.materials };
+      if ((wMats[wMatId] || 0) < 1) return { ...state, message: 'No materials to withdraw!' };
+      const matDef = BUILDING_MATERIALS[wMatId];
+      if (!matDef) return state;
+      const matItem = createMaterialItem(wMatId, 1);
+      if (!matItem) return state;
+      const wInv = addToInventory(state.player.inventory, matItem, state.player.maxInventory);
+      if (!wInv) return { ...state, message: 'Inventory is full!' };
+      wMats[wMatId] = wMats[wMatId] - 1;
+      return {
+        ...state,
+        player: { ...state.player, inventory: wInv },
+        base: { ...state.base, materials: wMats },
+        message: `Withdrew 1x ${matDef.name}.`,
+      };
+    }
+
     case 'BASE_BREW': {
       if (!state.base.buildings.brewery?.built) return { ...state, message: 'Build a Brewery first!' };
       if (state.base.craftingQueue) return { ...state, message: 'Already crafting something!' };
@@ -5730,6 +5749,7 @@ export function useGameState(isLoggedIn) {
     baseAddFuel: (item) => dispatch({ type: 'BASE_ADD_FUEL', item }),
     baseAddFuelFromStorage: (materialId) => dispatch({ type: 'BASE_ADD_FUEL_FROM_STORAGE', materialId }),
     baseStoreMaterial: (item) => dispatch({ type: 'BASE_STORE_MATERIAL', item }),
+    baseWithdrawMaterial: (materialId) => dispatch({ type: 'BASE_WITHDRAW_MATERIAL', materialId }),
     baseBrew: (recipeId) => dispatch({ type: 'BASE_BREW', recipeId }),
     baseSmelt: (recipeId, gearItem) => dispatch({ type: 'BASE_SMELT', recipeId, gearItem }),
     baseCraft: (recipeId) => dispatch({ type: 'BASE_CRAFT', recipeId }),
