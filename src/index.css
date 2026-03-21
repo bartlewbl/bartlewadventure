@@ -122,6 +122,7 @@ body {
 .side-panel-body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 14px;
   flex: 1;
   min-height: 0;
@@ -131,17 +132,22 @@ body {
 .side-panel-content {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 14px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  width: 100%;
+  text-align: center;
 }
 
 .side-panel-footer {
   margin-top: auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
+  width: 100%;
 }
 
 .side-panel.collapsed .side-panel-body {
@@ -150,19 +156,7 @@ body {
 }
 
 .side-panel-heading {
-  text-align: left;
-}
-
-.side-panel-title {
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: #ffd700;
-}
-
-.side-panel-subtitle {
-  font-size: 7px;
-  color: #8e8eb2;
-  margin-top: 4px;
+  text-align: center;
 }
 
 .side-panel-card {

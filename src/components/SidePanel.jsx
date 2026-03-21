@@ -119,11 +119,6 @@ export default function SidePanel({
 
       <div className="side-panel-body">
         <div className="side-panel-content">
-          <div className="side-panel-heading">
-            <div className="side-panel-title">Command Board</div>
-            <div className="side-panel-subtitle">Plan your next step</div>
-          </div>
-
           <div className="side-panel-clock">
             <div className="side-clock-main">
               <span className="side-clock-icon">{clock.period.icon}</span>
