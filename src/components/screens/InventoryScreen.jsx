@@ -30,12 +30,18 @@ const INV_CATEGORIES = [
   { id: 'potions', label: 'Potions', icon: '\u2661' },
   { id: 'energy-drinks', label: 'Energy', icon: '\u26A1' },
   { id: 'chests', label: 'Chests', icon: '\u{1F4E6}' },
+  { id: 'seeds', label: 'Seeds', icon: '\u{1F331}' },
+  { id: 'materials', label: 'Materials', icon: '\u{1F9F1}' },
+  { id: 'eggs', label: 'Eggs', icon: '\u{1F95A}' },
 ];
 
 function getItemCategory(item) {
   if (item.type === 'loot-chest') return 'chests';
   if (item.type === 'potion') return 'potions';
   if (item.type === 'energy-drink') return 'energy-drinks';
+  if (item.type === 'seed' || item.type === 'crop') return 'seeds';
+  if (item.type === 'material') return 'materials';
+  if (item.type === 'egg') return 'eggs';
   if (item.slot === 'weapon') return 'weapons';
   if (item.slot === 'shield') return 'shields';
   if (item.slot === 'helmet') return 'helmets';
