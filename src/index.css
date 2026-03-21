@@ -9971,6 +9971,19 @@ body {
   opacity: 0.5;
 }
 
+.village-trader-deal.sold-out {
+  opacity: 0.4;
+}
+
+.village-trader-deal-stock {
+  font-size: 9px;
+  color: #999;
+}
+
+.village-trader-deal.sold-out .village-trader-deal-stock {
+  color: #e74c3c;
+}
+
 .village-trader-deal-info {
   display: flex;
   align-items: center;

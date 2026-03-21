@@ -908,10 +908,10 @@ function gameReducer(state, action) {
         };
       }
 
-      // Quest village discovery check (~2% chance, only in regions with villages)
+      // Quest village discovery check (~1% chance, only in regions with villages)
       const regionId = state.currentRegion?.id;
       const regionVillages = regionId ? (QUEST_VILLAGES[regionId] || []) : [];
-      if (regionVillages.length > 0 && Math.random() < 0.02) {
+      if (regionVillages.length > 0 && Math.random() < 0.01) {
         const village = regionVillages[Math.floor(Math.random() * regionVillages.length)];
         const isNewDiscovery = !(state.villageQuests.discoveredVillages || []).includes(village.id);
         const newDiscovered = isNewDiscovery
@@ -1375,8 +1375,23 @@ function gameReducer(state, action) {
       // Find which trader has this deal
       const matchedTrader = vTraders.find(t => t.deals.some(d => d.id === action.dealId));
       if (!matchedTrader) return state;
+      // Check stock limits for village trader deals
+      const vDeal = matchedTrader.deals.find(d => d.id === action.dealId);
+      if (vDeal && vDeal.stock != null) {
+        const vPurchases = state.villagePurchases || {};
+        const bought = vPurchases[action.dealId] || 0;
+        if (bought >= vDeal.stock) {
+          return { ...state, message: 'Sold out!' };
+        }
+      }
       // Reuse TRADER_BUY logic by synthesizing an activeTrader context
       const result = gameReducer({ ...state, activeTrader: matchedTrader }, { type: 'TRADER_BUY', dealId: action.dealId });
+      // If purchase succeeded (gold changed or message differs), track the purchase
+      if (result.player.gold !== state.player.gold || (result.message && result.message !== 'Not enough gold!' && result.message !== 'Inventory full!')) {
+        const updatedPurchases = { ...(result.villagePurchases || state.villagePurchases || {}) };
+        updatedPurchases[action.dealId] = (updatedPurchases[action.dealId] || 0) + 1;
+        return { ...result, activeTrader: state.activeTrader, villagePurchases: updatedPurchases };
+      }
       return { ...result, activeTrader: state.activeTrader };
     }
 
