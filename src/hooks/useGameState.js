@@ -5381,6 +5381,9 @@ function handleVictory(state) {
     updatedPets = progressPetQuests(updatedPets, 'slay_boss', 1, regionId);
   }
 
+  // Restore energy on level up (like HP/mana)
+  const newEnergy = pendingLevels.length > 0 ? ENERGY_MAX : state.energy;
+
   return {
     ...state,
     screen: 'battle-result',
@@ -5388,6 +5391,7 @@ function handleVictory(state) {
     stats: newStats,
     tasks: newTasks,
     pets: updatedPets,
+    energy: newEnergy,
     pendingLevelUps: [...existingPending, ...pendingLevels],
     battleResult: {
       victory: true, expGain, goldGain,
