@@ -10551,3 +10551,98 @@ body {
   color: #ff8a65;
   margin-top: 2px;
 }
+
+/* ---- Quest Sidebar (right-side overlay during gameplay) ---- */
+.quest-sidebar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 140px;
+  background: rgba(8, 8, 24, 0.88);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 6px;
+  padding: 8px;
+  z-index: 20;
+  pointer-events: auto;
+  max-height: calc(100% - 16px);
+  overflow-y: auto;
+}
+
+.quest-sidebar-title {
+  font-size: 8px;
+  font-weight: 700;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+}
+
+.quest-sidebar-item {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(100, 100, 140, 0.15);
+}
+
+.quest-sidebar-item:last-child {
+  border-bottom: none;
+}
+
+.quest-sidebar-item.complete {
+  opacity: 0.65;
+}
+
+.quest-sidebar-name {
+  font-size: 7px;
+  font-weight: 600;
+  color: #e0e0ff;
+  margin-bottom: 2px;
+}
+
+.quest-sidebar-desc {
+  font-size: 6px;
+  color: #8888aa;
+  margin-bottom: 4px;
+}
+
+.quest-sidebar-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quest-sidebar-bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(30, 30, 60, 0.9);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.quest-sidebar-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #ffd700, #ffab00);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.quest-sidebar-item.complete .quest-sidebar-bar-fill {
+  background: linear-gradient(to right, #4caf50, #81c784);
+}
+
+.quest-sidebar-count {
+  font-size: 6px;
+  color: #9d9dc5;
+  white-space: nowrap;
+}
+
+.quest-sidebar-item.complete .quest-sidebar-count {
+  color: #4caf50;
+}
+
+/* Hide quest sidebar on mobile - too small */
+@media (max-width: 768px) {
+  .quest-sidebar {
+    display: none;
+  }
+}
