@@ -236,14 +236,11 @@ export default function App() {
               onPets={() => actions.showScreen('pets')}
               onJournal={() => actions.showScreen('journal')}
               onRest={actions.restAtInn}
-              onUsePotion={actions.usePotion}
               navLocked={navLocked}
               gold={state.player.gold}
               onProfile={() => actions.showScreen('profile')}
               onSkills={() => actions.showScreen('skills')}
               canRest={canRest}
-              hasPotions={state.player.inventory.some(i => i.type === 'potion')}
-              needsHpHealing={state.player.hp < state.player.maxHp}
               lastEnergyUpdate={state.lastEnergyUpdate}
               lastHpManaRegenUpdate={state.lastHpManaRegenUpdate}
             />

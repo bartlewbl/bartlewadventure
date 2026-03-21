@@ -22,9 +22,6 @@ export default function CharacterDock({
   canRest,
   lastEnergyUpdate,
   lastHpManaRegenUpdate,
-  onUsePotion,
-  hasPotions,
-  needsHpHealing,
 }) {
   const safeMax = energyMax ?? Math.max(energy ?? 0, 1);
   const currentEnergy = Math.max(0, Math.min(energy ?? safeMax, safeMax));
@@ -120,16 +117,6 @@ export default function CharacterDock({
             <span className="dock-gold-value">{goldValue.toLocaleString()}</span>
           </div>
         </div>
-        <button
-          className="dock-potion-button"
-          type="button"
-          disabled={navLocked || !hasPotions || !needsHpHealing}
-          onClick={onUsePotion}
-          aria-label="Use Potion"
-          title={!hasPotions ? 'No potions' : !needsHpHealing ? 'HP is full' : 'Use a potion'}
-        >
-          <span className="dock-potion-icon">♥</span>
-        </button>
         <button
           className="dock-rest-button"
           type="button"
