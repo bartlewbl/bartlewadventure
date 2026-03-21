@@ -705,18 +705,6 @@ export const WORKSHOP_RECIPES = [
   },
   // --- REGION TICKETS ---
   {
-    id: 'craft-ticket-frozen-wastes', name: 'Forge Frozen Wastes Permit',
-    materials: { 'iron-ingot': 5, 'crystal-shard': 3, 'stone-block': 8 },
-    result: { type: 'ticket', ticketRegionId: 'frozen-wastes' }, craftTime: 30000,
-    desc: 'Forge a frost-sealed permit to enter the Frozen Wastes.',
-  },
-  {
-    id: 'craft-ticket-scorched-badlands', name: 'Forge Badlands Pass',
-    materials: { 'iron-ingot': 8, 'charcoal': 10, 'oil-canister': 4, 'stone-block': 5 },
-    result: { type: 'ticket', ticketRegionId: 'scorched-badlands' }, craftTime: 45000,
-    desc: 'Forge a heat-resistant pass for the Scorched Badlands.',
-  },
-  {
     id: 'craft-ticket-toxic-marshlands', name: 'Forge Marshland Visa',
     materials: { 'toxic-resin': 12, 'herb-bundle': 8, 'glass-vial': 6, 'copper-wire': 5 },
     result: { type: 'ticket', ticketRegionId: 'toxic-marshlands' }, craftTime: 60000,
@@ -1493,18 +1481,6 @@ export function createMaterialItem(materialId, quantity = 1) {
 // Tickets required to access higher-level regions. Very rare drops or crafted in workshop.
 // Neon District (starter) and Arena (free) don't need tickets.
 export const REGION_TICKETS = {
-  'frozen-wastes': {
-    id: 'ticket-frozen-wastes', name: 'Frozen Wastes Permit', type: 'ticket',
-    rarity: 'Rare', sellPrice: 150,
-    description: 'A frost-sealed travel permit granting passage to the Frozen Wastes.',
-    regionId: 'frozen-wastes', regionName: 'Frozen Wastes',
-  },
-  'scorched-badlands': {
-    id: 'ticket-scorched-badlands', name: 'Badlands Pass', type: 'ticket',
-    rarity: 'Rare', sellPrice: 300,
-    description: 'A heat-resistant pass stamped with volcanic sigils. Grants entry to the Scorched Badlands.',
-    regionId: 'scorched-badlands', regionName: 'Scorched Badlands',
-  },
   'toxic-marshlands': {
     id: 'ticket-toxic-marshlands', name: 'Marshland Visa', type: 'ticket',
     rarity: 'Epic', sellPrice: 600,
@@ -1557,15 +1533,13 @@ export const TICKET_DROP_CONFIG = {
   'neon-district': {
     dropRate: 0.003,
     tickets: [
-      { regionId: 'frozen-wastes', weight: 60 },
-      { regionId: 'scorched-badlands', weight: 5 },
+      { regionId: 'toxic-marshlands', weight: 5 },
     ],
   },
   'frozen-wastes': {
-    dropRate: 0.004,
+    dropRate: 0.003,
     tickets: [
-      { regionId: 'scorched-badlands', weight: 50 },
-      { regionId: 'toxic-marshlands', weight: 8 },
+      { regionId: 'toxic-marshlands', weight: 10 },
     ],
   },
   'scorched-badlands': {
