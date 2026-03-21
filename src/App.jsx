@@ -23,6 +23,7 @@ import RegionsScreen from './components/screens/RegionsScreen';
 import JournalScreen from './components/screens/JournalScreen';
 import MarketScreen from './components/screens/MarketScreen';
 import BaseScreen from './components/screens/BaseScreen';
+import ArenaScreen from './components/screens/ArenaScreen';
 import PetScreen from './components/screens/PetScreen';
 import StatSelectScreen from './components/screens/StatSelectScreen';
 import SidePanel from './components/SidePanel';
@@ -189,7 +190,7 @@ export default function App() {
 
   const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select';
   const hidePanels = navLocked;
-  const canRest = !navLocked && (state.screen === 'town' || state.screen === 'locations' || state.screen === 'regions');
+  const canRest = !navLocked;
 
   return (
     <div className="game-container">
@@ -295,6 +296,7 @@ export default function App() {
                 tasks={state.tasks}
                 player={state.player}
                 onRest={actions.restAtInn}
+                onArena={() => actions.showScreen('arena')}
               />
             )}
 
@@ -533,6 +535,17 @@ export default function App() {
                 player={state.player}
                 onBack={actions.goToTown}
                 onMarketTransaction={actions.applyMarketTransaction}
+              />
+            )}
+
+            {state.screen === 'arena' && (
+              <ArenaScreen
+                player={state.player}
+                arenaState={state.arena}
+                onStartDuel={actions.arenaStartDuel}
+                onGauntletContinue={actions.arenaGauntletContinue}
+                onGauntletCashout={actions.arenaGauntletCashout}
+                onBack={() => actions.showScreen('locations')}
               />
             )}
 

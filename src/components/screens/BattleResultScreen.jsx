@@ -4,6 +4,65 @@ export default function BattleResultScreen({ result, onContinue }) {
   if (!result) return null;
 
   const isBoss = result.isBoss;
+  const isArena = result.isArena;
+
+  // Arena result rendering
+  if (isArena) {
+    return (
+      <div className="screen screen-result">
+        <div className={`result-title ${result.victory ? 'victory' : 'defeat'} arena-result`}>
+          {result.victory ? 'ARENA VICTORY!' : 'ARENA DEFEAT...'}
+        </div>
+
+        <div className="result-rewards">
+          {result.victory ? (
+            <>
+              <div className="arena-opponent-info">
+                Defeated {result.opponentName} ({result.opponentClass})
+              </div>
+              {result.arenaType === 'normal' && (
+                <div>+{result.goldGain} Gold (doubled your {result.wager}g wager!)</div>
+              )}
+              {result.arenaType === 'gauntlet' && (
+                <>
+                  <div className="gauntlet-win-info">
+                    Win Streak: {result.gauntletWins}!
+                  </div>
+                  <div>Current Pot: {result.gauntletPot}g</div>
+                  <div className="gauntlet-hint">Continue to double or cash out!</div>
+                </>
+              )}
+              {result.arenaType === 'highstakes' && (
+                <>
+                  <div>+{result.goldGain} Gold</div>
+                  <div className="highstakes-win-info">
+                    Wager: {result.wager}g + Bonus: {result.bonusGold}g
+                  </div>
+                </>
+              )}
+              {result.droppedItem && (
+                <ItemDropWindow item={result.droppedItem} label="Arena Reward!" />
+              )}
+            </>
+          ) : (
+            <>
+              <div className="arena-opponent-info">
+                Lost to {result.opponentName} ({result.opponentClass})
+              </div>
+              <div>Lost {result.goldLost}g wager</div>
+              {result.gauntletLoss > 0 && (
+                <div>Gauntlet pot lost: {result.gauntletLoss}g</div>
+              )}
+            </>
+          )}
+        </div>
+
+        <button className="btn btn-primary" onClick={onContinue}>
+          {result.victory && result.arenaType === 'gauntlet' ? 'Continue Gauntlet' : 'Back to Arena'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="screen screen-result">
