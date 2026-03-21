@@ -336,6 +336,7 @@ export default function App() {
                 villageQuests={state.villageQuests}
                 stats={state.stats}
                 player={state.player}
+                villagePurchases={state.villagePurchases || {}}
                 onAcceptQuest={actions.villageAcceptQuest}
                 onTurnInQuest={actions.villageTurnInQuest}
                 onTraderBuy={actions.villageTraderBuy}

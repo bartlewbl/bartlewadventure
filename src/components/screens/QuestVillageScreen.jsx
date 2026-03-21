@@ -1,6 +1,6 @@
 import { QUEST_VILLAGES } from '../../data/gameData';
 
-export default function QuestVillageScreen({ village, villageQuests, stats, player, onAcceptQuest, onTurnInQuest, onTraderBuy, onLeave }) {
+export default function QuestVillageScreen({ village, villageQuests, stats, player, villagePurchases, onAcceptQuest, onTurnInQuest, onTraderBuy, onLeave }) {
   if (!village) return null;
 
   const accepted = villageQuests?.acceptedQuests || [];
@@ -115,10 +115,20 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
               <div className="village-trader-deals">
                 {trader.deals.map(deal => {
                   const canAfford = player.gold >= deal.cost;
+                  const purchased = (villagePurchases || {})[deal.id] || 0;
+                  const soldOut = deal.stock != null && purchased >= deal.stock;
+                  const remaining = deal.stock != null ? deal.stock - purchased : null;
                   return (
-                    <div key={deal.id} className={`village-trader-deal ${!canAfford ? 'too-expensive' : ''}`}>
+                    <div key={deal.id} className={`village-trader-deal ${!canAfford ? 'too-expensive' : ''} ${soldOut ? 'sold-out' : ''}`}>
                       <div className="village-trader-deal-info">
-                        <div className="village-trader-deal-desc">{deal.description}</div>
+                        <div className="village-trader-deal-desc">
+                          {deal.description}
+                          {deal.stock != null && (
+                            <span className="village-trader-deal-stock">
+                              {soldOut ? ' — Sold out' : ` (${remaining} left)`}
+                            </span>
+                          )}
+                        </div>
                         <div className="village-trader-deal-cost">
                           {deal.cost > 0 ? `${deal.cost}g` : 'Free'}
                         </div>
@@ -126,9 +136,9 @@ export default function QuestVillageScreen({ village, villageQuests, stats, play
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => onTraderBuy(deal.id)}
-                        disabled={!canAfford}
+                        disabled={!canAfford || soldOut}
                       >
-                        {canAfford ? 'Buy' : "Can't afford"}
+                        {soldOut ? 'Sold out' : canAfford ? 'Buy' : "Can't afford"}
                       </button>
                     </div>
                   );
