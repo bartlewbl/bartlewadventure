@@ -275,6 +275,78 @@ export const PET_LOW_BOND_THRESHOLD = 30;     // below this, pet may refuse to f
 export const PET_REFUSE_CHANCE_LOW_BOND = 0.4; // 40% chance to refuse if bond < 30
 export const PET_MAX_SLOTS = 1;               // max active/equipped pets (only one pet active at a time)
 
+// ---- PET LEVELING ----
+export const PET_MAX_LEVEL = 20;
+// XP required to reach each level (index = level, so index 0 is unused)
+export const PET_XP_TABLE = [
+  0,    // level 0 (unused)
+  0,    // level 1 (starting level)
+  30,   // level 2
+  70,   // level 3
+  120,  // level 4
+  180,  // level 5
+  260,  // level 6
+  360,  // level 7
+  480,  // level 8
+  620,  // level 9
+  780,  // level 10
+  960,  // level 11
+  1160, // level 12
+  1380, // level 13
+  1620, // level 14
+  1900, // level 15
+  2200, // level 16
+  2550, // level 17
+  2950, // level 18
+  3400, // level 19
+  3900, // level 20
+];
+
+// Stat growth per level: each level adds a percentage of base stats
+export const PET_STAT_GROWTH_PER_LEVEL = {
+  atk: 0.08,  // +8% base ATK per level above 1
+  def: 0.08,  // +8% base DEF per level above 1
+  hp: 0.06,   // +6% base HP per level above 1
+};
+
+// Get XP needed to reach the next level (returns Infinity at max)
+export function getPetXpToNextLevel(level) {
+  if (level >= PET_MAX_LEVEL) return Infinity;
+  return PET_XP_TABLE[level + 1];
+}
+
+// Calculate effective stats for a pet at its current level
+export function getPetLevelStats(pet) {
+  const lvl = pet.level || 1;
+  const levelsGained = lvl - 1;
+  return {
+    atk: pet.baseAtk + Math.floor(pet.baseAtk * PET_STAT_GROWTH_PER_LEVEL.atk * levelsGained),
+    def: pet.baseDef + Math.floor(pet.baseDef * PET_STAT_GROWTH_PER_LEVEL.def * levelsGained),
+    hp: pet.baseHp + Math.floor(pet.baseHp * PET_STAT_GROWTH_PER_LEVEL.hp * levelsGained),
+  };
+}
+
+// Add XP to a pet instance, returning updated pet and any level-ups
+export function addPetXp(pet, xpAmount) {
+  const updated = { ...pet };
+  updated.xp = (updated.xp || 0) + xpAmount;
+  updated.level = updated.level || 1;
+  let levelsGained = 0;
+
+  while (updated.level < PET_MAX_LEVEL && updated.xp >= PET_XP_TABLE[updated.level + 1]) {
+    updated.level += 1;
+    levelsGained += 1;
+  }
+
+  // Update hp to match new level stats
+  if (levelsGained > 0) {
+    const stats = getPetLevelStats(updated);
+    updated.hp = stats.hp;
+  }
+
+  return { pet: updated, levelsGained };
+}
+
 // ---- PET BASE BUILDINGS ----
 export const PET_BUILDINGS = {
   kennel: {
@@ -356,6 +428,8 @@ export function createPetInstance(catalogId) {
     bond: PET_MAX_BOND,
     energy: PET_MAX_ENERGY,
     hp: template.baseHp,
+    level: 1,
+    xp: 0,
     activeQuests: [],    // [{ ...questDef, progress: 0 }]
     completedQuests: [], // [questId, ...]
   };
@@ -407,7 +481,8 @@ export function willPetFight(pet) {
 export function calcPetDamage(pet, monsterDef, buffs) {
   const atkMult = 1 + (buffs?.petAtkBuff || 0);
   const bondBonus = pet.bond >= 80 ? 1.15 : pet.bond >= 50 ? 1.0 : 0.85;
-  const baseAtk = Math.floor(pet.baseAtk * atkMult * bondBonus);
+  const levelStats = getPetLevelStats(pet);
+  const baseAtk = Math.floor(levelStats.atk * atkMult * bondBonus);
   const effectiveDef = Math.max(0, monsterDef * (pet.ability?.piercePercent ? (1 - pet.ability.piercePercent) : 1));
   const base = Math.max(1, baseAtk - effectiveDef * 0.4);
   const variance = 0.85 + Math.random() * 0.3;
@@ -498,7 +573,7 @@ export const PET_QUEST_POOL = {
       type: 'slay',
       target: 5,
       bondReward: 8,
-      goldReward: 20,
+      xpReward: 15,
     },
     {
       id: 'q-slay-15',
@@ -507,7 +582,7 @@ export const PET_QUEST_POOL = {
       type: 'slay',
       target: 15,
       bondReward: 18,
-      goldReward: 50,
+      xpReward: 40,
     },
     {
       id: 'q-slay-30',
@@ -516,7 +591,7 @@ export const PET_QUEST_POOL = {
       type: 'slay',
       target: 30,
       bondReward: 30,
-      goldReward: 100,
+      xpReward: 80,
     },
     {
       id: 'q-win-3',
@@ -525,7 +600,7 @@ export const PET_QUEST_POOL = {
       type: 'win_battles',
       target: 3,
       bondReward: 10,
-      goldReward: 15,
+      xpReward: 10,
     },
     {
       id: 'q-win-10',
@@ -534,7 +609,7 @@ export const PET_QUEST_POOL = {
       type: 'win_battles',
       target: 10,
       bondReward: 22,
-      goldReward: 60,
+      xpReward: 50,
     },
     {
       id: 'q-win-25',
@@ -543,7 +618,7 @@ export const PET_QUEST_POOL = {
       type: 'win_battles',
       target: 25,
       bondReward: 40,
-      goldReward: 120,
+      xpReward: 100,
     },
     {
       id: 'q-feed-3',
@@ -552,7 +627,7 @@ export const PET_QUEST_POOL = {
       type: 'feed_snack',
       target: 3,
       bondReward: 12,
-      goldReward: 0,
+      xpReward: 10,
     },
     {
       id: 'q-feed-8',
@@ -561,7 +636,7 @@ export const PET_QUEST_POOL = {
       type: 'feed_snack',
       target: 8,
       bondReward: 25,
-      goldReward: 30,
+      xpReward: 25,
     },
     {
       id: 'q-give-item',
@@ -570,7 +645,7 @@ export const PET_QUEST_POOL = {
       type: 'give_item',
       target: 1,
       bondReward: 15,
-      goldReward: 0,
+      xpReward: 15,
     },
     {
       id: 'q-give-3-items',
@@ -579,7 +654,7 @@ export const PET_QUEST_POOL = {
       type: 'give_item',
       target: 3,
       bondReward: 30,
-      goldReward: 40,
+      xpReward: 35,
     },
     {
       id: 'q-give-gold-50',
@@ -588,7 +663,7 @@ export const PET_QUEST_POOL = {
       type: 'give_gold',
       target: 50,
       bondReward: 10,
-      goldReward: 0,
+      xpReward: 10,
     },
     {
       id: 'q-give-gold-200',
@@ -597,7 +672,7 @@ export const PET_QUEST_POOL = {
       type: 'give_gold',
       target: 200,
       bondReward: 25,
-      goldReward: 0,
+      xpReward: 30,
     },
     {
       id: 'q-give-potion-3',
@@ -606,7 +681,7 @@ export const PET_QUEST_POOL = {
       type: 'give_potion',
       target: 3,
       bondReward: 12,
-      goldReward: 0,
+      xpReward: 10,
     },
     {
       id: 'q-explore-5',
@@ -615,7 +690,7 @@ export const PET_QUEST_POOL = {
       type: 'explore',
       target: 5,
       bondReward: 8,
-      goldReward: 15,
+      xpReward: 12,
     },
     {
       id: 'q-explore-15',
@@ -624,7 +699,7 @@ export const PET_QUEST_POOL = {
       type: 'explore',
       target: 15,
       bondReward: 20,
-      goldReward: 45,
+      xpReward: 35,
     },
     {
       id: 'q-slay-boss',
@@ -633,7 +708,7 @@ export const PET_QUEST_POOL = {
       type: 'slay_boss',
       target: 1,
       bondReward: 20,
-      goldReward: 50,
+      xpReward: 40,
     },
     {
       id: 'q-slay-3-bosses',
@@ -642,63 +717,63 @@ export const PET_QUEST_POOL = {
       type: 'slay_boss',
       target: 3,
       bondReward: 40,
-      goldReward: 150,
+      xpReward: 120,
     },
   ],
 
   // ---- PET-SPECIFIC QUESTS ----
   'fire-imp': [
-    { id: 'q-fimp-scorch', name: 'Scorched Earth', desc: 'Slay 8 monsters in the Scorched Badlands.', type: 'slay', region: 'scorched-badlands', target: 8, bondReward: 15, goldReward: 40 },
-    { id: 'q-fimp-explore', name: 'Fire Walk', desc: 'Explore the Scorched Badlands 5 times.', type: 'explore', region: 'scorched-badlands', target: 5, bondReward: 12, goldReward: 25 },
+    { id: 'q-fimp-scorch', name: 'Scorched Earth', desc: 'Slay 8 monsters in the Scorched Badlands.', type: 'slay', region: 'scorched-badlands', target: 8, bondReward: 15, xpReward: 30 },
+    { id: 'q-fimp-explore', name: 'Fire Walk', desc: 'Explore the Scorched Badlands 5 times.', type: 'explore', region: 'scorched-badlands', target: 5, bondReward: 12, xpReward: 20 },
   ],
   'shadow-cat': [
-    { id: 'q-scat-neon', name: 'Shadow Prowl', desc: 'Slay 10 monsters in the Neon District.', type: 'slay', region: 'neon-district', target: 10, bondReward: 15, goldReward: 35 },
-    { id: 'q-scat-stealth', name: 'Night Stalker', desc: 'Win 8 battles at night (with this pet).', type: 'win_battles', target: 8, bondReward: 18, goldReward: 45 },
+    { id: 'q-scat-neon', name: 'Shadow Prowl', desc: 'Slay 10 monsters in the Neon District.', type: 'slay', region: 'neon-district', target: 10, bondReward: 15, xpReward: 28 },
+    { id: 'q-scat-stealth', name: 'Night Stalker', desc: 'Win 8 battles at night (with this pet).', type: 'win_battles', target: 8, bondReward: 18, xpReward: 35 },
   ],
   'thunder-hawk': [
-    { id: 'q-thawk-sky', name: 'Highland Soar', desc: 'Slay 10 monsters in the Celestial Highlands.', type: 'slay', region: 'celestial-highlands', target: 10, bondReward: 18, goldReward: 50 },
-    { id: 'q-thawk-explore', name: 'Sky Survey', desc: 'Explore the Celestial Highlands 8 times.', type: 'explore', region: 'celestial-highlands', target: 8, bondReward: 15, goldReward: 40 },
+    { id: 'q-thawk-sky', name: 'Highland Soar', desc: 'Slay 10 monsters in the Celestial Highlands.', type: 'slay', region: 'celestial-highlands', target: 10, bondReward: 18, xpReward: 40 },
+    { id: 'q-thawk-explore', name: 'Sky Survey', desc: 'Explore the Celestial Highlands 8 times.', type: 'explore', region: 'celestial-highlands', target: 8, bondReward: 15, xpReward: 30 },
   ],
   'void-serpent': [
-    { id: 'q-vserp-void', name: 'Void Harvest', desc: 'Slay 12 monsters in the Void Nexus.', type: 'slay', region: 'void-nexus', target: 12, bondReward: 25, goldReward: 80 },
-    { id: 'q-vserp-boss', name: 'Apex Predator', desc: 'Defeat 2 bosses in the Void Nexus.', type: 'slay_boss', region: 'void-nexus', target: 2, bondReward: 35, goldReward: 120 },
+    { id: 'q-vserp-void', name: 'Void Harvest', desc: 'Slay 12 monsters in the Void Nexus.', type: 'slay', region: 'void-nexus', target: 12, bondReward: 25, xpReward: 65 },
+    { id: 'q-vserp-boss', name: 'Apex Predator', desc: 'Defeat 2 bosses in the Void Nexus.', type: 'slay_boss', region: 'void-nexus', target: 2, bondReward: 35, xpReward: 100 },
   ],
   'stone-turtle': [
-    { id: 'q-sturt-frozen', name: 'Frozen March', desc: 'Slay 8 monsters in the Frozen Wastes.', type: 'slay', region: 'frozen-wastes', target: 8, bondReward: 14, goldReward: 35 },
-    { id: 'q-sturt-feed', name: 'Leafy Treats', desc: 'Feed this pet 5 snacks.', type: 'feed_snack', target: 5, bondReward: 15, goldReward: 10 },
+    { id: 'q-sturt-frozen', name: 'Frozen March', desc: 'Slay 8 monsters in the Frozen Wastes.', type: 'slay', region: 'frozen-wastes', target: 8, bondReward: 14, xpReward: 28 },
+    { id: 'q-sturt-feed', name: 'Leafy Treats', desc: 'Feed this pet 5 snacks.', type: 'feed_snack', target: 5, bondReward: 15, xpReward: 12 },
   ],
   'iron-golem': [
-    { id: 'q-igol-badlands', name: 'Forge in Fire', desc: 'Slay 10 monsters in the Scorched Badlands.', type: 'slay', region: 'scorched-badlands', target: 10, bondReward: 16, goldReward: 45 },
-    { id: 'q-igol-gift', name: 'Iron Offering', desc: 'Give 2 equipment items to this golem.', type: 'give_item', target: 2, bondReward: 20, goldReward: 30 },
+    { id: 'q-igol-badlands', name: 'Forge in Fire', desc: 'Slay 10 monsters in the Scorched Badlands.', type: 'slay', region: 'scorched-badlands', target: 10, bondReward: 16, xpReward: 35 },
+    { id: 'q-igol-gift', name: 'Iron Offering', desc: 'Give 2 equipment items to this golem.', type: 'give_item', target: 2, bondReward: 20, xpReward: 25 },
   ],
   'crystal-guardian': [
-    { id: 'q-cguard-abyss', name: 'Crystal Depths', desc: 'Slay 10 monsters in the Abyssal Depths.', type: 'slay', region: 'abyssal-depths', target: 10, bondReward: 18, goldReward: 50 },
-    { id: 'q-cguard-explore', name: 'Deep Dive', desc: 'Explore the Abyssal Depths 6 times.', type: 'explore', region: 'abyssal-depths', target: 6, bondReward: 14, goldReward: 35 },
+    { id: 'q-cguard-abyss', name: 'Crystal Depths', desc: 'Slay 10 monsters in the Abyssal Depths.', type: 'slay', region: 'abyssal-depths', target: 10, bondReward: 18, xpReward: 40 },
+    { id: 'q-cguard-explore', name: 'Deep Dive', desc: 'Explore the Abyssal Depths 6 times.', type: 'explore', region: 'abyssal-depths', target: 6, bondReward: 14, xpReward: 28 },
   ],
   'forest-sprite': [
-    { id: 'q-fsprite-marsh', name: 'Herb Gathering', desc: 'Explore the Toxic Marshlands 6 times.', type: 'explore', region: 'toxic-marshlands', target: 6, bondReward: 12, goldReward: 30 },
-    { id: 'q-fsprite-heal', name: 'Nurture Bond', desc: 'Feed this sprite 6 snacks.', type: 'feed_snack', target: 6, bondReward: 18, goldReward: 15 },
+    { id: 'q-fsprite-marsh', name: 'Herb Gathering', desc: 'Explore the Toxic Marshlands 6 times.', type: 'explore', region: 'toxic-marshlands', target: 6, bondReward: 12, xpReward: 25 },
+    { id: 'q-fsprite-heal', name: 'Nurture Bond', desc: 'Feed this sprite 6 snacks.', type: 'feed_snack', target: 6, bondReward: 18, xpReward: 15 },
   ],
   'moon-fox': [
-    { id: 'q-mfox-frozen', name: 'Moonlit Hunt', desc: 'Slay 10 monsters in the Frozen Wastes.', type: 'slay', region: 'frozen-wastes', target: 10, bondReward: 16, goldReward: 45 },
-    { id: 'q-mfox-explore', name: 'Night Wander', desc: 'Explore 10 times with this pet.', type: 'explore', target: 10, bondReward: 15, goldReward: 35 },
+    { id: 'q-mfox-frozen', name: 'Moonlit Hunt', desc: 'Slay 10 monsters in the Frozen Wastes.', type: 'slay', region: 'frozen-wastes', target: 10, bondReward: 16, xpReward: 35 },
+    { id: 'q-mfox-explore', name: 'Night Wander', desc: 'Explore 10 times with this pet.', type: 'explore', target: 10, bondReward: 15, xpReward: 28 },
   ],
   'celestial-phoenix': [
-    { id: 'q-cphx-celestial', name: 'Heavenly Ascent', desc: 'Slay 12 monsters in the Celestial Highlands.', type: 'slay', region: 'celestial-highlands', target: 12, bondReward: 22, goldReward: 70 },
-    { id: 'q-cphx-boss', name: 'Trial by Fire', desc: 'Defeat 2 bosses with this phoenix.', type: 'slay_boss', target: 2, bondReward: 35, goldReward: 100 },
+    { id: 'q-cphx-celestial', name: 'Heavenly Ascent', desc: 'Slay 12 monsters in the Celestial Highlands.', type: 'slay', region: 'celestial-highlands', target: 12, bondReward: 22, xpReward: 55 },
+    { id: 'q-cphx-boss', name: 'Trial by Fire', desc: 'Defeat 2 bosses with this phoenix.', type: 'slay_boss', target: 2, bondReward: 35, xpReward: 80 },
   ],
   'war-pup': [
-    { id: 'q-wpup-neon', name: 'Street Patrol', desc: 'Slay 8 monsters in the Neon District.', type: 'slay', region: 'neon-district', target: 8, bondReward: 12, goldReward: 30 },
-    { id: 'q-wpup-play', name: 'Playtime', desc: 'Feed this pup 4 snacks.', type: 'feed_snack', target: 4, bondReward: 14, goldReward: 10 },
+    { id: 'q-wpup-neon', name: 'Street Patrol', desc: 'Slay 8 monsters in the Neon District.', type: 'slay', region: 'neon-district', target: 8, bondReward: 12, xpReward: 25 },
+    { id: 'q-wpup-play', name: 'Playtime', desc: 'Feed this pup 4 snacks.', type: 'feed_snack', target: 4, bondReward: 14, xpReward: 12 },
   ],
   'mystic-owl': [
-    { id: 'q-mowl-highlands', name: 'Wisdom Seeking', desc: 'Explore the Celestial Highlands 5 times.', type: 'explore', region: 'celestial-highlands', target: 5, bondReward: 14, goldReward: 35 },
-    { id: 'q-mowl-gold', name: 'Knowledge Tax', desc: 'Donate 100 gold to this owl.', type: 'give_gold', target: 100, bondReward: 18, goldReward: 0 },
+    { id: 'q-mowl-highlands', name: 'Wisdom Seeking', desc: 'Explore the Celestial Highlands 5 times.', type: 'explore', region: 'celestial-highlands', target: 5, bondReward: 14, xpReward: 28 },
+    { id: 'q-mowl-gold', name: 'Knowledge Tax', desc: 'Donate 100 gold to this owl.', type: 'give_gold', target: 100, bondReward: 18, xpReward: 20 },
   ],
   'dragon-whelp': [
-    { id: 'q-dwhelp-void', name: 'Dragon\'s Trial', desc: 'Slay 15 monsters in the Void Nexus.', type: 'slay', region: 'void-nexus', target: 15, bondReward: 30, goldReward: 100 },
-    { id: 'q-dwhelp-boss', name: 'Dragon\'s Challenge', desc: 'Defeat 3 bosses with this dragon.', type: 'slay_boss', target: 3, bondReward: 45, goldReward: 200 },
-    { id: 'q-dwhelp-feast', name: 'Royal Feast', desc: 'Feed this dragon 10 snacks.', type: 'feed_snack', target: 10, bondReward: 35, goldReward: 50 },
+    { id: 'q-dwhelp-void', name: 'Dragon\'s Trial', desc: 'Slay 15 monsters in the Void Nexus.', type: 'slay', region: 'void-nexus', target: 15, bondReward: 30, xpReward: 80 },
+    { id: 'q-dwhelp-boss', name: 'Dragon\'s Challenge', desc: 'Defeat 3 bosses with this dragon.', type: 'slay_boss', target: 3, bondReward: 45, xpReward: 150 },
+    { id: 'q-dwhelp-feast', name: 'Royal Feast', desc: 'Feed this dragon 10 snacks.', type: 'feed_snack', target: 10, bondReward: 35, xpReward: 40 },
   ],
 };
 
