@@ -23,6 +23,8 @@ export default function CharacterDock({
   canRest,
   lastEnergyUpdate,
   lastHpManaRegenUpdate,
+  inventoryCount,
+  maxInventory,
 }) {
   const safeMax = energyMax ?? Math.max(energy ?? 0, 1);
   const currentEnergy = Math.max(0, Math.min(energy ?? safeMax, safeMax));
@@ -185,6 +187,24 @@ export default function CharacterDock({
         </div>
         <span className="dock-xp-text">XP {currentExp}/{safeExpToLevel}</span>
       </div>
+
+      {/* Inventory space indicator */}
+      {maxInventory > 0 && (() => {
+        const count = inventoryCount ?? 0;
+        const max = maxInventory ?? 20;
+        const pct = Math.min((count / max) * 100, 100);
+        const isFull = count >= max;
+        const isNearFull = count >= max - 2;
+        return (
+          <div className={`dock-inv-indicator${isFull ? ' dock-inv-full' : isNearFull ? ' dock-inv-warn' : ''}`}>
+            <span className="dock-inv-icon">▦</span>
+            <div className="dock-inv-track">
+              <div className="dock-inv-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="dock-inv-text">{count}/{max}</span>
+          </div>
+        );
+      })()}
 
       {/* Quick actions */}
       <div className="dock-quick-actions">

@@ -250,6 +250,8 @@ export default function App() {
               canRest={canRest}
               lastEnergyUpdate={state.lastEnergyUpdate}
               lastHpManaRegenUpdate={state.lastHpManaRegenUpdate}
+              inventoryCount={state.player.inventory.length}
+              maxInventory={state.player.maxInventory}
             />
           )}
 
