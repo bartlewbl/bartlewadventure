@@ -2,7 +2,7 @@
 // All item creation logic extracted from gameData.js
 
 import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS } from '../data/gameData';
-import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem } from '../data/baseData';
+import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem, TICKET_DROP_CONFIG, createTicketItem } from '../data/baseData';
 import { CHEST_LOOKUP, RARITY_ORDER, CHEST_MATERIAL_POOLS } from '../data/lootChests';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
 import { prob } from '../data/probabilityStore';
@@ -562,6 +562,25 @@ export function rollEggDrop(regionId) {
     }
   }
   return createEggItem(config.eggs[config.eggs.length - 1].id);
+}
+
+// ---- REGION TICKET DROPS ----
+
+// Roll for a very rare region ticket drop based on current region
+export function rollTicketDrop(regionId) {
+  const config = TICKET_DROP_CONFIG[regionId];
+  if (!config) return null;
+  if (Math.random() > config.dropRate) return null;
+
+  const totalWeight = config.tickets.reduce((s, t) => s + t.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const entry of config.tickets) {
+    roll -= entry.weight;
+    if (roll <= 0) {
+      return createTicketItem(entry.regionId);
+    }
+  }
+  return createTicketItem(config.tickets[config.tickets.length - 1].regionId);
 }
 
 // ---- LOOT CHEST OPENING ----

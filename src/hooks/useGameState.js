@@ -7,9 +7,9 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
-import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, openLootChest } from '../engine/loot';
+import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, rollTicketDrop, openLootChest } from '../engine/loot';
 import { createChestItem, CHEST_LOOKUP } from '../data/lootChests';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
@@ -777,23 +777,39 @@ function gameReducer(state, action) {
           previousRegionId: state.currentRegion?.id || null,
         };
       }
-      // First region selection (new player, no current region) is free
-      const cost = state.currentRegion ? (region.travelCost || 0) : 0;
-      if (cost > 0 && state.player.gold < cost) {
-        return { ...state, message: `Not enough gold for the ticket! (${cost}g needed)` };
+      // Neon District (starter region) is always free
+      // First region selection (new player, no current region) goes to Neon District free
+      const isStarter = region.id === 'neon-district';
+      const isFirstTravel = !state.currentRegion;
+      const needsTicket = !isStarter && !isFirstTravel ? !!REGION_TICKETS[region.id] : (!isStarter && isFirstTravel);
+      if (needsTicket) {
+        const ticketIdx = state.player.inventory.findIndex(i => i.type === 'ticket' && i.ticketRegionId === region.id);
+        if (ticketIdx === -1) {
+          const ticketName = REGION_TICKETS[region.id]?.name || 'a ticket';
+          return { ...state, message: `You need a ${ticketName} to travel there! Find one exploring or craft it in the Workshop.` };
+        }
+        // Consume the ticket
+        const newInventory = [...state.player.inventory];
+        newInventory.splice(ticketIdx, 1);
+        let regionStats = state.stats;
+        regionStats = addStat(regionStats, 'regionsVisited');
+        return {
+          ...state,
+          screen: 'locations',
+          currentRegion: region,
+          previousRegionId: null,
+          stats: regionStats,
+          player: { ...state.player, inventory: newInventory },
+        };
       }
       let regionStats = state.stats;
       regionStats = addStat(regionStats, 'regionsVisited');
-      if (cost > 0) regionStats = addStat(regionStats, 'goldSpent', cost);
       return {
         ...state,
         screen: 'locations',
         currentRegion: region,
         previousRegionId: null,
         stats: regionStats,
-        player: cost > 0
-          ? { ...state.player, gold: state.player.gold - cost }
-          : state.player,
       };
     }
 
@@ -3975,7 +3991,19 @@ function gameReducer(state, action) {
         }
       } else if (queue.building === 'workshop') {
         const recipe = WORKSHOP_RECIPES.find(r => r.id === queue.recipeId);
-        if (recipe?.result?.template) {
+        if (recipe?.result?.ticketRegionId) {
+          // Ticket crafting
+          const ticketItem = createTicketItem(recipe.result.ticketRegionId);
+          if (ticketItem) {
+            const ticketInv = addToInventory(p.inventory, ticketItem, p.maxInventory);
+            if (ticketInv) {
+              p.inventory = ticketInv;
+              msg = `Forged ${ticketItem.name}!`;
+            } else {
+              return { ...state, message: 'Inventory full!' };
+            }
+          }
+        } else if (recipe?.result?.template) {
           const item = generateCraftedItem(recipe.result.template, state.player.level);
           if (item) {
             const craftInv = addToInventory(p.inventory, item, p.maxInventory);
@@ -5321,6 +5349,17 @@ function handleVictory(state) {
     }
   }
 
+  // Roll for extremely rare region ticket drop
+  let ticketDrop = null;
+  if (regionId) {
+    ticketDrop = rollTicketDrop(regionId);
+    if (ticketDrop && p.inventory.length < p.maxInventory) {
+      p.inventory = [...p.inventory, ticketDrop];
+    } else if (ticketDrop) {
+      ticketDrop = null; // inventory full
+    }
+  }
+
   // Bosses always drop a gear item of at least Rare quality
   const droppedItem = m.isBoss
     ? rollBossDrop(m.dropTable, m.level)
@@ -5399,6 +5438,7 @@ function handleVictory(state) {
       materialDrop: materialDrop || null,
       bossMaterials: bossMaterials || null,
       eggDrop: eggDrop || null,
+      ticketDrop: ticketDrop || null,
       lostItemName,
       levelUps: pendingLevels,
       newLevel: leveledPlayer.level,
