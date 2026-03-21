@@ -200,8 +200,8 @@ function MaterialStoragePanel({ base, player, onStoreMaterial, onWithdrawMateria
             <div key={id} className={`base-material-item rarity-${(mat?.rarity || 'common').toLowerCase()}`}>
               <span className="base-mat-name">{mat?.name || id}</span>
               <span className="base-mat-qty">x{qty}</span>
-              <button className="btn btn-sm base-withdraw-btn" onClick={() => onWithdrawMaterial(id)}>
-                Take
+              <button className="btn btn-sm base-withdraw-btn" title="Take" onClick={() => onWithdrawMaterial(id)}>
+                {'↑'}
               </button>
             </div>
           );

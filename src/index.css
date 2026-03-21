@@ -7648,21 +7648,20 @@ body {
 }
 
 .base-material-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-bottom: 8px;
 }
 
 .base-material-item {
   font-size: 7px;
-  padding: 6px 10px;
+  padding: 2px 5px;
   background: rgba(30, 30, 60, 0.7);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 5px;
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  gap: 3px;
   align-items: center;
   transition: transform 0.15s, box-shadow 0.15s;
 }
@@ -7678,8 +7677,21 @@ body {
 .base-material-item.rarity-epic { border-color: #ffa726; background: rgba(255, 167, 38, 0.08); }
 .base-material-item.rarity-legendary { border-color: #ffd700; background: rgba(255, 215, 0, 0.08); box-shadow: 0 0 6px rgba(255, 215, 0, 0.15); }
 
-.base-mat-name { color: #d0d0e0; font-size: 7px; }
-.base-mat-qty { color: #ffd700; font-weight: bold; font-size: 8px; }
+.base-mat-name { color: #d0d0e0; font-size: 7px; white-space: nowrap; }
+.base-mat-qty { color: #ffd700; font-weight: bold; font-size: 7px; }
+
+.base-withdraw-btn {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  padding: 0;
+  font-size: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+}
 
 .base-store-section {
   margin-top: 10px;
