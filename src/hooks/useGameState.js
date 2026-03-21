@@ -370,7 +370,6 @@ function extractSaveData(state) {
     player: state.player,
     screen: (state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm') ? 'town'
       : (state.screen === 'explore' || state.screen === 'random-event' || state.screen === 'event-result' || state.screen === 'quest-village' || state.screen === 'extraordinary-trader') ? 'locations'
-      : state.screen === 'arena' ? 'locations'
       : state.screen,
     pendingLevelUps: state.pendingLevelUps || [],
     energy: state.energy,
@@ -2933,14 +2932,14 @@ function gameReducer(state, action) {
     }
 
     case 'CONTINUE_AFTER_BATTLE': {
-      // Arena battle return
+      // Arena battle return - go back to locations (arena is a tab within locations)
       if (state.battleResult?.isArena) {
         if (state.arena?.gauntletActive) {
-          // Gauntlet win: go to arena screen to continue or cash out
-          return { ...state, screen: 'arena', battle: null, battleResult: null, battleLog: [] };
+          // Gauntlet win: go to locations so player can continue or cash out via arena tab
+          return { ...state, screen: 'locations', battle: null, battleResult: null, battleLog: [] };
         }
-        // Arena done (win/lose): go back to arena screen
-        return { ...state, screen: 'arena', battle: null, battleResult: null, battleLog: [], arena: null };
+        // Arena done (win/lose): go back to locations
+        return { ...state, screen: 'locations', battle: null, battleResult: null, battleLog: [], arena: null };
       }
 
       if (state.battleResult?.defeated) {
@@ -5187,7 +5186,7 @@ function gameReducer(state, action) {
       const payout = arena.gauntletWager;
       return {
         ...state,
-        screen: 'arena',
+        screen: 'locations',
         player: { ...state.player, gold: state.player.gold + payout },
         battle: null,
         battleResult: null,
