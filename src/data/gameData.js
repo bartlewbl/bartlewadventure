@@ -2818,8 +2818,10 @@ export const CHARACTER_CLASSES = {
 };
 
 // ---- XP FORMULA ----
+// Steeper progression: each level demands significantly more XP than the last,
+// outpacing the better exp drops from higher-level areas.
 export function expForLevel(level) {
-  return Math.floor(50 * Math.pow(level, 1.5));
+  return Math.floor(50 * Math.pow(level, 1.8) + 10 * Math.pow(level, 2.1));
 }
 
 // ---- EXPLORE TEXTS ----
