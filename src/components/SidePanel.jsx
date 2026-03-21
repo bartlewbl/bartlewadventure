@@ -34,6 +34,8 @@ export default function SidePanel({
   canRest,
   lastEnergyUpdate,
   lastHpManaRegenUpdate,
+  inventoryCount,
+  maxInventory,
 }) {
   const clock = useGameClock();
 
@@ -183,6 +185,8 @@ export default function SidePanel({
             canRest={canRest}
             lastEnergyUpdate={lastEnergyUpdate}
             lastHpManaRegenUpdate={lastHpManaRegenUpdate}
+            inventoryCount={inventoryCount}
+            maxInventory={maxInventory}
           />
 
           {navLocked && (
