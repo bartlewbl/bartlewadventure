@@ -10,7 +10,7 @@ import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, rollTicketDrop, openLootChest } from '../engine/loot';
 import { createChestItem, CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
-import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
+import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
@@ -4891,16 +4891,23 @@ function gameReducer(state, action) {
       pet.bond = Math.min(PET_MAX_BOND, pet.bond + (quest.bondReward || 0));
       pet.activeQuests = (pet.activeQuests || []).filter(q => q.id !== questId);
       pet.completedQuests = [...(pet.completedQuests || []), questId];
+
+      // Grant XP and handle level ups
+      const xpReward = quest.xpReward || 0;
+      let levelUpMsg = '';
+      if (xpReward > 0) {
+        const result = addPetXp(pet, xpReward);
+        Object.assign(pet, result.pet);
+        if (result.levelsGained > 0) {
+          levelUpMsg = ` ${pet.name} leveled up to Lv.${pet.level}!`;
+        }
+      }
+
       pets.ownedPets[idx] = pet;
 
-      const goldReward = quest.goldReward || 0;
-      const p = goldReward > 0
-        ? { ...state.player, gold: state.player.gold + goldReward }
-        : state.player;
-
       const bondMsg = quest.bondReward ? ` Bond +${quest.bondReward}` : '';
-      const goldMsg = goldReward > 0 ? ` +${goldReward}g` : '';
-      return { ...state, player: p, pets, message: `Quest complete: ${quest.name}!${bondMsg}${goldMsg}` };
+      const xpMsg = xpReward > 0 ? ` +${xpReward} XP` : '';
+      return { ...state, pets, message: `Quest complete: ${quest.name}!${bondMsg}${xpMsg}${levelUpMsg}` };
     }
 
     case 'PET_QUEST_GIVE_ITEM': {

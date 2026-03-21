@@ -3,6 +3,7 @@ import {
   PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS,
   PET_BUILDINGS, getPetBuildingBuffs, getPetRarityClass,
   PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer,
+  PET_MAX_LEVEL, getPetXpToNextLevel, getPetLevelStats,
 } from '../../data/petData';
 import { BUILDING_MATERIALS } from '../../data/baseData';
 
@@ -104,7 +105,7 @@ export default function PetScreen({
                     </div>
                   </div>
                   <div className="pet-card-stats">
-                    ATK:{pet.baseAtk} DEF:{pet.baseDef} HP:{pet.baseHp}
+                    Lv.{pet.level || 1} | ATK:{getPetLevelStats(pet).atk} DEF:{getPetLevelStats(pet).def} HP:{getPetLevelStats(pet).hp}
                   </div>
                 </div>
               );
@@ -123,7 +124,7 @@ export default function PetScreen({
                 {activePet.name}
                 <span className={`shop-rarity-badge ${getPetRarityClass(activePet.rarity)}`}>{activePet.rarity}</span>
               </div>
-              <div className="pet-detail-role">{activePet.role.charAt(0).toUpperCase() + activePet.role.slice(1)}</div>
+              <div className="pet-detail-role">{activePet.role.charAt(0).toUpperCase() + activePet.role.slice(1)} - Level {activePet.level || 1}{(activePet.level || 1) >= PET_MAX_LEVEL ? ' (MAX)' : ''}</div>
             </div>
 
             <div className="pet-detail-desc">{activePet.description}</div>
@@ -133,18 +134,25 @@ export default function PetScreen({
             </div>
 
             <div className="pet-detail-stats-grid">
-              <div className="pet-stat-block">
-                <div className="pet-stat-value">{activePet.baseAtk}{buffs.petAtkBuff > 0 ? ` (+${Math.round(buffs.petAtkBuff * 100)}%)` : ''}</div>
-                <div className="pet-stat-label">ATK</div>
-              </div>
-              <div className="pet-stat-block">
-                <div className="pet-stat-value">{activePet.baseDef}{buffs.petDefBuff > 0 ? ` (+${Math.round(buffs.petDefBuff * 100)}%)` : ''}</div>
-                <div className="pet-stat-label">DEF</div>
-              </div>
-              <div className="pet-stat-block">
-                <div className="pet-stat-value">{activePet.baseHp}{buffs.petHpBuff > 0 ? ` (+${Math.round(buffs.petHpBuff * 100)}%)` : ''}</div>
-                <div className="pet-stat-label">HP</div>
-              </div>
+              {(() => {
+                const ls = getPetLevelStats(activePet);
+                return (
+                  <>
+                    <div className="pet-stat-block">
+                      <div className="pet-stat-value">{ls.atk}{buffs.petAtkBuff > 0 ? ` (+${Math.round(buffs.petAtkBuff * 100)}%)` : ''}</div>
+                      <div className="pet-stat-label">ATK</div>
+                    </div>
+                    <div className="pet-stat-block">
+                      <div className="pet-stat-value">{ls.def}{buffs.petDefBuff > 0 ? ` (+${Math.round(buffs.petDefBuff * 100)}%)` : ''}</div>
+                      <div className="pet-stat-label">DEF</div>
+                    </div>
+                    <div className="pet-stat-block">
+                      <div className="pet-stat-value">{ls.hp}{buffs.petHpBuff > 0 ? ` (+${Math.round(buffs.petHpBuff * 100)}%)` : ''}</div>
+                      <div className="pet-stat-label">HP</div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="pet-detail-bars">
@@ -162,6 +170,22 @@ export default function PetScreen({
                 </div>
                 <span className="pet-bar-value">{activePet.energy}/{PET_MAX_ENERGY}</span>
               </div>
+              {(() => {
+                const lvl = activePet.level || 1;
+                const isMax = lvl >= PET_MAX_LEVEL;
+                const xp = activePet.xp || 0;
+                const nextXp = getPetXpToNextLevel(lvl);
+                const pct = isMax ? 100 : Math.min(100, Math.floor((xp / nextXp) * 100));
+                return (
+                  <div className="pet-bar-row">
+                    <span className="pet-bar-label">XP</span>
+                    <div className="bar xp-bar pet-bar-lg">
+                      <div className="bar-fill" style={{ width: pct + '%' }} />
+                    </div>
+                    <span className="pet-bar-value">{isMax ? 'MAX' : `${xp}/${nextXp}`}</span>
+                  </div>
+                );
+              })()}
             </div>
 
             {activePet.bond < 30 && (
@@ -227,7 +251,7 @@ export default function PetScreen({
 
             {/* ===== PET QUESTS ===== */}
             <div className="pet-quest-section">
-              <div className="pet-section-title">Quests (Bond +)</div>
+              <div className="pet-section-title">Quests (Bond + XP)</div>
 
               {/* Active quests */}
               {(activePet.activeQuests || []).length > 0 && (
@@ -240,7 +264,7 @@ export default function PetScreen({
                       <div key={quest.id} className={`pet-quest-card ${done ? 'complete' : ''}`}>
                         <div className="pet-quest-header">
                           <span className="pet-quest-name">{quest.name}</span>
-                          <span className="pet-quest-reward">+{quest.bondReward} bond{quest.goldReward > 0 ? ` +${quest.goldReward}g` : ''}</span>
+                          <span className="pet-quest-reward">+{quest.bondReward} bond{quest.xpReward > 0 ? ` +${quest.xpReward} XP` : ''}</span>
                         </div>
                         <div className="pet-quest-desc">{quest.desc}</div>
                         <div className="pet-quest-progress-row">
@@ -336,7 +360,7 @@ export default function PetScreen({
                       <div key={quest.id} className="pet-quest-card available">
                         <div className="pet-quest-header">
                           <span className="pet-quest-name">{quest.name}</span>
-                          <span className="pet-quest-reward">+{quest.bondReward} bond{quest.goldReward > 0 ? ` +${quest.goldReward}g` : ''}</span>
+                          <span className="pet-quest-reward">+{quest.bondReward} bond{quest.xpReward > 0 ? ` +${quest.xpReward} XP` : ''}</span>
                         </div>
                         <div className="pet-quest-desc">{quest.desc}</div>
                         <button
