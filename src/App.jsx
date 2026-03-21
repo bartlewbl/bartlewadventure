@@ -183,7 +183,7 @@ export default function App() {
 
   const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select';
   const hidePanels = navLocked;
-  const canRest = !navLocked && (state.screen === 'town' || state.screen === 'locations' || state.screen === 'regions');
+  const canRest = !navLocked;
 
   return (
     <div className="game-container">
