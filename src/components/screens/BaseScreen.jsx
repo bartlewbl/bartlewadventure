@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import {
   BUILDINGS, BUILDING_MATERIALS, FUEL_ITEMS, BREWERY_RECIPES, SMELTER_RECIPES,
-  WORKSHOP_RECIPES, SPARRING_DUMMIES, getChamberBuffs, getInnExpBonus, getWarehouseBonus,
+  WORKSHOP_RECIPES, SPARRING_DUMMIES, TRAINABLE_STATS, STAT_TRAINING_BASE_COST, STAT_TRAINING_COST_EXPONENT,
+  getChamberBuffs, getInnExpBonus, getWarehouseBonus,
   EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD,
   FARM_SEEDS, CROP_QUALITIES,
 } from '../../data/baseData';
@@ -596,8 +597,14 @@ function AdventureCampPanel({ base, onSend, onCollect }) {
   );
 }
 
-function SparringPanel({ base, onStart, onAttack, onSkill, onReset }) {
+function getStatTrainingCost(timesTrained) {
+  return Math.floor(STAT_TRAINING_BASE_COST * Math.pow(STAT_TRAINING_COST_EXPONENT, timesTrained));
+}
+
+function SparringPanel({ base, player, onStart, onAttack, onSkill, onReset, onTrainStat }) {
+  const [sparTab, setSparTab] = useState('dummies');
   const dummy = base.sparringDummy;
+  const trainingMap = base.statTraining || {};
 
   if (dummy) {
     const hp = base.sparringHp || 0;
@@ -627,19 +634,53 @@ function SparringPanel({ base, onStart, onAttack, onSkill, onReset }) {
   return (
     <div className="base-building-content">
       <div className="base-section-title">Sparring Range</div>
-      <div className="base-section-desc">Test your damage against training dummies. No energy or HP cost.</div>
-      <div className="base-dummy-list">
-        {SPARRING_DUMMIES.map(d => (
-          <div key={d.id} className="base-dummy-item">
-            <div className="base-dummy-info">
-              <div className="base-dummy-name">{d.name}</div>
-              <div className="base-dummy-desc">{d.desc}</div>
-              <div className="base-dummy-stats">HP: {d.hp} | DEF: {d.def}</div>
-            </div>
-            <button className="btn btn-sm" onClick={() => onStart(d.id)}>Fight</button>
-          </div>
-        ))}
+      <div className="base-tab-bar">
+        <button className={`base-tab ${sparTab === 'dummies' ? 'active' : ''}`} onClick={() => setSparTab('dummies')}>Dummies</button>
+        <button className={`base-tab ${sparTab === 'training' ? 'active' : ''}`} onClick={() => setSparTab('training')}>Stat Training</button>
       </div>
+
+      {sparTab === 'dummies' && (
+        <>
+          <div className="base-section-desc">Test your damage against training dummies. No energy or HP cost.</div>
+          <div className="base-dummy-list">
+            {SPARRING_DUMMIES.map(d => (
+              <div key={d.id} className="base-dummy-item">
+                <div className="base-dummy-info">
+                  <div className="base-dummy-name">{d.name}</div>
+                  <div className="base-dummy-desc">{d.desc}</div>
+                  <div className="base-dummy-stats">HP: {d.hp} | DEF: {d.def}</div>
+                </div>
+                <button className="btn btn-sm" onClick={() => onStart(d.id)}>Fight</button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {sparTab === 'training' && (
+        <>
+          <div className="base-section-desc">Pay gold to permanently boost your stats. Each upgrade costs more than the last.</div>
+          <div className="base-dummy-list">
+            {TRAINABLE_STATS.map(s => {
+              const trained = trainingMap[s.id] || 0;
+              const cost = getStatTrainingCost(trained);
+              const canAfford = player.gold >= cost;
+              return (
+                <div key={s.id} className="base-dummy-item">
+                  <div className="base-dummy-info">
+                    <div className="base-dummy-name">{s.name} <span style={{ opacity: 0.6 }}>({player[s.id] || 0})</span></div>
+                    <div className="base-dummy-desc">{s.desc}</div>
+                    <div className="base-dummy-stats">Trained: {trained}x | Next: {cost}g</div>
+                  </div>
+                  <button className="btn btn-sm" onClick={() => onTrainStat(s.id)} disabled={!canAfford}>
+                    {canAfford ? 'Train' : 'Need gold'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1191,7 +1232,7 @@ export default function BaseScreen({
   onUpgradeInn, onBuyInnBoost, onUpgradeChamber,
   onSendMission, onCollectMission,
   onBankDeposit, onBankWithdraw, onBankFreeze, onBankCollectFrozen, onBankLoan, onBankRepay,
-  onStartSpar, onSparAttack, onSparSkill, onResetSpar,
+  onStartSpar, onSparAttack, onSparSkill, onResetSpar, onTrainStat,
   onFarmPlant, onFarmPlantSeed, onFarmHarvest, onUpgradeWarehouse,
   onPlaceEgg, onFeedIncubator, onCollectHatch, onUpgradeIncubator,
 }) {
@@ -1288,8 +1329,9 @@ export default function BaseScreen({
         if (!buildings.sparringRange?.built) return renderBuildingOrConstruct('sparringRange');
         return (
           <SparringPanel
-            base={base} onStart={onStartSpar}
+            base={base} player={player} onStart={onStartSpar}
             onAttack={onSparAttack} onSkill={onSparSkill} onReset={onResetSpar}
+            onTrainStat={onTrainStat}
           />
         );
 

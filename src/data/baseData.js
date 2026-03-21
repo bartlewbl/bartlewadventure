@@ -1024,6 +1024,25 @@ export const SPARRING_DUMMIES = [
   { id: 'dummy-boss', name: 'Boss Dummy', hp: 800, def: 20, desc: 'Boss-tier stats. Prepare for the real thing.' },
 ];
 
+// ---- STAT TRAINING (Sparring Range) ----
+export const TRAINABLE_STATS = [
+  { id: 'baseAtk', name: 'Attack', desc: 'Increase base attack power.' },
+  { id: 'baseDef', name: 'Defense', desc: 'Increase base defense.' },
+  { id: 'charisma', name: 'Charisma', desc: 'Better shop prices.' },
+  { id: 'wisdom', name: 'Wisdom', desc: 'Increase mana pool.' },
+  { id: 'athletics', name: 'Athletics', desc: 'Improve dodge chance.' },
+  { id: 'speed', name: 'Speed', desc: 'Act faster in combat.' },
+  { id: 'evasion', name: 'Evasion', desc: 'Dodge attacks more often.' },
+  { id: 'accuracy', name: 'Accuracy', desc: 'Land hits more reliably.' },
+  { id: 'resistance', name: 'Resistance', desc: 'Reduce elemental damage.' },
+  { id: 'tenacity', name: 'Tenacity', desc: 'Shorten debuff duration.' },
+  { id: 'aggression', name: 'Aggression', desc: 'Deal (and take) more damage.' },
+  { id: 'luck', name: 'Luck', desc: 'Increase critical hit chance.' },
+  { id: 'fortitude', name: 'Fortitude', desc: 'Passive damage reduction.' },
+];
+export const STAT_TRAINING_BASE_COST = 500;
+export const STAT_TRAINING_COST_EXPONENT = 1.8;
+
 // ---- ADVENTURE CAMP LOOT TABLES ----
 export const CAMP_LOOT_TABLES = {
   1: { // Quick Raid

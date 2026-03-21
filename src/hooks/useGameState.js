@@ -9,7 +9,7 @@ import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, t
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, rollTicketDrop, openLootChest } from '../engine/loot';
 import { createChestItem, CHEST_LOOKUP } from '../data/lootChests';
-import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
+import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, TRAINABLE_STATS, STAT_TRAINING_BASE_COST, STAT_TRAINING_COST_EXPONENT, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer } from '../data/petData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
@@ -4660,6 +4660,22 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'BASE_TRAIN_STAT': {
+      if (!state.base.buildings.sparringRange?.built) return { ...state, message: 'Build a Sparring Range first!' };
+      const statDef = TRAINABLE_STATS.find(s => s.id === action.statId);
+      if (!statDef) return state;
+      const timesTrainedMap = state.base.statTraining || {};
+      const timesTrained = timesTrainedMap[action.statId] || 0;
+      const cost = Math.floor(STAT_TRAINING_BASE_COST * Math.pow(STAT_TRAINING_COST_EXPONENT, timesTrained));
+      if (state.player.gold < cost) return { ...state, message: `Not enough gold! Training ${statDef.name} costs ${cost}g.` };
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - cost, [action.statId]: (state.player[action.statId] || 0) + 1 },
+        base: { ...state.base, statTraining: { ...timesTrainedMap, [action.statId]: timesTrained + 1 } },
+        message: `Trained ${statDef.name}! (+1) Cost: ${cost}g.`,
+      };
+    }
+
     // ========== PET SYSTEM ==========
 
     case 'BUY_PET': {
@@ -5769,6 +5785,7 @@ export function useGameState(isLoggedIn) {
     baseSparAttack: () => dispatch({ type: 'BASE_SPAR_ATTACK' }),
     baseSparSkill: () => dispatch({ type: 'BASE_SPAR_SKILL' }),
     baseResetSpar: () => dispatch({ type: 'BASE_RESET_SPAR' }),
+    baseTrainStat: (statId) => dispatch({ type: 'BASE_TRAIN_STAT', statId }),
     baseFarmPlant: (plotIndex, cropId) => dispatch({ type: 'BASE_FARM_PLANT', plotIndex, cropId }),
     baseFarmPlantSeed: (plotIndex, seedItemId) => dispatch({ type: 'BASE_FARM_PLANT_SEED', plotIndex, seedItemId }),
     baseFarmHarvest: (plotIndex) => dispatch({ type: 'BASE_FARM_HARVEST', plotIndex }),
