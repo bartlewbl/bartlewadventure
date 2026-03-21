@@ -186,7 +186,7 @@ function FuelPanel({ base, player, onAddFuel, onAddFuelFromStorage }) {
   );
 }
 
-function MaterialStoragePanel({ base, player, onStoreMaterial }) {
+function MaterialStoragePanel({ base, player, onStoreMaterial, onWithdrawMaterial }) {
   const materials = base.materials || {};
   const invMaterials = player.inventory.filter(i => i.type === 'material');
 
@@ -200,6 +200,9 @@ function MaterialStoragePanel({ base, player, onStoreMaterial }) {
             <div key={id} className={`base-material-item rarity-${(mat?.rarity || 'common').toLowerCase()}`}>
               <span className="base-mat-name">{mat?.name || id}</span>
               <span className="base-mat-qty">x{qty}</span>
+              <button className="btn btn-sm base-withdraw-btn" onClick={() => onWithdrawMaterial(id)}>
+                Take
+              </button>
             </div>
           );
         })}
@@ -1183,7 +1186,7 @@ const TABS = [
 
 export default function BaseScreen({
   player, base, onBack,
-  onBuild, onAddFuel, onAddFuelFromStorage, onStoreMaterial,
+  onBuild, onAddFuel, onAddFuelFromStorage, onStoreMaterial, onWithdrawMaterial,
   onBrew, onSmelt, onCraft, onCollectCraft,
   onUpgradeInn, onBuyInnBoost, onUpgradeChamber,
   onSendMission, onCollectMission,
@@ -1229,7 +1232,7 @@ export default function BaseScreen({
               base={base} player={player}
               onAddFuel={onAddFuel} onAddFuelFromStorage={onAddFuelFromStorage}
             />
-            <MaterialStoragePanel base={base} player={player} onStoreMaterial={onStoreMaterial} />
+            <MaterialStoragePanel base={base} player={player} onStoreMaterial={onStoreMaterial} onWithdrawMaterial={onWithdrawMaterial} />
 
             <div className="base-section-title">{'🏗️'} Buildings</div>
             <div className="base-buildings-grid">
