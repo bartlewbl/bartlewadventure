@@ -10,7 +10,7 @@ import {
   getQuestProgress,
 } from '../../data/tasks';
 
-const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly', 'Story'];
+const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly'];
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
