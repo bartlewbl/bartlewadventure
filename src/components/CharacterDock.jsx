@@ -118,6 +118,9 @@ export default function CharacterDock({
           <div className="dock-gold-row">
             <span className="dock-gold-icon">●</span>
             <span className="dock-gold-value">{goldValue.toLocaleString()}</span>
+            <span className="dock-inv-sep">·</span>
+            <span className="dock-inv-icon">▦</span>
+            <span className={`dock-inv-count${(inventoryCount ?? 0) >= (maxInventory ?? 20) ? ' dock-inv-count-full' : (inventoryCount ?? 0) >= (maxInventory ?? 20) - 2 ? ' dock-inv-count-warn' : ''}`}>{inventoryCount ?? 0}/{maxInventory ?? 20}</span>
           </div>
         </div>
         <button
@@ -187,24 +190,6 @@ export default function CharacterDock({
         </div>
         <span className="dock-xp-text">XP {currentExp}/{safeExpToLevel}</span>
       </div>
-
-      {/* Inventory space indicator */}
-      {maxInventory > 0 && (() => {
-        const count = inventoryCount ?? 0;
-        const max = maxInventory ?? 20;
-        const pct = Math.min((count / max) * 100, 100);
-        const isFull = count >= max;
-        const isNearFull = count >= max - 2;
-        return (
-          <div className={`dock-inv-indicator${isFull ? ' dock-inv-full' : isNearFull ? ' dock-inv-warn' : ''}`}>
-            <span className="dock-inv-icon">▦</span>
-            <div className="dock-inv-track">
-              <div className="dock-inv-fill" style={{ width: `${pct}%` }} />
-            </div>
-            <span className="dock-inv-text">{count}/{max}</span>
-          </div>
-        );
-      })()}
 
       {/* Quick actions */}
       <div className="dock-quick-actions">
