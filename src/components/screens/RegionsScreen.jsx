@@ -1,8 +1,10 @@
 import { REGIONS } from '../../data/gameData';
+import { REGION_TICKETS } from '../../data/baseData';
 
 export default function RegionsScreen({
   playerLevel,
   playerGold,
+  playerInventory,
   currentRegionId,
   onSelect,
   onBack,
@@ -15,11 +17,13 @@ export default function RegionsScreen({
           const isCurrentRegion = currentRegionId === region.id;
           const needsLevel = playerLevel < region.levelReq;
           const isArena = !!region.isArena;
-          const cost = region.travelCost || 0;
-          // No cost if already in this region; first travel (no current region) is free; arena is always free
-          const effectiveCost = isArena ? 0 : (isCurrentRegion ? 0 : (currentRegionId ? cost : 0));
-          const needsGold = effectiveCost > 0 && playerGold < effectiveCost;
-          const locked = needsLevel || needsGold;
+          const isStarter = region.id === 'neon-district';
+          const ticketDef = REGION_TICKETS[region.id];
+          // Check if player has a ticket for this region
+          const hasTicket = ticketDef ? (playerInventory || []).some(i => i.type === 'ticket' && i.ticketRegionId === region.id) : false;
+          // Ticket needed when: not starter, not arena, not current region, and region requires a ticket
+          const needsTicket = !isStarter && !isArena && !isCurrentRegion && !!ticketDef && !hasTicket;
+          const locked = needsLevel || needsTicket;
           const locationCount = region.locations.length;
           const unlocked = region.locations.filter(l => playerLevel >= l.levelReq).length;
           return (
@@ -38,8 +42,8 @@ export default function RegionsScreen({
                 {needsLevel && (
                   <div className="region-req">Lv.{region.levelReq}+ required</div>
                 )}
-                {!needsLevel && needsGold && (
-                  <div className="region-req">Need {effectiveCost}g for ticket</div>
+                {!needsLevel && needsTicket && (
+                  <div className="region-req">Requires: {ticketDef.name}</div>
                 )}
                 {!locked && (
                   <div className="region-progress">
@@ -48,7 +52,13 @@ export default function RegionsScreen({
                       : (
                         <>
                           {unlocked}/{locationCount} locations
-                          {isCurrentRegion ? ' · You are here' : (effectiveCost > 0 ? ` · Ticket: ${effectiveCost}g` : ' · Free travel')}
+                          {isCurrentRegion
+                            ? ' · You are here'
+                            : (isStarter
+                              ? ' · Free travel'
+                              : (hasTicket ? ' · Ticket ready' : ' · Free travel')
+                            )
+                          }
                         </>
                       )
                     }

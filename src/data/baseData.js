@@ -703,6 +703,43 @@ export const WORKSHOP_RECIPES = [
     result: { type: 'cape', template: 'crafted-starlight-shroud' }, craftTime: 20000,
     desc: 'A shroud that shimmers with celestial light.',
   },
+  // --- REGION TICKETS ---
+  {
+    id: 'craft-ticket-frozen-wastes', name: 'Forge Frozen Wastes Permit',
+    materials: { 'iron-ingot': 5, 'crystal-shard': 3, 'stone-block': 8 },
+    result: { type: 'ticket', ticketRegionId: 'frozen-wastes' }, craftTime: 30000,
+    desc: 'Forge a frost-sealed permit to enter the Frozen Wastes.',
+  },
+  {
+    id: 'craft-ticket-scorched-badlands', name: 'Forge Badlands Pass',
+    materials: { 'iron-ingot': 8, 'charcoal': 10, 'oil-canister': 4, 'stone-block': 5 },
+    result: { type: 'ticket', ticketRegionId: 'scorched-badlands' }, craftTime: 45000,
+    desc: 'Forge a heat-resistant pass for the Scorched Badlands.',
+  },
+  {
+    id: 'craft-ticket-toxic-marshlands', name: 'Forge Marshland Visa',
+    materials: { 'toxic-resin': 12, 'herb-bundle': 8, 'glass-vial': 6, 'copper-wire': 5 },
+    result: { type: 'ticket', ticketRegionId: 'toxic-marshlands' }, craftTime: 60000,
+    desc: 'Forge a toxin-resistant visa for the Toxic Marshlands.',
+  },
+  {
+    id: 'craft-ticket-abyssal-depths', name: 'Forge Abyssal Dive Charter',
+    materials: { 'deep-coral': 10, 'crystal-shard': 8, 'copper-wire': 6, 'iron-ingot': 5 },
+    result: { type: 'ticket', ticketRegionId: 'abyssal-depths' }, craftTime: 90000,
+    desc: 'Forge a pressurized charter for the Abyssal Depths.',
+  },
+  {
+    id: 'craft-ticket-celestial-highlands', name: 'Forge Celestial Ascent Token',
+    materials: { 'starlight-dust': 10, 'crystal-shard': 12, 'plasma-core': 4, 'void-essence': 2 },
+    result: { type: 'ticket', ticketRegionId: 'celestial-highlands' }, craftTime: 120000,
+    desc: 'Forge a radiant token to ascend to the Celestial Highlands.',
+  },
+  {
+    id: 'craft-ticket-void-nexus', name: 'Forge Void Rift Key',
+    materials: { 'void-essence': 10, 'plasma-core': 8, 'starlight-dust': 6, 'crystal-shard': 10 },
+    result: { type: 'ticket', ticketRegionId: 'void-nexus' }, craftTime: 180000,
+    desc: 'Forge a key from collapsed reality to breach the Void Nexus.',
+  },
 ];
 
 // Crafted item templates (used by workshop)
@@ -1451,3 +1488,111 @@ export function createMaterialItem(materialId, quantity = 1) {
     isFuel: !!mat.isFuel,
   };
 }
+
+// ---- REGION TICKETS ----
+// Tickets required to access higher-level regions. Very rare drops or crafted in workshop.
+// Neon District (starter) and Arena (free) don't need tickets.
+export const REGION_TICKETS = {
+  'frozen-wastes': {
+    id: 'ticket-frozen-wastes', name: 'Frozen Wastes Permit', type: 'ticket',
+    rarity: 'Rare', sellPrice: 150,
+    description: 'A frost-sealed travel permit granting passage to the Frozen Wastes.',
+    regionId: 'frozen-wastes', regionName: 'Frozen Wastes',
+  },
+  'scorched-badlands': {
+    id: 'ticket-scorched-badlands', name: 'Badlands Pass', type: 'ticket',
+    rarity: 'Rare', sellPrice: 300,
+    description: 'A heat-resistant pass stamped with volcanic sigils. Grants entry to the Scorched Badlands.',
+    regionId: 'scorched-badlands', regionName: 'Scorched Badlands',
+  },
+  'toxic-marshlands': {
+    id: 'ticket-toxic-marshlands', name: 'Marshland Visa', type: 'ticket',
+    rarity: 'Epic', sellPrice: 600,
+    description: 'A sealed document coated in anti-toxin resin. Required for the Toxic Marshlands.',
+    regionId: 'toxic-marshlands', regionName: 'Toxic Marshlands',
+  },
+  'abyssal-depths': {
+    id: 'ticket-abyssal-depths', name: 'Abyssal Dive Charter', type: 'ticket',
+    rarity: 'Epic', sellPrice: 1200,
+    description: 'A pressurized charter granting safe descent into the Abyssal Depths.',
+    regionId: 'abyssal-depths', regionName: 'Abyssal Depths',
+  },
+  'celestial-highlands': {
+    id: 'ticket-celestial-highlands', name: 'Celestial Ascent Token', type: 'ticket',
+    rarity: 'Legendary', sellPrice: 2500,
+    description: 'A radiant token that parts the clouds and opens the path to the Celestial Highlands.',
+    regionId: 'celestial-highlands', regionName: 'Celestial Highlands',
+  },
+  'void-nexus': {
+    id: 'ticket-void-nexus', name: 'Void Rift Key', type: 'ticket',
+    rarity: 'Legendary', sellPrice: 5000,
+    description: 'A fragment of collapsed reality. The only way to breach the Void Nexus.',
+    regionId: 'void-nexus', regionName: 'Void Nexus',
+  },
+};
+
+// Create a ticket item for inventory
+export function createTicketItem(regionId) {
+  const ticket = REGION_TICKETS[regionId];
+  if (!ticket) return null;
+  return {
+    id: uid(),
+    ticketRegionId: regionId,
+    name: ticket.name,
+    type: 'ticket',
+    slot: null,
+    level: 1,
+    rarity: ticket.rarity,
+    rarityClass: ticket.rarity.toLowerCase(),
+    rarityColor: null,
+    icon: 'ticket',
+    description: ticket.description,
+    sellPrice: ticket.sellPrice,
+  };
+}
+
+// Ticket drop config per region — tickets for HIGHER regions drop very rarely in current region
+// Drop rates are intentionally extremely low (0.3% - 0.8%)
+export const TICKET_DROP_CONFIG = {
+  'neon-district': {
+    dropRate: 0.003,
+    tickets: [
+      { regionId: 'frozen-wastes', weight: 60 },
+      { regionId: 'scorched-badlands', weight: 5 },
+    ],
+  },
+  'frozen-wastes': {
+    dropRate: 0.004,
+    tickets: [
+      { regionId: 'scorched-badlands', weight: 50 },
+      { regionId: 'toxic-marshlands', weight: 8 },
+    ],
+  },
+  'scorched-badlands': {
+    dropRate: 0.005,
+    tickets: [
+      { regionId: 'toxic-marshlands', weight: 50 },
+      { regionId: 'abyssal-depths', weight: 8 },
+    ],
+  },
+  'toxic-marshlands': {
+    dropRate: 0.005,
+    tickets: [
+      { regionId: 'abyssal-depths', weight: 50 },
+      { regionId: 'celestial-highlands', weight: 5 },
+    ],
+  },
+  'abyssal-depths': {
+    dropRate: 0.006,
+    tickets: [
+      { regionId: 'celestial-highlands', weight: 50 },
+      { regionId: 'void-nexus', weight: 5 },
+    ],
+  },
+  'celestial-highlands': {
+    dropRate: 0.008,
+    tickets: [
+      { regionId: 'void-nexus', weight: 50 },
+    ],
+  },
+};

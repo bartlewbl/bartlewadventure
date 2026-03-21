@@ -90,6 +90,9 @@ export default function BattleResultScreen({ result, onContinue }) {
             {result.eggDrop && (
               <ItemDropWindow item={result.eggDrop} label="Rare Find!" />
             )}
+            {result.ticketDrop && (
+              <ItemDropWindow item={result.ticketDrop} label="Region Ticket Found!" />
+            )}
             {!result.droppedItem && result.lostItemName && (
               <div className="rarity-common">
                 Pack full: {result.lostItemName} slipped away.

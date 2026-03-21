@@ -273,6 +273,7 @@ export default function App() {
               <RegionsScreen
                 playerLevel={state.player.level}
                 playerGold={state.player.gold}
+                playerInventory={state.player.inventory}
                 currentRegionId={state.currentRegion?.id || null}
                 onSelect={actions.selectRegion}
                 onBack={state.currentRegion ? () => actions.showScreen('locations') : actions.goToTown}
