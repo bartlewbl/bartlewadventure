@@ -122,22 +122,20 @@ body {
 .side-panel-body {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 14px;
   flex: 1;
   min-height: 0;
   transition: opacity 0.2s ease;
+  text-align: center;
 }
 
 .side-panel-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 14px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  width: 100%;
   text-align: center;
 }
 
@@ -145,9 +143,8 @@ body {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 10px;
-  width: 100%;
+  text-align: center;
 }
 
 .side-panel.collapsed .side-panel-body {
