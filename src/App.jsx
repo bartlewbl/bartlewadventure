@@ -31,6 +31,7 @@ import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
 import StatsScreen from './components/screens/StatsScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import MobileNav from './components/MobileNav';
+import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
 
 export default function App() {
@@ -548,6 +549,14 @@ export default function App() {
 
             {state.screen === 'probability-dashboard' && (
               <ProbabilityDashboard onBack={actions.goToTown} />
+            )}
+
+            {['locations', 'explore', 'battle', 'battle-result'].includes(state.screen) && (
+              <QuestSidebar
+                pinnedQuests={state.tasks.pinnedQuests}
+                stats={state.stats}
+                tasks={state.tasks}
+              />
             )}
           </div>
 
