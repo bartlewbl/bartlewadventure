@@ -782,11 +782,15 @@ function gameReducer(state, action) {
       if (cost > 0 && state.player.gold < cost) {
         return { ...state, message: `Not enough gold for the ticket! (${cost}g needed)` };
       }
+      let regionStats = state.stats;
+      regionStats = addStat(regionStats, 'regionsVisited');
+      if (cost > 0) regionStats = addStat(regionStats, 'goldSpent', cost);
       return {
         ...state,
         screen: 'locations',
         currentRegion: region,
         previousRegionId: null,
+        stats: regionStats,
         player: cost > 0
           ? { ...state.player, gold: state.player.gold - cost }
           : state.player,
@@ -818,6 +822,7 @@ function gameReducer(state, action) {
         exploreFoundItem: null,
         energy: energy - ENERGY_COST_PER_TRIP,
         lastEnergyUpdate,
+        stats: addStat(state.stats, 'locationsExplored'),
       };
     }
 
@@ -1796,7 +1801,17 @@ function gameReducer(state, action) {
       let totalDmg = dmg + (blade.attacked ? blade.dmg : 0);
       let newStats = addStat(state.stats, 'damageDealt', totalDmg);
       newStats = setStatMax(newStats, 'highestDamage', dmg);
+      newStats = addStat(newStats, 'totalTurns');
+      if (playerCrit) {
+        newStats = addStat(newStats, 'criticalHits');
+      }
+      if (combos.length > 0) {
+        newStats = addStat(newStats, 'comboTriggered', combos.length);
+      }
       let newTasks = incrementTaskProgress(state.tasks, 'damageDealt', totalDmg);
+      if (playerCrit) {
+        newTasks = incrementTaskProgress(newTasks, 'criticalHits');
+      }
 
       if (m.hp <= 0) {
         return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks });
@@ -1934,7 +1949,15 @@ function gameReducer(state, action) {
       // Track damage
       let newStats = addStat(state.stats, 'damageDealt', dmg);
       newStats = setStatMax(newStats, 'highestDamage', dmg);
+      newStats = addStat(newStats, 'skillsUsed');
+      newStats = addStat(newStats, 'totalTurns');
+      if (skillCrit) {
+        newStats = addStat(newStats, 'criticalHits');
+      }
       let newTasks = incrementTaskProgress(state.tasks, 'damageDealt', dmg);
+      if (skillCrit) {
+        newTasks = incrementTaskProgress(newTasks, 'criticalHits');
+      }
 
       if (m.hp <= 0) {
         return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks });
@@ -2253,6 +2276,7 @@ function gameReducer(state, action) {
       let log = [...state.battleLog];
       let p = { ...state.player };
       const cls = getClassData(p);
+      let playerDodgedThisTurn = false;
 
       // Increment turn counter
       b.turnCount = (b.turnCount || 0) + 1;
@@ -2621,6 +2645,7 @@ function gameReducer(state, action) {
           dodged = true;
           log.push({ text: 'You nimbly evade the attack!', type: 'info' });
         }
+        if (dodged) playerDodgedThisTurn = true;
 
         if (!dodged) {
           // Monster AI: smarter skill selection based on situation
@@ -2902,7 +2927,10 @@ function gameReducer(state, action) {
 
       // Track damage taken (difference from start hp)
       const hpLost = Math.max(0, state.player.hp - p.hp);
-      const newStats = hpLost > 0 ? addStat(state.stats, 'damageTaken', hpLost) : state.stats;
+      let newStats = hpLost > 0 ? addStat(state.stats, 'damageTaken', hpLost) : state.stats;
+      if (playerDodgedThisTurn) {
+        newStats = addStat(newStats, 'dodgesPerformed');
+      }
 
       if (p.hp <= 0) {
         // Boss resurrection gimmick check
@@ -2994,7 +3022,8 @@ function gameReducer(state, action) {
       if (state.player.gold < healCost) return { ...state, message: `Not enough gold! (${healCost}g needed)` };
       const chamberBuffs = getChamberBuffs(state.base);
       const healBonus = chamberBuffs.healBonus || 0;
-      const newStats = addStat(state.stats, 'goldSpent', healCost);
+      let newStats = addStat(state.stats, 'goldSpent', healCost);
+      newStats = addStat(newStats, 'timesRested');
       const maxHpWithBuff = state.player.maxHp + (chamberBuffs.hpBuff || 0);
       const maxManaWithBuff = state.player.maxMana + (chamberBuffs.manaBuff || 0);
       return {
@@ -3159,6 +3188,7 @@ function gameReducer(state, action) {
 
       let newStats = addStat(state.stats, 'chestsOpened');
       newStats = addStat(newStats, 'goldEarned', scaledGold);
+      newStats = addStat(newStats, 'goldFromChests', scaledGold);
       const newTasks = incrementTaskProgress(state.tasks, 'chestsOpened');
 
       return {
@@ -3248,7 +3278,8 @@ function gameReducer(state, action) {
         gold: state.player.gold - adjustedBuyPrice,
         inventory: newInv,
       };
-      const newStats = addStat(state.stats, 'goldSpent', item.buyPrice);
+      let newStats = addStat(state.stats, 'goldSpent', item.buyPrice);
+      newStats = addStat(newStats, 'itemsBought');
       // Track purchase for stock
       let shopPurchases = { ...purchases };
       if (item.stock != null) {
@@ -3459,7 +3490,9 @@ function gameReducer(state, action) {
         }
       }
 
-      const newStats = goldAmount ? addStat(state.stats, 'goldEarned', goldAmount) : state.stats;
+      let newStats = goldAmount ? addStat(state.stats, 'goldEarned', goldAmount) : state.stats;
+      if (goldAmount) newStats = addStat(newStats, 'goldFromQuests', goldAmount);
+      newStats = addStat(newStats, 'questsClaimed');
       const newTasks = {
         ...tasks,
         [claimedKey]: [...(tasks[claimedKey] || []), taskId],
@@ -5311,9 +5344,16 @@ function handleVictory(state) {
   newStats = addStat(newStats, 'monstersKilled');
   newStats = addStat(newStats, 'battlesWon');
   newStats = addStat(newStats, 'goldEarned', goldGain);
+  newStats = addStat(newStats, 'goldFromMonsters', goldGain);
   if (m.id) newStats = addStat(newStats, `killed_${m.id}`);
   if (m.isBoss) newStats = addStat(newStats, 'bossesKilled');
-  if (lootAdded) newStats = addStat(newStats, 'itemsLooted');
+  if (lootAdded) {
+    newStats = addStat(newStats, 'itemsLooted');
+    if (droppedItem?.type) {
+      const typeKey = { sword: 'swordsLooted', armor: 'armorsLooted', shield: 'shieldsLooted', helmet: 'helmetsLooted', ring: 'ringsLooted', potion: 'potionsLooted', boots: 'bootsLooted', gloves: 'glovesLooted', cape: 'capesLooted', belt: 'beltsLooted', amulet: 'amuletsLooted', accessory: 'accessoriesLooted', 'energy-drink': 'energyDrinksLooted' }[droppedItem.type];
+      if (typeKey) newStats = addStat(newStats, typeKey);
+    }
+  }
   if (leveledPlayer.level > prevLevel) {
     newStats = addStat(newStats, 'levelsGained', leveledPlayer.level - prevLevel);
   }
@@ -5381,7 +5421,8 @@ function handleDefeat(state) {
     mana: Math.floor(state.player.maxMana * 0.5),
   };
 
-  const newStats = addStat(state.stats || createInitialStats(), 'battlesLost');
+  let newStats = addStat(state.stats || createInitialStats(), 'battlesLost');
+  newStats = addStat(newStats, 'deaths');
 
   return {
     ...state,
