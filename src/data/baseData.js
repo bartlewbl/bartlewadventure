@@ -191,7 +191,7 @@ export const BUILDINGS = {
     description: 'Craft potions and energy drinks from gathered herbs and materials.',
     buildCost: { gold: 750, materials: { 'scrap-wood': 15, 'stone-block': 8, 'copper-wire': 5, 'glass-vial': 8, 'herb-bundle': 6, 'toxic-resin': 3, 'oil-canister': 1 } },
     icon: 'brewery',
-    levelReq: 5,
+    levelReq: 10,
   },
   smelter: {
     id: 'smelter',
@@ -199,7 +199,7 @@ export const BUILDINGS = {
     description: 'Smelt raw ores and items into refined materials like iron ingots.',
     buildCost: { gold: 900, materials: { 'stone-block': 15, 'iron-ore': 12, 'charcoal': 8, 'coal-chunk': 4, 'copper-wire': 6, 'oil-canister': 2, 'scrap-wood': 10 } },
     icon: 'smelter',
-    levelReq: 8,
+    levelReq: 16,
   },
   workshop: {
     id: 'workshop',
@@ -207,7 +207,7 @@ export const BUILDINGS = {
     description: 'Craft tools, gear, and medium-complexity items from refined materials.',
     buildCost: { gold: 1200, materials: { 'scrap-wood': 20, 'iron-ore': 15, 'copper-wire': 12, 'stone-block': 8, 'charcoal': 6, 'glass-vial': 4, 'iron-ingot': 3 } },
     icon: 'workshop',
-    levelReq: 10,
+    levelReq: 20,
   },
   inn: {
     id: 'inn',
@@ -243,7 +243,7 @@ export const BUILDINGS = {
         ],
       },
     ],
-    levelReq: 7,
+    levelReq: 14,
   },
   chamber: {
     id: 'chamber',
@@ -277,7 +277,7 @@ export const BUILDINGS = {
         ],
       },
     },
-    levelReq: 3,
+    levelReq: 6,
   },
   adventureCamp: {
     id: 'adventureCamp',
@@ -291,7 +291,7 @@ export const BUILDINGS = {
       { id: 'deep-expedition', name: 'Deep Expedition', duration: 8 * 60 * 60 * 1000, desc: '8 hours - Good loot', lootTier: 3, goldRange: [80, 250] },
       { id: 'full-campaign', name: 'Full Campaign', duration: 24 * 60 * 60 * 1000, desc: '24 hours - Best loot', lootTier: 4, goldRange: [200, 600] },
     ],
-    levelReq: 12,
+    levelReq: 24,
   },
   sparringRange: {
     id: 'sparringRange',
@@ -299,7 +299,7 @@ export const BUILDINGS = {
     description: 'Test your kits, spells, and strategies against training dummies.',
     buildCost: { gold: 900, materials: { 'scrap-wood': 20, 'iron-ore': 12, 'stone-block': 8, 'charcoal': 5, 'copper-wire': 4, 'glass-vial': 3, 'coal-chunk': 2 } },
     icon: 'spar',
-    levelReq: 6,
+    levelReq: 12,
   },
   bank: {
     id: 'bank',
@@ -315,7 +315,7 @@ export const BUILDINGS = {
     ],
     maxFreezeAmount: 1000,
     maxLoanAmount: 1000,
-    levelReq: 15,
+    levelReq: 30,
   },
   farm: {
     id: 'farm',
@@ -357,7 +357,7 @@ export const BUILDINGS = {
       { id: 'celestial-fig', name: 'Celestial Fig', growTime: 10 * 60 * 60 * 1000, desc: '10 hours - Gold + Food', cost: { gold: 300 }, yield: { gold: [500, 800] }, foodYield: { name: 'Celestial Fig Tart', fuelMinutes: 150 } },
       { id: 'abyssal-kelp', name: 'Abyssal Kelp', growTime: 6 * 60 * 60 * 1000, desc: '6 hours - Deep Coral + Food', cost: { gold: 180 }, yield: { materialId: 'deep-coral', qty: [2, 3] }, foodYield: { name: 'Kelp Noodle Bowl', fuelMinutes: 90 } },
     ],
-    levelReq: 4,
+    levelReq: 8,
   },
   incubator: {
     id: 'incubator',
@@ -365,7 +365,7 @@ export const BUILDINGS = {
     description: 'Place rare eggs found from monsters to hatch them into pets over time.',
     buildCost: { gold: 1200, materials: { 'stone-block': 12, 'crystal-shard': 4, 'copper-wire': 6, 'scrap-wood': 15, 'herb-bundle': 5 } },
     icon: 'incubator',
-    levelReq: 8,
+    levelReq: 16,
     upgrades: [
       { level: 1, name: 'Basic Incubator', slots: 1, desc: '1 egg slot' },
       {
@@ -393,7 +393,7 @@ export const BUILDINGS = {
       { level: 4, name: 'Grand Warehouse', inventoryBonus: 50, desc: '+50 inventory slots (70 total)', upgradeCost: { gold: 4000, materials: { 'iron-ingot': 8, 'crystal-shard': 5, 'deep-coral': 3, 'starlight-dust': 2 } } },
       { level: 5, name: 'Legendary Vault', inventoryBonus: 60, desc: '+60 inventory slots (80 total)', upgradeCost: { gold: 7000, materials: { 'iron-ingot': 12, 'crystal-shard': 8, 'starlight-dust': 4, 'void-essence': 2 } } },
     ],
-    levelReq: 5,
+    levelReq: 10,
   },
 };
 
