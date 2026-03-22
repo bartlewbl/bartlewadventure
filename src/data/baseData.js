@@ -199,7 +199,7 @@ export const BUILDINGS = {
     description: 'Smelt raw ores and items into refined materials like iron ingots.',
     buildCost: { gold: 900, materials: { 'stone-block': 15, 'iron-ore': 12, 'charcoal': 8, 'coal-chunk': 4, 'copper-wire': 6, 'oil-canister': 2, 'scrap-wood': 10 } },
     icon: 'smelter',
-    levelReq: 16,
+    levelReq: 8,
   },
   workshop: {
     id: 'workshop',
@@ -207,7 +207,7 @@ export const BUILDINGS = {
     description: 'Craft tools, gear, and medium-complexity items from refined materials.',
     buildCost: { gold: 1200, materials: { 'scrap-wood': 20, 'iron-ore': 15, 'copper-wire': 12, 'stone-block': 8, 'charcoal': 6, 'glass-vial': 4, 'iron-ingot': 3 } },
     icon: 'workshop',
-    levelReq: 20,
+    levelReq: 10,
   },
   inn: {
     id: 'inn',
@@ -243,7 +243,7 @@ export const BUILDINGS = {
         ],
       },
     ],
-    levelReq: 14,
+    levelReq: 7,
   },
   chamber: {
     id: 'chamber',
@@ -291,7 +291,7 @@ export const BUILDINGS = {
       { id: 'deep-expedition', name: 'Deep Expedition', duration: 8 * 60 * 60 * 1000, desc: '8 hours - Good loot', lootTier: 3, goldRange: [80, 250] },
       { id: 'full-campaign', name: 'Full Campaign', duration: 24 * 60 * 60 * 1000, desc: '24 hours - Best loot', lootTier: 4, goldRange: [200, 600] },
     ],
-    levelReq: 24,
+    levelReq: 12,
   },
   sparringRange: {
     id: 'sparringRange',
@@ -299,7 +299,7 @@ export const BUILDINGS = {
     description: 'Test your kits, spells, and strategies against training dummies.',
     buildCost: { gold: 900, materials: { 'scrap-wood': 20, 'iron-ore': 12, 'stone-block': 8, 'charcoal': 5, 'copper-wire': 4, 'glass-vial': 3, 'coal-chunk': 2 } },
     icon: 'spar',
-    levelReq: 12,
+    levelReq: 6,
   },
   bank: {
     id: 'bank',
@@ -315,7 +315,7 @@ export const BUILDINGS = {
     ],
     maxFreezeAmount: 1000,
     maxLoanAmount: 1000,
-    levelReq: 30,
+    levelReq: 15,
   },
   farm: {
     id: 'farm',
@@ -365,7 +365,7 @@ export const BUILDINGS = {
     description: 'Place rare eggs found from monsters to hatch them into pets over time.',
     buildCost: { gold: 1200, materials: { 'stone-block': 12, 'crystal-shard': 4, 'copper-wire': 6, 'scrap-wood': 15, 'herb-bundle': 5 } },
     icon: 'incubator',
-    levelReq: 16,
+    levelReq: 8,
     upgrades: [
       { level: 1, name: 'Basic Incubator', slots: 1, desc: '1 egg slot' },
       {
