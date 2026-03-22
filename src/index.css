@@ -86,7 +86,7 @@ body {
   position: relative;
   width: 280px;
   flex-shrink: 0;
-  padding: 48px 18px 18px;
+  padding: 18px;
   background: rgba(4, 4, 18, 0.96);
   border-right: 2px solid #111129;
   box-shadow: 6px 0 20px rgba(0, 0, 0, 0.55);
@@ -98,7 +98,7 @@ body {
 
 .side-panel.collapsed {
   width: 60px;
-  padding: 48px 8px 18px;
+  padding: 18px 8px;
 }
 
 .side-panel-toggle {
@@ -135,7 +135,7 @@ body {
   gap: 14px;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: hidden;
   text-align: center;
 }
 
