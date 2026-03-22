@@ -5657,6 +5657,7 @@ export function useGameState(isLoggedIn) {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const saveTimerRef = useRef(null);
   const lastSaveRef = useRef(null);
+  const hasLoadedRef = useRef(false);
 
   const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle), [state.player, state.battle]);
   const playerDef = useMemo(() => getPlayerDef(state.player, state.battle), [state.player, state.battle]);
@@ -5664,9 +5665,8 @@ export function useGameState(isLoggedIn) {
   // Auto-save to server on every meaningful state change (debounced)
   useEffect(() => {
     if (!isLoggedIn) return;
-    if (state.screen === 'town' && state.player.level === 1 && state.player.exp === 0 && state.player.gold === 30) {
-      // Don't save the initial default state
-    }
+    // Don't save until a real save has been loaded or a new game started
+    if (!hasLoadedRef.current) return;
 
     const data = extractSaveData(state);
     const serialized = JSON.stringify(data);
@@ -5696,7 +5696,7 @@ export function useGameState(isLoggedIn) {
   }, []);
 
   const actions = useMemo(() => ({
-    startGame: () => dispatch({ type: 'START_GAME' }),
+    startGame: () => { hasLoadedRef.current = true; dispatch({ type: 'START_GAME' }); },
     setUsername: (name) => dispatch({ type: 'SET_USERNAME', name }),
     selectClass: (classId) => dispatch({ type: 'SELECT_CLASS', classId }),
     goToTown: () => dispatch({ type: 'GO_TO_TOWN' }),
@@ -5750,7 +5750,7 @@ export function useGameState(isLoggedIn) {
     openChest: () => dispatch({ type: 'OPEN_CHEST' }),
     closeChestResult: () => dispatch({ type: 'CLOSE_CHEST_RESULT' }),
     clearMessage: () => dispatch({ type: 'CLEAR_MESSAGE' }),
-    loadSave: (saveData) => dispatch({ type: 'LOAD_SAVE', saveData }),
+    loadSave: (saveData) => { hasLoadedRef.current = true; dispatch({ type: 'LOAD_SAVE', saveData }); },
     // Base building actions
     baseBuild: (buildingId) => dispatch({ type: 'BASE_BUILD', buildingId }),
     baseAddFuel: (item) => dispatch({ type: 'BASE_ADD_FUEL', item }),
