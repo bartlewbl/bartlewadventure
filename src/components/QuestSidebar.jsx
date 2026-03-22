@@ -1,9 +1,10 @@
 import {
-  TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
+  TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS, CLASS_STORY_QUESTS,
   getActiveDailyTasks, getActiveWeeklyTasks,
   getQuestProgress,
   getCurrentTutorial,
   getCurrentSideQuest,
+  getCurrentClassQuest,
   getMissionsForChapter,
   getUnlockedChapter,
 } from '../data/tasks';
@@ -22,6 +23,7 @@ function findQuestById(id) {
     ...getActiveDailyTasks(),
     ...getActiveWeeklyTasks(),
     ...SIDE_QUEST_CHAINS.flatMap(c => c.quests),
+    ...Object.values(CLASS_STORY_QUESTS).flatMap(c => c.quests),
   ];
   return allQuests.find(q => q.id === id) || null;
 }
@@ -32,7 +34,8 @@ function isQuestClaimed(id, tasks) {
     || (tasks.storyClaimed || []).includes(id)
     || (tasks.dailyClaimed || []).includes(id)
     || (tasks.weeklyClaimed || []).includes(id)
-    || (tasks.sideQuestClaimed || []).includes(id);
+    || (tasks.sideQuestClaimed || []).includes(id)
+    || (tasks.classQuestClaimed || []).includes(id);
 }
 
 // Determine taskType and chainId for a quest so we can call claimTask correctly
@@ -48,6 +51,12 @@ function getClaimInfo(quest) {
       return { taskType: 'sidequest', chainId: chain.chainId };
     }
   }
+  // Class story quests
+  for (const classData of Object.values(CLASS_STORY_QUESTS)) {
+    if (classData.quests.some(q => q.id === quest.id)) {
+      return { taskType: 'class_story' };
+    }
+  }
   // Daily/weekly/story tasks
   const dailyIds = getActiveDailyTasks().map(q => q.id);
   if (dailyIds.includes(quest.id)) return { taskType: 'daily' };
@@ -58,9 +67,15 @@ function getClaimInfo(quest) {
 }
 
 // Get all current quests from active quest lines (auto-tracked)
-function getActiveLineQuests(tasks) {
+function getActiveLineQuests(tasks, characterClass) {
   const activeLines = tasks.activeQuestLines || [];
   const quests = [];
+
+  // Class story quest is always active
+  if (characterClass && CLASS_STORY_QUESTS[characterClass]) {
+    const q = getCurrentClassQuest(characterClass, tasks.classQuestClaimed || []);
+    if (q) quests.push(q);
+  }
 
   for (const lineKey of activeLines) {
     if (lineKey === 'tutorial') {
@@ -81,9 +96,9 @@ function getActiveLineQuests(tasks) {
   return quests;
 }
 
-export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim }) {
+export default function QuestSidebar({ pinnedQuests, stats, tasks, characterClass, onClaim }) {
   // Gather quests from active quest lines (always shown)
-  const lineQuests = getActiveLineQuests(tasks);
+  const lineQuests = getActiveLineQuests(tasks, characterClass);
   const lineQuestIds = new Set(lineQuests.map(q => q.id));
 
   // Gather pinned quests that aren't already from an active quest line

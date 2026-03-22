@@ -18,8 +18,10 @@ import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
   STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
+  CLASS_STORY_QUESTS,
   getCurrentTutorial, isTutorialComplete, getMissionsForChapter, getUnlockedChapter,
   getSideQuestChain, getCurrentSideQuest, isSideChainComplete,
+  getCurrentClassQuest, isClassStoryComplete,
   isQuestLineActive, canActivateQuestLine, getQuestLineKey, MAX_ACTIVE_QUEST_LINES,
   isDailyExpired, isWeeklyExpired, isMonthlyExpired,
   getDailySeed, getWeeklySeed, getMonthlySeed,
@@ -752,7 +754,18 @@ function gameReducer(state, action) {
         luck: cls.baseStats.luck || 3,
         fortitude: cls.baseStats.fortitude || 3,
       };
-      return { ...state, screen: 'town', player: p };
+      // Auto-activate class story questline and set baseline for first quest
+      const classQuest = getCurrentClassQuest(cls.id, []);
+      const newBaselines = { ...(state.tasks.questBaselines || {}) };
+      if (classQuest) {
+        newBaselines[classQuest.id] = state.stats[classQuest.stat] || 0;
+      }
+      return {
+        ...state,
+        screen: 'town',
+        player: p,
+        tasks: { ...state.tasks, questBaselines: newBaselines },
+      };
     }
 
     case 'GO_TO_TOWN':
@@ -3417,7 +3430,7 @@ function gameReducer(state, action) {
     case 'CLAIM_TASK': {
       const { taskId, taskType } = action;
       const tasks = refreshTaskCycles(state.tasks);
-      const claimedKey = taskType === 'sidequest' ? 'sideQuestClaimed' : taskType + 'Claimed';
+      const claimedKey = taskType === 'sidequest' ? 'sideQuestClaimed' : taskType === 'class_story' ? 'classQuestClaimed' : taskType + 'Claimed';
       if (tasks[claimedKey]?.includes(taskId)) return state; // already claimed
 
       // Quest line enforcement for tutorial, mission, sidequest
@@ -3476,6 +3489,16 @@ function gameReducer(state, action) {
         // Must be the current quest in the chain (sequential)
         const currentSQ = getCurrentSideQuest(chainId, tasks.sideQuestClaimed);
         if (!currentSQ || currentSQ.id !== taskId) return state;
+        progress = getQuestProgress(state.stats, taskId, taskDef?.stat, tasks.questBaselines);
+      } else if (taskType === 'class_story') {
+        const classId = state.player.characterClass;
+        const classData = CLASS_STORY_QUESTS[classId];
+        if (!classData) return state;
+        taskDef = classData.quests.find(q => q.id === taskId);
+        if (!taskDef) return state;
+        // Must be the current quest (sequential)
+        const currentCQ = getCurrentClassQuest(classId, tasks.classQuestClaimed);
+        if (!currentCQ || currentCQ.id !== taskId) return state;
         progress = getQuestProgress(state.stats, taskId, taskDef?.stat, tasks.questBaselines);
       }
 
@@ -3542,6 +3565,9 @@ function gameReducer(state, action) {
       } else if (taskType === 'sidequest') {
         const chainId = action.chainId;
         const nextQ = getCurrentSideQuest(chainId, newTasks.sideQuestClaimed);
+        if (nextQ) newBaselines[nextQ.id] = newStats[nextQ.stat] || 0;
+      } else if (taskType === 'class_story') {
+        const nextQ = getCurrentClassQuest(state.player.characterClass, newTasks.classQuestClaimed);
         if (nextQ) newBaselines[nextQ.id] = newStats[nextQ.stat] || 0;
       }
       newTasks.questBaselines = newBaselines;

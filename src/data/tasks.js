@@ -31,6 +31,7 @@ export const TASK_TYPES = {
   TUTORIAL: 'tutorial',
   MISSION: 'mission',
   SIDEQUEST: 'sidequest',
+  CLASS_STORY: 'class_story',
 };
 
 // Max active quest lines (tutorial, story missions, side quest chains)
@@ -1516,6 +1517,105 @@ export const SIDE_QUEST_CHAINS = [
   },
 ];
 
+// ============================================================
+// CLASS STORY QUESTS - Unique questlines per character class.
+// Each class has a 10-quest epic storyline that spans from
+// character creation all the way to the endgame.
+// Class quest lines are always active and do NOT use quest line slots.
+// ============================================================
+
+export const CLASS_STORY_QUESTS = {
+  berserker: {
+    className: 'Berserker',
+    storyTitle: 'The Blood Path',
+    storyDescription: 'Embrace the rage within and carve a path of destruction across every realm. Only through fury will you find your true self.',
+    quests: [
+      { id: 'cq_ber_1', name: 'First Blood', description: 'The rage stirs within you. Channel it — slay 5 creatures in the Neon District to feel the fury awaken.', stat: 'monstersKilled', target: 5, reward: { gold: 50, energyDrinks: 1 }, order: 1, chapter: 'Awakening of Rage' },
+      { id: 'cq_ber_2', name: 'Seeing Red', description: 'The bloodlust grows. Prove you can endure pain by taking 500 total damage and still standing.', stat: 'damageTaken', target: 500, reward: { gold: 120 }, order: 2, chapter: 'Awakening of Rage' },
+      { id: 'cq_ber_3', name: 'Savage Reputation', description: 'Word of a feral fighter spreads. Win 20 battles with nothing but brute force and determination.', stat: 'battlesWon', target: 20, reward: { gold: 250, energyDrinks: 1 }, order: 3, chapter: 'The Warpath' },
+      { id: 'cq_ber_4', name: 'Blood Offering', description: 'The ancient berserker spirits demand tribute. Defeat 5 bosses to prove your worth as a vessel of rage.', stat: 'bossesKilled', target: 5, reward: { gold: 500 }, order: 4, chapter: 'The Warpath' },
+      { id: 'cq_ber_5', name: 'Crimson Trail', description: 'Leave a trail of destruction across the frozen wastes. Deal 25,000 total damage to everything in your path.', stat: 'damageDealt', target: 25000, reward: { gold: 800, energyDrinks: 2 }, order: 5, chapter: 'Warlord\'s Trial' },
+      { id: 'cq_ber_6', name: 'Unbreakable Fury', description: 'A true berserker never stops fighting. Win 60 battles to forge your legend in blood and iron.', stat: 'battlesWon', target: 60, reward: { gold: 1200 }, order: 6, chapter: 'Warlord\'s Trial' },
+      { id: 'cq_ber_7', name: 'Titan Slayer', description: 'The mightiest foes fall before your wrath. Crush 15 bosses across the realms.', stat: 'bossesKilled', target: 15, reward: { gold: 1800, energyDrinks: 3 }, order: 7, chapter: 'The Rampage' },
+      { id: 'cq_ber_8', name: 'Storm of Blades', description: 'Your rage becomes a force of nature. Unleash 150,000 total damage upon the world.', stat: 'damageDealt', target: 150000, reward: { gold: 2500 }, order: 8, chapter: 'The Rampage' },
+      { id: 'cq_ber_9', name: 'Blood Sovereign', description: 'No boss, no beast, no god can contain you. Annihilate 35 bosses to claim dominion over all who oppose you.', stat: 'bossesKilled', target: 35, reward: { gold: 3500, energyDrinks: 4 }, order: 9, chapter: 'Apotheosis of War' },
+      { id: 'cq_ber_10', name: 'The Undying Berserker', description: 'You have walked the Blood Path to its end. Deal 500,000 total damage and become an immortal legend of carnage.', stat: 'damageDealt', target: 500000, reward: { gold: 5000, energyDrinks: 5 }, order: 10, chapter: 'Apotheosis of War' },
+    ],
+  },
+
+  warrior: {
+    className: 'Warrior',
+    storyTitle: 'The Iron Oath',
+    storyDescription: 'Swear the Iron Oath and become an unbreakable shield for the weak. Your honor and endurance will be tested at every turn.',
+    quests: [
+      { id: 'cq_war_1', name: 'Shield Bearer', description: 'A warrior stands firm. Absorb 300 total damage to prove your resolve in the Neon District.', stat: 'damageTaken', target: 300, reward: { gold: 50, energyDrinks: 1 }, order: 1, chapter: 'The Oath Sworn' },
+      { id: 'cq_war_2', name: 'Defender of the Streets', description: 'The people need a protector. Win 15 battles defending the district from threats.', stat: 'battlesWon', target: 15, reward: { gold: 120 }, order: 2, chapter: 'The Oath Sworn' },
+      { id: 'cq_war_3', name: 'Iron Discipline', description: 'A warrior prepares before every battle. Use 10 potions wisely to sustain yourself through the long fights ahead.', stat: 'potionsUsed', target: 10, reward: { gold: 250, energyDrinks: 1 }, order: 3, chapter: 'Forging the Shield' },
+      { id: 'cq_war_4', name: 'Guardian\'s Challenge', description: 'The frozen wastes test the strongest wills. Absorb 3,000 total damage and refuse to fall.', stat: 'damageTaken', target: 3000, reward: { gold: 500 }, order: 4, chapter: 'Forging the Shield' },
+      { id: 'cq_war_5', name: 'Vanguard Commander', description: 'Lead the charge through hostile territory. Complete 50 explorations across all regions.', stat: 'explorationsCompleted', target: 50, reward: { gold: 800, energyDrinks: 2 }, order: 5, chapter: 'The Iron March' },
+      { id: 'cq_war_6', name: 'Siege Breaker', description: 'No fortress can withstand you. Defeat 12 bosses who guard the realm\'s strongholds.', stat: 'bossesKilled', target: 12, reward: { gold: 1200 }, order: 6, chapter: 'The Iron March' },
+      { id: 'cq_war_7', name: 'Unyielding Wall', description: 'You have been tested by fire and ice. Take 10,000 total damage — and survive every single blow.', stat: 'damageTaken', target: 10000, reward: { gold: 1800, energyDrinks: 3 }, order: 7, chapter: 'Bastion\'s Trial' },
+      { id: 'cq_war_8', name: 'Champion of the Realm', description: 'Warriors from all regions know your name. Win 100 battles to cement your legend.', stat: 'battlesWon', target: 100, reward: { gold: 2500 }, order: 8, chapter: 'Bastion\'s Trial' },
+      { id: 'cq_war_9', name: 'The Immortal Shield', description: 'Your body is iron, your will unbreakable. Absorb 25,000 total damage across all your campaigns.', stat: 'damageTaken', target: 25000, reward: { gold: 3500, energyDrinks: 4 }, order: 9, chapter: 'The Eternal Guardian' },
+      { id: 'cq_war_10', name: 'Oath Fulfilled', description: 'The Iron Oath is complete. Defeat 50 bosses and stand as the eternal guardian of every realm.', stat: 'bossesKilled', target: 50, reward: { gold: 5000, energyDrinks: 5 }, order: 10, chapter: 'The Eternal Guardian' },
+    ],
+  },
+
+  thief: {
+    className: 'Thief',
+    storyTitle: 'The Shadow Gambit',
+    storyDescription: 'Play the greatest con the world has ever seen. Steal, trade, and scheme your way from gutter rat to shadow king.',
+    quests: [
+      { id: 'cq_thi_1', name: 'Pickpocket', description: 'Every fortune starts with a single coin. Earn 100 gold through any means in the Neon District.', stat: 'goldEarned', target: 100, reward: { gold: 50, energyDrinks: 1 }, order: 1, chapter: 'The First Score' },
+      { id: 'cq_thi_2', name: 'Fence Runner', description: 'Move stolen goods to build your network. Sell 5 items to prove you can move merchandise.', stat: 'itemsSold', target: 5, reward: { gold: 120 }, order: 2, chapter: 'The First Score' },
+      { id: 'cq_thi_3', name: 'Shadow Strike', description: 'When you strike, they never see it coming. Deal 5,000 total damage from the shadows.', stat: 'damageDealt', target: 5000, reward: { gold: 250, energyDrinks: 1 }, order: 3, chapter: 'The Heist' },
+      { id: 'cq_thi_4', name: 'The Big Score', description: 'Plan and execute the perfect heist. Loot 25 items from dungeons across the regions.', stat: 'itemsLooted', target: 25, reward: { gold: 500 }, order: 4, chapter: 'The Heist' },
+      { id: 'cq_thi_5', name: 'Crime Lord', description: 'Build your criminal empire. Earn 5,000 total gold through combat, trade, and theft.', stat: 'goldEarned', target: 5000, reward: { gold: 800, energyDrinks: 2 }, order: 5, chapter: 'The Syndicate' },
+      { id: 'cq_thi_6', name: 'Master of Disguise', description: 'Move unseen through dangerous territory. Complete 75 explorations without getting caught.', stat: 'explorationsCompleted', target: 75, reward: { gold: 1200 }, order: 6, chapter: 'The Syndicate' },
+      { id: 'cq_thi_7', name: 'Kingpin\'s Ransom', description: 'Your wealth rivals the trade barons. Sell 50 items across all the realm\'s markets.', stat: 'itemsSold', target: 50, reward: { gold: 1800, energyDrinks: 3 }, order: 7, chapter: 'The Double Cross' },
+      { id: 'cq_thi_8', name: 'Assassin\'s Creed', description: 'Some targets require a knife in the dark. Eliminate 20 bosses who stand in your way.', stat: 'bossesKilled', target: 20, reward: { gold: 2500 }, order: 8, chapter: 'The Double Cross' },
+      { id: 'cq_thi_9', name: 'The Ghost', description: 'You are everywhere and nowhere. Complete 200 explorations — a shadow that owns every corner of every realm.', stat: 'explorationsCompleted', target: 200, reward: { gold: 3500, energyDrinks: 4 }, order: 9, chapter: 'Shadow King' },
+      { id: 'cq_thi_10', name: 'The Shadow Gambit', description: 'The gambit is complete. Earn 25,000 total gold and rule from the shadows as the ultimate mastermind.', stat: 'goldEarned', target: 25000, reward: { gold: 5000, energyDrinks: 5 }, order: 10, chapter: 'Shadow King' },
+    ],
+  },
+
+  mage: {
+    className: 'Mage',
+    storyTitle: 'The Arcane Convergence',
+    storyDescription: 'Unravel the mysteries of the arcane and channel power that bends reality itself. Knowledge is the ultimate weapon.',
+    quests: [
+      { id: 'cq_mag_1', name: 'Spark of Power', description: 'The arcane stirs within you. Defeat 8 creatures to channel your first spells in the Neon District.', stat: 'monstersKilled', target: 8, reward: { gold: 50, energyDrinks: 1 }, order: 1, chapter: 'The First Spell' },
+      { id: 'cq_mag_2', name: 'Arcane Study', description: 'A mage must explore to learn. Complete 10 explorations to discover ancient magical residues.', stat: 'explorationsCompleted', target: 10, reward: { gold: 120 }, order: 2, chapter: 'The First Spell' },
+      { id: 'cq_mag_3', name: 'Power Surge', description: 'Your spells grow devastating. Deal 8,000 total damage with raw arcane fury.', stat: 'damageDealt', target: 8000, reward: { gold: 250, energyDrinks: 1 }, order: 3, chapter: 'Channeling the Storm' },
+      { id: 'cq_mag_4', name: 'Ley Line Walker', description: 'Walk the ley lines that connect the realms. Complete 30 explorations to map the arcane network.', stat: 'explorationsCompleted', target: 30, reward: { gold: 500 }, order: 4, chapter: 'Channeling the Storm' },
+      { id: 'cq_mag_5', name: 'Archmage\'s Trial', description: 'The old masters set a trial: deal 40,000 total damage to prove your mastery of destructive magic.', stat: 'damageDealt', target: 40000, reward: { gold: 800, energyDrinks: 2 }, order: 5, chapter: 'The Spellweaver' },
+      { id: 'cq_mag_6', name: 'Elemental Sovereign', description: 'Command the elements against the strongest foes. Defeat 10 bosses with your arcane might.', stat: 'bossesKilled', target: 10, reward: { gold: 1200 }, order: 6, chapter: 'The Spellweaver' },
+      { id: 'cq_mag_7', name: 'Reality Weaver', description: 'Your spells reshape the world. Complete 120 explorations to bend reality across all realms.', stat: 'explorationsCompleted', target: 120, reward: { gold: 1800, energyDrinks: 3 }, order: 7, chapter: 'Convergence' },
+      { id: 'cq_mag_8', name: 'Spell of Annihilation', description: 'Channel the ultimate destructive force. Deal 200,000 total damage to prove magic\'s supremacy.', stat: 'damageDealt', target: 200000, reward: { gold: 2500 }, order: 8, chapter: 'Convergence' },
+      { id: 'cq_mag_9', name: 'God of Magic', description: 'No magical barrier can contain you. Defeat 30 bosses who guard the realm\'s deepest arcane secrets.', stat: 'bossesKilled', target: 30, reward: { gold: 3500, energyDrinks: 4 }, order: 9, chapter: 'The Arcane Convergence' },
+      { id: 'cq_mag_10', name: 'The Convergence', description: 'All magic flows through you. Deal 500,000 total damage and become the living embodiment of arcane power.', stat: 'damageDealt', target: 500000, reward: { gold: 5000, energyDrinks: 5 }, order: 10, chapter: 'The Arcane Convergence' },
+    ],
+  },
+
+  necromancer: {
+    className: 'Necromancer',
+    storyTitle: 'The Deathless Covenant',
+    storyDescription: 'Forge a covenant with death itself. Drain the living, command the fallen, and rise as the lord of the undying.',
+    quests: [
+      { id: 'cq_nec_1', name: 'Taste of Death', description: 'The first taste of death magic. Drain the life from 8 creatures in the Neon District.', stat: 'monstersKilled', target: 8, reward: { gold: 50, energyDrinks: 1 }, order: 1, chapter: 'The Dark Awakening' },
+      { id: 'cq_nec_2', name: 'Life Siphon', description: 'Death feeds you. Heal 300 total HP through life-draining abilities and potions.', stat: 'totalHealing', target: 300, reward: { gold: 120 }, order: 2, chapter: 'The Dark Awakening' },
+      { id: 'cq_nec_3', name: 'Reaper\'s Harvest', description: 'The dead whisper your name. Win 25 battles to prove your dominion over life and death.', stat: 'battlesWon', target: 25, reward: { gold: 250, energyDrinks: 1 }, order: 3, chapter: 'Harvest of Souls' },
+      { id: 'cq_nec_4', name: 'Grave Robber', description: 'The dead yield their treasures to you. Loot 20 items from the realms\' darkest corners.', stat: 'itemsLooted', target: 20, reward: { gold: 500 }, order: 4, chapter: 'Harvest of Souls' },
+      { id: 'cq_nec_5', name: 'Plague Bringer', description: 'Spread death like a plague. Deal 30,000 total damage as your dark power grows.', stat: 'damageDealt', target: 30000, reward: { gold: 800, energyDrinks: 2 }, order: 5, chapter: 'The Covenant Deepens' },
+      { id: 'cq_nec_6', name: 'Undying Vessel', description: 'Death cannot claim its own servant. Heal 5,000 total HP to prove your mastery over the boundary of life.', stat: 'totalHealing', target: 5000, reward: { gold: 1200 }, order: 6, chapter: 'The Covenant Deepens' },
+      { id: 'cq_nec_7', name: 'Lord of Bones', description: 'The bosses of every realm are mere puppets to you. Defeat 18 bosses to raise your army of the dead.', stat: 'bossesKilled', target: 18, reward: { gold: 1800, energyDrinks: 3 }, order: 7, chapter: 'Lich\'s Ascension' },
+      { id: 'cq_nec_8', name: 'Death\'s Embrace', description: 'Absorb enough death to transcend mortality. Take 15,000 total damage — each wound makes you stronger.', stat: 'damageTaken', target: 15000, reward: { gold: 2500 }, order: 8, chapter: 'Lich\'s Ascension' },
+      { id: 'cq_nec_9', name: 'Soul Reaper', description: 'Reap souls across every realm. Heal 15,000 total HP as death energy flows endlessly through you.', stat: 'totalHealing', target: 15000, reward: { gold: 3500, energyDrinks: 4 }, order: 9, chapter: 'The Deathless Covenant' },
+      { id: 'cq_nec_10', name: 'The Deathless One', description: 'The covenant is sealed. Win 200 battles and ascend as an undying lord — death incarnate.', stat: 'battlesWon', target: 200, reward: { gold: 5000, energyDrinks: 5 }, order: 10, chapter: 'The Deathless Covenant' },
+    ],
+  },
+};
+
 // Get the total number of chapters
 export const MISSION_CHAPTER_COUNT = 7;
 
@@ -1591,6 +1691,44 @@ export function canActivateQuestLine(activeQuestLines) {
   return countActiveQuestLines(activeQuestLines) < MAX_ACTIVE_QUEST_LINES;
 }
 
+// ---- CLASS STORY QUEST HELPERS ----
+
+// Get the class story quest data for a given class
+export function getClassStoryQuests(classId) {
+  return CLASS_STORY_QUESTS[classId] || null;
+}
+
+// Get the current class story quest (first unclaimed one)
+export function getCurrentClassQuest(classId, classQuestClaimed) {
+  const classData = CLASS_STORY_QUESTS[classId];
+  if (!classData) return null;
+  const claimed = classQuestClaimed || [];
+  return classData.quests.find(q => !claimed.includes(q.id)) || null;
+}
+
+// Check if all class story quests are completed
+export function isClassStoryComplete(classId, classQuestClaimed) {
+  const classData = CLASS_STORY_QUESTS[classId];
+  if (!classData) return true;
+  const claimed = classQuestClaimed || [];
+  return classData.quests.every(q => claimed.includes(q.id));
+}
+
+// Get the distinct chapters in a class story
+export function getClassStoryChapters(classId) {
+  const classData = CLASS_STORY_QUESTS[classId];
+  if (!classData) return [];
+  const seen = new Set();
+  const chapters = [];
+  for (const q of classData.quests) {
+    if (!seen.has(q.chapter)) {
+      seen.add(q.chapter);
+      chapters.push(q.chapter);
+    }
+  }
+  return chapters;
+}
+
 // ---- TASK HELPERS ----
 
 // Select N random tasks from a pool using a seed for deterministic selection
@@ -1661,7 +1799,9 @@ export function createInitialTaskProgress() {
     tutorialClaimed: [],
     missionClaimed: [],
     sideQuestClaimed: [],
+    classQuestClaimed: [],
     // Active quest line keys (max 2): 'tutorial', 'mission', 'side_<chainId>'
+    // Note: class_story is always active and does NOT use a slot
     activeQuestLines: [],
     // Pinned quest IDs shown on location screen (max 3)
     pinnedQuests: [],

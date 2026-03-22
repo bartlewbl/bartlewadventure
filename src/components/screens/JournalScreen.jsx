@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { CHEST_LOOKUP } from '../../data/lootChests';
 import {
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
-  TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
+  TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS, CLASS_STORY_QUESTS,
   getCurrentTutorial, isTutorialComplete, getMissionsForChapter, getUnlockedChapter,
   getCurrentSideQuest, isSideChainComplete,
+  getCurrentClassQuest, isClassStoryComplete,
   isQuestLineActive, canActivateQuestLine, MAX_ACTIVE_QUEST_LINES,
   MISSION_CHAPTER_COUNT,
   getQuestProgress,
 } from '../../data/tasks';
 
-const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly'];
+const TABS = ['Quests', 'Class Story', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly'];
 
 function formatNumber(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
@@ -193,10 +194,28 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
 }
 
 // Active Quest Lines overview tab
-function QuestSlotsTab({ tasks, stats, playerLevel, onActivate, onAbandon }) {
+function QuestSlotsTab({ tasks, stats, playerLevel, characterClass, onActivate, onAbandon }) {
   const [previewKey, setPreviewKey] = useState(null);
   const activeLines = tasks.activeQuestLines || [];
   const slotsUsed = activeLines.length;
+
+  // Build class story info (always active, separate from slots)
+  let classStoryInfo = null;
+  if (characterClass && CLASS_STORY_QUESTS[characterClass]) {
+    const classData = CLASS_STORY_QUESTS[characterClass];
+    const classQuestClaimed = tasks.classQuestClaimed || [];
+    const currentQ = getCurrentClassQuest(characterClass, classQuestClaimed);
+    const done = isClassStoryComplete(characterClass, classQuestClaimed);
+    classStoryInfo = {
+      key: 'class_story',
+      name: classData.storyTitle,
+      type: 'class_story',
+      currentQuest: currentQ,
+      isComplete: done,
+      progress: classQuestClaimed.length,
+      total: classData.quests.length,
+    };
+  }
 
   // Build info for each active line
   const lineInfos = activeLines.map(lineKey => {
@@ -275,7 +294,39 @@ function QuestSlotsTab({ tasks, stats, playerLevel, onActivate, onAbandon }) {
         <div className="journal-section-progress">{slotsUsed}/{MAX_ACTIVE_QUEST_LINES} slots</div>
       </div>
 
-      {lineInfos.length === 0 && (
+      {classStoryInfo && (() => {
+        const prog = classStoryInfo.currentQuest ? getQuestProgress(stats, classStoryInfo.currentQuest.id, classStoryInfo.currentQuest.stat, tasks.questBaselines) : 0;
+        const target = classStoryInfo.currentQuest?.target || 1;
+        const pct = Math.min(100, Math.floor((prog / target) * 100));
+        return (
+          <div className={`quest-slot-card ${classStoryInfo.isComplete ? 'complete' : ''}`} style={{ borderLeft: '3px solid #ffaa00' }}>
+            <div className="quest-slot-header">
+              <span className="quest-slot-name">{classStoryInfo.name}</span>
+              <span className="quest-slot-progress">{classStoryInfo.progress}/{classStoryInfo.total}</span>
+            </div>
+            {classStoryInfo.currentQuest && !classStoryInfo.isComplete && (
+              <div className="quest-slot-current">
+                <div className="quest-slot-current-name">Current: {classStoryInfo.currentQuest.name}</div>
+                <div className="quest-slot-current-desc">{classStoryInfo.currentQuest.description}</div>
+                <div className="journal-task-progress-row">
+                  <div className="journal-task-bar">
+                    <div className="journal-task-bar-fill" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="journal-task-count">
+                    {formatNumber(Math.min(prog, target))}/{formatNumber(target)}
+                  </span>
+                </div>
+              </div>
+            )}
+            {classStoryInfo.isComplete && (
+              <div className="quest-slot-complete-label">Completed!</div>
+            )}
+            <div style={{ fontSize: '0.75em', opacity: 0.6, marginTop: '4px' }}>Always Active</div>
+          </div>
+        );
+      })()}
+
+      {lineInfos.length === 0 && !classStoryInfo && (
         <div className="journal-empty">No active quest lines. Choose up to {MAX_ACTIVE_QUEST_LINES} below.</div>
       )}
 
@@ -690,7 +741,81 @@ function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin
   );
 }
 
-export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
+function ClassStoryTab({ stats, tasks, characterClass, onClaim, pinnedQuests, onPin, onUnpin }) {
+  const classData = CLASS_STORY_QUESTS[characterClass];
+  if (!classData) {
+    return (
+      <div className="journal-tasks-tab">
+        <div className="journal-empty">No class story available.</div>
+      </div>
+    );
+  }
+
+  const classQuestClaimed = tasks.classQuestClaimed || [];
+  const currentQuest = getCurrentClassQuest(characterClass, classQuestClaimed);
+  const allDone = isClassStoryComplete(characterClass, classQuestClaimed);
+  const completedCount = classQuestClaimed.length;
+  const totalCount = classData.quests.length;
+
+  return (
+    <div className="journal-tasks-tab">
+      <div className="journal-section-header">
+        <div className="journal-section-title">{classData.storyTitle}</div>
+        <div className="journal-section-progress">{completedCount}/{totalCount} complete</div>
+      </div>
+      <div className="journal-task-desc" style={{ marginBottom: '8px', opacity: 0.8, fontSize: '0.85em' }}>
+        {classData.storyDescription}
+      </div>
+
+      {allDone && (
+        <div className="journal-complete-banner">
+          {classData.storyTitle} Complete! You have fulfilled your destiny as a {classData.className}.
+        </div>
+      )}
+
+      {classData.quests.map((quest) => {
+        const claimed = classQuestClaimed.includes(quest.id);
+        const isCurrent = currentQuest && currentQuest.id === quest.id;
+        const isLocked = !claimed && !isCurrent;
+
+        if (isLocked) {
+          return (
+            <div key={quest.id} className="journal-task-card locked">
+              <div className="journal-task-header">
+                <span className="journal-task-name">{quest.order}. {quest.name}</span>
+                <RewardLabel reward={quest.reward} />
+              </div>
+              <div className="journal-task-desc">{quest.description}</div>
+              {quest.chapter && (
+                <div className="journal-task-region">{quest.chapter}</div>
+              )}
+              <div className="journal-task-locked-label">Complete previous quests to unlock</div>
+            </div>
+          );
+        }
+
+        const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
+        return (
+          <TaskCard
+            key={quest.id}
+            task={quest}
+            progress={progress}
+            target={quest.target}
+            claimed={claimed}
+            onClaim={(id, type) => onClaim(id, 'class_story')}
+            taskType="class_story"
+            pinnedQuests={pinnedQuests}
+            onPin={onPin}
+            onUnpin={onUnpin}
+            showPin={!claimed}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export default function JournalScreen({ stats, tasks, playerLevel, characterClass, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
   const [activeTab, setActiveTab] = useState('Quests');
   const now = Date.now();
 
@@ -738,11 +863,19 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
     if (currentQ && getQuestProgress(stats, currentQ.id, currentQ.stat, tasks.questBaselines) >= currentQ.target) sideBadge++;
   }
 
+  // Class story badge
+  let classStoryBadge = 0;
+  if (characterClass && CLASS_STORY_QUESTS[characterClass]) {
+    const currentCQ = getCurrentClassQuest(characterClass, tasks.classQuestClaimed || []);
+    if (currentCQ && getQuestProgress(stats, currentCQ.id, currentCQ.stat, tasks.questBaselines) >= currentCQ.target) classStoryBadge = 1;
+  }
+
   // Quests tab badge = sum of quest line badges
-  const questsBadge = tutBadge + missionBadge + sideBadge;
+  const questsBadge = tutBadge + missionBadge + sideBadge + classStoryBadge;
 
   const badges = {
     Quests: questsBadge,
+    'Class Story': classStoryBadge,
     Tutorial: tutBadge,
     Missions: missionBadge,
     'Side Quests': sideBadge,
@@ -776,8 +909,20 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             tasks={tasks}
             stats={stats}
             playerLevel={playerLevel}
+            characterClass={characterClass}
             onActivate={onActivate}
             onAbandon={onAbandon}
+          />
+        )}
+        {activeTab === 'Class Story' && (
+          <ClassStoryTab
+            stats={stats}
+            tasks={tasks}
+            characterClass={characterClass}
+            onClaim={onClaim}
+            pinnedQuests={pinnedQuests}
+            onPin={onPin}
+            onUnpin={onUnpin}
           />
         )}
         {activeTab === 'Tutorial' && (
