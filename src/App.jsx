@@ -140,6 +140,10 @@ export default function App() {
         <div className="ui-overlay">
           <div className="screen screen-loading">
             <div className="loading-title">PIXEL GRIND</div>
+            <div className="loading-tagline">Monster Hunter RPG</div>
+            <div className="loading-bar-track">
+              <div className="loading-bar-fill" />
+            </div>
             <div className="loading-text">Loading...</div>
           </div>
         </div>
