@@ -116,12 +116,12 @@ export default function AuthScreen({ onLogin, onRegister, error, loading }) {
           </button>
         </div>
 
-        {/* Version tag */}
-        <div className="auth-version">v1.0 — A Bartlew Adventure</div>
-
         {/* Decorative bottom border */}
         <div className="auth-border-bottom" />
       </div>
+
+      {/* Version tag pinned to bottom */}
+      <div className="auth-version">v1.0 — Pixel Grind</div>
     </div>
   );
 }
