@@ -135,8 +135,14 @@ body {
   gap: 14px;
   flex: 1;
   min-height: 0;
-  overflow-y: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   text-align: center;
+}
+
+.side-panel-content::-webkit-scrollbar {
+  display: none;
 }
 
 .side-panel-footer {
