@@ -255,6 +255,16 @@ export default function BattleScreen({
     handlePlayerAction(onChannel, 'player-skill');
   }, [handlePlayerAction, onChannel]);
 
+  const clock = useGameClock();
+  const weatherBuffs = useMemo(() => getWeatherSpellBuffList(clock.weather.id), [clock.weather.id]);
+
+  // Equipped pets
+  const equippedPets = useMemo(() => {
+    const equippedIds = pets?.equippedPets || [];
+    const owned = pets?.ownedPets || [];
+    return equippedIds.map(id => owned.find(p => p.instanceId === id)).filter(Boolean);
+  }, [pets]);
+
   if (!battle?.monster) return null;
   const m = battle.monster;
   const mHpPct = (m.hp / m.maxHp) * 100;
@@ -267,16 +277,6 @@ export default function BattleScreen({
   const passives = getPlayerPassiveSkills(player);
   const activeSkills = getPlayerActiveSkills(player);
   const treeActives = activeSkills.filter(s => !s.isClassSkill);
-
-  const clock = useGameClock();
-  const weatherBuffs = useMemo(() => getWeatherSpellBuffList(clock.weather.id), [clock.weather.id]);
-
-  // Equipped pets
-  const equippedPets = useMemo(() => {
-    const equippedIds = pets?.equippedPets || [];
-    const owned = pets?.ownedPets || [];
-    return equippedIds.map(id => owned.find(p => p.instanceId === id)).filter(Boolean);
-  }, [pets]);
 
   const ROLE_ICONS = { attacker: '\u2694', defender: '\u26E8', healer: '\u2661', buffer: '\u2606', hybrid: '\u269B' };
 
