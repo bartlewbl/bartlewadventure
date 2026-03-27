@@ -45,6 +45,69 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
     }
   }
 
+  // Separate choices into passives and actives for display
+  function renderChoices(tier, tierInfo) {
+    const isLocked = tierInfo.state === 'locked';
+    const isChosen = tierInfo.state === 'chosen';
+    const isAvailable = tierInfo.state === 'available';
+    const passiveChoices = tier.choices.filter(c => c.type === 'passive');
+    const activeChoices = tier.choices.filter(c => c.type === 'active');
+
+    return (
+      <div className="skill-tree-choices-grid">
+        {passiveChoices.length > 0 && (
+          <div className="skill-tree-passives-group">
+            <div className="skill-tree-group-label passive-label">Passives</div>
+            <div className="skill-tree-group-choices">
+              {passiveChoices.map(choice => renderNode(choice, tierInfo, isLocked, isChosen, isAvailable))}
+            </div>
+          </div>
+        )}
+        {activeChoices.length > 0 && (
+          <div className="skill-tree-actives-group">
+            <div className="skill-tree-group-label active-label">Active</div>
+            <div className="skill-tree-group-choices">
+              {activeChoices.map(choice => renderNode(choice, tierInfo, isLocked, isChosen, isAvailable))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderNode(choice, tierInfo, isLocked, isChosen, isAvailable) {
+    const isSelected = tierInfo.chosenId === choice.id;
+    const isOtherSelected = isChosen && !isSelected;
+    const canSelect = isAvailable;
+
+    return (
+      <div
+        key={choice.id}
+        className={`skill-tree-node ${
+          isSelected ? 'skill-tree-node-selected' :
+          isOtherSelected ? 'skill-tree-node-rejected' :
+          isLocked ? 'skill-tree-node-locked' :
+          canSelect ? 'skill-tree-node-available' : ''
+        } ${choice.milestone ? 'skill-tree-node-milestone' : ''}`}
+        onClick={() => canSelect ? handleSelect(choice) : null}
+        style={isSelected ? { borderColor: cls.color } : (choice.milestone && !isLocked ? { borderColor: '#ffaa00' } : undefined)}
+      >
+        <div className="skill-tree-node-header">
+          <span className={`skill-tree-node-type ${choice.type}`}>
+            {choice.type === 'passive' ? 'PASSIVE' : 'ACTIVE'}
+          </span>
+          <span className="skill-tree-node-name">{choice.name}</span>
+        </div>
+        <div className="skill-tree-node-desc">{choice.desc}</div>
+        {choice.type === 'active' && (
+          <div className="skill-tree-node-mana">{choice.manaCost} Mana • {choice.multiplier}x DMG</div>
+        )}
+        {isSelected && <div className="skill-tree-node-badge">LEARNED</div>}
+        {isOtherSelected && <div className="skill-tree-node-badge rejected">SKIPPED</div>}
+      </div>
+    );
+  }
+
   return (
     <div className="screen screen-skills">
       <div className="screen-header" style={{ color: cls.color }}>
@@ -91,57 +154,21 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
         {/* Skill tree tiers */}
         {tree.tiers.map((tier, tierIdx) => {
           const tierInfo = getTierState(tier, tierIdx);
-          const isLocked = tierInfo.state === 'locked';
-          const isChosen = tierInfo.state === 'chosen';
-          const isAvailable = tierInfo.state === 'available';
 
           return (
             <div key={tier.label} className={`skill-tree-tier ${tier.milestone ? 'skill-tree-tier-milestone' : ''}`}>
               <div className="skill-tree-connector">{tier.milestone ? '★' : '|'}</div>
-              <div className={`skill-tree-tier-label ${isLocked ? 'locked' : ''} ${tier.milestone ? 'milestone' : ''}`}>
+              <div className={`skill-tree-tier-label ${tierInfo.state === 'locked' ? 'locked' : ''} ${tier.milestone ? 'milestone' : ''}`}>
                 {tier.label} — Lv.{tier.level}
                 {tier.milestone && <span className="skill-tree-milestone-badge"> FATE CHOICE</span>}
-                {isLocked && player.level < tier.level && (
+                {tierInfo.state === 'locked' && player.level < tier.level && (
                   <span className="skill-tree-tier-req"> (Requires Lv.{tier.level})</span>
                 )}
-                {isLocked && player.level >= tier.level && (
+                {tierInfo.state === 'locked' && player.level >= tier.level && (
                   <span className="skill-tree-tier-req"> (Complete previous tier first)</span>
                 )}
               </div>
-              <div className="skill-tree-choices">
-                {tier.choices.map(choice => {
-                  const isSelected = tierInfo.chosenId === choice.id;
-                  const isOtherSelected = isChosen && !isSelected;
-                  const canSelect = isAvailable;
-
-                  return (
-                    <div
-                      key={choice.id}
-                      className={`skill-tree-node ${
-                        isSelected ? 'skill-tree-node-selected' :
-                        isOtherSelected ? 'skill-tree-node-rejected' :
-                        isLocked ? 'skill-tree-node-locked' :
-                        canSelect ? 'skill-tree-node-available' : ''
-                      } ${choice.milestone ? 'skill-tree-node-milestone' : ''}`}
-                      onClick={() => canSelect ? handleSelect(choice) : null}
-                      style={isSelected ? { borderColor: cls.color } : (choice.milestone && !isLocked ? { borderColor: '#ffaa00' } : undefined)}
-                    >
-                      <div className="skill-tree-node-header">
-                        <span className={`skill-tree-node-type ${choice.type}`}>
-                          {choice.type === 'passive' ? 'PASSIVE' : 'ACTIVE'}
-                        </span>
-                        <span className="skill-tree-node-name">{choice.name}</span>
-                      </div>
-                      <div className="skill-tree-node-desc">{choice.desc}</div>
-                      {choice.type === 'active' && (
-                        <div className="skill-tree-node-mana">{choice.manaCost} Mana • {choice.multiplier}x DMG</div>
-                      )}
-                      {isSelected && <div className="skill-tree-node-badge">LEARNED</div>}
-                      {isOtherSelected && <div className="skill-tree-node-badge rejected">SKIPPED</div>}
-                    </div>
-                  );
-                })}
-              </div>
+              {renderChoices(tier, tierInfo)}
             </div>
           );
         })}

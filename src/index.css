@@ -4658,8 +4658,45 @@ body {
   justify-content: center;
 }
 
+.skill-tree-choices-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.skill-tree-passives-group,
+.skill-tree-actives-group {
+  width: 100%;
+}
+
+.skill-tree-group-label {
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.skill-tree-group-label.passive-label {
+  color: #7cfc00;
+}
+
+.skill-tree-group-label.active-label {
+  color: #ff6b6b;
+}
+
+.skill-tree-group-choices {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .skill-tree-node {
-  flex: 0 1 320px;
+  flex: 0 1 220px;
   padding: 10px;
   border-radius: 6px;
   background: rgba(14, 22, 42, 0.9);
