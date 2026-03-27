@@ -703,6 +703,185 @@ export const MONSTERS = {
     baseExp: 78, baseGold: 48, skills: ['oblivion', 'firebreath', 'voidrift'],
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'potion', weight: 12 }],
   },
+  // ---- SHATTERED DIMENSION MONSTERS ----
+  'fracture-fiend': {
+    name: 'Fracture Fiend', sprite: 'ghost', baseHp: 88, baseAtk: 40, baseDef: 10,
+    baseExp: 90, baseGold: 54, skills: ['voidrift', 'slash'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'shard-golem': {
+    name: 'Shard Golem', sprite: 'golem', baseHp: 120, baseAtk: 36, baseDef: 20,
+    baseExp: 94, baseGold: 56, skills: ['slam', 'ironcrush', 'shatter'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'potion', weight: 14 }],
+  },
+  'rift-phantom': {
+    name: 'Rift Phantom', sprite: 'ghost', baseHp: 72, baseAtk: 44, baseDef: 7,
+    baseExp: 88, baseGold: 52, skills: ['entropy', 'drain', 'phaseshift'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
+  'warp-stalker': {
+    name: 'Warp Stalker', sprite: 'wolf', baseHp: 95, baseAtk: 42, baseDef: 14,
+    baseExp: 92, baseGold: 55, skills: ['bite', 'backstab', 'voidrift'],
+    dropTable: [{ type: 'boots', weight: 10 }, { type: 'gloves', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'dimensional-serpent': {
+    name: 'Dimensional Serpent', sprite: 'snake', baseHp: 85, baseAtk: 40, baseDef: 12,
+    baseExp: 86, baseGold: 52, skills: ['venom', 'dimensioncoil', 'charge'],
+    dropTable: [{ type: 'ring', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'temporal-wraith': {
+    name: 'Temporal Wraith', sprite: 'ghost', baseHp: 78, baseAtk: 46, baseDef: 8,
+    baseExp: 96, baseGold: 58, skills: ['entropy', 'timewarp', 'drain'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
+  'shatter-skeleton': {
+    name: 'Shatter Skeleton', sprite: 'skeleton', baseHp: 82, baseAtk: 38, baseDef: 16,
+    baseExp: 84, baseGold: 50, skills: ['slash', 'shatter', 'curse'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'echo-bat': {
+    name: 'Echo Bat', sprite: 'bat', baseHp: 65, baseAtk: 42, baseDef: 6,
+    baseExp: 82, baseGold: 48, skills: ['screech', 'sonicpulse', 'drain'],
+    dropTable: [{ type: 'ring', weight: 8 }, { type: 'amulet', weight: 6 }, { type: 'potion', weight: 22 }],
+  },
+  'mirror-dragon': {
+    name: 'Mirror Dragon', sprite: 'dragon', baseHp: 110, baseAtk: 44, baseDef: 16,
+    baseExp: 100, baseGold: 60, skills: ['firebreath', 'voidrift', 'shatter'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'potion', weight: 10 }],
+  },
+  // ---- INFERNAL DOMINION MONSTERS ----
+  'hellfire-imp': {
+    name: 'Hellfire Imp', sprite: 'goblin', baseHp: 90, baseAtk: 48, baseDef: 10,
+    baseExp: 110, baseGold: 66, skills: ['inferno', 'scratch', 'hellfire'],
+    dropTable: [{ type: 'ring', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
+  'pit-fiend': {
+    name: 'Pit Fiend', sprite: 'dragon', baseHp: 140, baseAtk: 50, baseDef: 20,
+    baseExp: 120, baseGold: 72, skills: ['inferno', 'frenzy', 'demoncrush'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'potion', weight: 10 }],
+  },
+  'brimstone-golem': {
+    name: 'Brimstone Golem', sprite: 'golem', baseHp: 160, baseAtk: 44, baseDef: 26,
+    baseExp: 118, baseGold: 70, skills: ['slam', 'eruption', 'ironcrush'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 12 }],
+  },
+  'soul-harvester': {
+    name: 'Soul Harvester', sprite: 'ghost', baseHp: 95, baseAtk: 54, baseDef: 10,
+    baseExp: 116, baseGold: 68, skills: ['drain', 'soulrend', 'curse'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 14 }],
+  },
+  'infernal-wolf': {
+    name: 'Infernal Wolf', sprite: 'wolf', baseHp: 115, baseAtk: 50, baseDef: 16,
+    baseExp: 112, baseGold: 66, skills: ['bite', 'howl', 'hellfire'],
+    dropTable: [{ type: 'boots', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'demon-knight': {
+    name: 'Demon Knight', sprite: 'vagrant', baseHp: 130, baseAtk: 48, baseDef: 22,
+    baseExp: 122, baseGold: 74, skills: ['slash', 'charge', 'demoncrush'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'potion', weight: 10 }],
+  },
+  'lava-serpent': {
+    name: 'Lava Serpent', sprite: 'snake', baseHp: 105, baseAtk: 48, baseDef: 14,
+    baseExp: 114, baseGold: 68, skills: ['scorch', 'venom', 'eruption'],
+    dropTable: [{ type: 'ring', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'ash-wraith': {
+    name: 'Ash Wraith', sprite: 'ghost', baseHp: 85, baseAtk: 52, baseDef: 8,
+    baseExp: 108, baseGold: 64, skills: ['inferno', 'drain', 'curse'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'cape', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
+  'doom-bat': {
+    name: 'Doom Bat', sprite: 'bat', baseHp: 80, baseAtk: 50, baseDef: 8,
+    baseExp: 106, baseGold: 62, skills: ['screech', 'hellfire', 'drain'],
+    dropTable: [{ type: 'ring', weight: 8 }, { type: 'amulet', weight: 6 }, { type: 'potion', weight: 20 }],
+  },
+  // ---- ETHEREAL SANCTUM MONSTERS ----
+  'spirit-guardian': {
+    name: 'Spirit Guardian', sprite: 'vagrant', baseHp: 150, baseAtk: 56, baseDef: 24,
+    baseExp: 140, baseGold: 84, skills: ['smite', 'judgment', 'spiritblade'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'potion', weight: 10 }],
+  },
+  'ethereal-wisp': {
+    name: 'Ethereal Wisp', sprite: 'ghost', baseHp: 100, baseAtk: 60, baseDef: 8,
+    baseExp: 134, baseGold: 80, skills: ['holybeam', 'drain', 'spiritfire'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 14 }],
+  },
+  'phantom-knight': {
+    name: 'Phantom Knight', sprite: 'skeleton', baseHp: 140, baseAtk: 54, baseDef: 22,
+    baseExp: 138, baseGold: 82, skills: ['slash', 'charge', 'spiritblade'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 10 }],
+  },
+  'soul-serpent': {
+    name: 'Soul Serpent', sprite: 'snake', baseHp: 120, baseAtk: 56, baseDef: 16,
+    baseExp: 136, baseGold: 80, skills: ['venom', 'spiritfire', 'drain'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
+  'ancestral-golem': {
+    name: 'Ancestral Golem', sprite: 'golem', baseHp: 190, baseAtk: 50, baseDef: 30,
+    baseExp: 142, baseGold: 86, skills: ['slam', 'judgment', 'petrify'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 10 }],
+  },
+  'dream-wolf': {
+    name: 'Dream Wolf', sprite: 'wolf', baseHp: 130, baseAtk: 58, baseDef: 18,
+    baseExp: 136, baseGold: 82, skills: ['bite', 'howl', 'spiritfire', 'mind_fog'],
+    dropTable: [{ type: 'boots', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
+  'memory-shade': {
+    name: 'Memory Shade', sprite: 'ghost', baseHp: 105, baseAtk: 62, baseDef: 10,
+    baseExp: 144, baseGold: 86, skills: ['psychic_wave', 'drain', 'spiritfire'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 14 }],
+  },
+  'celestial-drake': {
+    name: 'Celestial Drake', sprite: 'dragon', baseHp: 160, baseAtk: 58, baseDef: 22,
+    baseExp: 148, baseGold: 90, skills: ['holybeam', 'starfall', 'firebreath'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 8 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 10 }],
+  },
+  // ---- PRIMORDIAL CORE MONSTERS ----
+  'genesis-titan': {
+    name: 'Genesis Titan', sprite: 'golem', baseHp: 240, baseAtk: 60, baseDef: 36,
+    baseExp: 180, baseGold: 108, skills: ['slam', 'ironcrush', 'primordialsmash'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'potion', weight: 8 }],
+  },
+  'origin-wyrm': {
+    name: 'Origin Wyrm', sprite: 'dragon', baseHp: 200, baseAtk: 66, baseDef: 26,
+    baseExp: 186, baseGold: 112, skills: ['firebreath', 'oblivion', 'primordialsmash'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 8 }],
+  },
+  'primeval-wraith': {
+    name: 'Primeval Wraith', sprite: 'ghost', baseHp: 130, baseAtk: 72, baseDef: 12,
+    baseExp: 176, baseGold: 106, skills: ['oblivion', 'entropy', 'genesis_pulse'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 12 }],
+  },
+  'creation-serpent': {
+    name: 'Creation Serpent', sprite: 'snake', baseHp: 155, baseAtk: 64, baseDef: 20,
+    baseExp: 178, baseGold: 108, skills: ['venom', 'primordialsmash', 'charge'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 14 }],
+  },
+  'epoch-wolf': {
+    name: 'Epoch Wolf', sprite: 'wolf', baseHp: 170, baseAtk: 66, baseDef: 22,
+    baseExp: 180, baseGold: 110, skills: ['bite', 'frenzy', 'timewarp'],
+    dropTable: [{ type: 'boots', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'potion', weight: 14 }],
+  },
+  'void-archon': {
+    name: 'Void Archon', sprite: 'vagrant', baseHp: 180, baseAtk: 64, baseDef: 28,
+    baseExp: 184, baseGold: 112, skills: ['oblivion', 'voidrift', 'charge'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'potion', weight: 10 }],
+  },
+  'ancient-skeleton': {
+    name: 'Ancient Skeleton', sprite: 'skeleton', baseHp: 160, baseAtk: 60, baseDef: 26,
+    baseExp: 172, baseGold: 104, skills: ['slash', 'curse', 'genesis_pulse'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 14 }],
+  },
+  'cosmic-bat': {
+    name: 'Cosmic Bat', sprite: 'bat', baseHp: 110, baseAtk: 68, baseDef: 10,
+    baseExp: 170, baseGold: 102, skills: ['screech', 'sonicpulse', 'entropy'],
+    dropTable: [{ type: 'ring', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 18 }],
+  },
+  'infinity-goblin': {
+    name: 'Infinity Goblin', sprite: 'goblin', baseHp: 120, baseAtk: 62, baseDef: 14,
+    baseExp: 168, baseGold: 100, skills: ['backstab', 'steal', 'timewarp'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'boots', weight: 8 }, { type: 'potion', weight: 16 }],
+  },
 };
 
 // ---- BOSSES ----
@@ -965,6 +1144,158 @@ export const BOSSES = {
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 8 }],
     title: 'End of All Things',
   },
+
+  // ---- SHATTERED DIMENSION BOSSES ----
+  'boss-fracture-warden': {
+    name: 'Fracture Warden', sprite: 'golem', isBoss: true, baseHp: 1500, baseAtk: 76, baseDef: 28, baseSpeed: 3,
+    baseExp: 1600, baseGold: 1000, skills: ['shatter', 'slam', 'voidrift', 'channel_void'],
+    dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 8 }],
+    title: 'Guardian of Broken Reality',
+  },
+  'boss-temporal-devourer': {
+    name: 'Temporal Devourer', sprite: 'dragon', isBoss: true, baseHp: 1700, baseAtk: 80, baseDef: 28, baseSpeed: 6,
+    baseExp: 1800, baseGold: 1100, skills: ['timewarp', 'oblivion', 'frenzy', 'channel_void'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'potion', weight: 8 }],
+    title: 'Eater of Timelines',
+  },
+  'boss-mirror-king': {
+    name: 'Mirror King', sprite: 'vagrant', isBoss: true, baseHp: 1600, baseAtk: 82, baseDef: 26, baseSpeed: 5,
+    baseExp: 1700, baseGold: 1050, skills: ['shatter', 'slash', 'backstab', 'phaseshift', 'channel_shatter'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'potion', weight: 8 }],
+    title: 'Reflection of a Thousand Selves',
+  },
+  'boss-echo-lord': {
+    name: 'Echo Lord', sprite: 'ghost', isBoss: true, baseHp: 1400, baseAtk: 86, baseDef: 22, baseSpeed: 7,
+    baseExp: 1650, baseGold: 1020, skills: ['sonicpulse', 'entropy', 'drain', 'channel_void'],
+    dropTable: [{ type: 'ring', weight: 12 }, { type: 'amulet', weight: 10 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 8 }],
+    title: 'Voice of the Shattered',
+  },
+  'boss-rift-colossus': {
+    name: 'Rift Colossus', sprite: 'golem', isBoss: true, baseHp: 2000, baseAtk: 84, baseDef: 34, baseSpeed: 2,
+    baseExp: 1900, baseGold: 1200, skills: ['ironcrush', 'shatter', 'slam', 'frenzy', 'channel_shatter'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Titan of the Fractured Plane',
+  },
+  'boss-dimension-eater': {
+    name: 'Dimension Eater', sprite: 'dragon', isBoss: true, baseHp: 2200, baseAtk: 88, baseDef: 32, baseSpeed: 5,
+    baseExp: 2100, baseGold: 1400, skills: ['oblivion', 'voidrift', 'frenzy', 'timewarp', 'channel_void'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Devourer of Worlds',
+  },
+
+  // ---- INFERNAL DOMINION BOSSES ----
+  'boss-hellgate-keeper': {
+    name: 'Hellgate Keeper', sprite: 'golem', isBoss: true, baseHp: 2400, baseAtk: 92, baseDef: 36, baseSpeed: 3,
+    baseExp: 2300, baseGold: 1500, skills: ['inferno', 'ironcrush', 'hellfire', 'channel_inferno'],
+    dropTable: [{ type: 'shield', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Sentinel of the Burning Gate',
+  },
+  'boss-soul-reaver': {
+    name: 'Soul Reaver', sprite: 'ghost', isBoss: true, baseHp: 2000, baseAtk: 98, baseDef: 26, baseSpeed: 7,
+    baseExp: 2500, baseGold: 1600, skills: ['soulrend', 'drain', 'oblivion', 'curse', 'channel_inferno'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 10 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Harvester of the Damned',
+  },
+  'boss-inferno-drake': {
+    name: 'Inferno Drake', sprite: 'dragon', isBoss: true, baseHp: 2600, baseAtk: 96, baseDef: 34, baseSpeed: 5,
+    baseExp: 2600, baseGold: 1700, skills: ['inferno', 'firebreath', 'frenzy', 'eruption', 'channel_inferno'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Dragon of the Infernal Pit',
+  },
+  'boss-demon-general': {
+    name: 'Demon General', sprite: 'vagrant', isBoss: true, baseHp: 2800, baseAtk: 100, baseDef: 38, baseSpeed: 5,
+    baseExp: 2800, baseGold: 1800, skills: ['demoncrush', 'slash', 'charge', 'frenzy', 'channel_inferno'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Commander of the Legion',
+  },
+  'boss-brimstone-lord': {
+    name: 'Brimstone Lord', sprite: 'golem', isBoss: true, baseHp: 3000, baseAtk: 96, baseDef: 42, baseSpeed: 2,
+    baseExp: 2900, baseGold: 1900, skills: ['eruption', 'inferno', 'ironcrush', 'hellfire', 'channel_inferno'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Molten Heart of Hell',
+  },
+  'boss-archdevil': {
+    name: 'Archdevil Malachar', sprite: 'dragon', isBoss: true, baseHp: 3200, baseAtk: 105, baseDef: 38, baseSpeed: 6,
+    baseExp: 3200, baseGold: 2200, skills: ['oblivion', 'inferno', 'soulrend', 'frenzy', 'channel_inferno'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 4 }],
+    title: 'Lord of the Nine Hells',
+  },
+
+  // ---- ETHEREAL SANCTUM BOSSES ----
+  'boss-spirit-warden': {
+    name: 'Spirit Warden', sprite: 'ghost', isBoss: true, baseHp: 3000, baseAtk: 108, baseDef: 32, baseSpeed: 7,
+    baseExp: 3400, baseGold: 2300, skills: ['spiritfire', 'smite', 'drain', 'judgment', 'channel_spirit'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 10 }, { type: 'sword', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Guardian of the Eternal Gate',
+  },
+  'boss-dream-weaver': {
+    name: 'Dream Weaver', sprite: 'ghost', isBoss: true, baseHp: 2800, baseAtk: 112, baseDef: 28, baseSpeed: 8,
+    baseExp: 3500, baseGold: 2400, skills: ['madness', 'mind_fog', 'spiritfire', 'drain', 'channel_spirit'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'potion', weight: 8 }],
+    title: 'Spinner of Nightmares',
+  },
+  'boss-ancestral-titan': {
+    name: 'Ancestral Titan', sprite: 'golem', isBoss: true, baseHp: 3600, baseAtk: 106, baseDef: 44, baseSpeed: 2,
+    baseExp: 3600, baseGold: 2500, skills: ['slam', 'judgment', 'ironcrush', 'petrify', 'channel_spirit'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Colossus of the Ancestors',
+  },
+  'boss-memory-dragon': {
+    name: 'Memory Dragon', sprite: 'dragon', isBoss: true, baseHp: 3400, baseAtk: 114, baseDef: 36, baseSpeed: 5,
+    baseExp: 3800, baseGold: 2600, skills: ['holybeam', 'starfall', 'firebreath', 'spiritfire', 'channel_spirit'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Keeper of All Memories',
+  },
+  'boss-soul-arbiter': {
+    name: 'Soul Arbiter', sprite: 'vagrant', isBoss: true, baseHp: 3200, baseAtk: 118, baseDef: 38, baseSpeed: 6,
+    baseExp: 4000, baseGold: 2800, skills: ['judgment', 'spiritblade', 'smite', 'soulrend', 'channel_spirit'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'ring', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Judge of the Departed',
+  },
+  'boss-eternal-phoenix': {
+    name: 'Eternal Phoenix', sprite: 'dragon', isBoss: true, baseHp: 3800, baseAtk: 120, baseDef: 36, baseSpeed: 7,
+    baseExp: 4200, baseGold: 3000, skills: ['spiritfire', 'holybeam', 'inferno', 'frenzy', 'channel_spirit'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 4 }],
+    title: 'Immortal Flame Reborn',
+  },
+
+  // ---- PRIMORDIAL CORE BOSSES ----
+  'boss-genesis-warden': {
+    name: 'Genesis Warden', sprite: 'golem', isBoss: true, baseHp: 4000, baseAtk: 122, baseDef: 46, baseSpeed: 3,
+    baseExp: 4500, baseGold: 3200, skills: ['primordialsmash', 'slam', 'ironcrush', 'genesis_pulse', 'channel_genesis'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 4 }],
+    title: 'First Guardian of Creation',
+  },
+  'boss-cosmic-serpent': {
+    name: 'Cosmic Serpent', sprite: 'snake', isBoss: true, baseHp: 3600, baseAtk: 128, baseDef: 34, baseSpeed: 8,
+    baseExp: 4800, baseGold: 3400, skills: ['venom', 'primordialsmash', 'timewarp', 'oblivion', 'channel_genesis'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'potion', weight: 4 }],
+    title: 'Serpent That Encircles the World',
+  },
+  'boss-epoch-titan': {
+    name: 'Epoch Titan', sprite: 'golem', isBoss: true, baseHp: 4400, baseAtk: 126, baseDef: 50, baseSpeed: 2,
+    baseExp: 5000, baseGold: 3600, skills: ['primordialsmash', 'slam', 'timewarp', 'frenzy', 'channel_genesis'],
+    dropTable: [{ type: 'armor', weight: 12 }, { type: 'shield', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 4 }],
+    title: 'Titan of Endless Ages',
+  },
+  'boss-void-emperor': {
+    name: 'Void Emperor', sprite: 'vagrant', isBoss: true, baseHp: 4200, baseAtk: 132, baseDef: 42, baseSpeed: 6,
+    baseExp: 5200, baseGold: 3800, skills: ['oblivion', 'voidrift', 'genesis_pulse', 'frenzy', 'channel_genesis'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'potion', weight: 4 }],
+    title: 'Emperor Beyond the Void',
+  },
+  'boss-origin-dragon': {
+    name: 'Origin Dragon', sprite: 'dragon', isBoss: true, baseHp: 4800, baseAtk: 136, baseDef: 44, baseSpeed: 6,
+    baseExp: 5600, baseGold: 4200, skills: ['primordialsmash', 'oblivion', 'firebreath', 'genesis_pulse', 'channel_genesis'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'helmet', weight: 8 }, { type: 'potion', weight: 4 }],
+    title: 'First Dragon, Last Flame',
+  },
+  'boss-primordial-god': {
+    name: 'The Primordial', sprite: 'dragon', isBoss: true, baseHp: 5500, baseAtk: 145, baseDef: 48, baseSpeed: 7,
+    baseExp: 6500, baseGold: 5000, skills: ['oblivion', 'primordialsmash', 'genesis_pulse', 'frenzy', 'channel_genesis'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'helmet', weight: 10 }, { type: 'potion', weight: 4 }],
+    title: 'The Beginning and The End',
+  },
 };
 
 // ---- REGIONS ----
@@ -1132,6 +1463,106 @@ export const REGIONS = [
         encounterRate: 0.75, lootRate: 0.4, bgKey: 'void', boss: 'boss-oblivion-god', bossRate: 0.005 },
     ],
   },
+  {
+    id: 'shattered-dimension', name: 'Shattered Dimension',
+    description: 'A fractured plane where broken realities bleed into one another.',
+    levelReq: 55, travelCost: 50000, bgKey: 'void',
+    locations: [
+      { id: 'fracture-gate', name: 'Fracture Gate', description: 'The shattered entrance to a dimension torn apart by war.', levelReq: 55,
+        monsters: ['fracture-fiend', 'shard-golem', 'rift-phantom', 'warp-stalker', 'echo-bat', 'shatter-skeleton'],
+        encounterRate: 0.65, lootRate: 0.32, bgKey: 'void', boss: 'boss-fracture-warden', bossRate: 0.005 },
+      { id: 'mirror-wastes', name: 'Mirror Wastes', description: 'An endless desert of reflective glass shards that show impossible realities.', levelReq: 58,
+        monsters: ['mirror-dragon', 'rift-phantom', 'warp-stalker', 'dimensional-serpent', 'fracture-fiend', 'shard-golem', 'temporal-wraith'],
+        encounterRate: 0.67, lootRate: 0.34, bgKey: 'void', boss: 'boss-temporal-devourer', bossRate: 0.005 },
+      { id: 'echo-chambers', name: 'Echo Chambers', description: 'Vast halls where every sound repeats infinitely, driving intruders mad.', levelReq: 62,
+        monsters: ['echo-bat', 'temporal-wraith', 'rift-phantom', 'shatter-skeleton', 'warp-stalker', 'fracture-fiend', 'dimensional-serpent'],
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'void', boss: 'boss-echo-lord', bossRate: 0.005 },
+      { id: 'temporal-ruins', name: 'Temporal Ruins', description: 'Ancient structures frozen between moments in time.', levelReq: 66,
+        monsters: ['temporal-wraith', 'mirror-dragon', 'shard-golem', 'dimensional-serpent', 'shatter-skeleton', 'rift-phantom', 'warp-stalker'],
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-mirror-king', bossRate: 0.005 },
+      { id: 'shattered-citadel', name: 'Shattered Citadel', description: 'A fortress that exists in multiple realities simultaneously.', levelReq: 70,
+        monsters: ['mirror-dragon', 'temporal-wraith', 'shard-golem', 'warp-stalker', 'fracture-fiend', 'echo-bat', 'dimensional-serpent'],
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'void', boss: 'boss-rift-colossus', bossRate: 0.005 },
+      { id: 'dimension-heart', name: 'Dimension Heart', description: 'The pulsing core of the shattered dimension where all realities converge.', levelReq: 75,
+        monsters: ['mirror-dragon', 'temporal-wraith', 'shard-golem', 'rift-phantom', 'warp-stalker', 'dimensional-serpent', 'echo-bat'],
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'void', boss: 'boss-dimension-eater', bossRate: 0.005 },
+    ],
+  },
+  {
+    id: 'infernal-dominion', name: 'Infernal Dominion',
+    description: 'The burning realm of demons, where rivers of lava carve through obsidian fortresses.',
+    levelReq: 65, travelCost: 100000, bgKey: 'desert',
+    locations: [
+      { id: 'hellgate-entrance', name: 'Hellgate Entrance', description: 'The scorching threshold between worlds, guarded by demonic sentinels.', levelReq: 65,
+        monsters: ['hellfire-imp', 'doom-bat', 'ash-wraith', 'infernal-wolf', 'lava-serpent', 'demon-knight'],
+        encounterRate: 0.68, lootRate: 0.34, bgKey: 'desert', boss: 'boss-hellgate-keeper', bossRate: 0.005 },
+      { id: 'brimstone-wastes', name: 'Brimstone Wastes', description: 'Endless plains of scorched rock and sulfurous geysers.', levelReq: 69,
+        monsters: ['brimstone-golem', 'hellfire-imp', 'lava-serpent', 'ash-wraith', 'doom-bat', 'infernal-wolf', 'soul-harvester'],
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'desert', boss: 'boss-soul-reaver', bossRate: 0.005 },
+      { id: 'infernal-spire', name: 'Infernal Spire', description: 'A towering obsidian fortress wreathed in perpetual flame.', levelReq: 73,
+        monsters: ['demon-knight', 'pit-fiend', 'soul-harvester', 'ash-wraith', 'hellfire-imp', 'brimstone-golem', 'infernal-wolf'],
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'desert', boss: 'boss-inferno-drake', bossRate: 0.005 },
+      { id: 'soul-furnace', name: 'Soul Furnace', description: 'Where captured souls are smelted into demonic weapons.', levelReq: 77,
+        monsters: ['soul-harvester', 'pit-fiend', 'brimstone-golem', 'demon-knight', 'ash-wraith', 'lava-serpent', 'doom-bat'],
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'desert', boss: 'boss-demon-general', bossRate: 0.005 },
+      { id: 'obsidian-throne', name: 'Obsidian Throne', description: 'The seat of demonic power, radiating malevolent heat.', levelReq: 81,
+        monsters: ['pit-fiend', 'demon-knight', 'soul-harvester', 'brimstone-golem', 'infernal-wolf', 'hellfire-imp', 'lava-serpent'],
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'desert', boss: 'boss-brimstone-lord', bossRate: 0.005 },
+      { id: 'archdevils-sanctum', name: 'Archdevil\'s Sanctum', description: 'The innermost chamber of Hell where the Archdevil holds court.', levelReq: 85,
+        monsters: ['pit-fiend', 'demon-knight', 'soul-harvester', 'brimstone-golem', 'ash-wraith', 'infernal-wolf', 'lava-serpent'],
+        encounterRate: 0.78, lootRate: 0.44, bgKey: 'desert', boss: 'boss-archdevil', bossRate: 0.005 },
+    ],
+  },
+  {
+    id: 'ethereal-sanctum', name: 'Ethereal Sanctum',
+    description: 'An ancient realm of spirits and memories where the boundary between life and death dissolves.',
+    levelReq: 78, travelCost: 200000, bgKey: 'celestial',
+    locations: [
+      { id: 'spirit-gate', name: 'Spirit Gate', description: 'The shimmering threshold between the mortal world and the realm of spirits.', levelReq: 78,
+        monsters: ['ethereal-wisp', 'phantom-knight', 'soul-serpent', 'dream-wolf', 'memory-shade', 'spirit-guardian'],
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'celestial', boss: 'boss-spirit-warden', bossRate: 0.005 },
+      { id: 'hall-of-echoes', name: 'Hall of Echoes', description: 'A vast chamber where the voices of the dead whisper endlessly.', levelReq: 81,
+        monsters: ['memory-shade', 'ethereal-wisp', 'phantom-knight', 'spirit-guardian', 'dream-wolf', 'soul-serpent', 'ancestral-golem'],
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'celestial', boss: 'boss-dream-weaver', bossRate: 0.005 },
+      { id: 'ancestral-gardens', name: 'Ancestral Gardens', description: 'Impossible gardens tended by the spirits of ancient sages.', levelReq: 84,
+        monsters: ['ancestral-golem', 'spirit-guardian', 'dream-wolf', 'ethereal-wisp', 'soul-serpent', 'phantom-knight', 'memory-shade'],
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'celestial', boss: 'boss-ancestral-titan', bossRate: 0.005 },
+      { id: 'dreamscape', name: 'Dreamscape', description: 'A shifting landscape sculpted from the dreams and nightmares of the living.', levelReq: 87,
+        monsters: ['dream-wolf', 'memory-shade', 'ethereal-wisp', 'celestial-drake', 'phantom-knight', 'ancestral-golem', 'soul-serpent'],
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'celestial', boss: 'boss-memory-dragon', bossRate: 0.005 },
+      { id: 'judgment-hall', name: 'Judgment Hall', description: 'Where souls are weighed and fates decided for eternity.', levelReq: 90,
+        monsters: ['spirit-guardian', 'celestial-drake', 'ancestral-golem', 'phantom-knight', 'soul-serpent', 'memory-shade', 'dream-wolf'],
+        encounterRate: 0.78, lootRate: 0.44, bgKey: 'celestial', boss: 'boss-soul-arbiter', bossRate: 0.005 },
+      { id: 'phoenix-nest', name: 'Phoenix Nest', description: 'The blazing aerie of the Eternal Phoenix at the apex of the sanctum.', levelReq: 93,
+        monsters: ['celestial-drake', 'spirit-guardian', 'memory-shade', 'ancestral-golem', 'ethereal-wisp', 'dream-wolf', 'phantom-knight'],
+        encounterRate: 0.8, lootRate: 0.46, bgKey: 'celestial', boss: 'boss-eternal-phoenix', bossRate: 0.005 },
+    ],
+  },
+  {
+    id: 'primordial-core', name: 'Primordial Core',
+    description: 'The origin point of all existence — a churning maelstrom of raw creation and annihilation.',
+    levelReq: 88, travelCost: 500000, bgKey: 'void',
+    locations: [
+      { id: 'genesis-rift', name: 'Genesis Rift', description: 'The outermost edge of the Primordial Core where raw energy coalesces into matter.', levelReq: 88,
+        monsters: ['genesis-titan', 'primeval-wraith', 'creation-serpent', 'epoch-wolf', 'ancient-skeleton', 'cosmic-bat'],
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-genesis-warden', bossRate: 0.005 },
+      { id: 'cosmic-ocean', name: 'Cosmic Ocean', description: 'An infinite sea of liquid starlight flowing between nascent universes.', levelReq: 91,
+        monsters: ['creation-serpent', 'cosmic-bat', 'primeval-wraith', 'origin-wyrm', 'epoch-wolf', 'genesis-titan', 'void-archon'],
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'void', boss: 'boss-cosmic-serpent', bossRate: 0.005 },
+      { id: 'epoch-spire', name: 'Epoch Spire', description: 'A pillar of frozen time stretching from the birth of the universe to its death.', levelReq: 94,
+        monsters: ['epoch-wolf', 'ancient-skeleton', 'genesis-titan', 'void-archon', 'primeval-wraith', 'origin-wyrm', 'infinity-goblin'],
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'void', boss: 'boss-epoch-titan', bossRate: 0.005 },
+      { id: 'void-sanctum', name: 'Void Sanctum', description: 'A cathedral of pure nothingness suspended in the space between realities.', levelReq: 96,
+        monsters: ['void-archon', 'origin-wyrm', 'primeval-wraith', 'epoch-wolf', 'creation-serpent', 'genesis-titan', 'cosmic-bat'],
+        encounterRate: 0.78, lootRate: 0.44, bgKey: 'void', boss: 'boss-void-emperor', bossRate: 0.005 },
+      { id: 'dragon-cradle', name: 'Dragon Cradle', description: 'The nest where the first dragon was born from primordial flame.', levelReq: 98,
+        monsters: ['origin-wyrm', 'void-archon', 'genesis-titan', 'epoch-wolf', 'ancient-skeleton', 'primeval-wraith', 'infinity-goblin'],
+        encounterRate: 0.8, lootRate: 0.46, bgKey: 'void', boss: 'boss-origin-dragon', bossRate: 0.005 },
+      { id: 'the-origin', name: 'The Origin', description: 'The singular point from which all existence emerged. Here, reality itself can be unmade.', levelReq: 100,
+        monsters: ['origin-wyrm', 'genesis-titan', 'void-archon', 'primeval-wraith', 'epoch-wolf', 'creation-serpent', 'infinity-goblin'],
+        encounterRate: 0.82, lootRate: 0.5, bgKey: 'void', boss: 'boss-primordial-god', bossRate: 0.005 },
+    ],
+  },
 ];
 
 // ---- SPECIAL LOCATIONS (per region) ----
@@ -1264,6 +1695,78 @@ export const SPECIAL_LOCATIONS = {
       levelRange: [-2, 15], rareLootBonus: 2.5,
     },
   ],
+  'shattered-dimension': [
+    {
+      id: 'temporal-nexus', name: 'Temporal Nexus', description: 'A convergence of timelines where past, present, and future collide simultaneously.',
+      levelReq: 62, special: true,
+      monsters: ['temporal-wraith', 'mirror-dragon', 'rift-phantom', 'warp-stalker', 'dimensional-serpent', 'shard-golem'],
+      encounterRate: 0.88, lootRate: 0.58, bgKey: 'void',
+      boss: 'boss-temporal-devourer', bossRate: 0.015,
+      levelRange: [-3, 10], rareLootBonus: 1.8,
+    },
+    {
+      id: 'reality-graveyard', name: 'Reality Graveyard', description: 'Where dead dimensions come to rot — fragments of worlds that no longer exist.',
+      levelReq: 72, special: true,
+      monsters: ['mirror-dragon', 'temporal-wraith', 'shard-golem', 'echo-bat', 'fracture-fiend', 'shatter-skeleton'],
+      encounterRate: 0.92, lootRate: 0.65, bgKey: 'void',
+      boss: 'boss-dimension-eater', bossRate: 0.025,
+      levelRange: [-2, 15], rareLootBonus: 2.5,
+    },
+  ],
+  'infernal-dominion': [
+    {
+      id: 'demon-arena', name: 'Demon Arena', description: 'A blood-soaked coliseum where demons fight for the Archdevil\'s entertainment.',
+      levelReq: 72, special: true,
+      monsters: ['pit-fiend', 'demon-knight', 'soul-harvester', 'infernal-wolf', 'hellfire-imp', 'brimstone-golem'],
+      encounterRate: 0.88, lootRate: 0.58, bgKey: 'desert',
+      boss: 'boss-demon-general', bossRate: 0.015,
+      levelRange: [-3, 10], rareLootBonus: 1.8,
+    },
+    {
+      id: 'nine-hells-throne', name: 'Nine Hells Throne', description: 'The innermost circle of the Infernal Dominion where the Archdevil reigns supreme.',
+      levelReq: 82, special: true,
+      monsters: ['pit-fiend', 'demon-knight', 'soul-harvester', 'brimstone-golem', 'ash-wraith', 'lava-serpent'],
+      encounterRate: 0.92, lootRate: 0.65, bgKey: 'desert',
+      boss: 'boss-archdevil', bossRate: 0.025,
+      levelRange: [-2, 15], rareLootBonus: 2.5,
+    },
+  ],
+  'ethereal-sanctum': [
+    {
+      id: 'nightmare-realm', name: 'Nightmare Realm', description: 'The dark underside of the Dreamscape where nightmares take physical form.',
+      levelReq: 84, special: true,
+      monsters: ['memory-shade', 'dream-wolf', 'ethereal-wisp', 'phantom-knight', 'soul-serpent', 'celestial-drake'],
+      encounterRate: 0.88, lootRate: 0.58, bgKey: 'celestial',
+      boss: 'boss-dream-weaver', bossRate: 0.015,
+      levelRange: [-3, 10], rareLootBonus: 1.8,
+    },
+    {
+      id: 'eternal-pyre', name: 'Eternal Pyre', description: 'The sacred flame that burns at the heart of the sanctum, source of all rebirth.',
+      levelReq: 92, special: true,
+      monsters: ['celestial-drake', 'spirit-guardian', 'ancestral-golem', 'memory-shade', 'dream-wolf', 'soul-serpent'],
+      encounterRate: 0.92, lootRate: 0.65, bgKey: 'celestial',
+      boss: 'boss-eternal-phoenix', bossRate: 0.025,
+      levelRange: [-2, 15], rareLootBonus: 2.5,
+    },
+  ],
+  'primordial-core': [
+    {
+      id: 'infinity-well', name: 'Infinity Well', description: 'A bottomless well of raw creation energy where the universe\'s building blocks swirl.',
+      levelReq: 92, special: true,
+      monsters: ['origin-wyrm', 'genesis-titan', 'epoch-wolf', 'void-archon', 'creation-serpent', 'primeval-wraith'],
+      encounterRate: 0.9, lootRate: 0.6, bgKey: 'void',
+      boss: 'boss-origin-dragon', bossRate: 0.02,
+      levelRange: [-3, 12], rareLootBonus: 2.0,
+    },
+    {
+      id: 'big-bang-chamber', name: 'Big Bang Chamber', description: 'The exact point where everything began. Time and space have no meaning here.',
+      levelReq: 100, special: true,
+      monsters: ['origin-wyrm', 'genesis-titan', 'void-archon', 'primeval-wraith', 'epoch-wolf', 'infinity-goblin'],
+      encounterRate: 0.95, lootRate: 0.7, bgKey: 'void',
+      boss: 'boss-primordial-god', bossRate: 0.03,
+      levelRange: [-2, 18], rareLootBonus: 3.0,
+    },
+  ],
 };
 
 // ---- SPEED BY SPRITE TYPE (base speed for monsters) ----
@@ -1330,6 +1833,22 @@ export const MONSTER_ELEMENT_OVERRIDE = {
   'volt-spider': 'lightning', 'steam-skeleton': 'fire', 'iron-wolf': 'physical',
   'chain-wraith': 'shadow', 'drone-wasp': 'lightning', 'factory-drone': 'lightning',
   'acid-sprayer': 'nature',
+  // Shattered Dimension
+  'fracture-fiend': 'arcane', 'shard-golem': 'arcane', 'rift-phantom': 'arcane',
+  'warp-stalker': 'arcane', 'dimensional-serpent': 'arcane', 'temporal-wraith': 'arcane',
+  'shatter-skeleton': 'arcane', 'echo-bat': 'arcane', 'mirror-dragon': 'arcane',
+  // Infernal Dominion
+  'hellfire-imp': 'fire', 'pit-fiend': 'fire', 'brimstone-golem': 'fire',
+  'soul-harvester': 'shadow', 'infernal-wolf': 'fire', 'demon-knight': 'fire',
+  'lava-serpent': 'fire', 'ash-wraith': 'fire', 'doom-bat': 'fire',
+  // Ethereal Sanctum
+  'spirit-guardian': 'arcane', 'ethereal-wisp': 'arcane', 'phantom-knight': 'arcane',
+  'soul-serpent': 'arcane', 'ancestral-golem': 'arcane', 'dream-wolf': 'arcane',
+  'memory-shade': 'arcane', 'celestial-drake': 'arcane',
+  // Primordial Core
+  'genesis-titan': 'arcane', 'origin-wyrm': 'arcane', 'primeval-wraith': 'arcane',
+  'creation-serpent': 'arcane', 'epoch-wolf': 'arcane', 'void-archon': 'arcane',
+  'ancient-skeleton': 'arcane', 'cosmic-bat': 'arcane', 'infinity-goblin': 'arcane',
 };
 
 export function getMonsterElement(entry) {
@@ -1458,6 +1977,26 @@ export const LEVEL_MILESTONES = {
   45: { reward: 'stat_boost', stats: { maxHp: 60, maxMana: 40, baseAtk: 10, baseDef: 7, fortitude: 5, aggression: 3 }, desc: 'Ultimate stat boost at level 45' },
   48: { reward: 'perfect_parry_master', desc: 'Perfect Parry — parry counter deals 1.5x damage' },
   50: { reward: 'stat_boost', stats: { maxHp: 100, maxMana: 50, baseAtk: 15, baseDef: 10, speed: 5, luck: 5 }, desc: 'Legendary stat boost at level 50' },
+  52: { reward: 'stat_boost', stats: { maxHp: 20, maxMana: 10, baseAtk: 3, baseDef: 2 }, desc: '+20 HP, +10 Mana, +3 ATK, +2 DEF' },
+  55: { reward: 'stat_boost', stats: { maxHp: 30, maxMana: 15, baseAtk: 5, baseDef: 3, evasion: 3 }, desc: '+30 HP, +15 Mana, +5 ATK, +3 DEF, +3 EVA' },
+  58: { reward: 'stat_boost', stats: { maxHp: 25, baseAtk: 4, accuracy: 3, luck: 3 }, desc: '+25 HP, +4 ATK, +3 ACC, +3 LCK' },
+  60: { reward: 'stat_boost', stats: { maxHp: 80, maxMana: 40, baseAtk: 10, baseDef: 7, speed: 3 }, desc: 'Epic stat boost at level 60' },
+  62: { reward: 'stat_boost', stats: { maxHp: 30, maxMana: 15, resistance: 4, tenacity: 4 }, desc: '+30 HP, +15 Mana, +4 RES, +4 TEN' },
+  65: { reward: 'stat_boost', stats: { maxHp: 40, maxMana: 20, baseAtk: 6, baseDef: 4, fortitude: 4 }, desc: '+40 HP, +20 Mana, +6 ATK, +4 DEF, +4 FORT' },
+  68: { reward: 'stat_boost', stats: { maxHp: 35, baseAtk: 5, speed: 3, aggression: 4 }, desc: '+35 HP, +5 ATK, +3 SPD, +4 AGG' },
+  70: { reward: 'stat_boost', stats: { maxHp: 120, maxMana: 60, baseAtk: 15, baseDef: 10, speed: 4, evasion: 4, accuracy: 4 }, desc: 'Mythic stat boost at level 70' },
+  72: { reward: 'stat_boost', stats: { maxHp: 40, maxMana: 20, baseAtk: 6, resistance: 4 }, desc: '+40 HP, +20 Mana, +6 ATK, +4 RES' },
+  75: { reward: 'stat_boost', stats: { maxHp: 50, maxMana: 25, baseAtk: 8, baseDef: 5, luck: 5, fortitude: 4 }, desc: '+50 HP, +25 Mana, +8 ATK, +5 DEF, +5 LCK, +4 FORT' },
+  78: { reward: 'stat_boost', stats: { maxHp: 45, maxMana: 25, baseAtk: 7, tenacity: 5, aggression: 4 }, desc: '+45 HP, +25 Mana, +7 ATK, +5 TEN, +4 AGG' },
+  80: { reward: 'stat_boost', stats: { maxHp: 150, maxMana: 80, baseAtk: 20, baseDef: 14, speed: 5, evasion: 5, accuracy: 5 }, desc: 'Divine stat boost at level 80' },
+  82: { reward: 'stat_boost', stats: { maxHp: 50, maxMana: 30, baseDef: 6, resistance: 5, fortitude: 5 }, desc: '+50 HP, +30 Mana, +6 DEF, +5 RES, +5 FORT' },
+  85: { reward: 'stat_boost', stats: { maxHp: 60, maxMana: 35, baseAtk: 10, baseDef: 7, luck: 6, aggression: 5 }, desc: '+60 HP, +35 Mana, +10 ATK, +7 DEF, +6 LCK, +5 AGG' },
+  88: { reward: 'stat_boost', stats: { maxHp: 55, maxMana: 30, baseAtk: 8, speed: 4, evasion: 5, accuracy: 5 }, desc: '+55 HP, +30 Mana, +8 ATK, +4 SPD, +5 EVA, +5 ACC' },
+  90: { reward: 'stat_boost', stats: { maxHp: 200, maxMana: 100, baseAtk: 25, baseDef: 18, speed: 6, luck: 8, fortitude: 6 }, desc: 'Primordial stat boost at level 90' },
+  92: { reward: 'stat_boost', stats: { maxHp: 60, maxMana: 35, baseAtk: 10, baseDef: 8, tenacity: 6 }, desc: '+60 HP, +35 Mana, +10 ATK, +8 DEF, +6 TEN' },
+  95: { reward: 'stat_boost', stats: { maxHp: 80, maxMana: 45, baseAtk: 14, baseDef: 10, aggression: 6, resistance: 6 }, desc: '+80 HP, +45 Mana, +14 ATK, +10 DEF, +6 AGG, +6 RES' },
+  98: { reward: 'stat_boost', stats: { maxHp: 100, maxMana: 50, baseAtk: 16, baseDef: 12, speed: 5, luck: 6, fortitude: 6 }, desc: '+100 HP, +50 Mana, +16 ATK, +12 DEF, +5 SPD, +6 LCK, +6 FORT' },
+  100: { reward: 'stat_boost', stats: { maxHp: 300, maxMana: 150, baseAtk: 35, baseDef: 25, speed: 8, evasion: 8, accuracy: 8, luck: 10, fortitude: 8, aggression: 8, resistance: 8, tenacity: 8 }, desc: 'PRIMORDIAL GOD stat boost — the ultimate power at level 100' },
 };
 
 export function getMonsterSkillElement(skillId, monsterElement) {
@@ -1523,6 +2062,22 @@ export const SKILLS = {
   nullify:    { name: 'Nullify',     multiplier: 1.4, effect: 'lower_atk' },
   oblivion:   { name: 'Oblivion',    multiplier: 2.3 },
   entropy:    { name: 'Entropy',     multiplier: 1.5, effect: 'drain_hp' },
+  // Shattered Dimension skills
+  shatter:        { name: 'Shatter',         multiplier: 1.8, effect: 'lower_def' },
+  phaseshift:     { name: 'Phase Shift',     multiplier: 1.0, effect: 'lower_atk' },
+  timewarp:       { name: 'Time Warp',       multiplier: 1.6, effect: 'lower_def' },
+  sonicpulse:     { name: 'Sonic Pulse',     multiplier: 1.7 },
+  dimensioncoil:  { name: 'Dimension Coil',  multiplier: 1.5, effect: 'poison' },
+  // Infernal Dominion skills
+  hellfire:       { name: 'Hellfire',        multiplier: 2.1 },
+  demoncrush:     { name: 'Demon Crush',     multiplier: 1.9, effect: 'lower_def' },
+  soulrend:       { name: 'Soul Rend',       multiplier: 1.8, effect: 'drain_hp' },
+  // Ethereal Sanctum skills
+  spiritfire:     { name: 'Spirit Fire',     multiplier: 1.9 },
+  spiritblade:    { name: 'Spirit Blade',    multiplier: 2.0 },
+  // Primordial Core skills
+  primordialsmash:{ name: 'Primordial Smash',multiplier: 2.4 },
+  genesis_pulse:  { name: 'Genesis Pulse',   multiplier: 2.2, effect: 'lower_atk' },
   // Channel skills - enemy charges energy then unleashes boosted attack
   channel_fury:   { name: 'Channel Fury',   multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.5, unleashName: 'Unleash Fury', unleashMult: 2.5 },
   channel_storm:  { name: 'Channel Storm',  multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.2, unleashName: 'Unleash Storm', unleashMult: 2.2, unleashEffect: 'lower_def' },
@@ -1532,6 +2087,10 @@ export const SKILLS = {
   channel_plague: { name: 'Channel Plague', multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 1.8, unleashName: 'Plague Nova', unleashMult: 1.8, unleashEffect: 'poison' },
   channel_abyss:  { name: 'Channel Abyss',  multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.3, unleashName: 'Abyssal Crush', unleashMult: 2.3 },
   channel_light:  { name: 'Channel Light',  multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.4, unleashName: 'Divine Wrath', unleashMult: 2.4 },
+  channel_shatter:{ name: 'Channel Shatter',multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.6, unleashName: 'Reality Shatter', unleashMult: 2.6, unleashEffect: 'lower_def' },
+  channel_inferno:{ name: 'Channel Inferno',multiplier: 0, effect: 'channel', channelTurns: 2, channelBonus: 3.2, unleashName: 'Hellstorm', unleashMult: 3.2 },
+  channel_spirit: { name: 'Channel Spirit', multiplier: 0, effect: 'channel', channelTurns: 1, channelBonus: 2.8, unleashName: 'Spirit Nova', unleashMult: 2.8, unleashEffect: 'drain_hp' },
+  channel_genesis:{ name: 'Channel Genesis',multiplier: 0, effect: 'channel', channelTurns: 2, channelBonus: 3.5, unleashName: 'Big Bang', unleashMult: 3.5 },
   // Stun skills - target skips their next turn
   stun_bash:    { name: 'Stun Bash',     multiplier: 0.8, effect: 'stun', stunTurns: 1 },
   thunder_slam: { name: 'Thunder Slam',  multiplier: 1.2, effect: 'stun', stunTurns: 1 },
@@ -1604,6 +2163,38 @@ export const BOSS_GIMMICKS = {
   'boss-paradox-king': { type: 'paradox_mirror', name: 'Paradox Mirror', desc: 'Copies player ATK - deals same damage player would deal', triggerHpPct: 0.5 },
   'boss-singularity-titan': { type: 'gravity_well', name: 'Gravity Well', desc: 'Cannot run, speed halved, pulls in damage - takes 3% HP per turn', triggerHpPct: 0.6, dmgPct: 0.03, speedDebuff: 0.5 },
   'boss-oblivion-god': { type: 'oblivion_countdown', name: 'Oblivion Countdown', desc: 'Counts down from 10. At 0, instant kill. Each player hit reduces count by 1', triggerHpPct: 0.5, countdown: 10 },
+
+  // Shattered Dimension bosses
+  'boss-fracture-warden': { type: 'reality_shards', name: 'Reality Shards', desc: 'Summons shards that deal 4% max HP each turn and reduce accuracy by 20%', triggerHpPct: 0.6, dmgPct: 0.04, missPct: 0.2, duration: 4 },
+  'boss-temporal-devourer': { type: 'time_loop', name: 'Time Loop', desc: 'Every 4th turn, rewinds and repeats its strongest attack twice', triggerHpPct: 0.5, interval: 4, repeatHits: 2 },
+  'boss-mirror-king': { type: 'mirror_clone', name: 'Mirror Clone', desc: 'Creates a clone at 50% HP with 60% of its stats. Both must be killed', triggerHpPct: 0.5, cloneHpPct: 0.6 },
+  'boss-echo-lord': { type: 'resonance_cascade', name: 'Resonance Cascade', desc: 'Each hit taken increases its ATK by 8% but lowers DEF by 5%', triggerHpPct: 0.7, atkGainPct: 0.08, defLossPct: 0.05 },
+  'boss-rift-colossus': { type: 'dimensional_anchor', name: 'Dimensional Anchor', desc: 'Cannot be damaged for 2 turns while anchoring, then takes 50% more damage for 1 turn', triggerHpPct: 0.4, anchorTurns: 2, vulnerableTurns: 1, vulnerableMult: 1.5 },
+  'boss-dimension-eater': { type: 'consume_reality', name: 'Consume Reality', desc: 'Every 3 turns, devours a chunk of reality — permanent -10% player max HP', triggerHpPct: 0.7, interval: 3, hpReductionPct: 0.1 },
+
+  // Infernal Dominion bosses
+  'boss-hellgate-keeper': { type: 'hellfire_aura', name: 'Hellfire Aura', desc: 'Deals 6% max HP fire damage per turn to the player', triggerHpPct: 0.7, dmgPct: 0.06 },
+  'boss-soul-reaver': { type: 'soul_harvest', name: 'Soul Harvest', desc: 'Each successful attack steals 3% of player max HP permanently and adds it to its own', triggerHpPct: 0.6, stealPct: 0.03 },
+  'boss-inferno-drake': { type: 'triple_breath', name: 'Triple Breath', desc: 'At 50% HP, breathes fire 3 times for 60% damage each', triggerHpPct: 0.5, hits: 3, dmgPct: 0.6 },
+  'boss-demon-general': { type: 'legion_command', name: 'Legion Command', desc: 'Summons demon reinforcements that deal 5% max HP per turn for 5 turns', triggerHpPct: 0.5, dmgPct: 0.05, duration: 5 },
+  'boss-brimstone-lord': { type: 'magma_shield', name: 'Magma Shield', desc: 'Takes 40% less damage and reflects 20% back to attacker for 4 turns', triggerHpPct: 0.5, dmgReduction: 0.4, reflectPct: 0.2, duration: 4 },
+  'boss-archdevil': { type: 'nine_circles', name: 'Nine Circles', desc: 'Cycles through 9 phases, each adding a different debuff. At phase 9, unleashes devastating attack', triggerHpPct: 0.8, phases: 9, finalDmgPct: 0.7 },
+
+  // Ethereal Sanctum bosses
+  'boss-spirit-warden': { type: 'ethereal_barrier', name: 'Ethereal Barrier', desc: 'Absorbs first 3 hits completely, then becomes vulnerable and takes 30% more damage', triggerHpPct: 0.5, charges: 3, vulnerableMult: 1.3 },
+  'boss-dream-weaver': { type: 'nightmare_weave', name: 'Nightmare Weave', desc: 'Confuses player for 2 turns and their attacks have 30% chance to hit themselves', triggerHpPct: 0.5, confusionTurns: 2, selfHitPct: 0.3 },
+  'boss-ancestral-titan': { type: 'ancestral_fury', name: 'Ancestral Fury', desc: 'Gains +5 ATK, +3 DEF, and heals 3% HP per turn permanently', triggerHpPct: 0.6, atkGain: 5, defGain: 3, healPct: 0.03 },
+  'boss-memory-dragon': { type: 'memory_mirror', name: 'Memory Mirror', desc: 'Copies the player\'s best skill and uses it against them with 150% effectiveness', triggerHpPct: 0.5, skillCopyMult: 1.5 },
+  'boss-soul-arbiter': { type: 'final_judgment', name: 'Final Judgment', desc: 'At 30% HP, stops combat for a judgment — player must deal 20% boss HP in 2 turns or take 60% max HP damage', triggerHpPct: 0.3, testTurns: 2, dmgThreshold: 0.2, failDmgPct: 0.6 },
+  'boss-eternal-phoenix': { type: 'rebirth', name: 'Eternal Rebirth', desc: 'Revives at 50% HP when killed. Second death triggers a nova for 40% player max HP', triggerHpPct: 0, reviveHpPct: 0.5, novaDmgPct: 0.4 },
+
+  // Primordial Core bosses
+  'boss-genesis-warden': { type: 'creation_shield', name: 'Creation Shield', desc: 'Every 3 turns, creates a shield that absorbs damage equal to 20% of boss max HP', triggerHpPct: 0.7, interval: 3, shieldPct: 0.2 },
+  'boss-cosmic-serpent': { type: 'world_coil', name: 'World Coil', desc: 'Constricts player — can\'t defend or run for 3 turns, takes 4% max HP per turn', triggerHpPct: 0.5, duration: 3, dmgPct: 0.04 },
+  'boss-epoch-titan': { type: 'time_freeze', name: 'Time Freeze', desc: 'Freezes time — player skips 2 turns, then titan attacks with triple damage', triggerHpPct: 0.4, freezeTurns: 2, dmgMult: 3.0 },
+  'boss-void-emperor': { type: 'void_decree', name: 'Void Decree', desc: 'Nullifies all player stat bonuses and passive effects permanently. Heals 10% HP', triggerHpPct: 0.5, healPct: 0.1 },
+  'boss-origin-dragon': { type: 'primordial_breath', name: 'Primordial Breath', desc: 'Charges for 2 turns then unleashes 5x damage breath attack', triggerHpPct: 0.4, channelTurns: 2, unleashMult: 5.0 },
+  'boss-primordial-god': { type: 'genesis_countdown', name: 'Genesis Countdown', desc: 'Counts down from 8. At 0, resets the battle. Each player hit reduces count by 1. Boss heals 5% per turn during countdown', triggerHpPct: 0.4, countdown: 8, healPct: 0.05 },
 };
 
 // ---- RARITIES ----
