@@ -1862,11 +1862,11 @@ export function getMonsterElement(entry) {
 export const COMBO_CHAINS = {
   'power_combo': {
     name: 'Power Combo', sequence: ['attack', 'attack', 'skill'], bonus: 'dmg_boost',
-    boostPct: 0.25, desc: 'ATK → ATK → Skill: Next skill deals +25% damage',
+    boostPct: 0.15, desc: 'ATK → ATK → Skill: Next skill deals +15% damage',
   },
   'tactical_combo': {
     name: 'Tactical Strike', sequence: ['defend', 'attack'], bonus: 'crit_boost',
-    critBoost: 0.2, desc: 'Defend → ATK: +20% crit chance on attack',
+    critBoost: 0.12, desc: 'Defend → ATK: +12% crit chance on attack',
   },
   'channel_combo': {
     name: 'Overcharge', sequence: ['channel', 'skill'], bonus: 'double_channel',
@@ -1874,19 +1874,19 @@ export const COMBO_CHAINS = {
   },
   'relentless_combo': {
     name: 'Relentless', sequence: ['attack', 'attack', 'attack'], bonus: 'bleed',
-    bleedPct: 0.02, bleedTurns: 2, desc: 'ATK × 3: Enemy bleeds 2% HP/turn for 2 turns',
+    bleedPct: 0.01, bleedTurns: 2, desc: 'ATK × 3: Enemy bleeds 1% HP/turn for 2 turns',
   },
   'counter_combo': {
     name: 'Counter Rush', sequence: ['parry', 'attack'], bonus: 'pierce',
-    piercePct: 0.3, desc: 'Parry → ATK: Attack ignores 30% DEF',
+    piercePct: 0.2, desc: 'Parry → ATK: Attack ignores 20% DEF',
   },
   'fortress_crush': {
     name: 'Fortress Crush', sequence: ['defend', 'defend', 'attack'], bonus: 'armor_break',
-    armorBreakPct: 0.25, armorBreakTurns: 2, desc: 'Defend × 2 → ATK: Break enemy armor -25% DEF for 2 turns',
+    armorBreakPct: 0.15, armorBreakTurns: 2, desc: 'Defend × 2 → ATK: Break enemy armor -15% DEF for 2 turns',
   },
   'arcane_surge': {
     name: 'Arcane Surge', sequence: ['skill', 'skill', 'skill'], bonus: 'mana_restore',
-    restorePct: 0.15, desc: 'Skill × 3: Restore 15% max mana',
+    restorePct: 0.10, desc: 'Skill × 3: Restore 10% max mana',
   },
   'perfect_parry': {
     name: 'Perfect Parry', sequence: ['parry', 'parry'], bonus: 'invuln',
@@ -1894,7 +1894,7 @@ export const COMBO_CHAINS = {
   },
   'berserker_chain': {
     name: 'Berserker Chain', sequence: ['attack', 'skill', 'attack'], bonus: 'frenzy',
-    frenzyBonus: 0.2, desc: 'ATK → Skill → ATK: +20% damage for 2 turns',
+    frenzyBonus: 0.12, desc: 'ATK → Skill → ATK: +12% damage for 2 turns',
   },
   'channel_strike': {
     name: 'Focused Strike', sequence: ['channel', 'attack'], bonus: 'crit_guarantee',
@@ -1905,30 +1905,30 @@ export const COMBO_CHAINS = {
 // ---- STANCE DEFINITIONS ----
 export const STANCES = {
   balanced: { name: 'Balanced', dmgDealt: 1.0, dmgTaken: 1.0, critMod: 0, dodgeMod: 0, manaMod: 1.0 },
-  aggressive: { name: 'Aggressive', dmgDealt: 1.15, dmgTaken: 1.15, critMod: 0.05, dodgeMod: -0.05, manaMod: 1.1 },
-  defensive: { name: 'Defensive', dmgDealt: 0.8, dmgTaken: 0.7, critMod: -0.05, dodgeMod: 0.05, manaMod: 0.9 },
-  evasive: { name: 'Evasive', dmgDealt: 0.9, dmgTaken: 0.95, critMod: 0, dodgeMod: 0.12, manaMod: 1.0 },
+  aggressive: { name: 'Aggressive', dmgDealt: 1.1, dmgTaken: 1.12, critMod: 0.03, dodgeMod: -0.03, manaMod: 1.05 },
+  defensive: { name: 'Defensive', dmgDealt: 0.85, dmgTaken: 0.78, critMod: -0.03, dodgeMod: 0.03, manaMod: 0.95 },
+  evasive: { name: 'Evasive', dmgDealt: 0.92, dmgTaken: 0.95, critMod: 0, dodgeMod: 0.08, manaMod: 1.0 },
 };
 
 // ---- STANCE MOMENTUM ----
 // Staying in the same stance builds momentum, increasing bonuses
-export const STANCE_MOMENTUM_PER_TURN = 0.03; // +3% per turn staying in same stance
-export const STANCE_MOMENTUM_CAP = 0.18; // max +18%
+export const STANCE_MOMENTUM_PER_TURN = 0.02; // +2% per turn staying in same stance
+export const STANCE_MOMENTUM_CAP = 0.12; // max +12%
 
 // ---- UNIVERSAL COMBAT SKILLS (learnable by all classes through progression) ----
 export const UNIVERSAL_SKILLS = {
-  parry: { name: 'Parry', desc: 'Block and counter — take 60% less damage, counter for 0.6x ATK if hit', manaCost: 5, unlockLevel: 5, cooldown: 0 },
-  stun_strike: { name: 'Stun Strike', desc: 'Attack for 0.7x damage with 40% chance to stun for 1 turn', manaCost: 8, multiplier: 0.7, unlockLevel: 8, cooldown: 3 },
-  war_shout: { name: 'War Shout', desc: 'Reduce enemy ATK by 12% and boost your DEF by 10% for 2 turns', manaCost: 10, unlockLevel: 12, cooldown: 4 },
-  mind_blast: { name: 'Mind Blast', desc: '0.8x damage with 35% chance to confuse enemy for 1 turn', manaCost: 10, multiplier: 0.8, unlockLevel: 15, cooldown: 3 },
-  life_drain: { name: 'Life Drain', desc: '1.0x damage, heal 25% of damage dealt', manaCost: 12, multiplier: 1.0, unlockLevel: 18, cooldown: 3 },
-  elemental_strike: { name: 'Elemental Strike', desc: '1.2x damage matching weather element, +20% in matching weather', manaCost: 14, multiplier: 1.2, unlockLevel: 22, cooldown: 2 },
-  armor_shatter: { name: 'Armor Shatter', desc: '0.5x damage but reduces enemy DEF by 20% for 2 turns', manaCost: 10, multiplier: 0.5, unlockLevel: 26, cooldown: 5 },
-  mana_burst: { name: 'Mana Burst', desc: 'Convert 15% of current mana into pure damage (ignores DEF)', manaCost: 0, unlockLevel: 28, cooldown: 4 },
-  last_stand: { name: 'Last Stand', desc: 'Heal 20% max HP and gain +25% ATK for 2 turns (once per battle)', manaCost: 15, unlockLevel: 32, cooldown: 99 },
-  elemental_ward: { name: 'Elemental Ward', desc: 'Resist 35% of elemental damage for 2 turns', manaCost: 12, unlockLevel: 36, cooldown: 5 },
-  execute: { name: 'Execute', desc: '2.0x damage to enemies below 25% HP, otherwise 0.5x', manaCost: 15, multiplier: 0.5, unlockLevel: 38, cooldown: 4 },
-  limit_break: { name: 'Limit Break', desc: 'Consume all mana for strong damage (scales with mana consumed)', manaCost: 0, unlockLevel: 42, cooldown: 99 },
+  parry: { name: 'Parry', desc: 'Block and counter — take 50% less damage, counter for 0.5x ATK if hit', manaCost: 5, unlockLevel: 5, cooldown: 0 },
+  stun_strike: { name: 'Stun Strike', desc: 'Attack for 0.6x damage with 30% chance to stun for 1 turn', manaCost: 8, multiplier: 0.6, unlockLevel: 8, cooldown: 3 },
+  war_shout: { name: 'War Shout', desc: 'Reduce enemy ATK by 8% and boost your DEF by 8% for 2 turns', manaCost: 10, unlockLevel: 12, cooldown: 5 },
+  mind_blast: { name: 'Mind Blast', desc: '0.7x damage with 25% chance to confuse enemy for 1 turn', manaCost: 10, multiplier: 0.7, unlockLevel: 15, cooldown: 4 },
+  life_drain: { name: 'Life Drain', desc: '0.8x damage, heal 15% of damage dealt', manaCost: 12, multiplier: 0.8, unlockLevel: 18, cooldown: 3 },
+  elemental_strike: { name: 'Elemental Strike', desc: '1.0x damage matching weather element, +15% in matching weather', manaCost: 14, multiplier: 1.0, unlockLevel: 22, cooldown: 3 },
+  armor_shatter: { name: 'Armor Shatter', desc: '0.4x damage but reduces enemy DEF by 15% for 2 turns', manaCost: 10, multiplier: 0.4, unlockLevel: 26, cooldown: 5 },
+  mana_burst: { name: 'Mana Burst', desc: 'Convert 10% of current mana into pure damage (ignores DEF)', manaCost: 0, unlockLevel: 28, cooldown: 5 },
+  last_stand: { name: 'Last Stand', desc: 'Heal 12% max HP and gain +15% ATK for 2 turns (once per battle)', manaCost: 15, unlockLevel: 32, cooldown: 99 },
+  elemental_ward: { name: 'Elemental Ward', desc: 'Resist 25% of elemental damage for 2 turns', manaCost: 12, unlockLevel: 36, cooldown: 6 },
+  execute: { name: 'Execute', desc: '1.5x damage to enemies below 20% HP, otherwise 0.4x', manaCost: 15, multiplier: 0.4, unlockLevel: 38, cooldown: 5 },
+  limit_break: { name: 'Limit Break', desc: 'Consume all mana for moderate damage (scales with mana consumed)', manaCost: 0, unlockLevel: 42, cooldown: 99 },
 };
 
 // ---- SKILL ELEMENT MAPPING FOR MONSTER SKILLS ----
@@ -3335,10 +3335,10 @@ export const CHARACTER_CLASSES = {
     baseStats: { maxHp: 55, maxMana: 15, baseAtk: 8, baseDef: 1, charisma: 2, wisdom: 1, athletics: 5, speed: 5, evasion: 2, accuracy: 5, resistance: 1, tenacity: 4, aggression: 7, luck: 3, fortitude: 5 },
     growth: { hp: 10, hpRand: 6, atk: 2, atkRand: 2, def: 1, defRand: 1, mana: 2, manaRand: 2, charisma: 0, charismaRand: 1, wisdom: 0, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 0, resistanceRand: 1, tenacity: 1, tenacityRand: 1, aggression: 1, aggressionRand: 1, luck: 0, luckRand: 1, fortitude: 1, fortitudeRand: 1 },
     passive: 'Rage',
-    passiveDesc: '+20% ATK when below 40% HP',
+    passiveDesc: '+12% ATK when below 40% HP',
     skillName: 'Frenzy',
-    skillDesc: '1.6x ATK damage, take 10% max HP recoil',
-    skillMultiplier: 1.6,
+    skillDesc: '1.3x ATK damage, take 8% max HP recoil',
+    skillMultiplier: 1.3,
     skillEffect: 'recoil',
     skillManaCost: 10,
   },
@@ -3351,10 +3351,10 @@ export const CHARACTER_CLASSES = {
     baseStats: { maxHp: 65, maxMana: 25, baseAtk: 5, baseDef: 4, charisma: 2, wisdom: 3, athletics: 4, speed: 4, evasion: 3, accuracy: 4, resistance: 5, tenacity: 6, aggression: 3, luck: 3, fortitude: 7 },
     growth: { hp: 10, hpRand: 4, atk: 1, atkRand: 2, def: 2, defRand: 2, mana: 3, manaRand: 2, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 1, resistanceRand: 1, tenacity: 1, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 0, luckRand: 1, fortitude: 1, fortitudeRand: 1 },
     passive: 'Fortify',
-    passiveDesc: 'Defend blocks 60% damage instead of 50%',
+    passiveDesc: 'Defend blocks 55% damage instead of 50%',
     skillName: 'Shield Bash',
-    skillDesc: '1.2x ATK damage, reduces enemy ATK by 10% for the fight',
-    skillMultiplier: 1.2,
+    skillDesc: '1.1x ATK damage, reduces enemy ATK by 8% for the fight',
+    skillMultiplier: 1.1,
     skillEffect: 'weaken',
     skillManaCost: 8,
   },
@@ -3367,10 +3367,10 @@ export const CHARACTER_CLASSES = {
     baseStats: { maxHp: 42, maxMana: 25, baseAtk: 7, baseDef: 2, charisma: 5, wisdom: 2, athletics: 4, speed: 8, evasion: 7, accuracy: 6, resistance: 2, tenacity: 3, aggression: 4, luck: 7, fortitude: 2 },
     growth: { hp: 7, hpRand: 4, atk: 2, atkRand: 2, def: 1, defRand: 1, mana: 3, manaRand: 3, charisma: 1, charismaRand: 1, wisdom: 0, wisdomRand: 1, athletics: 1, athleticsRand: 1, speed: 1, speedRand: 1, evasion: 1, evasionRand: 1, accuracy: 1, accuracyRand: 1, resistance: 0, resistanceRand: 1, tenacity: 0, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 1, luckRand: 1, fortitude: 0, fortitudeRand: 1 },
     passive: 'Greed',
-    passiveDesc: '+15% gold from battles, 65% escape chance',
+    passiveDesc: '+10% gold from battles, 60% escape chance',
     skillName: 'Backstab',
-    skillDesc: '1.6x ATK damage, ignores 30% of enemy DEF',
-    skillMultiplier: 1.6,
+    skillDesc: '1.3x ATK damage, ignores 20% of enemy DEF',
+    skillMultiplier: 1.3,
     skillEffect: 'pierce',
     skillManaCost: 10,
   },
@@ -3383,10 +3383,10 @@ export const CHARACTER_CLASSES = {
     baseStats: { maxHp: 38, maxMana: 50, baseAtk: 6, baseDef: 1, charisma: 3, wisdom: 5, athletics: 1, speed: 3, evasion: 2, accuracy: 3, resistance: 6, tenacity: 3, aggression: 3, luck: 5, fortitude: 2 },
     growth: { hp: 6, hpRand: 3, atk: 2, atkRand: 1, def: 1, defRand: 1, mana: 6, manaRand: 4, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 0, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 1, resistanceRand: 1, tenacity: 0, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 1, luckRand: 1, fortitude: 0, fortitudeRand: 1 },
     passive: 'Arcane Mind',
-    passiveDesc: 'Skill attacks deal +25% damage',
+    passiveDesc: 'Skill attacks deal +15% damage',
     skillName: 'Arcane Blast',
-    skillDesc: '1.5x ATK damage, ignores all enemy DEF',
-    skillMultiplier: 1.5,
+    skillDesc: '1.2x ATK damage, ignores all enemy DEF',
+    skillMultiplier: 1.2,
     skillEffect: 'true_damage',
     skillManaCost: 12,
   },
@@ -3399,10 +3399,10 @@ export const CHARACTER_CLASSES = {
     baseStats: { maxHp: 45, maxMana: 40, baseAtk: 6, baseDef: 2, charisma: 3, wisdom: 5, athletics: 2, speed: 4, evasion: 3, accuracy: 4, resistance: 5, tenacity: 5, aggression: 4, luck: 4, fortitude: 4 },
     growth: { hp: 7, hpRand: 4, atk: 1, atkRand: 2, def: 1, defRand: 2, mana: 5, manaRand: 3, charisma: 0, charismaRand: 1, wisdom: 1, wisdomRand: 1, athletics: 0, athleticsRand: 1, speed: 0, speedRand: 1, evasion: 0, evasionRand: 1, accuracy: 0, accuracyRand: 1, resistance: 1, resistanceRand: 1, tenacity: 1, tenacityRand: 1, aggression: 0, aggressionRand: 1, luck: 0, luckRand: 1, fortitude: 1, fortitudeRand: 1 },
     passive: 'Lifetap',
-    passiveDesc: 'Normal attacks heal 8% of damage dealt',
+    passiveDesc: 'Normal attacks heal 5% of damage dealt',
     skillName: 'Drain Life',
-    skillDesc: '1.2x ATK damage, heal 25% of damage dealt',
-    skillMultiplier: 1.2,
+    skillDesc: '1.1x ATK damage, heal 15% of damage dealt',
+    skillMultiplier: 1.1,
     skillEffect: 'drain',
     skillManaCost: 10,
   },

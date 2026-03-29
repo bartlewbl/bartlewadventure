@@ -136,7 +136,7 @@ export function tryLuckyStrike(player, dmg) {
   if (!playerHasSkill(player, 'thf_t4a')) return { procced: false, dmg };
   const chance = playerHasSkill(player, 'thf_t22a') ? prob('passive.opportunityStrikes') : prob('passive.luckyStrike');
   if (Math.random() >= chance) return { procced: false, dmg };
-  const mult = playerHasSkill(player, 'thf_t24a') ? 2.5 : 1.75; // Lethal Precision upgrade
+  const mult = playerHasSkill(player, 'thf_t24a') ? 2.0 : 1.5; // Lethal Precision upgrade
   return { procced: true, dmg: dmg * mult };
 }
 
@@ -181,11 +181,11 @@ export function applyTurnStartPassives({ player, battle, log }) {
       log.push({ text: `Soul Fortress heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Meditation: restore 3 mana
+  // Meditation: restore 2 mana
   if (playerHasSkill(p, 'mag_t5a')) {
     const battleMana = getBattleMaxMana(p);
-    p = { ...p, mana: Math.min(battleMana, p.mana + 3) };
-    log.push({ text: `Meditation restores 3 mana!`, type: 'heal' });
+    p = { ...p, mana: Math.min(battleMana, p.mana + 2) };
+    log.push({ text: `Meditation restores 2 mana!`, type: 'heal' });
   }
   // Mana Regeneration: restore % max mana (uses wisdom-boosted max)
   if (playerHasSkill(p, 'mag_t9a')) {
@@ -222,28 +222,28 @@ export function applyTurnStartPassives({ player, battle, log }) {
   if (playerHasSkill(p, 'brs_t23a')) {
     b = { ...b, endlessRageStacks: (b.endlessRageStacks || 0) + 1 };
   }
-  // Death Aura (nec_t11a): enemies take 2% max HP damage at start of turn
+  // Death Aura (nec_t11a): enemies take 1% max HP damage at start of turn
   if (playerHasSkill(p, 'nec_t11a') && b.monster && b.monster.hp > 0) {
-    const auraDmg = Math.floor((b.monsterMaxHp || b.monster.maxHp || b.monster.hp) * 0.02);
+    const auraDmg = Math.floor((b.monsterMaxHp || b.monster.maxHp || b.monster.hp) * 0.01);
     if (auraDmg > 0) {
       const m = { ...b.monster, hp: Math.max(0, b.monster.hp - auraDmg) };
       b = { ...b, monster: m };
       log.push({ text: `Death Aura deals ${auraDmg} damage!`, type: 'dmg-monster' });
     }
   }
-  // Harbinger of Entropy (nec_t25a): enemy stats decay 1%, your ATK decays 0.5%
+  // Harbinger of Entropy (nec_t25a): enemy stats decay 0.5%, your ATK decays 0.3%
   if (playerHasSkill(p, 'nec_t25a') && b.monster && b.monster.hp > 0) {
     const m = { ...b.monster };
-    const atkDecay = Math.max(1, Math.floor(m.atk * 0.01));
-    const defDecay = Math.max(0, Math.floor(m.def * 0.01));
+    const atkDecay = Math.max(1, Math.floor(m.atk * 0.005));
+    const defDecay = Math.max(0, Math.floor(m.def * 0.005));
     m.atk = Math.max(1, m.atk - atkDecay);
     m.def = Math.max(0, m.def - defDecay);
-    const hpDecay = Math.floor((b.monsterMaxHp || m.hp) * 0.01);
+    const hpDecay = Math.floor((b.monsterMaxHp || m.hp) * 0.005);
     m.hp = Math.max(1, m.hp - hpDecay);
     b = { ...b, monster: m };
     log.push({ text: `Entropy! Enemy decays: ATK -${atkDecay}, DEF -${defDecay}, HP -${hpDecay}`, type: 'dmg-monster' });
     // Player ATK also decays
-    b = { ...b, entropyAtkDecay: (b.entropyAtkDecay || 0) + 0.005 };
+    b = { ...b, entropyAtkDecay: (b.entropyAtkDecay || 0) + 0.003 };
   }
   // Battle Hardened (war_t19a): track turns for damage reduction
   if (playerHasSkill(p, 'war_t19a')) {
@@ -264,14 +264,14 @@ export function applyTurnStartPassives({ player, battle, log }) {
   }
   // Monster bleed ticks
   if ((b.monsterBleedTurns || 0) > 0 && b.monster && b.monster.hp > 0) {
-    const bleedDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.03);
+    const bleedDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.02);
     const m = { ...b.monster, hp: Math.max(0, b.monster.hp - bleedDmg) };
     b = { ...b, monster: m, monsterBleedTurns: b.monsterBleedTurns - 1 };
     log.push({ text: `Bleed deals ${bleedDmg} damage!`, type: 'dmg-monster' });
   }
   // Monster burn ticks (mag_t17b apoc_fire)
   if ((b.monsterBurnTurns || 0) > 0 && b.monster && b.monster.hp > 0) {
-    const burnDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.025);
+    const burnDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.015);
     const m = { ...b.monster, hp: Math.max(0, b.monster.hp - burnDmg) };
     b = { ...b, monster: m, monsterBurnTurns: b.monsterBurnTurns - 1 };
     log.push({ text: `Burn deals ${burnDmg} damage!`, type: 'dmg-monster' });
@@ -373,7 +373,7 @@ export function applyDamageReduction(dmg, player, battle, cls) {
  */
 export function applyManaShield(dmg, player) {
   if (!playerHasSkill(player, 'mag_t1a') || player.mana <= 0) return { dmg, manaUsed: 0 };
-  const absorbRate = playerHasSkill(player, 'mag_t24a') ? 0.4 : (playerHasSkill(player, 'mag_t10a') ? 0.25 : 0.15);
+  const absorbRate = playerHasSkill(player, 'mag_t24a') ? 0.25 : (playerHasSkill(player, 'mag_t10a') ? 0.15 : 0.10);
   const manaAbsorb = Math.floor(dmg * absorbRate);
   const actualAbsorb = Math.min(manaAbsorb, player.mana);
   return { dmg: dmg - actualAbsorb, manaUsed: actualAbsorb };

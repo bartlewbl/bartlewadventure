@@ -36,42 +36,42 @@ const EFFECT_HANDLERS = {
 
   // ---- Enemy ATK reduction ----
   war_cry: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.15));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.10));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Enemy ATK reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   weaken: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.10));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.07));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Enemy ATK reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   weaken_15: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.10));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.07));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Enemy ATK reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   freeze: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.12));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.08));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Ice Lance! Enemy ATK reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   frost_nova: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.18));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.12));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Frost Nova! Enemy ATK reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   cheap_shot: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.12));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.08));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Cheap Shot! Enemy ATK reduced by ${reduction}!`, type: 'info' });
@@ -80,21 +80,21 @@ const EFFECT_HANDLERS = {
 
   // ---- Enemy DEF reduction ----
   shred_def: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.25));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.15));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Enemy DEF reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   quake: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.18));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.12));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Earthquake! Enemy DEF reduced by ${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   chain_lightning: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.15));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.10));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Chain Lightning! Enemy DEF reduced by ${reduction}!`, type: 'info' });
@@ -103,16 +103,16 @@ const EFFECT_HANDLERS = {
 
   // ---- Combined ATK+DEF reduction ----
   blizzard: ({ monster, battle, log }) => {
-    const atkRed = Math.max(1, Math.floor(monster.atk * 0.08));
-    const defRed = Math.max(1, Math.floor(monster.def * 0.08));
+    const atkRed = Math.max(1, Math.floor(monster.atk * 0.05));
+    const defRed = Math.max(1, Math.floor(monster.def * 0.05));
     monster = { ...monster, atk: Math.max(1, monster.atk - atkRed), def: Math.max(0, monster.def - defRed) };
     battle = { ...battle, monster };
     log.push({ text: `Blizzard! Enemy ATK -${atkRed}, DEF -${defRed}!`, type: 'info' });
     return { monster, battle, log };
   },
   wither: ({ monster, battle, log }) => {
-    const atkRed = Math.max(1, Math.floor(monster.atk * 0.15));
-    const defRed = Math.max(1, Math.floor(monster.def * 0.15));
+    const atkRed = Math.max(1, Math.floor(monster.atk * 0.10));
+    const defRed = Math.max(1, Math.floor(monster.def * 0.10));
     monster = { ...monster, atk: Math.max(1, monster.atk - atkRed), def: Math.max(0, monster.def - defRed) };
     battle = { ...battle, monster };
     log.push({ text: `Wither! Enemy ATK -${atkRed}, DEF -${defRed}!`, type: 'info' });
@@ -165,37 +165,37 @@ const EFFECT_HANDLERS = {
 
   // ---- Heal-on-hit effects ----
   final_stand: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.18);
+    const healAmt = Math.floor(dmg * 0.10);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Final Stand heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
   },
   soul_harvest: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.35);
+    const healAmt = Math.floor(dmg * 0.20);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Soul Harvest heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
   },
   drain: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.25);
+    const healAmt = Math.floor(dmg * 0.15);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Drained ${healAmt} HP!`, type: 'heal' });
     return { player, log };
   },
   full_drain: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.50);
+    const healAmt = Math.floor(dmg * 0.30);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Death Coil heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
   },
   army_drain: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.25);
+    const healAmt = Math.floor(dmg * 0.15);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Army of the Dead heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
   },
   rally_heal: ({ player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(battleMaxHp * 0.12);
+    const healAmt = Math.floor(battleMaxHp * 0.07);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Rallying Blow heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
@@ -232,8 +232,8 @@ const EFFECT_HANDLERS = {
 
   // ---- Blood Nova: heal + recoil combo ----
   blood_nova: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.15);
-    const recoil = Math.floor(player.maxHp * 0.06);
+    const healAmt = Math.floor(dmg * 0.08);
+    const recoil = Math.floor(player.maxHp * 0.04);
     player = { ...player, hp: Math.min(battleMaxHp, Math.max(1, player.hp + healAmt - recoil)) };
     log.push({ text: `Blood Nova heals ${healAmt}, recoil ${recoil}!`, type: 'info' });
     return { player, log };
@@ -252,8 +252,8 @@ const EFFECT_HANDLERS = {
 
   // ---- Complex combo effects ----
   nec_apocalypse: ({ dmg, player, battle, battleMaxHp, log }) => {
-    battle = { ...battle, monsterDoomTurns: 3 };
-    const healAmt = Math.floor(dmg * 0.18);
+    battle = { ...battle, monsterDoomTurns: 2 };
+    const healAmt = Math.floor(dmg * 0.10);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Apocalypse! Doom for 4 turns, heals ${healAmt} HP!`, type: 'info' });
     return { player, battle, log };
@@ -281,7 +281,7 @@ const EFFECT_HANDLERS = {
 
   // ---- Berserker post-20 ----
   shred_def_60: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.35));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.20));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Crushing Blow! Enemy DEF reduced by ${reduction}!`, type: 'info' });
@@ -395,7 +395,7 @@ const EFFECT_HANDLERS = {
 
   // ---- Warrior post-20 ----
   thunder_clap: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.12));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.08));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Thunder Clap! Enemy ATK reduced by ${reduction}!`, type: 'info' });
@@ -414,14 +414,14 @@ const EFFECT_HANDLERS = {
     return { battle, log };
   },
   seismic_slam: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.3));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.18));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Seismic Slam! Enemy DEF -${reduction}!`, type: 'info' });
     return { monster, battle, log };
   },
   devastate_heal: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.15);
+    const healAmt = Math.floor(dmg * 0.08);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Devastate heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
@@ -438,7 +438,7 @@ const EFFECT_HANDLERS = {
     return { player, monster, battle, log };
   },
   warbringer: ({ battle, log }) => {
-    battle = { ...battle, playerAtkBuff: (battle.playerAtkBuff || 0) + 0.12 };
+    battle = { ...battle, playerAtkBuff: (battle.playerAtkBuff || 0) + 0.08 };
     log.push({ text: `Warbringer! ATK +20% for the fight!`, type: 'info' });
     return { battle, log };
   },
@@ -609,7 +609,7 @@ const EFFECT_HANDLERS = {
 
   // ---- Mage post-20 ----
   inferno: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.atk * 0.12));
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.08));
     monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Inferno! Enemy ATK -${reduction}!`, type: 'info' });
@@ -626,7 +626,7 @@ const EFFECT_HANDLERS = {
     return { monster, battle, log };
   },
   comet: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.25));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.15));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Comet! Enemy DEF -${reduction}!`, type: 'info' });
@@ -642,7 +642,7 @@ const EFFECT_HANDLERS = {
   supernova: ({ player, battle, log }) => {
     // Drains all remaining mana for bonus damage (bonus applied as extra hits)
     const remainingMana = player.mana;
-    const bonusDmg = Math.floor(remainingMana * 1.2);
+    const bonusDmg = Math.floor(remainingMana * 0.8);
     player = { ...player, mana: 0 };
     if (bonusDmg > 0 && battle.monster.hp > 0) {
       const m = { ...battle.monster, hp: Math.max(0, battle.monster.hp - bonusDmg) };
@@ -657,8 +657,8 @@ const EFFECT_HANDLERS = {
     return { battle, log };
   },
   gravity_well: ({ monster, battle, log }) => {
-    const atkRed = Math.max(1, Math.floor(monster.atk * 0.12));
-    const defRed = Math.max(1, Math.floor(monster.def * 0.12));
+    const atkRed = Math.max(1, Math.floor(monster.atk * 0.08));
+    const defRed = Math.max(1, Math.floor(monster.def * 0.08));
     monster = { ...monster, atk: Math.max(1, monster.atk - atkRed), def: Math.max(0, monster.def - defRed) };
     battle = { ...battle, monster, monsterStunTurns: 1 };
     log.push({ text: `Gravity Well! Stunned! ATK -${atkRed}, DEF -${defRed}!`, type: 'info' });
@@ -679,7 +679,7 @@ const EFFECT_HANDLERS = {
     return { battle, log };
   },
   chain_destruction: ({ monster, battle, log }) => {
-    const reduction = Math.max(1, Math.floor(monster.def * 0.3));
+    const reduction = Math.max(1, Math.floor(monster.def * 0.18));
     monster = { ...monster, def: Math.max(0, monster.def - reduction) };
     battle = { ...battle, monster };
     log.push({ text: `Chain Destruction! Enemy DEF -${reduction}!`, type: 'info' });
@@ -707,7 +707,7 @@ const EFFECT_HANDLERS = {
 
   // ---- Necromancer post-20 ----
   spirit_lance: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.30);
+    const healAmt = Math.floor(dmg * 0.18);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Spirit Lance heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
@@ -758,14 +758,14 @@ const EFFECT_HANDLERS = {
     return { monster, battle, log };
   },
   abyssal_strike: ({ dmg, player, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.18);
+    const healAmt = Math.floor(dmg * 0.10);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Abyssal Strike heals ${healAmt} HP!`, type: 'heal' });
     return { player, log };
   },
   mass_wither: ({ monster, battle, log }) => {
-    const atkRed = Math.max(1, Math.floor(monster.atk * 0.25));
-    const defRed = Math.max(1, Math.floor(monster.def * 0.25));
+    const atkRed = Math.max(1, Math.floor(monster.atk * 0.15));
+    const defRed = Math.max(1, Math.floor(monster.def * 0.15));
     monster = { ...monster, atk: Math.max(1, monster.atk - atkRed), def: Math.max(0, monster.def - defRed) };
     battle = { ...battle, monster };
     log.push({ text: `Mass Wither! Enemy ATK -${atkRed}, DEF -${defRed}!`, type: 'info' });
@@ -792,24 +792,24 @@ const EFFECT_HANDLERS = {
     return { player, battle, log };
   },
   banshee_wail: ({ monster, battle, log }) => {
-    const atkRed = Math.max(1, Math.floor(monster.atk * 0.18));
+    const atkRed = Math.max(1, Math.floor(monster.atk * 0.12));
     monster = { ...monster, atk: Math.max(1, monster.atk - atkRed) };
     battle = { ...battle, monster, monsterStunTurns: 1 };
     log.push({ text: `Banshee Wail! Stunned! ATK -${atkRed}!`, type: 'info' });
     return { monster, battle, log };
   },
   death_grip: ({ dmg, player, monster, battle, battleMaxHp, log }) => {
-    const healAmt = Math.floor(dmg * 0.25);
+    const healAmt = Math.floor(dmg * 0.15);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
-    const defRed = Math.max(1, Math.floor(monster.def * 0.30));
+    const defRed = Math.max(1, Math.floor(monster.def * 0.18));
     monster = { ...monster, def: Math.max(0, monster.def - defRed) };
     battle = { ...battle, monster };
     log.push({ text: `Death Grip! Healed ${healAmt}, enemy DEF -${defRed}!`, type: 'info' });
     return { player, monster, battle, log };
   },
   annihilation: ({ dmg, player, battle, battleMaxHp, log }) => {
-    battle = { ...battle, monsterDoomTurns: 3 };
-    const healAmt = Math.floor(dmg * 0.30);
+    battle = { ...battle, monsterDoomTurns: 2 };
+    const healAmt = Math.floor(dmg * 0.18);
     player = { ...player, hp: Math.min(battleMaxHp, player.hp + healAmt) };
     log.push({ text: `Annihilation! Doom 4 turns, healed ${healAmt}!`, type: 'info' });
     return { player, battle, log };
