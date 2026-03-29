@@ -39,26 +39,26 @@ export function applyAttackPassives({ player, monster, battle, log, dmg, cls }) 
   // Bloodlust: heal % of damage dealt when below 30% HP
   if (playerHasSkill(p, 'brs_t3a') && p.hp < battleMaxHp * 0.3) {
     let healAmt = Math.floor(dmg * prob('passive.bloodlustHeal'));
-    if (playerHasSkill(p, 'nec_t9a')) healAmt = Math.floor(healAmt * 1.5); // Eternal Hunger
-    if (playerHasSkill(p, 'nec_t10a')) healAmt = healAmt * 2; // Lich Form
+    if (playerHasSkill(p, 'nec_t9a')) healAmt = Math.floor(healAmt * 1.25); // Eternal Hunger
+    if (playerHasSkill(p, 'nec_t10a')) healAmt = Math.floor(healAmt * 1.5); // Lich Form
     if (healAmt > 0 && p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Bloodlust heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Adrenaline Rush: restore 3 mana on attack
+  // Adrenaline Rush: restore 2 mana on attack
   if (playerHasSkill(p, 'brs_t6a')) {
     const battleMana = getBattleMaxMana(p);
-    p = { ...p, mana: Math.min(battleMana, p.mana + 3) };
+    p = { ...p, mana: Math.min(battleMana, p.mana + 2) };
   }
   // Necrotic Touch: reduce enemy DEF by 1
   if (playerHasSkill(p, 'nec_t5a') && m.def > 0) {
     m = { ...m, def: Math.max(0, m.def - 1) };
     b = { ...b, monster: m };
   }
-  // Opportunist: +15% damage against poisoned enemies
+  // Opportunist: +10% damage against poisoned enemies
   if (playerHasSkill(p, 'thf_t6a') && b.monsterPoisonTurns > 0) {
-    const bonus = Math.floor(dmg * 0.15);
+    const bonus = Math.floor(dmg * 0.10);
     m = { ...m, hp: Math.max(0, m.hp - bonus) };
     b = { ...b, monster: m };
     if (bonus > 0) log.push({ text: `Opportunist bonus: ${bonus} damage!`, type: 'dmg-monster' });
@@ -110,7 +110,7 @@ export function applySkillPassives({ player, log, dmg }) {
  */
 export function applyLifeTap(player, manaCost) {
   if (!playerHasSkill(player, 'nec_t6a') || manaCost <= 0) return player;
-  const ltHeal = Math.floor(manaCost * 0.5);
+  const ltHeal = Math.floor(manaCost * 0.3);
   return { ...player, hp: Math.min(getBattleMaxHp(player), player.hp + ltHeal) };
 }
 
@@ -136,7 +136,7 @@ export function tryLuckyStrike(player, dmg) {
   if (!playerHasSkill(player, 'thf_t4a')) return { procced: false, dmg };
   const chance = playerHasSkill(player, 'thf_t22a') ? prob('passive.opportunityStrikes') : prob('passive.luckyStrike');
   if (Math.random() >= chance) return { procced: false, dmg };
-  const mult = playerHasSkill(player, 'thf_t24a') ? 3 : 2; // Lethal Precision upgrade
+  const mult = playerHasSkill(player, 'thf_t24a') ? 2.0 : 1.5; // Lethal Precision upgrade
   return { procced: true, dmg: dmg * mult };
 }
 
@@ -181,11 +181,11 @@ export function applyTurnStartPassives({ player, battle, log }) {
       log.push({ text: `Soul Fortress heals ${healAmt} HP!`, type: 'heal' });
     }
   }
-  // Meditation: restore 4 mana
+  // Meditation: restore 2 mana
   if (playerHasSkill(p, 'mag_t5a')) {
     const battleMana = getBattleMaxMana(p);
-    p = { ...p, mana: Math.min(battleMana, p.mana + 4) };
-    log.push({ text: `Meditation restores 4 mana!`, type: 'heal' });
+    p = { ...p, mana: Math.min(battleMana, p.mana + 2) };
+    log.push({ text: `Meditation restores 2 mana!`, type: 'heal' });
   }
   // Mana Regeneration: restore % max mana (uses wisdom-boosted max)
   if (playerHasSkill(p, 'mag_t9a')) {
@@ -222,28 +222,28 @@ export function applyTurnStartPassives({ player, battle, log }) {
   if (playerHasSkill(p, 'brs_t23a')) {
     b = { ...b, endlessRageStacks: (b.endlessRageStacks || 0) + 1 };
   }
-  // Death Aura (nec_t11a): enemies take 3% max HP damage at start of turn
+  // Death Aura (nec_t11a): enemies take 1% max HP damage at start of turn
   if (playerHasSkill(p, 'nec_t11a') && b.monster && b.monster.hp > 0) {
-    const auraDmg = Math.floor((b.monsterMaxHp || b.monster.maxHp || b.monster.hp) * 0.03);
+    const auraDmg = Math.floor((b.monsterMaxHp || b.monster.maxHp || b.monster.hp) * 0.01);
     if (auraDmg > 0) {
       const m = { ...b.monster, hp: Math.max(0, b.monster.hp - auraDmg) };
       b = { ...b, monster: m };
       log.push({ text: `Death Aura deals ${auraDmg} damage!`, type: 'dmg-monster' });
     }
   }
-  // Harbinger of Entropy (nec_t25a): enemy stats decay 2%, your ATK decays 1%
+  // Harbinger of Entropy (nec_t25a): enemy stats decay 0.5%, your ATK decays 0.3%
   if (playerHasSkill(p, 'nec_t25a') && b.monster && b.monster.hp > 0) {
     const m = { ...b.monster };
-    const atkDecay = Math.max(1, Math.floor(m.atk * 0.02));
-    const defDecay = Math.max(0, Math.floor(m.def * 0.02));
+    const atkDecay = Math.max(1, Math.floor(m.atk * 0.005));
+    const defDecay = Math.max(0, Math.floor(m.def * 0.005));
     m.atk = Math.max(1, m.atk - atkDecay);
     m.def = Math.max(0, m.def - defDecay);
-    const hpDecay = Math.floor((b.monsterMaxHp || m.hp) * 0.02);
+    const hpDecay = Math.floor((b.monsterMaxHp || m.hp) * 0.005);
     m.hp = Math.max(1, m.hp - hpDecay);
     b = { ...b, monster: m };
     log.push({ text: `Entropy! Enemy decays: ATK -${atkDecay}, DEF -${defDecay}, HP -${hpDecay}`, type: 'dmg-monster' });
     // Player ATK also decays
-    b = { ...b, entropyAtkDecay: (b.entropyAtkDecay || 0) + 0.01 };
+    b = { ...b, entropyAtkDecay: (b.entropyAtkDecay || 0) + 0.003 };
   }
   // Battle Hardened (war_t19a): track turns for damage reduction
   if (playerHasSkill(p, 'war_t19a')) {
@@ -264,14 +264,14 @@ export function applyTurnStartPassives({ player, battle, log }) {
   }
   // Monster bleed ticks
   if ((b.monsterBleedTurns || 0) > 0 && b.monster && b.monster.hp > 0) {
-    const bleedDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.05);
+    const bleedDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.02);
     const m = { ...b.monster, hp: Math.max(0, b.monster.hp - bleedDmg) };
     b = { ...b, monster: m, monsterBleedTurns: b.monsterBleedTurns - 1 };
     log.push({ text: `Bleed deals ${bleedDmg} damage!`, type: 'dmg-monster' });
   }
   // Monster burn ticks (mag_t17b apoc_fire)
   if ((b.monsterBurnTurns || 0) > 0 && b.monster && b.monster.hp > 0) {
-    const burnDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.04);
+    const burnDmg = Math.floor((b.monsterMaxHp || b.monster.hp) * 0.015);
     const m = { ...b.monster, hp: Math.max(0, b.monster.hp - burnDmg) };
     b = { ...b, monster: m, monsterBurnTurns: b.monsterBurnTurns - 1 };
     log.push({ text: `Burn deals ${burnDmg} damage!`, type: 'dmg-monster' });
@@ -335,12 +335,12 @@ export function applyDamageReduction(dmg, player, battle, cls) {
   if (playerHasSkill(player, 'brs_t12a')) {
     d = Math.floor(d * 1.15);
   }
-  // Immortal Bastion (war_t15a): invulnerable first 5 turns, then +25% damage
+  // Immortal Bastion (war_t15a): take 50% less damage first 3 turns, then +20% damage
   if (playerHasSkill(player, 'war_t15a')) {
-    if ((battle.immortalBastionTurns || 0) <= 5) {
-      d = 0;
+    if ((battle.immortalBastionTurns || 0) <= 3) {
+      d = Math.floor(d * 0.5);
     } else {
-      d = Math.floor(d * 1.25);
+      d = Math.floor(d * 1.20);
     }
   }
   // Eternal Guardian (war_t20a)
@@ -352,11 +352,11 @@ export function applyDamageReduction(dmg, player, battle, cls) {
     const reduction = Math.min(prob('passive.battleHardenedCap'), (battle.battleHardenedTurns || 0) * prob('passive.battleHardenedRate'));
     d = Math.floor(d * (1 - reduction));
   }
-  // Scarred Veteran (brs_t21a): 1% reduction per 5% HP missing
+  // Scarred Veteran (brs_t21a): 0.5% reduction per 5% HP missing
   if (playerHasSkill(player, 'brs_t21a')) {
     const battleMaxHp = getBattleMaxHp(player);
     const hpPctMissing = Math.floor((1 - player.hp / battleMaxHp) * 100);
-    const reduction = Math.min(0.20, Math.floor(hpPctMissing / 5) * 0.01);
+    const reduction = Math.min(0.12, Math.floor(hpPctMissing / 5) * 0.005);
     if (reduction > 0) d = Math.floor(d * (1 - reduction));
   }
   // Phantom Existence (thf_t15a): 30% less damage dealt (by player), but this is damage TAKEN reduction
@@ -373,7 +373,7 @@ export function applyDamageReduction(dmg, player, battle, cls) {
  */
 export function applyManaShield(dmg, player) {
   if (!playerHasSkill(player, 'mag_t1a') || player.mana <= 0) return { dmg, manaUsed: 0 };
-  const absorbRate = playerHasSkill(player, 'mag_t24a') ? 0.6 : (playerHasSkill(player, 'mag_t10a') ? 0.4 : 0.2);
+  const absorbRate = playerHasSkill(player, 'mag_t24a') ? 0.25 : (playerHasSkill(player, 'mag_t10a') ? 0.15 : 0.10);
   const manaAbsorb = Math.floor(dmg * absorbRate);
   const actualAbsorb = Math.min(manaAbsorb, player.mana);
   return { dmg: dmg - actualAbsorb, manaUsed: actualAbsorb };
@@ -444,7 +444,7 @@ export function applySurvivalPassives({ player, battle, log }) {
       // Deathless bonus (brs_t22a)
       if (playerHasSkill(p, 'brs_t22a')) {
         b = { ...b, deathlessActive: true };
-        log.push({ text: `Deathless! +50% ATK!`, type: 'info' });
+        log.push({ text: `Deathless! +25% ATK!`, type: 'info' });
       }
     }
   }
@@ -456,19 +456,19 @@ export function applySurvivalPassives({ player, battle, log }) {
     // Deathless bonus (brs_t22a)
     if (playerHasSkill(p, 'brs_t22a')) {
       b = { ...b, deathlessActive: true };
-      log.push({ text: `Deathless! +50% ATK!`, type: 'info' });
+      log.push({ text: `Deathless! +25% ATK!`, type: 'info' });
     }
   }
-  // Undying Resolve (war_t18a): survive lethal at 20% HP
+  // Undying Resolve (war_t18a): survive lethal at 12% HP
   if (p.hp <= 0 && playerHasSkill(p, 'war_t18a') && !b.undyingResolveUsed) {
-    p = { ...p, hp: Math.floor(battleMaxHp * 0.2) };
+    p = { ...p, hp: Math.floor(battleMaxHp * 0.12) };
     b = { ...b, undyingResolveUsed: true };
     log.push({ text: `Undying Resolve! Survive at 20% HP!`, type: 'heal' });
   }
   // Phylactery (nec_t14a): revive at 30% HP on death
   if (p.hp <= 0 && playerHasSkill(p, 'nec_t14a')) {
     const maxRevives = playerHasSkill(p, 'nec_t24a') ? 2 : 1;
-    const reviveHp = playerHasSkill(p, 'nec_t24a') ? 0.5 : 0.3;
+    const reviveHp = playerHasSkill(p, 'nec_t24a') ? 0.3 : 0.2;
     const uses = b.phylacteryUses || 0;
     if (uses < maxRevives) {
       p = { ...p, hp: Math.floor(battleMaxHp * reviveHp) };
@@ -476,16 +476,16 @@ export function applySurvivalPassives({ player, battle, log }) {
       log.push({ text: `Phylactery revives you at ${Math.floor(reviveHp * 100)}% HP! (${maxRevives - uses - 1} left)`, type: 'heal' });
     }
   }
-  // Second Wind (brs_t13a): heal 20% at 25% HP once per battle
+  // Second Wind (brs_t13a): heal 12% at 25% HP once per battle
   if (playerHasSkill(p, 'brs_t13a') && !b.secondWindUsed && p.hp > 0 && p.hp < battleMaxHp * 0.25) {
-    const healAmt = Math.floor(battleMaxHp * 0.20);
+    const healAmt = Math.floor(battleMaxHp * 0.12);
     p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
     b = { ...b, secondWindUsed: true };
     log.push({ text: `Second Wind heals ${healAmt} HP!`, type: 'heal' });
   }
-  // Juggernaut (brs_t16a): cannot be reduced below 15% by single hit
+  // Juggernaut (brs_t16a): cannot be reduced below 10% by single hit
   if (playerHasSkill(p, 'brs_t16a') && p.hp > 0) {
-    const minHp = Math.floor(battleMaxHp * 0.15);
+    const minHp = Math.floor(battleMaxHp * 0.10);
     if (p.hp < minHp) {
       p = { ...p, hp: minHp };
       log.push({ text: `Juggernaut! Cannot drop below 15% from one hit!`, type: 'info' });
@@ -493,7 +493,7 @@ export function applySurvivalPassives({ player, battle, log }) {
   }
   // Death's Embrace: heal when below 25% HP (once/battle)
   if (playerHasSkill(p, 'nec_t2a') && !b.deathsEmbraceUsed && p.hp > 0 && p.hp < battleMaxHp * 0.25) {
-    const healAmt = Math.floor(battleMaxHp * 0.15);
+    const healAmt = Math.floor(battleMaxHp * 0.10);
     p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
     b = { ...b, deathsEmbraceUsed: true };
     log.push({ text: `Death's Embrace heals ${healAmt} HP!`, type: 'heal' });
