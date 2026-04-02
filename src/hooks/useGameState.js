@@ -24,6 +24,7 @@ import {
   isDailyExpired, isWeeklyExpired, isMonthlyExpired,
   getDailySeed, getWeeklySeed, getMonthlySeed,
   getQuestProgress,
+  isCompoundQuestComplete,
 } from '../data/tasks';
 
 export const ENERGY_MAX = 100;
@@ -191,17 +192,30 @@ function refreshTaskCycles(tasks) {
   return t;
 }
 
-// Increment task progress for matching stat key
+// Increment task progress for matching stat key.
+// Uses tasks._playerLevel (set by reducer) to scale daily/weekly task targets.
 function incrementTaskProgress(tasks, statKey, amount = 1) {
   const now = Date.now();
   let t = refreshTaskCycles(tasks);
+  const lvl = t._playerLevel || 1;
 
-  // Helper to update progress for a task list
+  // Helper to update progress for a task list (supports compound quests)
   const updateProgress = (activeTasks, progress) => {
     const updated = { ...progress };
     for (const task of activeTasks) {
+      // Simple quest: single stat/target
       if (task.stat === statKey) {
         updated[task.id] = (updated[task.id] || 0) + amount;
+      }
+      // Compound quest: check each subquest's stat
+      if (task.compound && task.subquests) {
+        for (let idx = 0; idx < task.subquests.length; idx++) {
+          const sq = task.subquests[idx];
+          if (sq.stat === statKey) {
+            const key = `${task.id}__${idx}`;
+            updated[key] = (updated[key] || 0) + amount;
+          }
+        }
       }
     }
     return updated;
@@ -209,8 +223,8 @@ function incrementTaskProgress(tasks, statKey, amount = 1) {
 
   return {
     ...t,
-    dailyProgress: updateProgress(getActiveDailyTasks(now), t.dailyProgress),
-    weeklyProgress: updateProgress(getActiveWeeklyTasks(now), t.weeklyProgress),
+    dailyProgress: updateProgress(getActiveDailyTasks(now, lvl), t.dailyProgress),
+    weeklyProgress: updateProgress(getActiveWeeklyTasks(now, lvl), t.weeklyProgress),
     monthlyProgress: updateProgress(getActiveMonthlyTasks(now), t.monthlyProgress),
   };
 }
@@ -474,6 +488,10 @@ function createBattleState(monster, player) {
     frenzyBonusPct: 0,
     // Invulnerability from perfect parry combo
     playerInvulnTurns: 0,
+    // Quest tracking: full-battle action flags
+    usedDefend: false,
+    usedPotion: false,
+    damageTakenInBattle: 0,
   };
 }
 
@@ -661,6 +679,10 @@ function progressSinglePetQuest(pets, petInstanceId, questType, amount = 1) {
 
 // ---- REDUCER ----
 function gameReducer(state, action) {
+  // Sync player level into tasks so incrementTaskProgress can scale daily/weekly targets
+  if (state.player && state.tasks && state.tasks._playerLevel !== state.player.level) {
+    state = { ...state, tasks: { ...state.tasks, _playerLevel: state.player.level } };
+  }
   switch (action.type) {
     case 'LOAD_SAVE': {
       const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests, previousRegionId: savedPreviousRegionId } = action.saveData || {};
@@ -939,6 +961,9 @@ function gameReducer(state, action) {
       // Extraordinary trader encounter check (~1.5% chance)
       if (Math.random() < 0.015) {
         const trader = EXTRAORDINARY_TRADERS[Math.floor(Math.random() * EXTRAORDINARY_TRADERS.length)];
+        // Track merchant encounter for quests
+        const traderStats = addStat(state.stats, 'merchantEncounters');
+        let traderTasks = incrementTaskProgress(state.tasks, 'merchantEncounters');
         return {
           ...state, screen: 'extraordinary-trader',
           exploreText: text,
@@ -946,6 +971,8 @@ function gameReducer(state, action) {
           lastEnergyUpdate: exploreLastUpdate,
           pets: petsAfterExplore,
           activeTrader: trader,
+          stats: traderStats,
+          tasks: traderTasks,
         };
       }
 
@@ -1068,6 +1095,11 @@ function gameReducer(state, action) {
         const goldFound = newPlayer.gold - state.player.gold;
         newStats = addStat(newStats, 'goldEarned', goldFound);
         newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldFound);
+      }
+      // Track material collection from scavenging
+      if (scavengedMaterial) {
+        newStats = addStat(newStats, 'materialsCollected');
+        newTasks = incrementTaskProgress(newTasks, 'materialsCollected');
       }
       return { ...state, exploreText: newText, exploreFoundItem: newFoundItem, player: newPlayer, stats: newStats, tasks: newTasks, energy: exploreEnergy, lastEnergyUpdate: exploreLastUpdate, discoveredItemLocations: newDiscovered, pets: petsAfterExplore };
     }
@@ -2229,7 +2261,7 @@ function gameReducer(state, action) {
       if (state.battle.noDefend) {
         return { ...state, message: 'You cannot defend right now!' };
       }
-      const b = { ...state.battle, defending: true, defendedLastTurn: true, showSkillMenu: false, showInspect: false, actionHistory: [...(state.battle.actionHistory || []), 'defend'].slice(-5) };
+      const b = { ...state.battle, defending: true, defendedLastTurn: true, usedDefend: true, showSkillMenu: false, showInspect: false, actionHistory: [...(state.battle.actionHistory || []), 'defend'].slice(-5) };
       let p = { ...state.player };
       const log = [...state.battleLog, { text: 'You brace for impact!', type: 'info' }];
       // Arcane Barrier: defend restores 10 mana
@@ -2251,7 +2283,7 @@ function gameReducer(state, action) {
       const healed = Math.min(potionHeal, bMaxHp - state.player.hp);
       if (healed === 0) return { ...state, message: 'HP is already full!' };
       const p = { ...state.player, hp: state.player.hp + healed, inventory: removeOneFromStack(state.player.inventory, potion.id) };
-      const b = { ...state.battle, defending: false, showSkillMenu: false, showInspect: false };
+      const b = { ...state.battle, defending: false, usedPotion: true, showSkillMenu: false, showInspect: false };
       const log = [...state.battleLog, { text: `Used ${potion.name}, healed ${healed} HP!`, type: 'heal' }];
       let newStats = addStat(state.stats, 'potionsUsed');
       newStats = addStat(newStats, 'totalHealing', healed);
@@ -2966,6 +2998,7 @@ function gameReducer(state, action) {
 
       // Track damage taken (difference from start hp)
       const hpLost = Math.max(0, state.player.hp - p.hp);
+      if (hpLost > 0) b.damageTakenInBattle = (b.damageTakenInBattle || 0) + hpLost;
       let newStats = hpLost > 0 ? addStat(state.stats, 'damageTaken', hpLost) : state.stats;
       if (playerDodgedThisTurn) {
         newStats = addStat(newStats, 'dodgesPerformed');
@@ -3516,14 +3549,26 @@ function gameReducer(state, action) {
 
       // Find the task definition and verify completion
       const now = Date.now();
+      const lvl = state.player.level || 1;
       let taskDef = null;
       let progress = 0;
+      let isCompound = false;
       if (taskType === 'daily') {
-        taskDef = getActiveDailyTasks(now).find(t => t.id === taskId);
-        progress = tasks.dailyProgress[taskId] || 0;
+        taskDef = getActiveDailyTasks(now, lvl).find(t => t.id === taskId);
+        if (taskDef?.compound) {
+          isCompound = true;
+          progress = isCompoundQuestComplete(taskDef, tasks.dailyProgress) ? taskDef.subquests.length : 0;
+        } else {
+          progress = tasks.dailyProgress[taskId] || 0;
+        }
       } else if (taskType === 'weekly') {
-        taskDef = getActiveWeeklyTasks(now).find(t => t.id === taskId);
-        progress = tasks.weeklyProgress[taskId] || 0;
+        taskDef = getActiveWeeklyTasks(now, lvl).find(t => t.id === taskId);
+        if (taskDef?.compound) {
+          isCompound = true;
+          progress = isCompoundQuestComplete(taskDef, tasks.weeklyProgress) ? taskDef.subquests.length : 0;
+        } else {
+          progress = tasks.weeklyProgress[taskId] || 0;
+        }
       } else if (taskType === 'monthly') {
         taskDef = getActiveMonthlyTasks(now).find(t => t.id === taskId);
         progress = tasks.monthlyProgress[taskId] || 0;
@@ -3562,14 +3607,17 @@ function gameReducer(state, action) {
         progress = getQuestProgress(state.stats, taskId, taskDef?.stat, tasks.questBaselines);
       }
 
-      if (!taskDef || progress < taskDef.target) return state;
+      // For compound quests, completion means all subquests are done
+      if (!taskDef) return state;
+      if (isCompound) {
+        if (progress < taskDef.subquests.length) return state;
+      } else {
+        if (progress < taskDef.target) return state;
+      }
 
-      // Apply reward — daily and weekly gold scales with player level
+      // Apply reward — daily and weekly gold already scaled by scaleTask
       let p = { ...state.player, inventory: [...state.player.inventory] };
-      const scaleGold = taskType === 'daily' || taskType === 'weekly';
-      const goldAmount = taskDef.reward.gold
-        ? (scaleGold ? scaleRewardByLevel(taskDef.reward.gold, p.level) : taskDef.reward.gold)
-        : 0;
+      const goldAmount = taskDef.reward.gold || 0;
       if (goldAmount) {
         p.gold += goldAmount;
       }
@@ -5510,6 +5558,22 @@ function handleVictory(state) {
   newStats = addStat(newStats, 'goldFromMonsters', goldGain);
   if (m.id) newStats = addStat(newStats, `killed_${m.id}`);
   if (m.isBoss) newStats = addStat(newStats, 'bossesKilled');
+  // Track combat restriction achievements
+  const b = state.battle;
+  if (!b.usedDefend) {
+    newStats = addStat(newStats, 'winsWithoutDefend');
+    if (m.isBoss) newStats = addStat(newStats, 'bossKilledNoDefend');
+  }
+  if (!b.usedPotion) {
+    newStats = addStat(newStats, 'winsWithoutPotion');
+    if (m.isBoss) newStats = addStat(newStats, 'bossKilledNoPotion');
+  }
+  if ((b.damageTakenInBattle || 0) === 0) {
+    newStats = addStat(newStats, 'flawlessVictories');
+  }
+  // Track materials collected from battle drops
+  if (materialDrop) newStats = addStat(newStats, 'materialsCollected');
+  if (bossMaterials) newStats = addStat(newStats, 'materialsCollected', bossMaterials.length);
   if (lootAdded) {
     newStats = addStat(newStats, 'itemsLooted');
     if (droppedItem?.type) {
@@ -5528,6 +5592,21 @@ function handleVictory(state) {
   newTasks = incrementTaskProgress(newTasks, 'goldEarned', goldGain);
   if (m.id) newTasks = incrementTaskProgress(newTasks, `killed_${m.id}`);
   if (m.isBoss) newTasks = incrementTaskProgress(newTasks, 'bossesKilled');
+  // Track combat restriction quest progress
+  if (!b.usedDefend) {
+    newTasks = incrementTaskProgress(newTasks, 'winsWithoutDefend');
+    if (m.isBoss) newTasks = incrementTaskProgress(newTasks, 'bossKilledNoDefend');
+  }
+  if (!b.usedPotion) {
+    newTasks = incrementTaskProgress(newTasks, 'winsWithoutPotion');
+    if (m.isBoss) newTasks = incrementTaskProgress(newTasks, 'bossKilledNoPotion');
+  }
+  if ((b.damageTakenInBattle || 0) === 0) {
+    newTasks = incrementTaskProgress(newTasks, 'flawlessVictories');
+  }
+  // Track materials collected from battle drops
+  if (materialDrop) newTasks = incrementTaskProgress(newTasks, 'materialsCollected');
+  if (bossMaterials) newTasks = incrementTaskProgress(newTasks, 'materialsCollected', bossMaterials.length);
   if (lootAdded) newTasks = incrementTaskProgress(newTasks, 'itemsLooted');
   if (leveledPlayer.level > prevLevel) {
     newTasks = incrementTaskProgress(newTasks, 'levelsGained', leveledPlayer.level - prevLevel);

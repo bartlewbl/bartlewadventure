@@ -574,6 +574,7 @@ export default function App() {
                 stats={state.stats}
                 tasks={state.tasks}
                 onClaim={(taskId, taskType, chainId) => actions.claimTask(taskId, taskType, chainId)}
+                playerLevel={state.player?.level || 1}
               />
             )}
           </div>

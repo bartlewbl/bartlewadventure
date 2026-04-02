@@ -6312,6 +6312,67 @@ body {
   color: #7fff7f;
 }
 
+/* Compound quest sub-objectives in journal */
+.journal-task-subquests {
+  margin-top: 6px;
+  padding-left: 8px;
+  border-left: 2px solid rgba(100, 100, 150, 0.3);
+}
+
+.journal-task-sub {
+  margin-bottom: 4px;
+}
+
+.journal-task-sub-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 7px;
+}
+
+.journal-task-sub-icon {
+  color: #8888bb;
+  font-size: 7px;
+}
+
+.journal-task-sub.sub-complete .journal-task-sub-icon {
+  color: #4caf50;
+}
+
+.journal-task-sub-name {
+  flex: 1;
+  color: #b0b0d0;
+  font-size: 7px;
+}
+
+.journal-task-sub.sub-complete .journal-task-sub-name {
+  color: #4caf50;
+}
+
+.journal-task-sub-count {
+  font-size: 6px;
+  color: #9d9dc5;
+}
+
+.journal-task-sub-bar {
+  height: 4px;
+  background: rgba(30, 30, 60, 0.9);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.journal-task-sub-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #4fc3f7, #76ffdf);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.journal-task-sub.sub-complete .journal-task-sub-bar-fill {
+  background: linear-gradient(to right, #4caf50, #81c784);
+}
+
 .journal-task-claim:hover {
   background: #2a7a2a;
 }
@@ -11048,6 +11109,50 @@ body {
 
 .quest-sidebar-claim:active {
   filter: brightness(0.9);
+}
+
+/* Compound quest subquests in sidebar */
+.quest-sidebar-subquests {
+  margin-top: 3px;
+  padding-left: 4px;
+  border-left: 1px solid rgba(100, 100, 150, 0.3);
+}
+
+.quest-sidebar-sub {
+  margin-bottom: 2px;
+}
+
+.quest-sidebar-sub-name {
+  font-size: 6px;
+  color: #8888bb;
+}
+
+.quest-sidebar-sub.sub-complete .quest-sidebar-sub-name {
+  color: #4caf50;
+}
+
+.quest-sidebar-sub-bar {
+  height: 3px;
+  background: rgba(30, 30, 60, 0.9);
+  border-radius: 1px;
+  overflow: hidden;
+  margin: 1px 0;
+}
+
+.quest-sidebar-sub-fill {
+  height: 100%;
+  background: linear-gradient(to right, #4fc3f7, #76ffdf);
+  border-radius: 1px;
+  transition: width 0.3s;
+}
+
+.quest-sidebar-sub.sub-complete .quest-sidebar-sub-fill {
+  background: linear-gradient(to right, #4caf50, #81c784);
+}
+
+.quest-sidebar-sub-count {
+  font-size: 5px;
+  color: #7777aa;
 }
 
 /* Hide quest sidebar on mobile - too small */

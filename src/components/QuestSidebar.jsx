@@ -2,6 +2,8 @@ import {
   TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
   getActiveDailyTasks, getActiveWeeklyTasks,
   getQuestProgress,
+  getCompoundQuestProgress,
+  isCompoundQuestComplete,
   getCurrentTutorial,
   getCurrentSideQuest,
   getMissionsForChapter,
@@ -14,13 +16,13 @@ function formatNumber(n) {
   return String(n);
 }
 
-function findQuestById(id) {
+function findQuestById(id, playerLevel) {
   const allQuests = [
     ...TUTORIAL_QUESTS,
     ...STORY_MISSIONS,
     ...STORY_TASKS,
-    ...getActiveDailyTasks(),
-    ...getActiveWeeklyTasks(),
+    ...getActiveDailyTasks(Date.now(), playerLevel),
+    ...getActiveWeeklyTasks(Date.now(), playerLevel),
     ...SIDE_QUEST_CHAINS.flatMap(c => c.quests),
   ];
   return allQuests.find(q => q.id === id) || null;
@@ -36,7 +38,7 @@ function isQuestClaimed(id, tasks) {
 }
 
 // Determine taskType and chainId for a quest so we can call claimTask correctly
-function getClaimInfo(quest) {
+function getClaimInfo(quest, playerLevel) {
   if (TUTORIAL_QUESTS.some(q => q.id === quest.id)) {
     return { taskType: 'tutorial' };
   }
@@ -49,9 +51,9 @@ function getClaimInfo(quest) {
     }
   }
   // Daily/weekly/story tasks
-  const dailyIds = getActiveDailyTasks().map(q => q.id);
+  const dailyIds = getActiveDailyTasks(Date.now(), playerLevel).map(q => q.id);
   if (dailyIds.includes(quest.id)) return { taskType: 'daily' };
-  const weeklyIds = getActiveWeeklyTasks().map(q => q.id);
+  const weeklyIds = getActiveWeeklyTasks(Date.now(), playerLevel).map(q => q.id);
   if (weeklyIds.includes(quest.id)) return { taskType: 'weekly' };
   if (STORY_TASKS.some(q => q.id === quest.id)) return { taskType: 'story' };
   return null;
@@ -81,7 +83,98 @@ function getActiveLineQuests(tasks) {
   return quests;
 }
 
-export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim }) {
+// Render a simple quest (single stat/target)
+function renderSimpleQuest(quest, stats, tasks, onClaim, playerLevel) {
+  const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
+  const pct = Math.min(100, Math.floor((progress / quest.target) * 100));
+  const complete = progress >= quest.target;
+  const claimInfo = complete ? getClaimInfo(quest, playerLevel) : null;
+  return (
+    <div key={quest.id} className={`quest-sidebar-item ${complete ? 'complete' : ''}`}>
+      <div className="quest-sidebar-name">{quest.name}</div>
+      <div className="quest-sidebar-desc">{quest.description}</div>
+      <div className="quest-sidebar-progress">
+        <div className="quest-sidebar-bar">
+          <div className="quest-sidebar-bar-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="quest-sidebar-count">
+          {formatNumber(Math.min(progress, quest.target))}/{formatNumber(quest.target)}
+          {complete && ' \u2713'}
+        </div>
+      </div>
+      {complete && claimInfo && onClaim && (
+        <button
+          className="btn quest-sidebar-claim"
+          onClick={() => onClaim(quest.id, claimInfo.taskType, claimInfo.chainId)}
+        >
+          Claim Reward
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Get progress data for a compound quest from the correct progress bucket
+function getCompoundProgressData(quest, tasks, playerLevel) {
+  const dailyIds = getActiveDailyTasks(Date.now(), playerLevel).map(q => q.id);
+  if (dailyIds.includes(quest.id)) return tasks.dailyProgress;
+  const weeklyIds = getActiveWeeklyTasks(Date.now(), playerLevel).map(q => q.id);
+  if (weeklyIds.includes(quest.id)) return tasks.weeklyProgress;
+  return {};
+}
+
+// Render a compound quest (multiple subquests)
+function renderCompoundQuest(quest, stats, tasks, onClaim, playerLevel) {
+  const progressData = getCompoundProgressData(quest, tasks, playerLevel);
+  const { completed, total, subquests } = getCompoundQuestProgress(quest, progressData);
+  const allDone = completed === total;
+  const overallPct = Math.floor((completed / total) * 100);
+  const claimInfo = allDone ? getClaimInfo(quest, playerLevel) : null;
+  return (
+    <div key={quest.id} className={`quest-sidebar-item ${allDone ? 'complete' : ''}`}>
+      <div className="quest-sidebar-name">{quest.name}</div>
+      <div className="quest-sidebar-desc">{quest.description}</div>
+      <div className="quest-sidebar-progress">
+        <div className="quest-sidebar-bar">
+          <div className="quest-sidebar-bar-fill" style={{ width: `${overallPct}%` }} />
+        </div>
+        <div className="quest-sidebar-count">
+          {completed}/{total} objectives
+          {allDone && ' \u2713'}
+        </div>
+      </div>
+      <div className="quest-sidebar-subquests">
+        {subquests.map((sq, idx) => {
+          const sqPct = Math.min(100, Math.floor((sq.progress / sq.target) * 100));
+          return (
+            <div key={idx} className={`quest-sidebar-sub ${sq.complete ? 'sub-complete' : ''}`}>
+              <div className="quest-sidebar-sub-name">
+                {sq.complete ? '\u2713' : '\u25CB'} {sq.name || sq.description || `Objective ${idx + 1}`}
+              </div>
+              <div className="quest-sidebar-sub-bar">
+                <div className="quest-sidebar-sub-fill" style={{ width: `${sqPct}%` }} />
+              </div>
+              <div className="quest-sidebar-sub-count">
+                {formatNumber(sq.progress)}/{formatNumber(sq.target)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {allDone && claimInfo && onClaim && (
+        <button
+          className="btn quest-sidebar-claim"
+          onClick={() => onClaim(quest.id, claimInfo.taskType, claimInfo.chainId)}
+        >
+          Claim Reward
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim, playerLevel }) {
+  const lvl = playerLevel || 1;
   // Gather quests from active quest lines (always shown)
   const lineQuests = getActiveLineQuests(tasks);
   const lineQuestIds = new Set(lineQuests.map(q => q.id));
@@ -90,7 +183,7 @@ export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim }) {
   const pinnedOnly = (pinnedQuests || [])
     .filter(id => !lineQuestIds.has(id))
     .map(id => {
-      const quest = findQuestById(id);
+      const quest = findQuestById(id, lvl);
       if (!quest || isQuestClaimed(id, tasks)) return null;
       return quest;
     })
@@ -103,33 +196,10 @@ export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim }) {
     <div className="quest-sidebar">
       <div className="quest-sidebar-title">Quests</div>
       {allQuests.map(quest => {
-        const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
-        const pct = Math.min(100, Math.floor((progress / quest.target) * 100));
-        const complete = progress >= quest.target;
-        const claimInfo = complete ? getClaimInfo(quest) : null;
-        return (
-          <div key={quest.id} className={`quest-sidebar-item ${complete ? 'complete' : ''}`}>
-            <div className="quest-sidebar-name">{quest.name}</div>
-            <div className="quest-sidebar-desc">{quest.description}</div>
-            <div className="quest-sidebar-progress">
-              <div className="quest-sidebar-bar">
-                <div className="quest-sidebar-bar-fill" style={{ width: `${pct}%` }} />
-              </div>
-              <div className="quest-sidebar-count">
-                {formatNumber(Math.min(progress, quest.target))}/{formatNumber(quest.target)}
-                {complete && ' \u2713'}
-              </div>
-            </div>
-            {complete && claimInfo && onClaim && (
-              <button
-                className="btn quest-sidebar-claim"
-                onClick={() => onClaim(quest.id, claimInfo.taskType, claimInfo.chainId)}
-              >
-                Claim Reward
-              </button>
-            )}
-          </div>
-        );
+        if (quest.compound && quest.subquests) {
+          return renderCompoundQuest(quest, stats, tasks, onClaim, lvl);
+        }
+        return renderSimpleQuest(quest, stats, tasks, onClaim, lvl);
       })}
     </div>
   );

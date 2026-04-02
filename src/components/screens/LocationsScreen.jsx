@@ -14,13 +14,13 @@ function formatNumber(n) {
   return String(n);
 }
 
-function findQuestById(id) {
+function findQuestById(id, playerLevel) {
   const allQuests = [
     ...TUTORIAL_QUESTS,
     ...STORY_MISSIONS,
     ...STORY_TASKS,
-    ...getActiveDailyTasks(),
-    ...getActiveWeeklyTasks(),
+    ...getActiveDailyTasks(Date.now(), playerLevel || 1),
+    ...getActiveWeeklyTasks(Date.now(), playerLevel || 1),
     ...SIDE_QUEST_CHAINS.flatMap(c => c.quests),
   ];
   return allQuests.find(q => q.id === id) || null;
@@ -35,12 +35,12 @@ function isQuestClaimed(id, tasks) {
     || (tasks.sideQuestClaimed || []).includes(id);
 }
 
-function PinnedQuestTracker({ pinnedQuests, stats, tasks }) {
+function PinnedQuestTracker({ pinnedQuests, stats, tasks, playerLevel }) {
   if (!pinnedQuests || pinnedQuests.length === 0) return null;
 
   const activeQuests = pinnedQuests
     .map(id => {
-      const quest = findQuestById(id);
+      const quest = findQuestById(id, playerLevel);
       if (!quest || isQuestClaimed(id, tasks)) return null;
       return quest;
     })
@@ -374,7 +374,7 @@ export default function LocationsScreen({
       </div>
 
       {pinnedQuests && stats && tasks && (
-        <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} />
+        <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} playerLevel={playerLevel} />
       )}
 
       {hasSpecial && (
