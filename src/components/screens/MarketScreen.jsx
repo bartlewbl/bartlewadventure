@@ -260,7 +260,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
         </div>
         <div className="market-wallet">
           <span className="market-wallet-gold">{player?.gold ?? 0}g</span>
-          <span className="market-wallet-inv">{player?.inventory?.length ?? 0}/{player?.maxInventory ?? 20}</span>
+          <span className="market-wallet-inv">{player?.inventory?.length ?? 0}/{player?.maxInventory ?? 30}</span>
         </div>
       </div>
 
@@ -364,7 +364,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
             {!loading && sortedListings.map(listing => {
               const canAfford = (player?.gold ?? 0) >= listing.price;
               const isOwn = listing.sellerId === undefined; // shouldn't happen on browse
-              const invFull = (player?.inventory?.length ?? 0) >= (player?.maxInventory ?? 20);
+              const invFull = (player?.inventory?.length ?? 0) >= (player?.maxInventory ?? 30);
               return (
                 <div
                   key={listing.id}
