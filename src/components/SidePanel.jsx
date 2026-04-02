@@ -36,6 +36,8 @@ export default function SidePanel({
   lastHpManaRegenUpdate,
   inventoryCount,
   maxInventory,
+  unequippableCount,
+  onSellUnequippable,
 }) {
   const clock = useGameClock();
 
@@ -182,6 +184,8 @@ export default function SidePanel({
             lastHpManaRegenUpdate={lastHpManaRegenUpdate}
             inventoryCount={inventoryCount}
             maxInventory={maxInventory}
+            unequippableCount={unequippableCount}
+            onSellUnequippable={onSellUnequippable}
           />
 
           {navLocked && (

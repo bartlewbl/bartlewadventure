@@ -33,6 +33,7 @@ import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import MobileNav from './components/MobileNav';
 import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
+import { canClassEquip } from './data/gameData';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -195,6 +196,12 @@ export default function App() {
   const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select';
   const hidePanels = navLocked;
   const canRest = !navLocked;
+  const unequippableCount = state.player.inventory.filter(item => {
+    if (!item.slot) return false;
+    const levelLocked = item.level && item.level > state.player.level;
+    const classLocked = !canClassEquip(item, state.player.characterClass);
+    return levelLocked || classLocked;
+  }).length;
 
   return (
     <div className="game-container">
@@ -257,6 +264,8 @@ export default function App() {
               lastHpManaRegenUpdate={state.lastHpManaRegenUpdate}
               inventoryCount={state.player.inventory.length}
               maxInventory={state.player.maxInventory}
+              unequippableCount={unequippableCount}
+              onSellUnequippable={actions.sellUnequippable}
             />
           )}
 
