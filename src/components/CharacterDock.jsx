@@ -25,6 +25,8 @@ export default function CharacterDock({
   lastHpManaRegenUpdate,
   inventoryCount,
   maxInventory,
+  unequippableCount,
+  onSellUnequippable,
 }) {
   const safeMax = energyMax ?? Math.max(energy ?? 0, 1);
   const currentEnergy = Math.max(0, Math.min(energy ?? safeMax, safeMax));
@@ -120,7 +122,20 @@ export default function CharacterDock({
             <span className="dock-gold-value">{goldValue.toLocaleString()}</span>
             <span className="dock-inv-sep">·</span>
             <span className="dock-inv-icon">▦</span>
-            <span className={`dock-inv-count${(inventoryCount ?? 0) >= (maxInventory ?? 30) ? ' dock-inv-count-full' : (inventoryCount ?? 0) >= (maxInventory ?? 30) - 2 ? ' dock-inv-count-warn' : ''}`}>{inventoryCount ?? 0}/{maxInventory ?? 30}</span>
+            {unequippableCount > 0 ? (
+              <span
+                className={`dock-inv-count dock-inv-count-sellable${(inventoryCount ?? 0) >= (maxInventory ?? 30) ? ' dock-inv-count-full' : (inventoryCount ?? 0) >= (maxInventory ?? 30) - 2 ? ' dock-inv-count-warn' : ''}`}
+                role="button"
+                tabIndex={0}
+                title={`Sell ${unequippableCount} unequippable item${unequippableCount !== 1 ? 's' : ''}`}
+                onClick={onSellUnequippable}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onSellUnequippable(); }}
+              >
+                {inventoryCount ?? 0}/{maxInventory ?? 30}
+              </span>
+            ) : (
+              <span className={`dock-inv-count${(inventoryCount ?? 0) >= (maxInventory ?? 30) ? ' dock-inv-count-full' : (inventoryCount ?? 0) >= (maxInventory ?? 30) - 2 ? ' dock-inv-count-warn' : ''}`}>{inventoryCount ?? 0}/{maxInventory ?? 30}</span>
+            )}
           </div>
         </div>
         <button

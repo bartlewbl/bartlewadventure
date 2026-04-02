@@ -625,6 +625,18 @@ body {
   color: rgba(255, 80, 80, 0.8);
 }
 
+.dock-inv-count-sellable {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.dock-inv-count-sellable:hover {
+  color: #ff9898;
+  text-decoration-style: solid;
+}
+
 /* --- Quick Action Buttons --- */
 .dock-quick-actions {
   display: flex;
