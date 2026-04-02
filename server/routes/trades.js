@@ -207,8 +207,8 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     }
 
     // Check inventory space
-    const senderMaxInv = senderPlayer.maxInventory || 20;
-    const receiverMaxInv = receiverPlayer.maxInventory || 20;
+    const senderMaxInv = senderPlayer.maxInventory || 30;
+    const receiverMaxInv = receiverPlayer.maxInventory || 30;
     const senderNewSize = senderInventory.length - offerItems.length + rItems.length;
     const receiverNewSize = receiverInventory.length - rItems.length + offerItems.length;
 

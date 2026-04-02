@@ -120,7 +120,7 @@ export default function CharacterDock({
             <span className="dock-gold-value">{goldValue.toLocaleString()}</span>
             <span className="dock-inv-sep">·</span>
             <span className="dock-inv-icon">▦</span>
-            <span className={`dock-inv-count${(inventoryCount ?? 0) >= (maxInventory ?? 20) ? ' dock-inv-count-full' : (inventoryCount ?? 0) >= (maxInventory ?? 20) - 2 ? ' dock-inv-count-warn' : ''}`}>{inventoryCount ?? 0}/{maxInventory ?? 20}</span>
+            <span className={`dock-inv-count${(inventoryCount ?? 0) >= (maxInventory ?? 30) ? ' dock-inv-count-full' : (inventoryCount ?? 0) >= (maxInventory ?? 30) - 2 ? ' dock-inv-count-warn' : ''}`}>{inventoryCount ?? 0}/{maxInventory ?? 30}</span>
           </div>
         </div>
         <button

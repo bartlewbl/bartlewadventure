@@ -61,7 +61,7 @@ function getBuildingBenefits(buildingId, def) {
     case 'incubator':
       return ['Place rare eggs found from monsters to hatch them into pets', 'Eggs hatch over time into pets of varying rarity', 'Upgrade for more slots and faster hatching', 'Rarer eggs hatch into more powerful pets'];
     case 'warehouse':
-      return ['Increases your inventory capacity by +20 slots', 'Upgrade through 5 tiers for +10 more each level', 'Base: 20 slots, Max: 80 slots at Legendary Vault', 'Essential for hoarding loot and materials'];
+      return ['Increases your inventory capacity by +20 slots', 'Upgrade through 5 tiers for +10 more each level', 'Base: 30 slots, Max: 90 slots at Legendary Vault', 'Essential for hoarding loot and materials'];
     default:
       return [def.description];
   }
