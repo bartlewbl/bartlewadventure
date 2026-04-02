@@ -673,6 +673,14 @@ function gameReducer(state, action) {
       // Apply passive HP/Mana regen accumulated while offline
       const hpManaRegen = regenHpMana(mergedPlayer, lastHpManaRegenUpdate ?? baseState.lastHpManaRegenUpdate);
       mergedPlayer = hpManaRegen.player;
+      // Migrate maxInventory: ensure existing saves get the new base of 30
+      // Calculate what maxInventory should be: base (30) + warehouse bonus if any
+      const warehouseLvl = savedBase?.warehouseLevel || 0;
+      const warehouseBonus = warehouseLvl > 0 ? (BUILDINGS.warehouse?.upgrades?.[warehouseLvl - 1]?.inventoryBonus || 0) : 0;
+      const expectedMinInventory = baseState.player.maxInventory + warehouseBonus;
+      if (mergedPlayer.maxInventory < expectedMinInventory) {
+        mergedPlayer.maxInventory = expectedMinInventory;
+      }
       // Migrate equipment: ensure new slots exist for old saves
       if (mergedPlayer.equipment) {
         mergedPlayer.equipment = { ...baseState.player.equipment, ...mergedPlayer.equipment };
