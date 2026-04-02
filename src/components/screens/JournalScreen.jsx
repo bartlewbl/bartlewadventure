@@ -8,6 +8,8 @@ import {
   isQuestLineActive, canActivateQuestLine, MAX_ACTIVE_QUEST_LINES,
   MISSION_CHAPTER_COUNT,
   getQuestProgress,
+  isCompoundQuestComplete,
+  getCompoundQuestProgress,
 } from '../../data/tasks';
 
 const TABS = ['Quests', 'Tutorial', 'Missions', 'Side Quests', 'Daily', 'Weekly', 'Monthly'];
@@ -55,7 +57,7 @@ function PinButton({ questId, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQuests, onPin, onUnpin, showPin, chainId }) {
+function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQuests, onPin, onUnpin, showPin, chainId, subquests }) {
   const pct = Math.min(100, Math.floor((progress / target) * 100));
   const complete = progress >= target;
   const canClaim = complete && !claimed;
@@ -83,17 +85,45 @@ function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQu
       {task.regionHint && (
         <div className="journal-task-region">{task.regionHint}</div>
       )}
-      <div className="journal-task-progress-row">
-        <div className="journal-task-bar">
-          <div
-            className="journal-task-bar-fill"
-            style={{ width: `${pct}%` }}
-          />
+      {/* Compound quest: show sub-objectives */}
+      {subquests && subquests.length > 0 ? (
+        <div className="journal-task-subquests">
+          {subquests.map((sq, idx) => {
+            const sqPct = Math.min(100, Math.floor((sq.progress / sq.target) * 100));
+            return (
+              <div key={idx} className={`journal-task-sub ${sq.complete ? 'sub-complete' : ''}`}>
+                <div className="journal-task-sub-header">
+                  <span className="journal-task-sub-icon">{sq.complete ? '\u2713' : '\u25CB'}</span>
+                  <span className="journal-task-sub-name">{sq.name || `Objective ${idx + 1}`}</span>
+                  <span className="journal-task-sub-count">
+                    {formatNumber(sq.progress)}/{formatNumber(sq.target)}
+                  </span>
+                </div>
+                <div className="journal-task-sub-bar">
+                  <div className="journal-task-sub-bar-fill" style={{ width: `${sqPct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+          <div className="journal-task-progress-row">
+            <span className="journal-task-count" style={{ marginLeft: 'auto' }}>
+              {progress}/{target} objectives
+            </span>
+          </div>
         </div>
-        <span className="journal-task-count">
-          {formatNumber(Math.min(progress, target))}/{formatNumber(target)}
-        </span>
-      </div>
+      ) : (
+        <div className="journal-task-progress-row">
+          <div className="journal-task-bar">
+            <div
+              className="journal-task-bar-fill"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span className="journal-task-count">
+            {formatNumber(Math.min(progress, target))}/{formatNumber(target)}
+          </span>
+        </div>
+      )}
       {canClaim && (
         <button
           className="btn btn-sm journal-task-claim"
@@ -168,10 +198,30 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
         <div className="journal-empty">No tasks available.</div>
       )}
       {taskDefs.map(task => {
+        const claimed = claimedList.includes(task.id);
+        // Compound quest: render with sub-objectives
+        if (task.compound && task.subquests) {
+          const { completed, total, subquests } = getCompoundQuestProgress(task, progressMap);
+          return (
+            <TaskCard
+              key={task.id}
+              task={task}
+              progress={completed}
+              target={total}
+              claimed={claimed}
+              onClaim={onClaim}
+              taskType={taskType}
+              pinnedQuests={pinnedQuests}
+              onPin={onPin}
+              onUnpin={onUnpin}
+              showPin={taskType === 'tutorial' || taskType === 'mission' || taskType === 'story' || taskType === 'daily' || taskType === 'weekly'}
+              subquests={subquests}
+            />
+          );
+        }
         const progress = isStory
           ? (stats[task.stat] || 0)
           : (progressMap[task.id] || 0);
-        const claimed = claimedList.includes(task.id);
         return (
           <TaskCard
             key={task.id}
@@ -694,16 +744,21 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
   const [activeTab, setActiveTab] = useState('Quests');
   const now = Date.now();
 
-  const dailyTasks = getActiveDailyTasks(now);
-  const weeklyTasks = getActiveWeeklyTasks(now);
+  const lvl = playerLevel || 1;
+  const dailyTasks = getActiveDailyTasks(now, lvl);
+  const weeklyTasks = getActiveWeeklyTasks(now, lvl);
   const monthlyTasks = getActiveMonthlyTasks(now);
   const pinnedQuests = tasks.pinnedQuests || [];
 
-  // Count unclaimed completions for badge
+  // Count unclaimed completions for badge (supports compound quests)
   const countReady = (defs, progressMap, claimedList, isStory) => {
     return defs.filter(t => {
+      if (claimedList.includes(t.id)) return false;
+      if (t.compound && t.subquests) {
+        return isCompoundQuestComplete(t, progressMap);
+      }
       const prog = isStory ? (stats[t.stat] || 0) : (progressMap[t.id] || 0);
-      return prog >= t.target && !claimedList.includes(t.id);
+      return prog >= t.target;
     }).length;
   };
 

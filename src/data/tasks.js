@@ -43,15 +43,100 @@ export const QUEST_LINE_TYPES = {
   SIDEQUEST: 'sidequest', // side quest chains use 'side_<chainId>'
 };
 
+// ---- LEVEL SCALING HELPERS ----
+// Scale quest targets and rewards based on player level.
+// This makes daily/weekly quests feel appropriately challenging at every stage.
+
+// Scale a target value by player level (grows ~8% per level, capped at 10x base)
+export function scaleTarget(base, level) {
+  return Math.floor(base * Math.min(10, 1 + (level - 1) * 0.08));
+}
+
+// Scale a reward gold value by player level (grows ~6% per level)
+export function scaleRewardGold(base, level) {
+  return Math.floor(base * (1 + (level - 1) * 0.06));
+}
+
+// Apply level scaling to a simple task (single stat/target)
+function scaleSimpleTask(task, level) {
+  return {
+    ...task,
+    target: scaleTarget(task.baseTarget || task.target, level),
+    description: task.descTemplate
+      ? task.descTemplate(scaleTarget(task.baseTarget || task.target, level))
+      : task.description,
+    reward: {
+      ...task.reward,
+      gold: task.reward.gold ? scaleRewardGold(task.reward.gold, level) : 0,
+    },
+  };
+}
+
+// Apply level scaling to a compound task (subquests)
+function scaleCompoundTask(task, level) {
+  return {
+    ...task,
+    subquests: task.subquests.map(sq => ({
+      ...sq,
+      target: scaleTarget(sq.baseTarget || sq.target, level),
+      description: sq.descTemplate
+        ? sq.descTemplate(scaleTarget(sq.baseTarget || sq.target, level))
+        : sq.description,
+    })),
+    reward: {
+      ...task.reward,
+      gold: task.reward.gold ? scaleRewardGold(task.reward.gold, level) : 0,
+    },
+  };
+}
+
+// Scale any task (simple or compound) by player level
+export function scaleTask(task, level) {
+  if (task.compound) return scaleCompoundTask(task, level);
+  return scaleSimpleTask(task, level);
+}
+
+// ---- COMPOUND QUEST HELPERS ----
+// Compound quests have multiple sub-objectives that must ALL be completed.
+// Each subquest tracks its own stat/target independently.
+
+// Check if a compound quest is complete given progress data
+export function isCompoundQuestComplete(task, progressObj) {
+  if (!task.compound || !task.subquests) return false;
+  return task.subquests.every((sq, idx) => {
+    const key = `${task.id}__${idx}`;
+    return (progressObj[key] || 0) >= sq.target;
+  });
+}
+
+// Get overall progress fraction for a compound quest (for display)
+export function getCompoundQuestProgress(task, progressObj) {
+  if (!task.compound || !task.subquests) return { completed: 0, total: 0, subquests: [] };
+  const subquests = task.subquests.map((sq, idx) => {
+    const key = `${task.id}__${idx}`;
+    const progress = progressObj[key] || 0;
+    return { ...sq, progress: Math.min(progress, sq.target), complete: progress >= sq.target };
+  });
+  return {
+    completed: subquests.filter(s => s.complete).length,
+    total: subquests.length,
+    subquests,
+  };
+}
+
 // ---- DAILY TASKS ----
 // Reset every 24 hours. Small, achievable goals.
+// Targets and rewards scale with player level via scaleTask().
+// Tasks can be simple (single stat/target) or compound (multiple subquests).
 export const DAILY_TASKS = [
   {
     id: 'daily_kill_5',
     name: 'Pest Control',
     description: 'Defeat 5 monsters',
     stat: 'monstersKilled',
+    baseTarget: 5,
     target: 5,
+    descTemplate: (t) => `Defeat ${t} monsters`,
     reward: { gold: 25, energyDrinks: 1 },
   },
   {
@@ -59,7 +144,9 @@ export const DAILY_TASKS = [
     name: 'Scout Duty',
     description: 'Complete 3 explorations',
     stat: 'explorationsCompleted',
+    baseTarget: 3,
     target: 3,
+    descTemplate: (t) => `Complete ${t} explorations`,
     reward: { gold: 15, energyDrinks: 1 },
   },
   {
@@ -67,7 +154,9 @@ export const DAILY_TASKS = [
     name: 'Heavy Hitter',
     description: 'Deal 500 total damage',
     stat: 'damageDealt',
+    baseTarget: 500,
     target: 500,
+    descTemplate: (t) => `Deal ${t.toLocaleString()} total damage`,
     reward: { gold: 20, energyDrinks: 1 },
   },
   {
@@ -75,7 +164,9 @@ export const DAILY_TASKS = [
     name: 'Gold Rush',
     description: 'Earn 100 gold',
     stat: 'goldEarned',
+    baseTarget: 100,
     target: 100,
+    descTemplate: (t) => `Earn ${t.toLocaleString()} gold`,
     reward: { gold: 30 },
   },
   {
@@ -91,7 +182,9 @@ export const DAILY_TASKS = [
     name: 'Winning Streak',
     description: 'Win 3 battles',
     stat: 'battlesWon',
+    baseTarget: 3,
     target: 3,
+    descTemplate: (t) => `Win ${t} battles`,
     reward: { gold: 20, energyDrinks: 1 },
   },
   {
@@ -99,8 +192,158 @@ export const DAILY_TASKS = [
     name: 'Scavenger',
     description: 'Loot 2 items',
     stat: 'itemsLooted',
+    baseTarget: 2,
     target: 2,
+    descTemplate: (t) => `Loot ${t} items`,
     reward: { gold: 15 },
+  },
+  // --- NEW: Compound daily quests ---
+  {
+    id: 'daily_hunter_gather',
+    name: 'Hunter-Gatherer',
+    description: 'Kill monsters and collect materials in one outing.',
+    compound: true,
+    subquests: [
+      { name: 'Hunt Monsters', stat: 'monstersKilled', baseTarget: 3, target: 3, descTemplate: (t) => `Defeat ${t} monsters` },
+      { name: 'Collect Materials', stat: 'materialsCollected', baseTarget: 2, target: 2, descTemplate: (t) => `Collect ${t} materials` },
+    ],
+    reward: { gold: 35, energyDrinks: 1 },
+  },
+  {
+    id: 'daily_slash_and_sell',
+    name: 'Slash & Sell',
+    description: 'Fight for loot and sell what you find.',
+    compound: true,
+    subquests: [
+      { name: 'Loot Items', stat: 'itemsLooted', baseTarget: 2, target: 2, descTemplate: (t) => `Loot ${t} items` },
+      { name: 'Sell Items', stat: 'itemsSold', baseTarget: 1, target: 1, descTemplate: (t) => `Sell ${t} item${t > 1 ? 's' : ''}` },
+    ],
+    reward: { gold: 25 },
+  },
+  {
+    id: 'daily_combat_medic',
+    name: 'Combat Medic',
+    description: 'Fight hard and patch yourself up.',
+    compound: true,
+    subquests: [
+      { name: 'Deal Damage', stat: 'damageDealt', baseTarget: 300, target: 300, descTemplate: (t) => `Deal ${t.toLocaleString()} damage` },
+      { name: 'Use Potions', stat: 'potionsUsed', target: 1 },
+    ],
+    reward: { gold: 20, energyDrinks: 1 },
+  },
+  {
+    id: 'daily_crit_striker',
+    name: 'Precision Strikes',
+    description: 'Land critical hits in combat.',
+    stat: 'criticalHits',
+    baseTarget: 2,
+    target: 2,
+    descTemplate: (t) => `Land ${t} critical hits`,
+    reward: { gold: 20 },
+  },
+  {
+    id: 'daily_dodge_master',
+    name: 'Nimble Feet',
+    description: 'Dodge enemy attacks.',
+    stat: 'dodgesPerformed',
+    baseTarget: 2,
+    target: 2,
+    descTemplate: (t) => `Dodge ${t} attacks`,
+    reward: { gold: 15 },
+  },
+  {
+    id: 'daily_material_run',
+    name: 'Material Run',
+    description: 'Gather materials from the wilds.',
+    stat: 'materialsCollected',
+    baseTarget: 3,
+    target: 3,
+    descTemplate: (t) => `Collect ${t} materials`,
+    reward: { gold: 20, energyDrinks: 1 },
+  },
+  {
+    id: 'daily_chest_opener',
+    name: 'Treasure Trove',
+    description: 'Open loot chests.',
+    stat: 'chestsOpened',
+    baseTarget: 1,
+    target: 1,
+    descTemplate: (t) => `Open ${t} chest${t > 1 ? 's' : ''}`,
+    reward: { gold: 20 },
+  },
+  {
+    id: 'daily_boss_rush',
+    name: 'Boss Rush',
+    description: 'Challenge a boss and emerge victorious.',
+    stat: 'bossesKilled',
+    target: 1,
+    reward: { gold: 40, energyDrinks: 1 },
+  },
+  {
+    id: 'daily_skill_user',
+    name: 'Ability Showcase',
+    description: 'Use skills in combat.',
+    stat: 'skillsUsed',
+    baseTarget: 3,
+    target: 3,
+    descTemplate: (t) => `Use ${t} skills in combat`,
+    reward: { gold: 15 },
+  },
+  {
+    id: 'daily_flawless',
+    name: 'Flawless Victory',
+    description: 'Win a battle without taking any damage.',
+    stat: 'flawlessVictories',
+    target: 1,
+    reward: { gold: 35, energyDrinks: 1 },
+  },
+  {
+    id: 'daily_combo_chain',
+    name: 'Combo Artist',
+    description: 'Trigger combo chains in battle.',
+    stat: 'comboTriggered',
+    baseTarget: 1,
+    target: 1,
+    descTemplate: (t) => `Trigger ${t} combo chain${t > 1 ? 's' : ''}`,
+    reward: { gold: 25 },
+  },
+  {
+    id: 'daily_no_block_win',
+    name: 'All-Out Assault',
+    description: 'Win a battle without using defend.',
+    stat: 'winsWithoutDefend',
+    target: 1,
+    reward: { gold: 30 },
+  },
+  {
+    id: 'daily_parry_master',
+    name: 'Perfect Timing',
+    description: 'Perform perfect parries in battle.',
+    stat: 'perfectParries',
+    baseTarget: 1,
+    target: 1,
+    descTemplate: (t) => `Perform ${t} perfect parr${t > 1 ? 'ies' : 'y'}`,
+    reward: { gold: 25 },
+  },
+  {
+    id: 'daily_merchant_meet',
+    name: 'Chance Encounter',
+    description: 'Find an extraordinary trader while exploring.',
+    stat: 'merchantEncounters',
+    target: 1,
+    reward: { gold: 30, energyDrinks: 1 },
+  },
+  {
+    id: 'daily_explore_and_fight',
+    name: 'Full Expedition',
+    description: 'Explore the world and defeat what you find.',
+    compound: true,
+    subquests: [
+      { name: 'Explore', stat: 'explorationsCompleted', baseTarget: 3, target: 3, descTemplate: (t) => `Complete ${t} explorations` },
+      { name: 'Defeat Monsters', stat: 'monstersKilled', baseTarget: 2, target: 2, descTemplate: (t) => `Defeat ${t} monsters` },
+      { name: 'Earn Gold', stat: 'goldEarned', baseTarget: 50, target: 50, descTemplate: (t) => `Earn ${t} gold` },
+    ],
+    reward: { gold: 40, energyDrinks: 1 },
   },
 ];
 
@@ -109,13 +352,16 @@ export const DAILY_TASK_COUNT = 4;
 
 // ---- WEEKLY TASKS ----
 // Reset every 7 days. Medium-term goals.
+// Targets and rewards scale with player level via scaleTask().
 export const WEEKLY_TASKS = [
   {
     id: 'weekly_kill_50',
     name: 'Monster Hunter',
     description: 'Defeat 50 monsters',
     stat: 'monstersKilled',
+    baseTarget: 50,
     target: 50,
+    descTemplate: (t) => `Defeat ${t} monsters`,
     reward: { gold: 200, chestId: 'shadow-lockbox', energyDrinks: 2 },
   },
   {
@@ -123,7 +369,9 @@ export const WEEKLY_TASKS = [
     name: 'Boss Slayer',
     description: 'Defeat 3 bosses',
     stat: 'bossesKilled',
+    baseTarget: 3,
     target: 3,
+    descTemplate: (t) => `Defeat ${t} bosses`,
     reward: { gold: 300, chestId: 'mercenary-bounty', energyDrinks: 2 },
   },
   {
@@ -131,7 +379,9 @@ export const WEEKLY_TASKS = [
     name: 'Damage Dealer',
     description: 'Deal 5,000 total damage',
     stat: 'damageDealt',
+    baseTarget: 5000,
     target: 5000,
+    descTemplate: (t) => `Deal ${t.toLocaleString()} total damage`,
     reward: { gold: 250, energyDrinks: 2 },
   },
   {
@@ -139,7 +389,9 @@ export const WEEKLY_TASKS = [
     name: 'Profit Margin',
     description: 'Earn 1,000 gold',
     stat: 'goldEarned',
+    baseTarget: 1000,
     target: 1000,
+    descTemplate: (t) => `Earn ${t.toLocaleString()} gold`,
     reward: { gold: 350, chestId: 'street-crate' },
   },
   {
@@ -147,7 +399,9 @@ export const WEEKLY_TASKS = [
     name: 'Cartographer',
     description: 'Complete 20 explorations',
     stat: 'explorationsCompleted',
+    baseTarget: 20,
     target: 20,
+    descTemplate: (t) => `Complete ${t} explorations`,
     reward: { gold: 200, energyDrinks: 2 },
   },
   {
@@ -155,8 +409,158 @@ export const WEEKLY_TASKS = [
     name: 'Merchant',
     description: 'Sell 10 items',
     stat: 'itemsSold',
+    baseTarget: 10,
     target: 10,
+    descTemplate: (t) => `Sell ${t} items`,
     reward: { gold: 150, energyDrinks: 1 },
+  },
+  // --- NEW: Compound weekly quests ---
+  {
+    id: 'weekly_material_hoarder',
+    name: 'Material Hoarder',
+    description: 'Gather a large stock of building materials.',
+    stat: 'materialsCollected',
+    baseTarget: 15,
+    target: 15,
+    descTemplate: (t) => `Collect ${t} materials`,
+    reward: { gold: 250, energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_well_rounded',
+    name: 'Well-Rounded Adventurer',
+    description: 'Prove your skills in all aspects of adventuring.',
+    compound: true,
+    subquests: [
+      { name: 'Slay Monsters', stat: 'monstersKilled', baseTarget: 20, target: 20, descTemplate: (t) => `Defeat ${t} monsters` },
+      { name: 'Gather Materials', stat: 'materialsCollected', baseTarget: 5, target: 5, descTemplate: (t) => `Collect ${t} materials` },
+      { name: 'Sell Loot', stat: 'itemsSold', baseTarget: 5, target: 5, descTemplate: (t) => `Sell ${t} items` },
+      { name: 'Explore', stat: 'explorationsCompleted', baseTarget: 10, target: 10, descTemplate: (t) => `Complete ${t} explorations` },
+    ],
+    reward: { gold: 400, chestId: 'street-crate', energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_boss_no_potion',
+    name: 'Unstoppable Force',
+    description: 'Defeat a boss without using any potions during the fight.',
+    stat: 'bossKilledNoPotion',
+    target: 1,
+    reward: { gold: 350, chestId: 'mercenary-bounty', energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_boss_no_defend',
+    name: 'Reckless Fury',
+    description: 'Defeat a boss without using defend once.',
+    stat: 'bossKilledNoDefend',
+    target: 1,
+    reward: { gold: 350, energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_flawless_streak',
+    name: 'Untouchable',
+    description: 'Win battles without taking damage.',
+    stat: 'flawlessVictories',
+    baseTarget: 3,
+    target: 3,
+    descTemplate: (t) => `Win ${t} flawless battles`,
+    reward: { gold: 300, energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_crit_machine',
+    name: 'Critical Mass',
+    description: 'Land critical hits to devastate your foes.',
+    stat: 'criticalHits',
+    baseTarget: 10,
+    target: 10,
+    descTemplate: (t) => `Land ${t} critical hits`,
+    reward: { gold: 200, energyDrinks: 1 },
+  },
+  {
+    id: 'weekly_merchant_finder',
+    name: 'Trader Network',
+    description: 'Encounter extraordinary traders while exploring.',
+    stat: 'merchantEncounters',
+    baseTarget: 2,
+    target: 2,
+    descTemplate: (t) => `Find ${t} extraordinary traders`,
+    reward: { gold: 250, energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_parry_champion',
+    name: 'Parry Champion',
+    description: 'Master the art of the parry.',
+    stat: 'perfectParries',
+    baseTarget: 5,
+    target: 5,
+    descTemplate: (t) => `Perform ${t} perfect parries`,
+    reward: { gold: 200, energyDrinks: 1 },
+  },
+  {
+    id: 'weekly_war_profiteer',
+    name: 'War Profiteer',
+    description: 'Fight, loot, and profit from your spoils of war.',
+    compound: true,
+    subquests: [
+      { name: 'Win Battles', stat: 'battlesWon', baseTarget: 15, target: 15, descTemplate: (t) => `Win ${t} battles` },
+      { name: 'Loot Items', stat: 'itemsLooted', baseTarget: 8, target: 8, descTemplate: (t) => `Loot ${t} items` },
+      { name: 'Earn Gold', stat: 'goldEarned', baseTarget: 500, target: 500, descTemplate: (t) => `Earn ${t.toLocaleString()} gold` },
+    ],
+    reward: { gold: 350, chestId: 'shadow-lockbox', energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_combo_master',
+    name: 'Combo Maestro',
+    description: 'Chain combos and dodge attacks to dominate combat.',
+    compound: true,
+    subquests: [
+      { name: 'Trigger Combos', stat: 'comboTriggered', baseTarget: 5, target: 5, descTemplate: (t) => `Trigger ${t} combos` },
+      { name: 'Dodge Attacks', stat: 'dodgesPerformed', baseTarget: 5, target: 5, descTemplate: (t) => `Dodge ${t} attacks` },
+    ],
+    reward: { gold: 250, energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_chest_and_craft',
+    name: 'Treasure & Tools',
+    description: 'Open chests and gather crafting materials.',
+    compound: true,
+    subquests: [
+      { name: 'Open Chests', stat: 'chestsOpened', baseTarget: 3, target: 3, descTemplate: (t) => `Open ${t} chests` },
+      { name: 'Collect Materials', stat: 'materialsCollected', baseTarget: 8, target: 8, descTemplate: (t) => `Collect ${t} materials` },
+    ],
+    reward: { gold: 200, chestId: 'street-crate', energyDrinks: 1 },
+  },
+  {
+    id: 'weekly_no_potion_streak',
+    name: 'Natural Toughness',
+    description: 'Win battles without relying on potions.',
+    stat: 'winsWithoutPotion',
+    baseTarget: 5,
+    target: 5,
+    descTemplate: (t) => `Win ${t} battles without using potions`,
+    reward: { gold: 250, energyDrinks: 2 },
+  },
+  {
+    id: 'weekly_pure_offense',
+    name: 'Pure Offense',
+    description: 'Win battles using only attacks and skills—no defending allowed.',
+    stat: 'winsWithoutDefend',
+    baseTarget: 5,
+    target: 5,
+    descTemplate: (t) => `Win ${t} battles without defending`,
+    reward: { gold: 200, energyDrinks: 1 },
+  },
+  {
+    id: 'weekly_grand_expedition',
+    name: 'Grand Expedition',
+    description: 'A true adventure: explore, fight, gather, and profit.',
+    compound: true,
+    subquests: [
+      { name: 'Explore', stat: 'explorationsCompleted', baseTarget: 15, target: 15, descTemplate: (t) => `Complete ${t} explorations` },
+      { name: 'Slay Monsters', stat: 'monstersKilled', baseTarget: 25, target: 25, descTemplate: (t) => `Defeat ${t} monsters` },
+      { name: 'Collect Materials', stat: 'materialsCollected', baseTarget: 8, target: 8, descTemplate: (t) => `Collect ${t} materials` },
+      { name: 'Earn Gold', stat: 'goldEarned', baseTarget: 800, target: 800, descTemplate: (t) => `Earn ${t.toLocaleString()} gold` },
+      { name: 'Sell Loot', stat: 'itemsSold', baseTarget: 5, target: 5, descTemplate: (t) => `Sell ${t} items` },
+    ],
+    reward: { gold: 500, chestId: 'mercenary-bounty', energyDrinks: 3 },
   },
 ];
 
@@ -1621,12 +2025,17 @@ export function getMonthlySeed(now = Date.now()) {
 }
 
 // Get the active tasks for the current cycle
-export function getActiveDailyTasks(now = Date.now()) {
-  return selectTasks(DAILY_TASKS, DAILY_TASK_COUNT, getDailySeed(now));
+// Pass playerLevel to scale targets & rewards; defaults to 1 for backward compat.
+export function getActiveDailyTasks(now = Date.now(), playerLevel = 1) {
+  const selected = selectTasks(DAILY_TASKS, DAILY_TASK_COUNT, getDailySeed(now));
+  if (playerLevel <= 1) return selected;
+  return selected.map(t => scaleTask(t, playerLevel));
 }
 
-export function getActiveWeeklyTasks(now = Date.now()) {
-  return selectTasks(WEEKLY_TASKS, WEEKLY_TASK_COUNT, getWeeklySeed(now));
+export function getActiveWeeklyTasks(now = Date.now(), playerLevel = 1) {
+  const selected = selectTasks(WEEKLY_TASKS, WEEKLY_TASK_COUNT, getWeeklySeed(now));
+  if (playerLevel <= 1) return selected;
+  return selected.map(t => scaleTask(t, playerLevel));
 }
 
 export function getActiveMonthlyTasks(now = Date.now()) {
@@ -1739,5 +2148,13 @@ export function createInitialStats() {
     energyDrinksLooted: 0,
     petsFound: 0,
     petQuestsCompleted: 0,
+    // Extended stats for new quest types
+    materialsCollected: 0,
+    merchantEncounters: 0,
+    flawlessVictories: 0,
+    winsWithoutDefend: 0,
+    winsWithoutPotion: 0,
+    bossKilledNoDefend: 0,
+    bossKilledNoPotion: 0,
   };
 }
