@@ -278,7 +278,7 @@ router.post('/:id/buy', requireAuth, async (req, res) => {
     }
 
     const buyerInv = buyerPlayer.inventory || [];
-    const buyerMaxInv = buyerPlayer.maxInventory || 20;
+    const buyerMaxInv = buyerPlayer.maxInventory || 30;
     if (buyerInv.length >= buyerMaxInv) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Your inventory is full' });
@@ -359,7 +359,7 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
     const saveData = JSON.parse(sellerSave.save_data);
     const player = saveData.player;
     const inventory = player.inventory || [];
-    const maxInv = player.maxInventory || 20;
+    const maxInv = player.maxInventory || 30;
 
     if (inventory.length >= maxInv) {
       return res.status(400).json({ error: 'Your inventory is full. Make room before cancelling.' });

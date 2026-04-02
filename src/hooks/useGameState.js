@@ -65,7 +65,7 @@ function createInitialPlayer() {
     gold: 30,
     equipment: { weapon: null, shield: null, helmet: null, armor: null, gloves: null, boots: null, belt: null, cape: null, amulet: null, accessory: null, accessory2: null },
     inventory: [],
-    maxInventory: 20,
+    maxInventory: 30,
     skillTree: [],
     unlockedUniversalSkills: [], // universal combat skills unlocked through level milestones
     comboMaster: false, // combo chains deal +20% bonus
@@ -3762,7 +3762,7 @@ function gameReducer(state, action) {
       if (action.buildingId === 'warehouse') {
         newBase.warehouseLevel = 1;
         const bonus = BUILDINGS.warehouse.upgrades[0].inventoryBonus;
-        newPlayer.maxInventory = (state.player.maxInventory || 20) + bonus;
+        newPlayer.maxInventory = (state.player.maxInventory || 30) + bonus;
       }
 
       return {
@@ -4292,7 +4292,7 @@ function gameReducer(state, action) {
         player: {
           ...state.player,
           gold: state.player.gold - wCost.gold,
-          maxInventory: (state.player.maxInventory || 20) + inventoryIncrease,
+          maxInventory: (state.player.maxInventory || 30) + inventoryIncrease,
         },
         base: { ...state.base, materials: wMats, warehouseLevel: currentWLevel + 1 },
         message: `${nextWUpgrade.name}! ${nextWUpgrade.desc}`,
