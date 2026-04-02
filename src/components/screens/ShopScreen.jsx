@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { getShopItems, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
-import { getChestShopStock } from '../../data/lootChests';
+import { getTradingMarketStock } from '../../data/lootChests';
+import { BUILDING_MATERIALS } from '../../data/baseData';
 import { getClassName, getClassColor, getClassShortName, canClassEquip } from '../../data/gameData';
 import { getStackKey } from '../../hooks/useGameState';
 import useGameClock from '../../hooks/useGameClock';
@@ -23,10 +24,10 @@ const SLOT_LABELS = {
 const SHOPS = [
   { id: 'armourer', label: 'Armourer', icon: '\u2694', desc: 'Weapons & armor' },
   { id: 'brewer', label: 'Brewer', icon: '\u2697', desc: 'Potions & energy' },
-  { id: 'chests', label: 'Chests', icon: '\u{1F4E6}', desc: 'Rare loot chests' },
   { id: 'grocery', label: 'Grocery', icon: '\uD83D\uDED2', desc: 'Food for incubator' },
   { id: 'petshop', label: 'Pet Shop', icon: '\u{1F43E}', desc: 'Buy pets & pet items' },
   { id: 'featured', label: 'Featured', icon: '\u2605', desc: 'Daily deals' },
+  { id: 'trading', label: 'Trading', icon: '\u2692', desc: 'Trade materials for loot chests' },
 ];
 
 const ARMOUR_CATEGORIES = [
@@ -96,7 +97,7 @@ function isInvFullForItem(player, shopItem) {
   return true;
 }
 
-export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onBack }) {
+export default function ShopScreen({ player, pets, base, shopPurchases, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onBack }) {
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
@@ -120,8 +121,8 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
   const petItemStock = useMemo(() => getPetItemShop(player.level), [player.level]);
   // Grocery stock
   const groceryStock = useMemo(() => getGroceryStock(player.level), [player.level]);
-  // Chest shop stock
-  const chestStock = useMemo(() => getChestShopStock(player.level), [player.level]);
+  // Trading market stock
+  const tradingStock = useMemo(() => getTradingMarketStock(player.level), [player.level]);
   // Featured — refreshes every 10 hours
   const featuredStock = useMemo(() => getDailyFeaturedItems(player.level, clock.shopSeed, player.characterClass), [player.level, clock.shopSeed, player.characterClass]);
 
@@ -420,38 +421,6 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
         </>
       )}
 
-      {/* ===== CHESTS ===== */}
-      {activeShop === 'chests' && (
-        <div className="shop-content">
-          <div className="shop-list">
-            {chestStock.length === 0 && <div className="shop-empty"><div className="shop-empty-text">No chests available at your level</div></div>}
-            {chestStock.filter(item => getRemaining(item) > 0).map(item => {
-              const canAfford = player.gold >= item.buyPrice;
-              const invFull = isInvFullForItem(player, item);
-              const remaining = getRemaining(item);
-              return (
-                <div key={item.id} className={`shop-card ${item.rarityClass || ''} ${!canAfford ? 'unaffordable' : ''}`}>
-                  <div className="shop-card-left">
-                    <div className="shop-card-type">Loot Chest</div>
-                    <div className={`shop-card-name ${item.rarityClass || ''}`}>{item.name}</div>
-                    <div className="shop-card-meta">
-                      <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
-                      <span className="shop-card-stats">{item.desc}</span>
-                      {remaining < Infinity && <span className="shop-card-stock">Stock: {remaining}</span>}
-                    </div>
-                  </div>
-                  <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}
-                    title={invFull ? 'Inventory full' : !canAfford ? 'Not enough gold' : ''}>
-                    <span className="shop-btn-price">{item.buyPrice}g</span>
-                    <span className="shop-btn-label">Buy</span>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* ===== FEATURED ===== */}
       {activeShop === 'featured' && (
         <div className="shop-content">
@@ -483,6 +452,66 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
                   <button className="shop-buy-btn" onClick={() => handleBuy(item)} disabled={!canAfford || invFull}>
                     <span className="shop-btn-price">{item.buyPrice}g</span>
                     <span className="shop-btn-label">Buy</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ===== TRADING MARKET ===== */}
+      {activeShop === 'trading' && (
+        <div className="shop-content">
+          <div className="shop-featured-banner">Trade Materials for Powerful Loot Chests</div>
+          <div className="shop-list">
+            {tradingStock.length === 0 && (
+              <div className="shop-empty"><div className="shop-empty-text">No chests available at your level yet</div></div>
+            )}
+            {tradingStock.map(chest => {
+              const baseMats = base?.materials || {};
+              const canAfford = Object.entries(chest.materialCost).every(
+                ([matId, qty]) => (baseMats[matId] || 0) >= qty
+              );
+              const invFull = player.inventory.length >= player.maxInventory;
+              return (
+                <div key={chest.id} className={`shop-card rarity-${chest.rarity.toLowerCase()} ${!canAfford ? 'unaffordable' : ''}`}>
+                  <div className="shop-card-left">
+                    <div className="shop-card-type">Forged Chest</div>
+                    <div className={`shop-card-name rarity-${chest.rarity.toLowerCase()}`}>{chest.name}</div>
+                    <div className="shop-card-meta">
+                      <span className={`shop-rarity-badge rarity-${chest.rarity.toLowerCase()}`}>{chest.rarity}</span>
+                      <span className="shop-card-stats">
+                        {chest.itemCount.min}-{chest.itemCount.max} items + {chest.goldBonus.min}-{chest.goldBonus.max}g
+                      </span>
+                    </div>
+                    <div className="shop-card-desc" style={{ fontSize: '0.8em', color: '#999', marginTop: 2 }}>{chest.desc}</div>
+                    <div className="trading-cost-list" style={{ marginTop: 4 }}>
+                      {Object.entries(chest.materialCost).map(([matId, qty]) => {
+                        const matDef = BUILDING_MATERIALS[matId];
+                        const have = baseMats[matId] || 0;
+                        const enough = have >= qty;
+                        return (
+                          <span key={matId} className="trading-cost-item" style={{
+                            display: 'inline-block',
+                            marginRight: 8,
+                            fontSize: '0.78em',
+                            color: enough ? '#4fc3f7' : '#ff5252',
+                          }}>
+                            {matDef?.name || matId} {have}/{qty}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <button
+                    className="shop-buy-btn"
+                    onClick={() => onTradeForChest(chest.id)}
+                    disabled={!canAfford || invFull}
+                    title={invFull ? 'Inventory full' : !canAfford ? 'Not enough materials' : ''}
+                  >
+                    <span className="shop-btn-price">Forge</span>
+                    <span className="shop-btn-label">{'\u2692'}</span>
                   </button>
                 </div>
               );

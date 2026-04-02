@@ -8,7 +8,7 @@ import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
 import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, rollTicketDrop, openLootChest } from '../engine/loot';
-import { createChestItem, CHEST_LOOKUP } from '../data/lootChests';
+import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
 import { saveGame } from '../api';
@@ -3361,6 +3361,48 @@ function gameReducer(state, action) {
       return { ...state, player: p, shopPurchases, shopPurchaseSeed: currentSeed ?? state.shopPurchaseSeed, message: `Purchased ${item.name}!`, stats: newStats };
     }
 
+    case 'TRADE_MATERIALS_FOR_CHEST': {
+      const chestId = action.chestId;
+      const tradingChest = TRADING_CHEST_LOOKUP[chestId];
+      if (!tradingChest) return { ...state, message: 'Unknown chest!' };
+      if (state.player.level < tradingChest.minLevel) return { ...state, message: `Requires level ${tradingChest.minLevel}!` };
+
+      // Check material costs against base warehouse
+      const mats = { ...state.base.materials };
+      for (const [matId, qty] of Object.entries(tradingChest.materialCost)) {
+        if ((mats[matId] || 0) < qty) {
+          const matName = BUILDING_MATERIALS[matId]?.name || matId;
+          return { ...state, message: `Need ${qty}x ${matName}! (have ${mats[matId] || 0})` };
+        }
+      }
+
+      // Check inventory space
+      const chestItem = createChestItem(chestId);
+      if (!chestItem) return { ...state, message: 'Error creating chest!' };
+      if (!canAddToInventory(state.player.inventory, chestItem, state.player.maxInventory)) {
+        return { ...state, message: 'Inventory full!' };
+      }
+
+      // Deduct materials
+      for (const [matId, qty] of Object.entries(tradingChest.materialCost)) {
+        mats[matId] = (mats[matId] || 0) - qty;
+      }
+
+      // Add chest to inventory
+      const newInv = addToInventory(state.player.inventory, chestItem, state.player.maxInventory);
+      let newStats = addStat(state.stats, 'itemsBought');
+      const newTasks = incrementTaskProgress(state.tasks, 'itemsBought');
+
+      return {
+        ...state,
+        player: { ...state.player, inventory: newInv },
+        base: { ...state.base, materials: mats },
+        stats: newStats,
+        tasks: newTasks,
+        message: `Forged ${tradingChest.name}!`,
+      };
+    }
+
     case 'APPLY_TRADE': {
       // After accepting a trade: add received items, remove given items, adjust gold
       const { receivedItems, receivedGold, givenItems, givenGold } = action;
@@ -5781,6 +5823,7 @@ export function useGameState(isLoggedIn) {
     sellUnequippable: () => dispatch({ type: 'SELL_UNEQUIPPABLE' }),
     reorderInventory: (fromIndex, toIndex) => dispatch({ type: 'REORDER_INVENTORY', fromIndex, toIndex }),
     buyItem: (item, shopSeed) => dispatch({ type: 'BUY_ITEM', item, shopSeed }),
+    tradeForChest: (chestId) => dispatch({ type: 'TRADE_MATERIALS_FOR_CHEST', chestId }),
     claimDailyReward: (rewards, label) => dispatch({ type: 'CLAIM_DAILY_REWARD', rewards, label }),
     claimTask: (taskId, taskType, chainId) => dispatch({ type: 'CLAIM_TASK', taskId, taskType, chainId }),
     pinQuest: (questId) => dispatch({ type: 'PIN_QUEST', questId }),

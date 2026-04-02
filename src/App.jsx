@@ -470,12 +470,14 @@ export default function App() {
               <ShopScreen
                 player={state.player}
                 pets={state.pets}
+                base={state.base}
                 shopPurchases={state.shopPurchases || {}}
                 onBuy={actions.buyItem}
                 onSell={actions.sellItem}
                 onSellUnequippable={actions.sellUnequippable}
                 onBuyPet={actions.buyPet}
                 onBuyPetItem={actions.buyPetItem}
+                onTradeForChest={actions.tradeForChest}
                 onBack={actions.goToTown}
               />
             )}
