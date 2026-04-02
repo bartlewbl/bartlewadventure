@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES, getMonsterSkillElement } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES, getMonsterSkillElement, canClassEquip } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
@@ -3263,6 +3263,39 @@ function gameReducer(state, action) {
       return { ...state, player: p, message: `Sold for ${item.sellPrice}g!`, stats: newStats, tasks: newTasks };
     }
 
+    case 'SELL_UNEQUIPPABLE': {
+      const playerClass = state.player.characterClass;
+      const playerLevel = state.player.level;
+      const charismaBonus = getCharismaPriceBonus(state.player);
+      const unequippable = state.player.inventory.filter(item => {
+        if (!item.slot) return false;
+        const levelLocked = item.level && item.level > playerLevel;
+        const classLocked = !canClassEquip(item, playerClass);
+        return levelLocked || classLocked;
+      });
+      if (unequippable.length === 0) {
+        return { ...state, message: 'No unequippable equipment to sell.' };
+      }
+      let totalGold = 0;
+      let remaining = [...state.player.inventory];
+      let soldCount = 0;
+      let newStats = { ...state.stats };
+      let newTasks = { ...state.tasks };
+      for (const item of unequippable) {
+        const count = item.stackCount || 1;
+        const price = Math.floor(item.sellPrice * (1 + charismaBonus));
+        totalGold += price * count;
+        soldCount += count;
+        remaining = remaining.filter(i => i.id !== item.id);
+        newStats = addStat(newStats, 'itemsSold', count);
+        newStats = addStat(newStats, 'goldEarned', item.sellPrice * count);
+        newTasks = incrementTaskProgress(newTasks, 'itemsSold', count);
+        newTasks = incrementTaskProgress(newTasks, 'goldEarned', item.sellPrice * count);
+      }
+      const p = { ...state.player, gold: state.player.gold + totalGold, inventory: remaining };
+      return { ...state, player: p, message: `Sold ${soldCount} unequippable item${soldCount !== 1 ? 's' : ''} for ${totalGold}g!`, stats: newStats, tasks: newTasks };
+    }
+
     case 'REORDER_INVENTORY': {
       const inventory = state.player.inventory || [];
       if (inventory.length < 2) return state;
@@ -5737,6 +5770,7 @@ export function useGameState(isLoggedIn) {
     unequipItem: (slot) => dispatch({ type: 'UNEQUIP_ITEM', slot }),
     useItem: (item) => dispatch({ type: 'USE_ITEM', item }),
     sellItem: (item) => dispatch({ type: 'SELL_ITEM', item }),
+    sellUnequippable: () => dispatch({ type: 'SELL_UNEQUIPPABLE' }),
     reorderInventory: (fromIndex, toIndex) => dispatch({ type: 'REORDER_INVENTORY', fromIndex, toIndex }),
     buyItem: (item, shopSeed) => dispatch({ type: 'BUY_ITEM', item, shopSeed }),
     claimDailyReward: (rewards, label) => dispatch({ type: 'CLAIM_DAILY_REWARD', rewards, label }),
