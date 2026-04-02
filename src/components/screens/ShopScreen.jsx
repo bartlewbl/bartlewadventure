@@ -3,7 +3,7 @@ import { getShopItems, getArmourerStock, getDailyFeaturedItems } from '../../eng
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
 import { getChestShopStock } from '../../data/lootChests';
-import { getClassName, getClassColor, getClassShortName } from '../../data/gameData';
+import { getClassName, getClassColor, getClassShortName, canClassEquip } from '../../data/gameData';
 import { getStackKey } from '../../hooks/useGameState';
 import useGameClock from '../../hooks/useGameClock';
 
@@ -96,7 +96,7 @@ function isInvFullForItem(player, shopItem) {
   return true;
 }
 
-export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell, onBuyPet, onBuyPetItem, onBack }) {
+export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onBack }) {
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
@@ -138,6 +138,20 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
     if (category === 'all') return player.inventory;
     return player.inventory.filter(item => getItemCategory(item) === category);
   }, [player.inventory, category]);
+
+  // Unequippable equipment in inventory (class-locked or level-locked)
+  const unequippableItems = useMemo(() => {
+    return player.inventory.filter(item => {
+      if (!item.slot) return false;
+      const levelLocked = item.level && item.level > player.level;
+      const classLocked = !canClassEquip(item, player.characterClass);
+      return levelLocked || classLocked;
+    });
+  }, [player.inventory, player.level, player.characterClass]);
+
+  const unequippableGold = useMemo(() => {
+    return unequippableItems.reduce((sum, item) => sum + (item.sellPrice || 0) * (item.stackCount || 1), 0);
+  }, [unequippableItems]);
 
   return (
     <div className="screen screen-shop">
@@ -227,7 +241,18 @@ export default function ShopScreen({ player, pets, shopPurchases, onBuy, onSell,
               </div>
             )}
 
-            {tab === 'sell' && renderSellList(filteredInventory, player, onSell)}
+            {tab === 'sell' && (
+              <>
+                {unequippableItems.length > 0 && (
+                  <div className="shop-sell-unequippable">
+                    <button className="shop-sell-unequippable-btn" onClick={onSellUnequippable}>
+                      Sell All Unequippable ({unequippableItems.length}) — +{unequippableGold}g
+                    </button>
+                  </div>
+                )}
+                {renderSellList(filteredInventory, player, onSell)}
+              </>
+            )}
           </div>
         </>
       )}
