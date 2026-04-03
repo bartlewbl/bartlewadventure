@@ -2197,6 +2197,104 @@ export const BOSS_GIMMICKS = {
   'boss-primordial-god': { type: 'genesis_countdown', name: 'Genesis Countdown', desc: 'Counts down from 8. At 0, resets the battle. Each player hit reduces count by 1. Boss heals 5% per turn during countdown', triggerHpPct: 0.4, countdown: 8, healPct: 0.05 },
 };
 
+// ---- EVENT BOSSES ----
+// Special bosses that only appear via random events in specific regions.
+// They are tougher than normal bosses for their level but drop better loot.
+export const EVENT_BOSSES = {
+  // Neon District
+  'event-boss-neon-phantom': {
+    name: 'Neon Phantom', sprite: 'ghost', isBoss: true, baseHp: 160, baseAtk: 18, baseDef: 4, baseSpeed: 10,
+    baseExp: 120, baseGold: 80, skills: ['shadowstrike', 'drain', 'screech', 'channel_fury'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Glitch in the Grid', region: 'neon-district',
+  },
+  // Frozen Wastes
+  'event-boss-avalanche-yeti': {
+    name: 'Avalanche Yeti', sprite: 'golem', isBoss: true, baseHp: 220, baseAtk: 24, baseDef: 10, baseSpeed: 5,
+    baseExp: 200, baseGold: 120, skills: ['slam', 'frostbite', 'roar', 'channel_ice'],
+    dropTable: [{ type: 'armor', weight: 14 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Terror of the Snowdrifts', region: 'frozen-wastes',
+  },
+  // Scorched Badlands
+  'event-boss-mirage-djinn': {
+    name: 'Mirage Djinn', sprite: 'ghost', isBoss: true, baseHp: 280, baseAtk: 32, baseDef: 8, baseSpeed: 9,
+    baseExp: 300, baseGold: 180, skills: ['heatwave', 'firebreath', 'curse', 'channel_flame'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Lord of Burning Illusions', region: 'scorched-badlands',
+  },
+  // Toxic Marshlands
+  'event-boss-plague-mother': {
+    name: 'Plague Mother', sprite: 'slime', isBoss: true, baseHp: 360, baseAtk: 34, baseDef: 12, baseSpeed: 4,
+    baseExp: 380, baseGold: 220, skills: ['poison', 'venom', 'drain', 'channel_fury'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Origin of the Blight', region: 'toxic-marshlands',
+  },
+  // Abyssal Depths
+  'event-boss-leviathan-hatchling': {
+    name: 'Leviathan Hatchling', sprite: 'dragon', isBoss: true, baseHp: 440, baseAtk: 40, baseDef: 14, baseSpeed: 7,
+    baseExp: 480, baseGold: 300, skills: ['charge', 'slam', 'thunderclap', 'channel_storm'],
+    dropTable: [{ type: 'sword', weight: 14 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Spawn of the Abyss', region: 'abyssal-depths',
+  },
+  // Celestial Highlands
+  'event-boss-fallen-seraph': {
+    name: 'Fallen Seraph', sprite: 'ghost', isBoss: true, baseHp: 520, baseAtk: 48, baseDef: 16, baseSpeed: 8,
+    baseExp: 600, baseGold: 380, skills: ['holybeam', 'judgment', 'drain', 'channel_light'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Angel Cast from Grace', region: 'celestial-highlands',
+  },
+  // Void Nexus
+  'event-boss-reality-eater': {
+    name: 'Reality Eater', sprite: 'dragon', isBoss: true, baseHp: 650, baseAtk: 56, baseDef: 18, baseSpeed: 6,
+    baseExp: 750, baseGold: 460, skills: ['voidrift', 'entropy', 'oblivion', 'channel_void'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'ring', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Devourer of What Is', region: 'void-nexus',
+  },
+  // Shattered Dimension
+  'event-boss-chrono-wraith': {
+    name: 'Chrono Wraith', sprite: 'ghost', isBoss: true, baseHp: 800, baseAtk: 68, baseDef: 20, baseSpeed: 9,
+    baseExp: 950, baseGold: 600, skills: ['timewarp', 'drain', 'oblivion', 'channel_void'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Echo of a Forgotten Timeline', region: 'shattered-dimension',
+  },
+  // Infernal Dominion
+  'event-boss-sin-incarnate': {
+    name: 'Sin Incarnate', sprite: 'vagrant', isBoss: true, baseHp: 1000, baseAtk: 78, baseDef: 24, baseSpeed: 7,
+    baseExp: 1200, baseGold: 780, skills: ['soulrend', 'inferno', 'curse', 'channel_inferno'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'ring', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Walking Damnation', region: 'infernal-dominion',
+  },
+  // Ethereal Sanctum
+  'event-boss-memory-devourer': {
+    name: 'Memory Devourer', sprite: 'dragon', isBoss: true, baseHp: 1200, baseAtk: 88, baseDef: 26, baseSpeed: 8,
+    baseExp: 1500, baseGold: 950, skills: ['spiritfire', 'drain', 'madness', 'channel_spirit'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Eater of Who You Were', region: 'ethereal-sanctum',
+  },
+  // Primordial Core
+  'event-boss-unborn-god': {
+    name: 'The Unborn God', sprite: 'dragon', isBoss: true, baseHp: 1500, baseAtk: 100, baseDef: 30, baseSpeed: 7,
+    baseExp: 2000, baseGold: 1300, skills: ['primordialsmash', 'genesis_pulse', 'oblivion', 'channel_genesis'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 4 }],
+    title: 'Deity That Never Was', region: 'primordial-core',
+  },
+};
+
+// Event boss gimmicks
+export const EVENT_BOSS_GIMMICKS = {
+  'event-boss-neon-phantom': { type: 'phase_shift', name: 'Neon Flicker', desc: 'Flickers between tangible and intangible — 40% chance to dodge each hit', triggerHpPct: 0.7, dodgePct: 0.4 },
+  'event-boss-avalanche-yeti': { type: 'enrage', name: 'Avalanche Fury', desc: 'ATK increases by 20% every 2 turns', triggerHpPct: 0.6, atkBoostPct: 0.2, interval: 2 },
+  'event-boss-mirage-djinn': { type: 'whiteout', name: 'Mirage Veil', desc: 'Player attacks have 50% miss chance for 2 turns', triggerHpPct: 0.5, missPct: 0.5, duration: 2 },
+  'event-boss-plague-mother': { type: 'regeneration', name: 'Festering Growth', desc: 'Heals 6% max HP per turn', triggerHpPct: 0.7, healPct: 0.06 },
+  'event-boss-leviathan-hatchling': { type: 'armor_up', name: 'Scale Harden', desc: 'Doubles DEF for 4 turns', triggerHpPct: 0.5, defMult: 2.0, duration: 4 },
+  'event-boss-fallen-seraph': { type: 'ash_resurrection', name: 'Divine Rebirth', desc: 'Revives once at 40% HP when killed', triggerHpPct: 0, reviveHpPct: 0.4 },
+  'event-boss-reality-eater': { type: 'phase_shift', name: 'Reality Warp', desc: 'Alternates between physical and void form each turn', triggerHpPct: 0.7, phases: ['physical', 'void'] },
+  'event-boss-chrono-wraith': { type: 'time_freeze', name: 'Time Stop', desc: 'Freezes player for 2 turns, then attacks with triple damage', triggerHpPct: 0.4, freezeTurns: 2, dmgMult: 3.0 },
+  'event-boss-sin-incarnate': { type: 'venom_stacks', name: 'Sin Stacks', desc: 'Each attack adds sin stacks — at 4 stacks, deals 30% max HP', triggerHpPct: 1.0, maxStacks: 4, burstDmgPct: 0.3 },
+  'event-boss-memory-devourer': { type: 'poison_nova', name: 'Memory Drain', desc: 'Drains memories — player takes 5% max HP per turn and healing reduced by 50%', triggerHpPct: 0.5, poisonDuration: 5, healReduction: 0.5 },
+  'event-boss-unborn-god': { type: 'genesis_countdown', name: 'Unborn Pulse', desc: 'Counts down from 6. At 0, resets the battle. Boss heals 8% per turn during countdown', triggerHpPct: 0.4, countdown: 6, healPct: 0.08 },
+};
+
 // ---- RARITIES ----
 export const RARITIES = [
   { name: 'Common',    cssClass: 'rarity-common',    color: '#ccc',    multiplier: 1.0, weight: 72 },
@@ -4284,6 +4382,250 @@ export const RANDOM_EVENTS = [
         outcomes: [
           { weight: 0.50, type: 'gold_big', text: 'You stoke the forge and attract a passing smith who pays well for the setup.' },
           { weight: 0.50, type: 'gold', text: 'You sell the leftover materials to a passing scavenger.' },
+        ],
+      },
+    ],
+  },
+  // ---- EVENT BOSS ENCOUNTERS ----
+  // Region-specific events that can spawn special event bosses.
+  {
+    id: 'neon-glitch-surge',
+    title: 'Glitch Surge',
+    region: 'neon-district',
+    description: 'The neon signs around you flicker violently and a distorted figure materializes from the static. It pulses with unstable energy.',
+    choices: [
+      {
+        label: 'Confront It',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-neon-phantom', text: 'The Neon Phantom solidifies and attacks with crackling energy!' },
+          { weight: 0.40, type: 'item_rare', text: 'The figure dissolves before you, leaving behind a piece of glitched equipment.' },
+        ],
+      },
+      {
+        label: 'Back Away Slowly',
+        outcomes: [
+          { weight: 0.70, type: 'nothing', text: 'The figure flickers and fades. You let out a breath you didn\'t know you were holding.' },
+          { weight: 0.30, type: 'damage', amount: 0.15, text: 'A bolt of static arcs toward you as you retreat!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'frozen-howl',
+    title: 'Thunderous Howl',
+    region: 'frozen-wastes',
+    description: 'A deep, guttural howl shakes the snow from the trees. Massive footprints in the ice lead into a fog bank.',
+    choices: [
+      {
+        label: 'Follow the Tracks',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-avalanche-yeti', text: 'A colossal yeti bursts from the fog, fists raised to crush you!' },
+          { weight: 0.40, type: 'gold_big', text: 'The tracks lead to an abandoned camp with a frozen treasure chest.' },
+        ],
+      },
+      {
+        label: 'Find Shelter',
+        outcomes: [
+          { weight: 0.60, type: 'heal', amount: 0.15, text: 'You hunker down and wait it out. The cold eases as you find a warm overhang.' },
+          { weight: 0.40, type: 'nothing', text: 'The howling fades into the distance. Whatever it was, it moved on.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'desert-mirage',
+    title: 'Shimmering Mirage',
+    region: 'scorched-badlands',
+    description: 'The heat haze before you coalesces into what looks like a palace of gold. A robed figure beckons from its entrance.',
+    choices: [
+      {
+        label: 'Approach the Figure',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-mirage-djinn', text: 'The mirage shatters and the Djinn reveals its true form — fury incarnate!' },
+          { weight: 0.40, type: 'item_great', text: 'The figure bows and presents you with a gift before vanishing into the heat.' },
+        ],
+      },
+      {
+        label: 'Ignore the Mirage',
+        outcomes: [
+          { weight: 0.70, type: 'nothing', text: 'You know better than to trust desert illusions. You press on.' },
+          { weight: 0.30, type: 'energy_drain', amount: 4, text: 'The shimmering heat saps your will to continue. You feel drained.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'swamp-bloom',
+    title: 'Corrupted Bloom',
+    region: 'toxic-marshlands',
+    description: 'A massive flower erupts from the muck, its petals dripping with iridescent poison. Something writhes inside its bulb.',
+    choices: [
+      {
+        label: 'Cut It Open',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-plague-mother', text: 'The Plague Mother bursts free, showering you in toxic spores!' },
+          { weight: 0.40, type: 'item_rare', text: 'Inside the bulb you find a crystallized toxin — valuable alchemical gear!' },
+        ],
+      },
+      {
+        label: 'Leave It Alone',
+        outcomes: [
+          { weight: 0.60, type: 'nothing', text: 'Some things in the swamp are best left undisturbed.' },
+          { weight: 0.40, type: 'damage', amount: 0.10, text: 'Even passing near it, the spores irritate your lungs.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'deep-tremor',
+    title: 'Abyssal Tremor',
+    region: 'abyssal-depths',
+    description: 'The ocean floor shudders violently. A massive shadow passes overhead, far too large to be any normal creature.',
+    choices: [
+      {
+        label: 'Lure It Down',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-leviathan-hatchling', text: 'A Leviathan Hatchling descends with jaws wide open!' },
+          { weight: 0.40, type: 'gold_big', text: 'The creature dislodges treasure from the reef as it passes. You grab what you can.' },
+        ],
+      },
+      {
+        label: 'Hide in the Coral',
+        outcomes: [
+          { weight: 0.70, type: 'nothing', text: 'You wedge yourself between coral formations until the shadow passes.' },
+          { weight: 0.30, type: 'item', text: 'While hiding, you discover a piece of gear wedged in the coral.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'celestial-fall',
+    title: 'Falling Star',
+    region: 'celestial-highlands',
+    description: 'A brilliant streak of light crashes into a nearby cloud island, leaving a smoldering crater. Wings of tarnished gold unfurl from the impact.',
+    choices: [
+      {
+        label: 'Investigate the Crater',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-fallen-seraph', text: 'The Fallen Seraph rises, eyes burning with anguish and rage!' },
+          { weight: 0.40, type: 'item_great', text: 'The impact scattered divine fragments — you collect a radiant piece of equipment.' },
+        ],
+      },
+      {
+        label: 'Observe from Distance',
+        outcomes: [
+          { weight: 0.50, type: 'gold', text: 'Scattered coins of celestial gold rain down from the impact. You gather some.' },
+          { weight: 0.50, type: 'nothing', text: 'The light fades. Whatever fell from the sky does not stir again.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'void-tear',
+    title: 'Rift Tear',
+    region: 'void-nexus',
+    description: 'Reality cracks open before you like a wound. Something immense and hungry stares through the gap.',
+    choices: [
+      {
+        label: 'Reach Through',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-reality-eater', text: 'The Reality Eater lunges through the tear, jaws unhinged!' },
+          { weight: 0.40, type: 'item_rare', text: 'Your hand closes around something solid beyond the rift — a weapon forged in nothingness!' },
+        ],
+      },
+      {
+        label: 'Seal the Rift',
+        outcomes: [
+          { weight: 0.50, type: 'heal', amount: 0.20, text: 'You force the rift closed. Stabilizing energy washes over you.' },
+          { weight: 0.50, type: 'energy_drain', amount: 6, text: 'Closing the rift drains your life force. You feel hollow inside.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'shattered-echo',
+    title: 'Temporal Echo',
+    region: 'shattered-dimension',
+    description: 'A ghostly version of yourself walks toward you from the fractured horizon. It wears your face but its eyes are wrong — ancient and cold.',
+    choices: [
+      {
+        label: 'Face Your Echo',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-chrono-wraith', text: 'The Chrono Wraith sheds your likeness and reveals its true monstrous form!' },
+          { weight: 0.40, type: 'item_great', text: 'The echo dissolves, leaving behind gear from a timeline where you were stronger.' },
+        ],
+      },
+      {
+        label: 'Close Your Eyes',
+        outcomes: [
+          { weight: 0.60, type: 'nothing', text: 'When you open them, the echo is gone. Just another trick of this broken place.' },
+          { weight: 0.40, type: 'damage', amount: 0.20, text: 'The echo touches your forehead. Pain lances through your skull as memories scatter.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'infernal-summoning',
+    title: 'Demonic Summoning Circle',
+    region: 'infernal-dominion',
+    description: 'A pulsing circle of hellfire runes blazes on the ground. Something is being pulled through from a deeper layer of Hell.',
+    choices: [
+      {
+        label: 'Disrupt the Ritual',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-sin-incarnate', text: 'Too late! Sin Incarnate rips free from the circle and turns on you!' },
+          { weight: 0.40, type: 'gold_big', text: 'You shatter the runes. The summoning fails and scattered demonic coins materialize.' },
+        ],
+      },
+      {
+        label: 'Walk Around It',
+        outcomes: [
+          { weight: 0.60, type: 'nothing', text: 'You give the circle a wide berth. Whatever it summons is someone else\'s problem.' },
+          { weight: 0.40, type: 'damage', amount: 0.15, text: 'Hellfire lashes out at you as you skirt the edge of the circle!' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'spirit-convergence',
+    title: 'Spirit Convergence',
+    region: 'ethereal-sanctum',
+    description: 'Thousands of spirit wisps converge into a massive swirling vortex. A face forms in the maelstrom — hungry and ancient.',
+    choices: [
+      {
+        label: 'Challenge the Spirit',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-memory-devourer', text: 'The Memory Devourer crystallizes from the vortex, ready to consume your very identity!' },
+          { weight: 0.40, type: 'item_rare', text: 'The spirits scatter, leaving behind a fragment of condensed memory — powerful equipment!' },
+        ],
+      },
+      {
+        label: 'Meditate',
+        outcomes: [
+          { weight: 0.50, type: 'heal', amount: 0.25, text: 'You find peace among the spirits. They heal your wounds as they disperse.' },
+          { weight: 0.50, type: 'energy_restore', amount: 8, text: 'The spirits share their energy with you before fading away.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'primordial-awakening',
+    title: 'Primordial Awakening',
+    region: 'primordial-core',
+    description: 'The raw energy of creation concentrates into a towering form. It opens eyes that have never seen the world before — and they burn with newborn fury.',
+    choices: [
+      {
+        label: 'Stand Your Ground',
+        outcomes: [
+          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-unborn-god', text: 'The Unborn God takes its first breath and its first kill — you\'re the target!' },
+          { weight: 0.40, type: 'item_great', text: 'The form collapses before fully manifesting, leaving behind raw primordial essence shaped into gear.' },
+        ],
+      },
+      {
+        label: 'Flee the Area',
+        outcomes: [
+          { weight: 0.50, type: 'nothing', text: 'You run. No shame in retreating from something that was never meant to exist.' },
+          { weight: 0.50, type: 'energy_drain', amount: 8, text: 'The gravitational pull of the awakening drains your energy as you escape.' },
         ],
       },
     ],
