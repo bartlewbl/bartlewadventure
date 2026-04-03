@@ -3674,12 +3674,14 @@ body {
 }
 
 .shop-wallet-gold {
+  font-family: 'Press Start 2P', monospace;
   font-size: 11px;
   color: #ffd700;
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
 }
 
 .shop-wallet-inv {
+  font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   color: #8e8eb2;
 }
@@ -3900,6 +3902,7 @@ body {
 }
 
 .shop-card-type {
+  font-family: 'Press Start 2P', monospace;
   font-size: 6px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -3907,6 +3910,7 @@ body {
 }
 
 .shop-card-name {
+  font-family: 'Press Start 2P', monospace;
   font-size: 9px;
   color: #fff;
   white-space: nowrap;
@@ -3922,6 +3926,7 @@ body {
 }
 
 .shop-rarity-badge {
+  font-family: 'Press Start 2P', monospace;
   font-size: 6px;
   padding: 2px 5px;
   border-radius: 2px;
@@ -3940,20 +3945,21 @@ body {
 }
 
 .shop-card-level {
+  font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   color: #aaccff;
-  font-weight: bold;
 }
 
 .shop-card-stats {
+  font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   color: #7cfc7c;
 }
 
 .shop-card-stock {
+  font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   color: #ffaa33;
-  font-weight: bold;
   margin-left: 4px;
 }
 
@@ -4009,10 +4015,12 @@ body {
 }
 
 .shop-btn-price {
+  font-family: 'Press Start 2P', monospace;
   font-size: 9px;
 }
 
 .shop-btn-label {
+  font-family: 'Press Start 2P', monospace;
   font-size: 6px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -9144,6 +9152,38 @@ body {
   font-size: 7px;
   color: #aaa;
   margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* Trading cost list in trading market */
+.trading-cost-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.trading-cost-item {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.trading-cost-item.has-enough {
+  color: #4fc3f7;
+}
+
+.trading-cost-item.not-enough {
+  color: #ff5252;
+}
+
+/* Shop card description line */
+.shop-card-desc {
+  font-size: 7px;
+  color: #999;
+  margin-top: 2px;
   line-height: 1.4;
 }
 
