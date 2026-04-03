@@ -485,19 +485,14 @@ export default function ShopScreen({ player, pets, base, shopPurchases, onBuy, o
                         {chest.itemCount.min}-{chest.itemCount.max} items + {chest.goldBonus.min}-{chest.goldBonus.max}g
                       </span>
                     </div>
-                    <div className="shop-card-desc" style={{ fontSize: '0.8em', color: '#999', marginTop: 2 }}>{chest.desc}</div>
-                    <div className="trading-cost-list" style={{ marginTop: 4 }}>
+                    <div className="shop-card-desc">{chest.desc}</div>
+                    <div className="trading-cost-list">
                       {Object.entries(chest.materialCost).map(([matId, qty]) => {
                         const matDef = BUILDING_MATERIALS[matId];
                         const have = baseMats[matId] || 0;
                         const enough = have >= qty;
                         return (
-                          <span key={matId} className="trading-cost-item" style={{
-                            display: 'inline-block',
-                            marginRight: 8,
-                            fontSize: '0.78em',
-                            color: enough ? '#4fc3f7' : '#ff5252',
-                          }}>
+                          <span key={matId} className={`trading-cost-item ${enough ? 'has-enough' : 'not-enough'}`}>
                             {matDef?.name || matId} {have}/{qty}
                           </span>
                         );
