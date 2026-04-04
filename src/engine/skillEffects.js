@@ -828,6 +828,107 @@ const EFFECT_HANDLERS = {
     }
     return { player, monster, battle, log };
   },
+
+  // ---- FACTION SPECIAL ATTACKS ----
+
+  // Ironforge Covenant — Molten Slam: burn DoT 3 turns
+  faction_molten_slam: ({ monster, battle, log }) => {
+    battle = { ...battle, monsterBurnTurns: (battle.monsterBurnTurns || 0) + 3 };
+    log.push({ text: `The enemy is engulfed in flames! (Burn 3 turns)`, type: 'info' });
+    return { monster, battle, log };
+  },
+
+  // Ironforge Covenant — Forge Shield: 25% damage reduction + 15% thorns for 3 turns
+  faction_forge_shield: ({ player, battle, log }) => {
+    battle = { ...battle, forgeShieldTurns: 3, forgeShieldReduction: 0.25, forgeShieldThorns: 0.15 };
+    log.push({ text: `A blazing shield surrounds you! (-25% dmg taken, 15% thorns for 3 turns)`, type: 'info' });
+    return { player, battle, log };
+  },
+
+  // Shadow Syndicate — Venomstrike: strong poison 4 turns
+  faction_venomstrike: ({ monster, battle, log }) => {
+    battle = { ...battle, monsterPoisonTurns: Math.max(battle.monsterPoisonTurns || 0, 4) };
+    log.push({ text: `Deadly venom courses through the enemy! (Poison 4 turns)`, type: 'info' });
+    return { monster, battle, log };
+  },
+
+  // Shadow Syndicate — Shadowstep: dodge next 2 attacks
+  faction_shadowstep: ({ battle, log }) => {
+    battle = { ...battle, dodgeCharges: (battle.dodgeCharges || 0) + 2 };
+    log.push({ text: `You vanish into shadow! (Dodge next 2 attacks)`, type: 'info' });
+    return { battle, log };
+  },
+
+  // Old Guard Order — Guardian's Smite: heal 30% of damage dealt
+  faction_guardian_smite: ({ dmg, player, log }) => {
+    const heal = Math.floor(dmg * 0.30);
+    player = { ...player, hp: Math.min(player.maxHp, player.hp + heal) };
+    log.push({ text: `Guardian light heals you for ${heal} HP!`, type: 'heal' });
+    return { player, log };
+  },
+
+  // Old Guard Order — Ancestral Ward: +20% ATK and DEF for 4 turns
+  faction_ancestral_ward: ({ battle, log }) => {
+    battle = { ...battle, ancestralWardTurns: 4, ancestralWardBonus: 0.20 };
+    log.push({ text: `Ancient spirits bolster you! (+20% ATK & DEF for 4 turns)`, type: 'info' });
+    return { battle, log };
+  },
+
+  // Golden Cartel — Fortune's Gambit: random multiplier 0.5x–2.5x + gold flag
+  faction_fortunes_gambit: ({ dmg, monster, battle, log }) => {
+    const roll = 0.5 + Math.random() * 2.0; // 0.5x to 2.5x
+    const bonusDmg = Math.floor(dmg * roll) - dmg;
+    if (bonusDmg > 0) {
+      monster = { ...monster, hp: Math.max(0, monster.hp - bonusDmg) };
+      log.push({ text: `Fortune smiles! ${bonusDmg} bonus damage! (${roll.toFixed(1)}x)`, type: 'dmg-monster' });
+    } else if (bonusDmg < 0) {
+      monster = { ...monster, hp: Math.min(monster.maxHp, monster.hp - bonusDmg) };
+      log.push({ text: `Bad luck! Lost ${Math.abs(bonusDmg)} damage... (${roll.toFixed(1)}x)`, type: 'info' });
+    } else {
+      log.push({ text: `Fortune breaks even. (1.0x)`, type: 'info' });
+    }
+    battle = { ...battle, monster, goldenGambitActive: true };
+    return { monster, battle, log };
+  },
+
+  // Golden Cartel — Gilded Barrage: 2 extra hits at 0.7x each, 25% stun per hit
+  faction_gilded_barrage: ({ dmg, monster, battle, log }) => {
+    let totalExtra = 0;
+    let stunApplied = false;
+    for (let i = 0; i < 2; i++) {
+      const hitDmg = Math.floor(dmg * 0.7);
+      totalExtra += hitDmg;
+      if (Math.random() < 0.25 && !stunApplied) {
+        battle = { ...battle, monsterStunTurns: (battle.monsterStunTurns || 0) + 1 };
+        stunApplied = true;
+      }
+    }
+    monster = { ...monster, hp: Math.max(0, monster.hp - totalExtra) };
+    battle = { ...battle, monster };
+    log.push({ text: `Gilded Barrage hits twice more for ${totalExtra} total!`, type: 'dmg-monster' });
+    if (stunApplied) log.push({ text: `Enemy is stunned!`, type: 'info' });
+    return { monster, battle, log };
+  },
+
+  // Steel Legion — Disciplined Strike: reduce enemy ATK by 15% for 3 turns
+  faction_disciplined_strike: ({ monster, battle, log }) => {
+    const reduction = Math.max(1, Math.floor(monster.atk * 0.15));
+    monster = { ...monster, atk: Math.max(1, monster.atk - reduction) };
+    battle = { ...battle, monster, atkDebuffTurns: (battle.atkDebuffTurns || 0) + 3 };
+    log.push({ text: `Disciplined strike weakens enemy ATK by ${reduction}!`, type: 'info' });
+    return { monster, battle, log };
+  },
+
+  // Steel Legion — Commander's Charge: 40% chance to stun 1 turn
+  faction_commanders_charge: ({ monster, battle, log }) => {
+    if (Math.random() < 0.40) {
+      battle = { ...battle, monsterStunTurns: (battle.monsterStunTurns || 0) + 1 };
+      log.push({ text: `The charge staggers the enemy! Stunned for 1 turn!`, type: 'info' });
+    } else {
+      log.push({ text: `The enemy braces against the charge!`, type: 'info' });
+    }
+    return { monster, battle, log };
+  },
 };
 
 // Pierce and execute effects are handled in combat.js (getEffectiveDef / getExecuteMultiplier)

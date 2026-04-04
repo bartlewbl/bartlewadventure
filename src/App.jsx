@@ -30,6 +30,7 @@ import RightPanel from './components/RightPanel';
 import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
 import StatsScreen from './components/screens/StatsScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
+import TavernScreen from './components/screens/TavernScreen';
 import MobileNav from './components/MobileNav';
 import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
@@ -255,6 +256,7 @@ export default function App() {
               onBase={() => actions.showScreen('base')}
               onPets={() => actions.showScreen('pets')}
               onJournal={() => actions.showScreen('journal')}
+              onTavern={() => actions.showScreen('tavern')}
               onRest={actions.restAtInn}
               navLocked={navLocked}
               gold={state.player.gold}
@@ -389,6 +391,7 @@ export default function App() {
                 battleLog={state.battleLog}
                 player={state.player}
                 pets={state.pets}
+                tavern={state.tavern}
                 onAttack={actions.battleAttack}
                 onSkill={actions.battleSkill}
                 onDefend={actions.battleDefend}
@@ -402,6 +405,7 @@ export default function App() {
                 onParry={actions.battleParry}
                 onChangeStance={actions.battleChangeStance}
                 onUniversalSkill={actions.battleUniversalSkill}
+                onFactionSkill={actions.battleFactionSkill}
                 setBattleAnim={setBattleAnim}
                 animTick={animTick}
               />
@@ -478,12 +482,14 @@ export default function App() {
                 pets={state.pets}
                 base={state.base}
                 shopPurchases={state.shopPurchases || {}}
+                tavern={state.tavern}
                 onBuy={actions.buyItem}
                 onSell={actions.sellItem}
                 onSellUnequippable={actions.sellUnequippable}
                 onBuyPet={actions.buyPet}
                 onBuyPetItem={actions.buyPetItem}
                 onTradeForChest={actions.tradeForChest}
+                onTavernBuy={actions.tavernBuyItem}
                 onBack={actions.goToTown}
               />
             )}
@@ -507,6 +513,7 @@ export default function App() {
               <BaseScreen
                 player={state.player}
                 base={state.base}
+                tavern={state.tavern}
                 onBack={actions.goToTown}
                 onBuild={actions.baseBuild}
                 onAddFuel={actions.baseAddFuel}
@@ -571,6 +578,19 @@ export default function App() {
               />
             )}
 
+            {state.screen === 'tavern' && (
+              <TavernScreen
+                tavern={state.tavern}
+                player={state.player}
+                stats={state.stats}
+                onAcceptQuest={actions.tavernAcceptQuest}
+                onTurnInQuest={actions.tavernTurnInQuest}
+                onLearnFactionSkill={actions.tavernLearnFactionSkill}
+                onBuyItem={actions.tavernBuyItem}
+                onBack={actions.goToTown}
+              />
+            )}
+
             {state.screen === 'probability-dashboard' && (
               <ProbabilityDashboard onBack={actions.goToTown} />
             )}
@@ -608,6 +628,7 @@ export default function App() {
             onBase={() => actions.showScreen('base')}
             onPets={() => actions.showScreen('pets')}
             onJournal={() => actions.showScreen('journal')}
+            onTavern={() => actions.showScreen('tavern')}
             onProfile={() => actions.showScreen('profile')}
             onSkills={() => actions.showScreen('skills')}
             onStats={() => actions.showScreen('player-stats')}

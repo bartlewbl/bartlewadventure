@@ -7,7 +7,7 @@ Pure game logic, no UI. All files are imported by components and the main game l
 | File | Purpose |
 |------|---------|
 | combat.js | Damage formulas, stat getters, dodge/crit/resistance, turn order |
-| skillEffects.js | 60+ skill effect handlers (recoil, healing, debuffs, DoTs) |
+| skillEffects.js | 70+ skill effect handlers (recoil, healing, debuffs, DoTs, faction attacks) |
 | passives.js | Passive triggers at 5 battle phases (turn start, after attack, after skill, taking damage, post-defense) |
 | elements.js | Elemental damage triangles (Fire>Ice>Lightning>Fire, Shadow>Nature>Arcane>Shadow) + weather system |
 | scaling.js | Monster/boss stat scaling by area level |
@@ -62,6 +62,25 @@ loot.js ← utils.js
 arena.js ← loot.js, CHARACTER_CLASSES from data/
 scaling.js ← standalone (used by encounter spawning)
 ```
+
+## Faction Combat Skills (skillEffects.js)
+
+10 faction-specific effects tied to tavern NPC reputation (defined in `data/tavernData.js`):
+
+| Effect | Faction | Description |
+|--------|---------|-------------|
+| faction_molten_slam | Ironforge Covenant (Grog) | Burn DoT 3 turns (5% maxHP/turn) |
+| faction_forge_shield | Ironforge Covenant (Grog) | -25% dmg taken + 15% thorns for 3 turns |
+| faction_venomstrike | Shadow Syndicate (Whisper) | Poison 4 turns |
+| faction_shadowstep | Shadow Syndicate (Whisper) | +2 dodge charges |
+| faction_guardian_smite | Old Guard Order (Fenwick) | Heal 30% of damage dealt |
+| faction_ancestral_ward | Old Guard Order (Fenwick) | +20% ATK & DEF for 4 turns |
+| faction_fortunes_gambit | Golden Cartel (Mira) | Random 0.5x-2.5x damage + gold on kill |
+| faction_gilded_barrage | Golden Cartel (Mira) | 2 extra hits at 0.7x, 25% stun each |
+| faction_disciplined_strike | Steel Legion (Thorne) | -15% enemy ATK for 3 turns |
+| faction_commanders_charge | Steel Legion (Thorne) | 40% chance stun 1 turn |
+
+Battle state keys added: `monsterBurnTurns`, `forgeShieldTurns`, `forgeShieldReduction`, `forgeShieldThorns`, `ancestralWardTurns`, `ancestralWardBonus`, `goldenGambitActive`
 
 ## Common Pitfalls
 

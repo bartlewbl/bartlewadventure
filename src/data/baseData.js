@@ -435,6 +435,42 @@ export const BREWERY_RECIPES = [
     result: { type: 'energy-drink', tier: 3 }, craftTime: 20000,
     desc: 'Brew the ultimate energy restoration elixir.',
   },
+  // --- TAVERN-UNLOCKED RECIPES ---
+  {
+    id: 'brew-grogs-tonic', name: "Brew Grog's Fortifying Tonic",
+    tavernNpc: 'bartender', tavernReqRep: 2,
+    materials: { 'herb-bundle': 6, 'glass-vial': 2, 'toxic-resin': 2 },
+    result: { type: 'potion', tier: 2 }, craftTime: 12000,
+    desc: "Grog's secret recipe. Heals more than a standard combat stim.",
+  },
+  {
+    id: 'brew-whisper-venom', name: "Brew Whisper's Venom Draught",
+    tavernNpc: 'whisper', tavernReqRep: 3,
+    materials: { 'toxic-resin': 5, 'glass-vial': 2, 'herb-bundle': 3 },
+    result: { type: 'potion', tier: 3 }, craftTime: 18000,
+    desc: "Whisper's poison-turned-medicine. Potent healing with a bitter aftertaste.",
+  },
+  {
+    id: 'brew-fenwick-elixir', name: "Brew Fenwick's Veteran Elixir",
+    tavernNpc: 'fenwick', tavernReqRep: 3,
+    materials: { 'herb-bundle': 10, 'crystal-shard': 2, 'glass-vial': 3 },
+    result: { type: 'energy-drink', tier: 2 }, craftTime: 15000,
+    desc: "Old Fenwick's personal energy blend from his adventuring days.",
+  },
+  {
+    id: 'brew-mira-profit-potion', name: "Brew Mira's Golden Draught",
+    tavernNpc: 'mira', tavernReqRep: 2,
+    materials: { 'herb-bundle': 4, 'glass-vial': 2, 'crystal-shard': 1 },
+    result: { type: 'potion', tier: 1 }, craftTime: 8000,
+    desc: "Mira's budget-friendly recipe. Cheap to make, sells well.",
+  },
+  {
+    id: 'brew-thorne-battlestim', name: "Brew Thorne's Field Stim",
+    tavernNpc: 'thorne', tavernReqRep: 2,
+    materials: { 'herb-bundle': 5, 'glass-vial': 2, 'iron-ore': 2 },
+    result: { type: 'energy-drink', tier: 1 }, craftTime: 10000,
+    desc: "Military-grade energy stim. Thorne's squad swears by it.",
+  },
 ];
 
 // ---- SMELTER RECIPES ----
@@ -466,6 +502,31 @@ export const SMELTER_RECIPES = [
     fuelRequired: 8,
     result: { materialId: 'copper-wire', quantity: 3 }, craftTime: 10000,
     desc: 'Purify and extend copper wiring.',
+  },
+  // --- TAVERN-UNLOCKED RECIPES ---
+  {
+    id: 'smelt-whisper-alloy', name: "Whisper's Shadow Alloy",
+    tavernNpc: 'whisper', tavernReqRep: 3,
+    materials: { 'iron-ore': 4, 'coal-chunk': 2, 'void-essence': 1 },
+    fuelRequired: 20,
+    result: { materialId: 'iron-ingot', quantity: 5 }, craftTime: 15000,
+    desc: "Whisper's contacts taught her this high-yield smelting technique.",
+  },
+  {
+    id: 'smelt-thorne-reforge', name: "Thorne's Military Reforge",
+    tavernNpc: 'thorne', tavernReqRep: 4,
+    salvageGear: true,
+    fuelRequired: 15,
+    result: { materialId: 'iron-ingot', quantity: 3 }, craftTime: 12000,
+    desc: "Military-grade salvage technique. Extracts more material from gear.",
+  },
+  {
+    id: 'smelt-mira-crystal-refine', name: "Mira's Crystal Purification",
+    tavernNpc: 'mira', tavernReqRep: 4,
+    materials: { 'crystal-shard': 1, 'starlight-dust': 1 },
+    fuelRequired: 25,
+    result: { materialId: 'crystal-shard', quantity: 5 }, craftTime: 20000,
+    desc: "Mira's trade secret for multiplying crystal shards.",
   },
 ];
 
@@ -703,6 +764,42 @@ export const WORKSHOP_RECIPES = [
     result: { type: 'cape', template: 'crafted-starlight-shroud' }, craftTime: 20000,
     desc: 'A shroud that shimmers with celestial light.',
   },
+  // --- TAVERN-UNLOCKED RECIPES ---
+  {
+    id: 'craft-grogs-stein', name: "Forge Grog's Iron Stein",
+    tavernNpc: 'bartender', tavernReqRep: 3,
+    materials: { 'iron-ingot': 3, 'copper-wire': 2, 'glass-vial': 2 },
+    result: { type: 'accessory', template: 'crafted-grogs-stein' }, craftTime: 15000,
+    desc: "A sturdy drinking stein that Grog designed. Boosts vitality.",
+  },
+  {
+    id: 'craft-whisper-dagger', name: "Forge Whisper's Stiletto",
+    tavernNpc: 'whisper', tavernReqRep: 4,
+    materials: { 'void-essence': 2, 'iron-ingot': 3, 'crystal-shard': 2 },
+    result: { type: 'sword', template: 'crafted-whisper-stiletto' }, craftTime: 22000,
+    desc: "A lethal blade designed by Whisper for silent strikes.",
+  },
+  {
+    id: 'craft-fenwick-shield', name: "Forge Fenwick's Oathshield",
+    tavernNpc: 'fenwick', tavernReqRep: 4,
+    materials: { 'iron-ingot': 5, 'stone-block': 4, 'starlight-dust': 1 },
+    result: { type: 'shield', template: 'crafted-fenwick-oathshield' }, craftTime: 22000,
+    desc: "A replica of Fenwick's legendary adventuring shield.",
+  },
+  {
+    id: 'craft-mira-crown', name: "Forge Mira's Merchant Crown",
+    tavernNpc: 'mira', tavernReqRep: 4,
+    materials: { 'crystal-shard': 4, 'copper-wire': 3, 'starlight-dust': 2 },
+    result: { type: 'helmet', template: 'crafted-mira-merchant-crown' }, craftTime: 22000,
+    desc: "A crown that Mira claims brings fortune to its wearer.",
+  },
+  {
+    id: 'craft-thorne-armor', name: "Forge Thorne's Commandplate",
+    tavernNpc: 'thorne', tavernReqRep: 5,
+    materials: { 'iron-ingot': 6, 'void-essence': 2, 'starlight-dust': 2, 'plasma-core': 1 },
+    result: { type: 'armor', template: 'crafted-thorne-commandplate' }, craftTime: 30000,
+    desc: "The legendary armor of the Guard Commander. Thorne's masterwork.",
+  },
   // --- REGION TICKETS ---
   {
     id: 'craft-ticket-toxic-marshlands', name: 'Forge Marshland Visa',
@@ -779,6 +876,12 @@ export const CRAFTED_ITEMS = {
   'crafted-woven-cloak': { name: 'Woven Cloak', slot: 'cape', rarity: 'Uncommon', baseAtk: 2, baseDef: 6, baseLevel: 8, classes: ['thief'] },
   'crafted-crystal-mantle': { name: 'Crystal Mantle', slot: 'cape', rarity: 'Rare', baseAtk: 4, baseDef: 9, baseLevel: 15, classes: ['necromancer'] },
   'crafted-starlight-shroud': { name: 'Starlight Shroud', slot: 'cape', rarity: 'Epic', baseAtk: 7, baseDef: 12, baseLevel: 22, classes: ['berserker'] },
+  // Tavern-unlocked items
+  'crafted-grogs-stein': { name: "Grog's Iron Stein", slot: 'accessory', rarity: 'Rare', baseAtk: 4, baseDef: 8, baseLevel: 12 },
+  'crafted-whisper-stiletto': { name: "Whisper's Stiletto", slot: 'weapon', rarity: 'Epic', baseAtk: 28, baseDef: 0, baseLevel: 20 },
+  'crafted-fenwick-oathshield': { name: "Fenwick's Oathshield", slot: 'shield', rarity: 'Epic', baseAtk: 3, baseDef: 22, baseLevel: 20 },
+  'crafted-mira-merchant-crown': { name: "Mira's Merchant Crown", slot: 'helmet', rarity: 'Epic', baseAtk: 10, baseDef: 12, baseLevel: 20 },
+  'crafted-thorne-commandplate': { name: "Thorne's Commandplate", slot: 'armor', rarity: 'Legendary', baseAtk: 8, baseDef: 28, baseLevel: 25 },
 };
 
 // ---- EGG ITEMS ----

@@ -5,6 +5,7 @@ import {
   EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD,
   FARM_SEEDS, CROP_QUALITIES,
 } from '../../data/baseData';
+import { getRepLevel, REP_LEVELS, TAVERN_NPCS } from '../../data/tavernData';
 
 const BUILDING_ICONS = {
   brewery: '\u2697\uFE0F',
@@ -284,7 +285,22 @@ function BuildingConstructPanel({ buildingId, buildingDef, player, base, onBuild
   );
 }
 
-function BreweryPanel({ base, onBrew, onCollect }) {
+function checkTavernRecipeLock(recipe, tavern) {
+  if (!recipe.tavernNpc || !recipe.tavernReqRep) return null;
+  const rep = tavern?.reputation?.[recipe.tavernNpc] || 0;
+  const repLvl = getRepLevel(rep).level;
+  if (repLvl >= recipe.tavernReqRep) return null;
+  const npc = TAVERN_NPCS.find(n => n.id === recipe.tavernNpc);
+  const reqLabel = REP_LEVELS.find(r => r.level === recipe.tavernReqRep)?.label || '';
+  return `${reqLabel} with ${npc?.name || recipe.tavernNpc}`;
+}
+
+function TavernLockBadge({ lockReason }) {
+  if (!lockReason) return null;
+  return <div className="base-recipe-tavern-lock">Tavern: {lockReason}</div>;
+}
+
+function BreweryPanel({ base, tavern, onBrew, onCollect }) {
   const mats = base.materials || {};
   return (
     <div className="base-building-content">
@@ -295,11 +311,13 @@ function BreweryPanel({ base, onBrew, onCollect }) {
         <div className="base-recipe-list">
           {BREWERY_RECIPES.map(recipe => {
             const canCraft = Object.entries(recipe.materials).every(([id, qty]) => (mats[id] || 0) >= qty);
+            const lockReason = checkTavernRecipeLock(recipe, tavern);
             return (
-              <div key={recipe.id} className="base-recipe-item">
+              <div key={recipe.id} className={`base-recipe-item ${lockReason ? 'tavern-locked' : ''}`}>
                 <div className="base-recipe-info">
                   <div className="base-recipe-name">{recipe.name}</div>
                   <div className="base-recipe-desc">{recipe.desc}</div>
+                  <TavernLockBadge lockReason={lockReason} />
                   <div className="base-recipe-mats">
                     {Object.entries(recipe.materials).map(([id, qty]) => (
                       <span key={id} className={`base-recipe-mat ${(mats[id] || 0) >= qty ? 'met' : 'unmet'}`}>
@@ -308,7 +326,9 @@ function BreweryPanel({ base, onBrew, onCollect }) {
                     ))}
                   </div>
                 </div>
-                <button className="btn btn-sm" disabled={!canCraft} onClick={() => onBrew(recipe.id)}>Brew</button>
+                <button className="btn btn-sm" disabled={!canCraft || !!lockReason} onClick={() => onBrew(recipe.id)}>
+                  {lockReason ? 'Locked' : 'Brew'}
+                </button>
               </div>
             );
           })}
@@ -318,7 +338,7 @@ function BreweryPanel({ base, onBrew, onCollect }) {
   );
 }
 
-function SmelterPanel({ base, player, onSmelt, onCollect }) {
+function SmelterPanel({ base, tavern, player, onSmelt, onCollect }) {
   const mats = base.materials || {};
   return (
     <div className="base-building-content">
@@ -332,11 +352,13 @@ function SmelterPanel({ base, player, onSmelt, onCollect }) {
               ? Object.entries(recipe.materials).every(([id, qty]) => (mats[id] || 0) >= qty)
               : true;
             const hasGear = recipe.salvageGear ? player.inventory.some(i => i.slot) : true;
+            const lockReason = checkTavernRecipeLock(recipe, tavern);
             return (
-              <div key={recipe.id} className="base-recipe-item">
+              <div key={recipe.id} className={`base-recipe-item ${lockReason ? 'tavern-locked' : ''}`}>
                 <div className="base-recipe-info">
                   <div className="base-recipe-name">{recipe.name}</div>
                   <div className="base-recipe-desc">{recipe.desc}</div>
+                  <TavernLockBadge lockReason={lockReason} />
                   {recipe.materials && (
                     <div className="base-recipe-mats">
                       {Object.entries(recipe.materials).map(([id, qty]) => (
@@ -357,7 +379,7 @@ function SmelterPanel({ base, player, onSmelt, onCollect }) {
                 </div>
                 <button
                   className="btn btn-sm"
-                  disabled={!canCraft || !hasGear}
+                  disabled={!canCraft || !hasGear || !!lockReason}
                   onClick={() => {
                     if (recipe.salvageGear) {
                       const gear = player.inventory.find(i => i.slot);
@@ -367,7 +389,7 @@ function SmelterPanel({ base, player, onSmelt, onCollect }) {
                     }
                   }}
                 >
-                  Smelt
+                  {lockReason ? 'Locked' : 'Smelt'}
                 </button>
               </div>
             );
@@ -378,7 +400,7 @@ function SmelterPanel({ base, player, onSmelt, onCollect }) {
   );
 }
 
-function WorkshopPanel({ base, onCraft, onCollect }) {
+function WorkshopPanel({ base, tavern, onCraft, onCollect }) {
   const mats = base.materials || {};
   return (
     <div className="base-building-content">
@@ -389,11 +411,13 @@ function WorkshopPanel({ base, onCraft, onCollect }) {
         <div className="base-recipe-list">
           {WORKSHOP_RECIPES.map(recipe => {
             const canCraft = Object.entries(recipe.materials).every(([id, qty]) => (mats[id] || 0) >= qty);
+            const lockReason = checkTavernRecipeLock(recipe, tavern);
             return (
-              <div key={recipe.id} className="base-recipe-item">
+              <div key={recipe.id} className={`base-recipe-item ${lockReason ? 'tavern-locked' : ''}`}>
                 <div className="base-recipe-info">
                   <div className="base-recipe-name">{recipe.name}</div>
                   <div className="base-recipe-desc">{recipe.desc}</div>
+                  <TavernLockBadge lockReason={lockReason} />
                   <div className="base-recipe-mats">
                     {Object.entries(recipe.materials).map(([id, qty]) => (
                       <span key={id} className={`base-recipe-mat ${(mats[id] || 0) >= qty ? 'met' : 'unmet'}`}>
@@ -402,7 +426,9 @@ function WorkshopPanel({ base, onCraft, onCollect }) {
                     ))}
                   </div>
                 </div>
-                <button className="btn btn-sm" disabled={!canCraft} onClick={() => onCraft(recipe.id)}>Craft</button>
+                <button className="btn btn-sm" disabled={!canCraft || !!lockReason} onClick={() => onCraft(recipe.id)}>
+                  {lockReason ? 'Locked' : 'Craft'}
+                </button>
               </div>
             );
           })}
@@ -1185,7 +1211,7 @@ const TABS = [
 ];
 
 export default function BaseScreen({
-  player, base, onBack,
+  player, base, tavern, onBack,
   onBuild, onAddFuel, onAddFuelFromStorage, onStoreMaterial, onWithdrawMaterial,
   onBrew, onSmelt, onCraft, onCollectCraft,
   onUpgradeInn, onBuyInnBoost, onUpgradeChamber,
@@ -1262,15 +1288,15 @@ export default function BaseScreen({
 
       case 'brewery':
         if (!buildings.brewery?.built) return renderBuildingOrConstruct('brewery');
-        return <BreweryPanel base={base} onBrew={onBrew} onCollect={onCollectCraft} />;
+        return <BreweryPanel base={base} tavern={tavern} onBrew={onBrew} onCollect={onCollectCraft} />;
 
       case 'smelter':
         if (!buildings.smelter?.built) return renderBuildingOrConstruct('smelter');
-        return <SmelterPanel base={base} player={player} onSmelt={onSmelt} onCollect={onCollectCraft} />;
+        return <SmelterPanel base={base} tavern={tavern} player={player} onSmelt={onSmelt} onCollect={onCollectCraft} />;
 
       case 'workshop':
         if (!buildings.workshop?.built) return renderBuildingOrConstruct('workshop');
-        return <WorkshopPanel base={base} onCraft={onCraft} onCollect={onCollectCraft} />;
+        return <WorkshopPanel base={base} tavern={tavern} onCraft={onCraft} onCollect={onCollectCraft} />;
 
       case 'inn':
         if (!buildings.inn?.built) return renderBuildingOrConstruct('inn');

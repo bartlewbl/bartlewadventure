@@ -11,6 +11,7 @@ import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateReward
 import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
+import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills } from '../data/tavernData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
@@ -158,6 +159,13 @@ function createInitialState() {
       acceptedQuests: [],     // [{ questId, villageId, baseline }]
       completedQuests: [],    // [questId, ...]
     },
+    tavern: {
+      reputation: {},         // { npcId: number }
+      acceptedQuests: [],     // [{ questId, npcId, baseline }]
+      completedQuests: [],    // [questId, ...]
+      learnedFactionSkills: [], // [factionSkillId, ...]
+      shopPurchases: {},      // { itemKey: count }
+    },
     activeTrader: null,       // current trader encounter
     activeVillage: null,      // current village encounter
     pendingChest: null,       // { itemId, chestId } for chest opening screen
@@ -166,6 +174,8 @@ function createInitialState() {
     previousRegionId: null,   // saved when entering arena so player can return
   };
 }
+
+// ---- TAVERN BUFF HELPERS ----
 
 // ---- STAT TRACKING HELPERS ----
 function addStat(stats, key, amount = 1) {
@@ -397,6 +407,7 @@ function extractSaveData(state) {
     pets: state.pets,
     discoveredItemLocations: state.discoveredItemLocations,
     villageQuests: state.villageQuests,
+    tavern: state.tavern,
     previousRegionId: state.previousRegionId || null,
   };
 }
@@ -685,7 +696,7 @@ function gameReducer(state, action) {
   }
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests, previousRegionId: savedPreviousRegionId } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests, tavern: savedTavern, previousRegionId: savedPreviousRegionId } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -741,6 +752,7 @@ function gameReducer(state, action) {
         pendingLevelUps: mergedPending,
         discoveredItemLocations: savedDiscovered || {},
         villageQuests: { ...baseState.villageQuests, ...savedVillageQuests },
+        tavern: { ...baseState.tavern, ...savedTavern },
         previousRegionId: savedPreviousRegionId || null,
       };
     }
@@ -2487,6 +2499,21 @@ function gameReducer(state, action) {
           b.warShoutDefBuff = 0;
         }
       }
+      // Faction: burn DoT tick
+      if (b.monsterBurnTurns > 0) {
+        const burnDmg = Math.floor(m.maxHp * 0.05);
+        m.hp = Math.max(0, m.hp - burnDmg);
+        b.monsterBurnTurns--;
+        log.push({ text: `Burn deals ${burnDmg} to ${m.name}!`, type: 'dmg-monster' });
+        if (m.hp <= 0) {
+          b.monster = m;
+          return handleVictory({ ...state, player: p, battle: b, battleLog: log });
+        }
+      }
+      // Faction: forge shield tick
+      if (b.forgeShieldTurns > 0) b.forgeShieldTurns--;
+      // Faction: ancestral ward tick
+      if (b.ancestralWardTurns > 0) b.ancestralWardTurns--;
       // Combo bleed tick
       if (b.comboBleedTurns > 0) {
         const bleedDmg = Math.floor(m.maxHp * (b.comboBleedPct || 0.04));
@@ -2919,6 +2946,22 @@ function gameReducer(state, action) {
             const pAgg = getPlayerAggression(p);
             if (pAgg > 0) {
               dmg = Math.floor(dmg * calcAggressionDmgTaken(pAgg));
+            }
+
+            // Faction: Forge Shield damage reduction + thorns
+            if (b.forgeShieldTurns > 0) {
+              const shieldReduct = b.forgeShieldReduction || 0.25;
+              const dmgBefore = dmg;
+              dmg = Math.floor(dmg * (1 - shieldReduct));
+              if (b.forgeShieldThorns > 0) {
+                const thornsDmg = Math.floor(dmgBefore * b.forgeShieldThorns);
+                m = { ...m, hp: Math.max(0, m.hp - thornsDmg) };
+                log.push({ text: `Forge Shield reflects ${thornsDmg} fire damage!`, type: 'dmg-monster' });
+              }
+            }
+            // Faction: Ancestral Ward DEF bonus (reduces incoming damage)
+            if (b.ancestralWardTurns > 0 && b.ancestralWardBonus > 0) {
+              dmg = Math.floor(dmg * (1 - b.ancestralWardBonus));
             }
 
             // Parry: massive damage reduction + counter attack
@@ -4095,6 +4138,10 @@ function gameReducer(state, action) {
 
       const recipe = BREWERY_RECIPES.find(r => r.id === action.recipeId);
       if (!recipe) return state;
+      if (recipe.tavernNpc && recipe.tavernReqRep) {
+        const tRep = state.tavern?.reputation?.[recipe.tavernNpc] || 0;
+        if (getRepLevel(tRep).level < recipe.tavernReqRep) return { ...state, message: 'Not enough tavern reputation!' };
+      }
 
       const mats = { ...state.base.materials };
       for (const [matId, qty] of Object.entries(recipe.materials)) {
@@ -4134,6 +4181,10 @@ function gameReducer(state, action) {
 
       const recipe = SMELTER_RECIPES.find(r => r.id === action.recipeId);
       if (!recipe) return state;
+      if (recipe.tavernNpc && recipe.tavernReqRep) {
+        const tRep = state.tavern?.reputation?.[recipe.tavernNpc] || 0;
+        if (getRepLevel(tRep).level < recipe.tavernReqRep) return { ...state, message: 'Not enough tavern reputation!' };
+      }
 
       const mats = { ...state.base.materials };
       if (recipe.materials) {
@@ -4184,6 +4235,10 @@ function gameReducer(state, action) {
 
       const recipe = WORKSHOP_RECIPES.find(r => r.id === action.recipeId);
       if (!recipe) return state;
+      if (recipe.tavernNpc && recipe.tavernReqRep) {
+        const tRep = state.tavern?.reputation?.[recipe.tavernNpc] || 0;
+        if (getRepLevel(tRep).level < recipe.tavernReqRep) return { ...state, message: 'Not enough tavern reputation!' };
+      }
 
       const mats = { ...state.base.materials };
       for (const [matId, qty] of Object.entries(recipe.materials)) {
@@ -5551,6 +5606,243 @@ function gameReducer(state, action) {
       };
     }
 
+    // ---- TAVERN ACTIONS ----
+    case 'TAVERN_ACCEPT_QUEST': {
+      const { questId, npcId } = action;
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
+      const npcQuests = TAVERN_QUESTS[npcId];
+      if (!npcQuests) return state;
+      const questDef = npcQuests.find(q => q.id === questId);
+      if (!questDef) return state;
+      if (tavern.completedQuests.includes(questId)) return { ...state, message: 'Already completed!' };
+      if (tavern.acceptedQuests.some(q => q.questId === questId)) return { ...state, message: 'Already accepted!' };
+      const rep = tavern.reputation[npcId] || 0;
+      const repLvl = getRepLevel(rep).level;
+      if (repLvl < questDef.reqRep) return { ...state, message: 'Not enough reputation!' };
+      if (state.player.level < questDef.reqLevel) return { ...state, message: `Requires level ${questDef.reqLevel}!` };
+      return {
+        ...state,
+        tavern: {
+          ...tavern,
+          acceptedQuests: [...tavern.acceptedQuests, { questId, npcId, baseline: state.stats[questDef.stat] || 0 }],
+        },
+        message: `Quest accepted: ${questDef.name}`,
+      };
+    }
+
+    case 'TAVERN_TURN_IN_QUEST': {
+      const { questId, npcId } = action;
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
+      const npcQuests = TAVERN_QUESTS[npcId];
+      if (!npcQuests) return state;
+      const questDef = npcQuests.find(q => q.id === questId);
+      if (!questDef) return state;
+      const accepted = tavern.acceptedQuests.find(q => q.questId === questId);
+      if (!accepted) return state;
+      const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
+      if (progress < questDef.target) return { ...state, message: 'Quest not complete yet!' };
+      // Grant reputation to this NPC
+      const newRep = { ...tavern.reputation };
+      newRep[npcId] = (newRep[npcId] || 0) + questDef.repReward;
+      // Cross-NPC reputation effects
+      const crossEffects = REP_CROSS_EFFECTS[npcId] || {};
+      for (const [otherNpcId, delta] of Object.entries(crossEffects)) {
+        newRep[otherNpcId] = (newRep[otherNpcId] || 0) + delta;
+      }
+      // Grant gold reward
+      let newStats = addStat(state.stats, 'goldEarned', questDef.goldReward);
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold + questDef.goldReward },
+        tavern: {
+          ...tavern,
+          reputation: newRep,
+          acceptedQuests: tavern.acceptedQuests.filter(q => q.questId !== questId),
+          completedQuests: [...tavern.completedQuests, questId],
+        },
+        stats: newStats,
+        message: `Quest complete! +${questDef.goldReward}g, +${questDef.repReward} rep with ${npcId}`,
+      };
+    }
+
+    case 'TAVERN_LEARN_FACTION_SKILL': {
+      const { skillId, npcId } = action;
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
+      const npcFactionSkills = FACTION_SKILLS[npcId];
+      if (!npcFactionSkills) return state;
+      const skillDef = npcFactionSkills.find(s => s.id === skillId);
+      if (!skillDef) return state;
+      if ((tavern.learnedFactionSkills || []).includes(skillId)) return { ...state, message: 'Already learned!' };
+      const rep = tavern.reputation[npcId] || 0;
+      const repLvl = getRepLevel(rep).level;
+      if (repLvl < skillDef.reqRep) return { ...state, message: 'Not enough reputation!' };
+      return {
+        ...state,
+        tavern: {
+          ...tavern,
+          learnedFactionSkills: [...(tavern.learnedFactionSkills || []), skillId],
+        },
+        message: `Learned faction skill: ${skillDef.name}!`,
+      };
+    }
+
+    case 'BATTLE_USE_FACTION_SKILL': {
+      if (!state.battle) return state;
+      let b = { ...state.battle };
+      let m = { ...b.monster };
+      let p = { ...state.player };
+      const factionSkills = getUnlockedFactionSkills(state.tavern);
+      const skill = factionSkills.find(s => s.id === action.skillId);
+      if (!skill) return state;
+      const stanceMods = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
+      const manaCost = getEffectiveManaCost(p, Math.ceil((skill.manaCost || 0) * (stanceMods.manaMod || 1.0)), b);
+      if (manaCost > 0 && p.mana < manaCost) {
+        return { ...state, message: `Not enough mana! (${manaCost} needed)` };
+      }
+      p = { ...p, mana: p.mana - manaCost };
+
+      let passiveBonus = getSkillPassiveBonus(p);
+      const echoProc = rollSpellEcho(p);
+      if (echoProc) passiveBonus *= 2;
+
+      const atkValue = Math.floor(getPlayerAtk(p, b) * skill.multiplier * passiveBonus);
+      const battleMaxHp = getBattleMaxHp(p);
+
+      p = applyLifeTap(p, manaCost);
+
+      const effectiveMonsterDef = b.armorShatterTurns > 0 ? Math.floor(m.def * (1 - b.armorShatterPct)) : m.def;
+      const effectiveDef = getEffectiveDef(effectiveMonsterDef, skill.effect);
+      let finalMult = getExecuteMultiplier(skill.effect, m.hp, m.maxHp);
+
+      let dmg = calcDamage(Math.floor(atkValue * finalMult), effectiveDef);
+
+      if (b.frenzyBonusTurns > 0 && b.frenzyBonusPct > 0) {
+        dmg = Math.floor(dmg * (1 + b.frenzyBonusPct));
+      }
+      dmg = Math.floor(dmg * stanceMods.dmgDealt);
+
+      // Ancestral ward ATK bonus
+      if (b.ancestralWardTurns > 0 && b.ancestralWardBonus > 0) {
+        dmg = Math.floor(dmg * (1 + b.ancestralWardBonus));
+      }
+
+      let facCrit = false;
+      const pLuck = getPlayerLuck(p);
+      const facCritChance = getPlayerCritChance(p) + luckCritBonus(pLuck) + stanceMods.critMod;
+      if (Math.random() < facCritChance) {
+        dmg = Math.floor(dmg * getPlayerCritMultiplier(p));
+        facCrit = true;
+      }
+
+      m.hp = Math.max(0, m.hp - dmg);
+      b.monster = m;
+      b.defending = false;
+      b.defendedLastTurn = false;
+      b.showSkillMenu = false;
+      b.showInspect = false;
+      let log = [...state.battleLog];
+      const critLabel = facCrit ? 'CRIT! ' : '';
+      if (echoProc) {
+        log.push({ text: `${critLabel}Spell Echo! ${skill.name} for ${dmg} damage!`, type: 'dmg-monster' });
+      } else {
+        log.push({ text: `${critLabel}${skill.name} for ${dmg} damage!`, type: 'dmg-monster' });
+      }
+
+      b.actionHistory = [...(b.actionHistory || []), 'skill'].slice(-5);
+      const facCombos = checkComboChains(b.actionHistory, p.comboMaster);
+      if (facCombos.length > 0) {
+        for (const combo of facCombos) {
+          log.push({ text: `Combo: ${combo.name}!`, type: 'info' });
+          if (combo.bonus === 'mana_restore') {
+            const restored = Math.floor(getBattleMaxMana(p) * (combo.restorePct || 0.25));
+            p = { ...p, mana: Math.min(getBattleMaxMana(p), p.mana + restored) };
+            log.push({ text: `Arcane Surge restores ${restored} mana!`, type: 'heal' });
+          } else if (combo.bonus === 'frenzy') {
+            b.frenzyBonusTurns = 2;
+            b.frenzyBonusPct = combo.frenzyBonus || 0.35;
+            log.push({ text: `Frenzy! +${Math.round(b.frenzyBonusPct * 100)}% damage for 2 turns!`, type: 'info' });
+          } else if (combo.bonus === 'dmg_boost') {
+            const comboDmg = Math.floor(dmg * combo.boostPct);
+            m.hp = Math.max(0, m.hp - comboDmg);
+            log.push({ text: `Combo bonus damage: ${comboDmg}!`, type: 'dmg-monster' });
+          }
+          b.activeCombo = combo;
+          b.comboStreak = (b.comboStreak || 0) + 1;
+        }
+        b.actionHistory = [];
+      }
+
+      if (skill.effect) {
+        const fx = applySkillEffect(skill.effect, { dmg, player: p, monster: m, battle: b, battleMaxHp, log, manaCost });
+        p = fx.player || p;
+        m = fx.monster || m;
+        b = fx.battle || b;
+        log = fx.log || log;
+        if (fx.monster) b = { ...b, monster: m };
+      }
+
+      ({ player: p, log } = applySkillPassives({ player: p, log, dmg }));
+
+      let newStats = addStat(state.stats, 'damageDealt', dmg);
+      newStats = setStatMax(newStats, 'highestDamage', dmg);
+      let newTasks = incrementTaskProgress(state.tasks, 'damageDealt', dmg);
+
+      // Golden Gambit gold bonus on kill
+      if (b.goldenGambitActive && m.hp <= 0) {
+        const bonusGold = Math.floor(20 + Math.random() * 50);
+        p = { ...p, gold: p.gold + bonusGold };
+        log.push({ text: `Fortune's Gambit bonus: +${bonusGold} gold!`, type: 'info' });
+        b.goldenGambitActive = false;
+      }
+
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks });
+      }
+
+      const petResult = processPetTurnActions({ ...state, player: p, battle: { ...b, monster: m }, pets: state.pets }, log);
+      p = petResult.state.player;
+      m = petResult.state.battle.monster;
+      b = { ...petResult.state.battle };
+      log = petResult.log;
+
+      if (m.hp <= 0) {
+        return handleVictory({ ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResult.state.pets });
+      }
+      return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResult.state.pets };
+    }
+
+    case 'TAVERN_BUY_ITEM': {
+      const { itemDef, npcId } = action;
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
+      if (state.player.gold < itemDef.buyPrice) return { ...state, message: 'Not enough gold!' };
+      const newItem = {
+        id: 'tav_' + Date.now() + '_' + Math.random(),
+        name: itemDef.name,
+        type: itemDef.type === 'gear' ? 'equipment' : itemDef.type,
+        slot: itemDef.slot || null,
+        level: itemDef.level || 1,
+        rarity: itemDef.rarity,
+        rarityClass: 'rarity-' + (itemDef.rarity || 'common').toLowerCase(),
+        rarityColor: itemDef.rarity === 'Epic' ? '#ce93d8' : itemDef.rarity === 'Rare' ? '#ffd700' : itemDef.rarity === 'Uncommon' ? '#4fc3f7' : '#ccc',
+        atk: itemDef.atk || 0,
+        def: itemDef.def || 0,
+        healAmount: itemDef.healAmount || 0,
+        sellPrice: itemDef.sellPrice || Math.floor(itemDef.buyPrice * 0.4),
+        consumableEffect: itemDef.consumableEffect || null,
+      };
+      if (!canAddToInventory(state.player.inventory, newItem, state.player.maxInventory)) return { ...state, message: 'Inventory full!' };
+      const newInv = addToInventory(state.player.inventory, newItem, state.player.maxInventory);
+      const stockKey = npcId + '_' + itemDef.name;
+      const newShopPurchases = { ...tavern.shopPurchases, [stockKey]: (tavern.shopPurchases[stockKey] || 0) + 1 };
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - itemDef.buyPrice, inventory: newInv },
+        tavern: { ...tavern, shopPurchases: newShopPurchases },
+        stats: addStat(state.stats, 'goldSpent', itemDef.buyPrice),
+        message: `Purchased ${itemDef.name}!`,
+      };
+    }
+
     default:
       return state;
   }
@@ -6043,6 +6335,11 @@ export function useGameState(isLoggedIn) {
     traderLeave: () => dispatch({ type: 'TRADER_LEAVE' }),
     traderAcceptQuest: (questId, traderId) => dispatch({ type: 'TRADER_ACCEPT_QUEST', questId, traderId }),
     traderTurnInQuest: (questId, traderId) => dispatch({ type: 'TRADER_TURN_IN_QUEST', questId, traderId }),
+    tavernAcceptQuest: (questId, npcId) => dispatch({ type: 'TAVERN_ACCEPT_QUEST', questId, npcId }),
+    tavernTurnInQuest: (questId, npcId) => dispatch({ type: 'TAVERN_TURN_IN_QUEST', questId, npcId }),
+    tavernBuyItem: (itemDef, npcId) => dispatch({ type: 'TAVERN_BUY_ITEM', itemDef, npcId }),
+    tavernLearnFactionSkill: (skillId, npcId) => dispatch({ type: 'TAVERN_LEARN_FACTION_SKILL', skillId, npcId }),
+    battleFactionSkill: (skillId) => dispatch({ type: 'BATTLE_USE_FACTION_SKILL', skillId }),
     battleAttack: () => dispatch({ type: 'BATTLE_PLAYER_ATTACK' }),
     battleSkill: () => dispatch({ type: 'BATTLE_PLAYER_SKILL' }),
     battleTreeSkill: (skillId) => dispatch({ type: 'BATTLE_USE_TREE_SKILL', skillId }),
