@@ -33,3 +33,14 @@ Browser-based RPG/adventure game with market mechanics, character progression, c
 - Backend routes handle persistence, auth, and multiplayer features (trading, market)
 - No TypeScript - all files are .js/.jsx
 - No test framework currently configured
+
+## Subdirectory Docs
+- `src/engine/CLAUDE.md` - Game engine: formulas, damage stacking, skill effect patterns, file dependencies
+- `server/CLAUDE.md` - Full database schema (SQL), all API endpoints, auth flow, transaction patterns
+
+## Keeping Docs Updated
+When you modify files in `src/engine/` or `server/`, update the corresponding `CLAUDE.md` to reflect your changes. This includes:
+- New or removed files, functions, or endpoints
+- Changed formulas, constants, or scaling values
+- New database tables or columns
+- New API routes or changed request/response shapes
