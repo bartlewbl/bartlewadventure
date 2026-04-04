@@ -21,7 +21,8 @@
 //   damageDealt, damageTaken, goldEarned, goldSpent, itemsLooted,
 //   itemsSold, potionsUsed, explorationsCompleted, regionsVisited,
 //   skillsUnlocked, levelsGained, criticalHits, dodgesPerformed,
-//   highestDamage, totalHealing
+//   highestDamage, totalHealing,
+//   fireRitualsLit, fireRitualsDefended, fireRitualMonstersKilled, wavesSurvived
 
 export const TASK_TYPES = {
   DAILY: 'daily',
@@ -2180,6 +2181,42 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_sr_7', name: 'Kingpin Delivery', description: 'The big score. Deliver a Rift Severer from Paradox Maze and a Nullpoint Edge from Singularity Well. Die and everything is lost.', stat: 'monstersKilled', target: 0, reward: { gold: 2500, energyDrinks: 5 }, order: 7, itemRequirements: [{ itemName: 'Rift Severer', locationId: 'paradox-maze', locationName: 'Paradox Maze' }, { itemName: 'Nullpoint Edge', locationId: 'singularity-well', locationName: 'Singularity Well' }] },
     ],
   },
+
+  // Chain: Fire Keeper - find ritual sites, light fires, defend them from waves (Lv 3)
+  {
+    chainId: 'fire_keeper',
+    chainName: 'Fire Keeper',
+    chainDescription: 'Seek out abandoned campfires and ancient ritual circles. Light the flame — and when darkness falls, defend it.',
+    chainIcon: 'flame',
+    levelReq: 3,
+    quests: [
+      { id: 'side_fk_1', name: 'First Spark', description: 'Find a burned-out campfire while exploring and light it with fuel.', stat: 'fireRitualsLit', target: 1, reward: { gold: 50 }, order: 1 },
+      { id: 'side_fk_2', name: 'Fuel Gatherer', description: 'Light 2 more ritual fires. You\'re getting the hang of this.', stat: 'fireRitualsLit', target: 3, reward: { gold: 100, energyDrinks: 1 }, order: 2 },
+      { id: 'side_fk_3', name: 'Night Watch', description: 'Light a fire and defend it through the night. Survive all waves of attackers.', stat: 'fireRitualsDefended', target: 1, reward: { gold: 200, energyDrinks: 1 }, order: 3 },
+      { id: 'side_fk_4', name: 'Burning Bright', description: 'Light 5 total fires across different locations. The flame spreads.', stat: 'fireRitualsLit', target: 5, reward: { gold: 250 }, order: 4 },
+      { id: 'side_fk_5', name: 'Siege of Flames', description: 'Defend 3 ritual fires from the creatures of the night.', stat: 'fireRitualsDefended', target: 3, reward: { gold: 400, energyDrinks: 2 }, order: 5 },
+      { id: 'side_fk_6', name: 'Pyre Warden', description: 'Light 10 fires total. The darkness fears your flame.', stat: 'fireRitualsLit', target: 10, reward: { gold: 500 }, order: 6 },
+      { id: 'side_fk_7', name: 'Eternal Flame', description: 'Defend 6 ritual fires. You are the Fire Keeper — nothing extinguishes your light.', stat: 'fireRitualsDefended', target: 6, reward: { gold: 800, energyDrinks: 3 }, order: 7 },
+    ],
+  },
+
+  // Chain: Flame Sentinel - harder fire defense quests (Lv 14)
+  {
+    chainId: 'flame_sentinel',
+    chainName: 'Flame Sentinel',
+    chainDescription: 'The ancient pyres call to those strong enough to guard them. Face brutal waves through the longest nights.',
+    chainIcon: 'flame',
+    levelReq: 14,
+    quests: [
+      { id: 'side_fs_1', name: 'Signal Fire', description: 'Find and light an abandoned signal pyre in dangerous territory.', stat: 'fireRitualsLit', target: 12, reward: { gold: 300 }, order: 1 },
+      { id: 'side_fs_2', name: 'Holding the Line', description: 'Defend a ritual fire and slay 15 monsters during wave defense.', stat: 'fireRitualMonstersKilled', target: 15, reward: { gold: 400 }, order: 2 },
+      { id: 'side_fs_3', name: 'Dark Tide', description: 'Survive the defense of 5 more ritual fires against the night hordes.', stat: 'fireRitualsDefended', target: 8, reward: { gold: 550, energyDrinks: 2 }, order: 3 },
+      { id: 'side_fs_4', name: 'Infernal Beacon', description: 'Light 20 fires total. Your beacons mark safe paths through the darkness.', stat: 'fireRitualsLit', target: 20, reward: { gold: 600 }, order: 4 },
+      { id: 'side_fs_5', name: 'Ironclad Vigil', description: 'Defend 12 ritual fires. The waves grow fiercer but you stand firm.', stat: 'fireRitualsDefended', target: 12, reward: { gold: 800, energyDrinks: 2 }, order: 5 },
+      { id: 'side_fs_6', name: 'Ashen Warlord', description: 'Kill 50 monsters during fire defense. They burn in your light.', stat: 'fireRitualMonstersKilled', target: 50, reward: { gold: 1000 }, order: 6 },
+      { id: 'side_fs_7', name: 'Flame Sentinel', description: 'Defend 20 ritual fires. You are the last line between the flame and the void.', stat: 'fireRitualsDefended', target: 20, reward: { gold: 1500, energyDrinks: 4 }, order: 7 },
+    ],
+  },
 ];
 
 // Get the total number of chapters
@@ -2418,5 +2455,10 @@ export function createInitialStats() {
     winsWithoutPotion: 0,
     bossKilledNoDefend: 0,
     bossKilledNoPotion: 0,
+    // Fire ritual stats
+    fireRitualsLit: 0,
+    fireRitualsDefended: 0,
+    fireRitualMonstersKilled: 0,
+    wavesSurvived: 0,
   };
 }

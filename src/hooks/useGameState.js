@@ -15,6 +15,7 @@ import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FAC
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
+import { pickRitualSite, RITUAL_DISCOVER_CHANCE, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
@@ -172,6 +173,8 @@ function createInitialState() {
     chestResult: null,        // result of opening a chest (displayed on screen)
     arena: null,              // { tierId, wager, gauntletActive, gauntletWins, gauntletWager }
     previousRegionId: null,   // saved when entering arena so player can return
+    activeRitualSite: null,   // current fire ritual site found during exploration
+    waveDefense: null,        // { tier, currentWave, totalWaves, hpScale, atkScale, restHealPct, locationId }
   };
 }
 
@@ -1008,6 +1011,23 @@ function gameReducer(state, action) {
         };
       }
 
+      // Fire ritual site discovery check (~4% chance)
+      if (Math.random() < RITUAL_DISCOVER_CHANCE) {
+        const ritualSite = pickRitualSite(loc.id);
+        if (ritualSite) {
+          // Determine if this site can trigger a wave defense (50% chance for non-trivial locations)
+          const canDefend = loc.levelReq >= 3 && Math.random() < 0.5;
+          return {
+            ...state, screen: 'fire-ritual',
+            exploreText: text,
+            energy: exploreEnergy,
+            lastEnergyUpdate: exploreLastUpdate,
+            pets: petsAfterExplore,
+            activeRitualSite: { ...ritualSite, canDefend, locationId: loc.id, locationLevelReq: loc.levelReq },
+          };
+        }
+      }
+
       const adjustedEncounterRate = loc.encounterRate * effects.encounterMult;
       if (Math.random() < adjustedEncounterRate) {
         const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
@@ -1671,6 +1691,141 @@ function gameReducer(state, action) {
         ...state,
         screen: 'explore',
         activeTrader: null,
+      };
+    }
+
+    // ---- FIRE RITUAL ACTIONS ----
+
+    case 'FIRE_RITUAL_LIGHT': {
+      // Player lights the fire without defending - consumes fuel, awards stats
+      const site = state.activeRitualSite;
+      if (!site) return state;
+      const fuelIndices = findFuelItems(state.player.inventory, site.fuelCost);
+      if (fuelIndices.length < site.fuelCost) return { ...state, message: 'Not enough fuel!' };
+      // Remove fuel items from inventory (handle stacks)
+      let inv = [...state.player.inventory];
+      // Remove from highest index first to avoid shifting
+      const sortedIndices = [...fuelIndices].sort((a, b) => b - a);
+      for (const idx of sortedIndices) {
+        const item = inv[idx];
+        if (item.stackCount && item.stackCount > 1) {
+          inv[idx] = { ...item, stackCount: item.stackCount - 1 };
+        } else {
+          inv.splice(idx, 1);
+        }
+      }
+      let newStats = addStat(state.stats, 'fireRitualsLit');
+      let newTasks = incrementTaskProgress(state.tasks, 'fireRitualsLit');
+      return {
+        ...state,
+        screen: 'explore',
+        player: { ...state.player, inventory: inv },
+        activeRitualSite: null,
+        stats: newStats,
+        tasks: newTasks,
+        exploreText: `You light the ${site.name}. Warm flames dance in the darkness, and the area feels safer.`,
+      };
+    }
+
+    case 'FIRE_RITUAL_DEFEND': {
+      // Player lights and chooses to defend - consumes fuel, starts wave defense battle
+      const site = state.activeRitualSite;
+      if (!site) return state;
+      const fuelIndices = findFuelItems(state.player.inventory, site.fuelCost);
+      if (fuelIndices.length < site.fuelCost) return { ...state, message: 'Not enough fuel!' };
+      // Remove fuel items
+      let inv = [...state.player.inventory];
+      const sortedIndices = [...fuelIndices].sort((a, b) => b - a);
+      for (const idx of sortedIndices) {
+        const item = inv[idx];
+        if (item.stackCount && item.stackCount > 1) {
+          inv[idx] = { ...item, stackCount: item.stackCount - 1 };
+        } else {
+          inv.splice(idx, 1);
+        }
+      }
+      // Track the light stat
+      let newStats = addStat(state.stats, 'fireRitualsLit');
+      let newTasks = incrementTaskProgress(state.tasks, 'fireRitualsLit');
+      // Set up wave defense
+      const tier = getWaveTier(site.locationLevelReq);
+      const config = WAVE_CONFIGS[tier];
+      const loc = state.currentLocation;
+      // Spawn first wave monster
+      const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
+      const monster = scaleMonster(monsterId, loc.levelReq);
+      if (!monster) return state;
+      // Apply wave scaling
+      monster.maxHp = Math.floor(monster.maxHp * config.hpScale);
+      monster.hp = monster.maxHp;
+      monster.atk = Math.floor(monster.atk * config.atkScale);
+      const encBattle = createBattleState(monster, state.player);
+      const waveDefense = {
+        tier,
+        currentWave: 1,
+        totalWaves: config.waves,
+        hpScale: config.hpScale,
+        atkScale: config.atkScale,
+        restHealPct: config.restHealPct,
+        locationId: loc.id,
+      };
+      return {
+        ...state,
+        screen: 'battle',
+        player: { ...state.player, inventory: inv },
+        activeRitualSite: null,
+        stats: newStats,
+        tasks: newTasks,
+        battle: encBattle,
+        battleLog: [
+          { text: 'Night falls. Creatures stir in the darkness...', type: 'info' },
+          { text: `Wave 1/${config.waves} - A ${monster.name} attacks the fire!`, type: 'info' },
+        ],
+        battleResult: null,
+        waveDefense,
+      };
+    }
+
+    case 'FIRE_RITUAL_LEAVE': {
+      return {
+        ...state,
+        screen: 'explore',
+        activeRitualSite: null,
+        exploreText: 'You leave the ritual site behind and continue exploring...',
+      };
+    }
+
+    case 'WAVE_DEFENSE_NEXT': {
+      // Spawn next wave monster after between-wave rest
+      const wd = state.waveDefense;
+      if (!wd) return state;
+      const nextWave = wd.currentWave + 1;
+      if (nextWave > wd.totalWaves) return state; // shouldn't happen
+      const loc = state.currentLocation;
+      const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
+      const monster = scaleMonster(monsterId, loc.levelReq);
+      if (!monster) return state;
+      // Scale monster stats for wave (later waves are slightly stronger)
+      const waveBonus = 1 + (nextWave - 1) * 0.1; // +10% per wave
+      monster.maxHp = Math.floor(monster.maxHp * wd.hpScale * waveBonus);
+      monster.hp = monster.maxHp;
+      monster.atk = Math.floor(monster.atk * wd.atkScale * waveBonus);
+      // Heal player between waves
+      const maxHp = getBattleMaxHp(state.player);
+      const healAmount = Math.floor(maxHp * wd.restHealPct);
+      const newHp = Math.min(maxHp, state.player.hp + healAmount);
+      const encBattle = createBattleState(monster, { ...state.player, hp: newHp });
+      return {
+        ...state,
+        screen: 'battle',
+        player: { ...state.player, hp: newHp },
+        battle: encBattle,
+        battleLog: [
+          { text: `You rest briefly by the fire... (+${healAmount} HP)`, type: 'heal' },
+          { text: `Wave ${nextWave}/${wd.totalWaves} - A ${monster.name} lunges from the shadows!`, type: 'info' },
+        ],
+        battleResult: null,
+        waveDefense: { ...wd, currentWave: nextWave },
       };
     }
 
@@ -2408,8 +2563,8 @@ function gameReducer(state, action) {
     }
 
     case 'BATTLE_RUN': {
-      if (state.battle.noRun) {
-        return { ...state, message: 'You cannot escape!' };
+      if (state.battle.noRun || state.waveDefense) {
+        return { ...state, message: state.waveDefense ? 'You must defend the fire!' : 'You cannot escape!' };
       }
       const cls = getClassData(state.player);
       let escapeChance = (cls?.passive === 'Greed') ? prob('combat.escapeChanceGreed') : prob('combat.escapeChanceBase');
@@ -3172,9 +3327,40 @@ function gameReducer(state, action) {
         return { ...state, screen: 'locations', battle: null, battleResult: null, battleLog: [], arena: null };
       }
 
+      // Wave defense: if defeated during wave defense, end it
+      if (state.battleResult?.defeated && state.waveDefense) {
+        return {
+          ...state, screen: 'town', battle: null, battleResult: null, battleLog: [],
+          currentLocation: null, waveDefense: null,
+        };
+      }
+
       if (state.battleResult?.defeated) {
         return { ...state, screen: 'town', battle: null, battleResult: null, battleLog: [], currentLocation: null };
       }
+
+      // Wave defense: more waves remaining - dispatch WAVE_DEFENSE_NEXT
+      if (state.waveDefense && state.battleResult?.isWaveDefense && !state.battleResult?.waveDefenseComplete) {
+        // Pending level-ups go first, then next wave
+        if (state.pendingLevelUps?.length > 0) {
+          return { ...state, screen: 'stat-select', battle: null, battleResult: null, battleLog: [] };
+        }
+        return gameReducer(state, { type: 'WAVE_DEFENSE_NEXT' });
+      }
+
+      // Wave defense complete - clear wave state and continue
+      if (state.waveDefense && state.battleResult?.waveDefenseComplete) {
+        if (state.pendingLevelUps?.length > 0) {
+          return { ...state, screen: 'stat-select', battle: null, battleResult: null, battleLog: [], waveDefense: null };
+        }
+        return {
+          ...state, screen: 'explore', battle: null, battleResult: null, battleLog: [],
+          waveDefense: null,
+          exploreText: 'The fire burns bright. The creatures retreat as dawn breaks. You defended the ritual fire!',
+          exploreFoundItem: null,
+        };
+      }
+
       // If there are pending level-ups, go to stat selection
       if (state.pendingLevelUps?.length > 0) {
         return { ...state, screen: 'stat-select', battle: null, battleResult: null, battleLog: [] };
@@ -6007,8 +6193,34 @@ function handleVictory(state) {
     updatedPets = progressPetQuests(updatedPets, 'slay_boss', 1, regionId);
   }
 
+  // Track fire ritual wave defense stats
+  const wd = state.waveDefense;
+  if (wd) {
+    newStats = addStat(newStats, 'fireRitualMonstersKilled');
+    newStats = addStat(newStats, 'wavesSurvived');
+    newTasks = incrementTaskProgress(newTasks, 'fireRitualMonstersKilled');
+    newTasks = incrementTaskProgress(newTasks, 'wavesSurvived');
+    // If this was the last wave, track the full defense completion
+    if (wd.currentWave >= wd.totalWaves) {
+      newStats = addStat(newStats, 'fireRitualsDefended');
+      newTasks = incrementTaskProgress(newTasks, 'fireRitualsDefended');
+    }
+  }
+
   // Restore energy on level up (like HP/mana)
   const newEnergy = pendingLevels.length > 0 ? ENERGY_MAX : state.energy;
+
+  // Apply wave defense bonus multipliers to rewards on final wave
+  let finalExpGain = expGain;
+  let finalGoldGain = goldGain;
+  if (wd && wd.currentWave >= wd.totalWaves) {
+    const bonus = WAVE_DEFENSE_BONUS[wd.tier] || { goldMult: 1, expMult: 1 };
+    finalExpGain = Math.floor(expGain * bonus.expMult);
+    finalGoldGain = Math.floor(goldGain * bonus.goldMult);
+    // Adjust player rewards for the bonus
+    leveledPlayer.exp = leveledPlayer.exp - expGain + finalExpGain;
+    leveledPlayer.gold = leveledPlayer.gold - goldGain + finalGoldGain;
+  }
 
   return {
     ...state,
@@ -6020,7 +6232,8 @@ function handleVictory(state) {
     energy: newEnergy,
     pendingLevelUps: [...existingPending, ...pendingLevels],
     battleResult: {
-      victory: true, expGain, goldGain,
+      victory: true, expGain: wd && wd.currentWave >= wd.totalWaves ? finalExpGain : expGain,
+      goldGain: wd && wd.currentWave >= wd.totalWaves ? finalGoldGain : goldGain,
       droppedItem: lootAdded ? droppedItem : null,
       materialDrop: materialDrop || null,
       bossMaterials: bossMaterials || null,
@@ -6032,6 +6245,12 @@ function handleVictory(state) {
       isBoss: !!m.isBoss,
       bossName: m.isBoss ? m.name : null,
       innBonus: innBonus > 0 ? innBonus : null,
+      // Wave defense info
+      isWaveDefense: !!wd,
+      waveNumber: wd?.currentWave || 0,
+      totalWaves: wd?.totalWaves || 0,
+      waveDefenseComplete: wd ? wd.currentWave >= wd.totalWaves : false,
+      waveTier: wd?.tier || null,
     },
   };
 }
@@ -6432,6 +6651,10 @@ export function useGameState(isLoggedIn) {
     arenaGauntletContinue: () => dispatch({ type: 'ARENA_GAUNTLET_CONTINUE' }),
     arenaGauntletCashout: () => dispatch({ type: 'ARENA_GAUNTLET_CASHOUT' }),
     arenaLeave: () => dispatch({ type: 'ARENA_LEAVE' }),
+    // Fire ritual actions
+    fireRitualLight: () => dispatch({ type: 'FIRE_RITUAL_LIGHT' }),
+    fireRitualDefend: () => dispatch({ type: 'FIRE_RITUAL_DEFEND' }),
+    fireRitualLeave: () => dispatch({ type: 'FIRE_RITUAL_LEAVE' }),
   }), []);
 
   return { state, actions, playerAtk, playerDef };

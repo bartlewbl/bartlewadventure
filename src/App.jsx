@@ -31,6 +31,7 @@ import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
 import StatsScreen from './components/screens/StatsScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import TavernScreen from './components/screens/TavernScreen';
+import FireRitualScreen from './components/screens/FireRitualScreen';
 import MobileNav from './components/MobileNav';
 import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
@@ -194,7 +195,7 @@ export default function App() {
     );
   }
 
-  const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select';
+  const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select' || state.screen === 'fire-ritual';
   const hidePanels = navLocked;
   const canRest = !navLocked;
   const unequippableCount = state.player.inventory.filter(item => {
@@ -335,6 +336,16 @@ export default function App() {
               />
             )}
 
+            {state.screen === 'fire-ritual' && (
+              <FireRitualScreen
+                ritualSite={state.activeRitualSite}
+                player={state.player}
+                onLight={actions.fireRitualLight}
+                onDefend={actions.fireRitualDefend}
+                onLeave={actions.fireRitualLeave}
+              />
+            )}
+
             {state.screen === 'random-event' && (
               <RandomEventScreen
                 event={state.randomEvent}
@@ -392,6 +403,7 @@ export default function App() {
                 player={state.player}
                 pets={state.pets}
                 tavern={state.tavern}
+                waveDefense={state.waveDefense}
                 onAttack={actions.battleAttack}
                 onSkill={actions.battleSkill}
                 onDefend={actions.battleDefend}
