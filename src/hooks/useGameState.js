@@ -11,7 +11,7 @@ import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateReward
 import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
-import { TAVERN_QUESTS, TAVERN_SKILLS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills } from '../data/tavernData';
+import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills } from '../data/tavernData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
@@ -163,7 +163,6 @@ function createInitialState() {
       reputation: {},         // { npcId: number }
       acceptedQuests: [],     // [{ questId, npcId, baseline }]
       completedQuests: [],    // [questId, ...]
-      learnedSkills: [],      // [skillId, ...]
       learnedFactionSkills: [], // [factionSkillId, ...]
       shopPurchases: {},      // { itemKey: count }
     },
@@ -177,21 +176,6 @@ function createInitialState() {
 }
 
 // ---- TAVERN BUFF HELPERS ----
-// Aggregate all learned tavern skill effects into a single object
-export function getTavernBuffs(tavern) {
-  if (!tavern?.learnedSkills?.length) return {};
-  const buffs = {};
-  for (const [npcId, skills] of Object.entries(TAVERN_SKILLS)) {
-    for (const skill of skills) {
-      if (tavern.learnedSkills.includes(skill.id)) {
-        for (const [key, val] of Object.entries(skill.effect)) {
-          buffs[key] = (buffs[key] || 0) + val;
-        }
-      }
-    }
-  }
-  return buffs;
-}
 
 // ---- STAT TRACKING HELPERS ----
 function addStat(stats, key, amount = 1) {
@@ -2326,8 +2310,6 @@ function gameReducer(state, action) {
       if (!potion) return { ...state, message: 'No potions!' };
       const bMaxHp = getBattleMaxHp(state.player);
       let potionHeal = potion.healAmount;
-      const tavernPotionBonus = getTavernBuffs(state.tavern).potionBonus || 0;
-      if (tavernPotionBonus > 0) potionHeal = Math.floor(potionHeal * (1 + tavernPotionBonus));
       if (playerHasSkill(state.player, 'thf_t5a')) potionHeal = Math.floor(potionHeal * 1.3);
       if (playerHasSkill(state.player, 'nec_t10a')) potionHeal = potionHeal * 2; // Lich Form
       const healed = Math.min(potionHeal, bMaxHp - state.player.hp);
@@ -3372,8 +3354,7 @@ function gameReducer(state, action) {
     case 'SELL_ITEM': {
       const item = action.item;
       const charismaBonus = getCharismaPriceBonus(state.player);
-      const tavernSellBonus = getTavernBuffs(state.tavern).sellBonus || 0;
-      const adjustedSellPrice = Math.floor(item.sellPrice * (1 + charismaBonus + tavernSellBonus));
+      const adjustedSellPrice = Math.floor(item.sellPrice * (1 + charismaBonus));
       const p = {
         ...state.player,
         gold: state.player.gold + adjustedSellPrice,
@@ -3440,8 +3421,7 @@ function gameReducer(state, action) {
       const item = action.item;
       const charismaBuyBonus = getCharismaPriceBonus(state.player);
       const weatherDiscount = getCurrentEffects().shopDiscount || 0;
-      const tavernShopDiscount = getTavernBuffs(state.tavern).shopDiscount || 0;
-      const adjustedBuyPrice = Math.max(1, Math.floor(item.buyPrice * (1 - charismaBuyBonus - weatherDiscount - tavernShopDiscount)));
+      const adjustedBuyPrice = Math.max(1, Math.floor(item.buyPrice * (1 - charismaBuyBonus - weatherDiscount)));
       if (state.player.gold < adjustedBuyPrice) return { ...state, message: 'Not enough gold!' };
       const newItem = { ...item, id: 'item_' + Date.now() + '_' + Math.random() };
       delete newItem.buyPrice;
@@ -5575,7 +5555,7 @@ function gameReducer(state, action) {
     // ---- TAVERN ACTIONS ----
     case 'TAVERN_ACCEPT_QUEST': {
       const { questId, npcId } = action;
-      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedSkills: [], shopPurchases: {} };
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
       const npcQuests = TAVERN_QUESTS[npcId];
       if (!npcQuests) return state;
       const questDef = npcQuests.find(q => q.id === questId);
@@ -5598,7 +5578,7 @@ function gameReducer(state, action) {
 
     case 'TAVERN_TURN_IN_QUEST': {
       const { questId, npcId } = action;
-      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedSkills: [], shopPurchases: {} };
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
       const npcQuests = TAVERN_QUESTS[npcId];
       if (!npcQuests) return state;
       const questDef = npcQuests.find(q => q.id === questId);
@@ -5631,30 +5611,9 @@ function gameReducer(state, action) {
       };
     }
 
-    case 'TAVERN_LEARN_SKILL': {
-      const { skillId, npcId } = action;
-      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedSkills: [], shopPurchases: {} };
-      const npcSkills = TAVERN_SKILLS[npcId];
-      if (!npcSkills) return state;
-      const skillDef = npcSkills.find(s => s.id === skillId);
-      if (!skillDef) return state;
-      if (tavern.learnedSkills.includes(skillId)) return { ...state, message: 'Already learned!' };
-      const rep = tavern.reputation[npcId] || 0;
-      const repLvl = getRepLevel(rep).level;
-      if (repLvl < skillDef.reqRep) return { ...state, message: 'Not enough reputation!' };
-      return {
-        ...state,
-        tavern: {
-          ...tavern,
-          learnedSkills: [...tavern.learnedSkills, skillId],
-        },
-        message: `Learned: ${skillDef.name}!`,
-      };
-    }
-
     case 'TAVERN_LEARN_FACTION_SKILL': {
       const { skillId, npcId } = action;
-      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedSkills: [], learnedFactionSkills: [], shopPurchases: {} };
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
       const npcFactionSkills = FACTION_SKILLS[npcId];
       if (!npcFactionSkills) return state;
       const skillDef = npcFactionSkills.find(s => s.id === skillId);
@@ -5800,7 +5759,7 @@ function gameReducer(state, action) {
 
     case 'TAVERN_BUY_ITEM': {
       const { itemDef, npcId } = action;
-      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedSkills: [], shopPurchases: {} };
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
       if (state.player.gold < itemDef.buyPrice) return { ...state, message: 'Not enough gold!' };
       const newItem = {
         id: 'tav_' + Date.now() + '_' + Math.random(),
@@ -5845,14 +5804,12 @@ function handleVictory(state) {
 
   const innBonus = getInnExpBonus(state.base);
   const worldEffects = getCurrentEffects();
-  const tavBuffs = getTavernBuffs(state.tavern);
-  const expGain = Math.floor(m.exp * (1 + innBonus + (tavBuffs.xpBonus || 0)) * worldEffects.xpMult);
+  const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult);
   const cls = getClassData(state.player);
   let goldMult = 1.0;
   if (cls?.passive === 'Greed') goldMult *= 1.25;
   if (playerHasSkill(state.player, 'thf_t2a')) goldMult *= 1.50;
   goldMult *= worldEffects.goldMult;
-  goldMult *= (1 + (tavBuffs.goldDropBonus || 0));
   const goldGain = Math.floor(m.gold * goldMult);
 
   let p = { ...state.player, exp: state.player.exp + expGain, gold: state.player.gold + goldGain };
@@ -6266,9 +6223,8 @@ export function useGameState(isLoggedIn) {
   const saveTimerRef = useRef(null);
   const lastSaveRef = useRef(null);
 
-  const tavernBuffsMemo = useMemo(() => getTavernBuffs(state.tavern), [state.tavern]);
-  const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle) + (tavernBuffsMemo.flatAtk || 0), [state.player, state.battle, tavernBuffsMemo]);
-  const playerDef = useMemo(() => getPlayerDef(state.player, state.battle) + (tavernBuffsMemo.flatDef || 0), [state.player, state.battle, tavernBuffsMemo]);
+  const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle), [state.player, state.battle]);
+  const playerDef = useMemo(() => getPlayerDef(state.player, state.battle), [state.player, state.battle]);
 
   // Auto-save to server on every meaningful state change (debounced)
   useEffect(() => {
@@ -6325,7 +6281,6 @@ export function useGameState(isLoggedIn) {
     traderLeave: () => dispatch({ type: 'TRADER_LEAVE' }),
     tavernAcceptQuest: (questId, npcId) => dispatch({ type: 'TAVERN_ACCEPT_QUEST', questId, npcId }),
     tavernTurnInQuest: (questId, npcId) => dispatch({ type: 'TAVERN_TURN_IN_QUEST', questId, npcId }),
-    tavernLearnSkill: (skillId, npcId) => dispatch({ type: 'TAVERN_LEARN_SKILL', skillId, npcId }),
     tavernBuyItem: (itemDef, npcId) => dispatch({ type: 'TAVERN_BUY_ITEM', itemDef, npcId }),
     tavernLearnFactionSkill: (skillId, npcId) => dispatch({ type: 'TAVERN_LEARN_FACTION_SKILL', skillId, npcId }),
     battleFactionSkill: (skillId) => dispatch({ type: 'BATTLE_USE_FACTION_SKILL', skillId }),
