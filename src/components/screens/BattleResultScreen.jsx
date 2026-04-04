@@ -103,6 +103,11 @@ export default function BattleResultScreen({ result, onContinue }) {
           <>
             <div>Lost {result.goldLost} gold...</div>
             <div>{isBoss ? 'The boss was too powerful...' : 'You barely escaped with your life.'}</div>
+            {result.lostDeliveryItems && result.lostDeliveryItems.length > 0 && (
+              <div className="rarity-common" style={{ marginTop: 6 }}>
+                Quest items lost: {result.lostDeliveryItems.join(', ')}
+              </div>
+            )}
           </>
         )}
       </div>

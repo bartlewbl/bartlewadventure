@@ -487,6 +487,7 @@ export default function App() {
                 stats={state.stats}
                 tasks={state.tasks}
                 playerLevel={state.player.level}
+                playerInventory={state.player?.inventory}
                 onClaim={(taskId, taskType, chainId) => actions.claimTask(taskId, taskType, chainId)}
                 onPin={actions.pinQuest}
                 onUnpin={actions.unpinQuest}
@@ -575,6 +576,7 @@ export default function App() {
                 tasks={state.tasks}
                 onClaim={(taskId, taskType, chainId) => actions.claimTask(taskId, taskType, chainId)}
                 playerLevel={state.player?.level || 1}
+                playerInventory={state.player?.inventory}
               />
             )}
           </div>
