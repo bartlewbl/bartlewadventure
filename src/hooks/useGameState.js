@@ -3632,11 +3632,29 @@ function gameReducer(state, action) {
       if (isCompound) {
         if (progress < taskDef.subquests.length) return state;
       } else {
-        if (progress < taskDef.target) return state;
+        // For delivery quests with target 0, skip stat check
+        if (taskDef.target > 0 && progress < taskDef.target) return state;
+      }
+
+      // Check item requirements for delivery quests
+      if (taskDef.itemRequirements && taskDef.itemRequirements.length > 0) {
+        const inv = state.player.inventory;
+        for (const req of taskDef.itemRequirements) {
+          const hasItem = inv.some(item => item.name === req.itemName && item.foundLocation === req.locationId);
+          if (!hasItem) return state;
+        }
       }
 
       // Apply reward — daily and weekly gold already scaled by scaleTask
       let p = { ...state.player, inventory: [...state.player.inventory] };
+
+      // Remove required delivery items from inventory
+      if (taskDef.itemRequirements && taskDef.itemRequirements.length > 0) {
+        for (const req of taskDef.itemRequirements) {
+          const idx = p.inventory.findIndex(item => item.name === req.itemName && item.foundLocation === req.locationId);
+          if (idx !== -1) p.inventory.splice(idx, 1);
+        }
+      }
       const goldAmount = taskDef.reward.gold || 0;
       if (goldAmount) {
         p.gold += goldAmount;
@@ -5681,11 +5699,83 @@ function handleDefeat(state) {
   }
 
   const goldLost = Math.floor(state.player.gold * 0.2);
+
+  // Collect all delivery quest item requirements from active quests
+  const deliveryItemNames = new Set();
+  const tasks = state.tasks || {};
+  const lvl = state.player.level || 1;
+  const now = Date.now();
+  // Daily delivery quests
+  const dailyTasks = getActiveDailyTasks(now, lvl);
+  for (const t of dailyTasks) {
+    if (t.itemRequirements && !(tasks.dailyClaimed || []).includes(t.id)) {
+      for (const req of t.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+  // Weekly delivery quests
+  const weeklyTasks = getActiveWeeklyTasks(now, lvl);
+  for (const t of weeklyTasks) {
+    if (t.itemRequirements && !(tasks.weeklyClaimed || []).includes(t.id)) {
+      for (const req of t.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+  // Monthly delivery quests
+  const monthlyTasks = getActiveMonthlyTasks(now);
+  for (const t of monthlyTasks) {
+    if (t.itemRequirements && !(tasks.monthlyClaimed || []).includes(t.id)) {
+      for (const req of t.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+  // Story delivery quests
+  for (const t of STORY_TASKS) {
+    if (t.itemRequirements && !(tasks.storyClaimed || []).includes(t.id)) {
+      for (const req of t.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+  // Story mission delivery quests
+  for (const t of STORY_MISSIONS) {
+    if (t.itemRequirements && !(tasks.missionClaimed || []).includes(t.id)) {
+      for (const req of t.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+  // Side quest chain delivery quests
+  for (const chain of SIDE_QUEST_CHAINS) {
+    const current = getCurrentSideQuest(chain.chainId, tasks.sideQuestClaimed);
+    if (current?.itemRequirements) {
+      for (const req of current.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+  // Village delivery quests
+  const acceptedVQ = tasks.villageQuests?.accepted || [];
+  const completedVQ = tasks.villageQuests?.completedQuests || [];
+  for (const aq of acceptedVQ) {
+    if (completedVQ.includes(aq.questId)) continue;
+    const village = Object.values(QUEST_VILLAGES).flat().find(v => v.id === aq.villageId);
+    const questDef = village?.quests.find(q => q.id === aq.questId);
+    if (questDef?.itemRequirements) {
+      for (const req of questDef.itemRequirements) deliveryItemNames.add(req.itemName);
+    }
+  }
+
+  // Remove delivery quest items from inventory on death
+  let newInventory = [...state.player.inventory];
+  const lostDeliveryItems = [];
+  if (deliveryItemNames.size > 0) {
+    newInventory = newInventory.filter(item => {
+      if (deliveryItemNames.has(item.name)) {
+        lostDeliveryItems.push(item.name);
+        return false;
+      }
+      return true;
+    });
+  }
+
   const p = {
     ...state.player,
     gold: state.player.gold - goldLost,
     hp: Math.floor(state.player.maxHp * 0.3),
     mana: Math.floor(state.player.maxMana * 0.5),
+    inventory: newInventory,
   };
 
   let newStats = addStat(state.stats || createInitialStats(), 'battlesLost');
@@ -5698,6 +5788,7 @@ function handleDefeat(state) {
     stats: newStats,
     battleResult: {
       defeated: true, goldLost,
+      lostDeliveryItems: lostDeliveryItems.length > 0 ? lostDeliveryItems : null,
       isBoss: !!m?.isBoss,
       bossName: m?.isBoss ? m.name : null,
     },

@@ -345,6 +345,43 @@ export const DAILY_TASKS = [
     ],
     reward: { gold: 40, energyDrinks: 1 },
   },
+  // --- Delivery quests: fetch an item and turn it in ---
+  {
+    id: 'daily_deliver_shiv',
+    name: 'Shiv Courier',
+    description: 'Find a Rusty Shiv in Neon Mile and deliver it. Watch out — dying means losing it!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 45, energyDrinks: 1 },
+    itemRequirements: [{ itemName: 'Rusty Shiv', locationId: 'neon-mile', locationName: 'Neon Mile' }],
+  },
+  {
+    id: 'daily_deliver_dagger',
+    name: 'Dagger Drop-off',
+    description: 'Retrieve a Copper Dagger from Neon Mile or Shadow Alley. Don\'t die or you\'ll lose it!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 40 },
+    itemRequirements: [{ itemName: 'Copper Dagger', locationId: 'neon-mile', locationName: 'Neon Mile' }],
+  },
+  {
+    id: 'daily_deliver_pipe',
+    name: 'Pipe Runner',
+    description: 'Grab a Bent Pipe Bludgeon from Neon Mile and bring it back in one piece.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 35 },
+    itemRequirements: [{ itemName: 'Bent Pipe Bludgeon', locationId: 'neon-mile', locationName: 'Neon Mile' }],
+  },
+  {
+    id: 'daily_deliver_switchblade',
+    name: 'Alley Pickup',
+    description: 'Find a Switchblade Special in Shadow Alley. Death means starting over!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 45, energyDrinks: 1 },
+    itemRequirements: [{ itemName: 'Switchblade Special', locationId: 'shadow-alley', locationName: 'Shadow Alley' }],
+  },
 ];
 
 // Number of daily tasks to randomly select each day
@@ -562,6 +599,42 @@ export const WEEKLY_TASKS = [
     ],
     reward: { gold: 500, chestId: 'mercenary-bounty', energyDrinks: 3 },
   },
+  // --- Delivery quests ---
+  {
+    id: 'weekly_deliver_twin_blades',
+    name: 'Rooftop Arms Deal',
+    description: 'Retrieve a Carbon Spear from Skyline Rooftops and a Rebar Club from Shadow Alley. Dying means losing them both!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 300, energyDrinks: 2 },
+    itemRequirements: [
+      { itemName: 'Carbon Spear', locationId: 'skyline-rooftops', locationName: 'Skyline Rooftops' },
+      { itemName: 'Rebar Club', locationId: 'shadow-alley', locationName: 'Shadow Alley' },
+    ],
+  },
+  {
+    id: 'weekly_deliver_ironworks',
+    name: 'Ironworks Requisition',
+    description: 'Bring a Chainbreaker Axe from Ironworks Yard and a Volt Edge from Ironworks Yard. Guard them with your life!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 350, chestId: 'street-crate', energyDrinks: 2 },
+    itemRequirements: [
+      { itemName: 'Chainbreaker Axe', locationId: 'ironworks-yard', locationName: 'Ironworks Yard' },
+      { itemName: 'Volt Edge', locationId: 'ironworks-yard', locationName: 'Ironworks Yard' },
+    ],
+  },
+  {
+    id: 'weekly_deliver_neon_katana',
+    name: 'Midnight Retrieval',
+    description: 'Recover a Neon Katana from the Midnight Terminal. This legendary blade must not be lost to death!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 400, chestId: 'shadow-lockbox', energyDrinks: 2 },
+    itemRequirements: [
+      { itemName: 'Neon Katana', locationId: 'midnight-terminal', locationName: 'Midnight Terminal' },
+    ],
+  },
 ];
 
 // Number of weekly tasks to randomly select each week
@@ -609,6 +682,31 @@ export const MONTHLY_TASKS = [
     stat: 'explorationsCompleted',
     target: 100,
     reward: { gold: 800, energyDrinks: 3 },
+  },
+  // --- Delivery quests ---
+  {
+    id: 'monthly_deliver_glacier_set',
+    name: 'Frostbound Shipment',
+    description: 'Recover a Frostbite Cleaver from Glacier Tunnels and a Frostfire Saber from Permafrost Ruins. The frozen wastes are deadly — die and they\'re gone.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 1500, chestId: 'skyline-strongbox', energyDrinks: 3 },
+    itemRequirements: [
+      { itemName: 'Frostbite Cleaver', locationId: 'glacier-tunnels', locationName: 'Glacier Tunnels' },
+      { itemName: 'Frostfire Saber', locationId: 'permafrost-ruins', locationName: 'Permafrost Ruins' },
+    ],
+  },
+  {
+    id: 'monthly_deliver_volcanic_arms',
+    name: 'Volcanic Arsenal',
+    description: 'Bring an Ember Scimitar from Sunscorch Canyon and a Volcanic Greataxe from Inferno Pit. These weapons must survive the journey!',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 1800, chestId: 'neon-treasure', energyDrinks: 3 },
+    itemRequirements: [
+      { itemName: 'Ember Scimitar', locationId: 'sunscorch-canyon', locationName: 'Sunscorch Canyon' },
+      { itemName: 'Volcanic Greataxe', locationId: 'inferno-pit', locationName: 'Inferno Pit' },
+    ],
   },
 ];
 
@@ -777,6 +875,43 @@ export const STORY_TASKS = [
     stat: 'itemsSold',
     target: 50,
     reward: { gold: 200 },
+  },
+  // --- Delivery story quests (one-time milestones) ---
+  {
+    id: 'story_deliver_iron_shortsword',
+    name: 'Underground Courier',
+    description: 'Retrieve an Iron Shortsword from Metro Underpass. A powerful patron needs it — don\'t die on the way.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 150, energyDrinks: 1 },
+    itemRequirements: [{ itemName: 'Iron Shortsword', locationId: 'metro-underpass', locationName: 'Metro Underpass' }],
+  },
+  {
+    id: 'story_deliver_storm_falchion',
+    name: 'Rooftop Relic',
+    description: 'Recover a Storm Falchion from the Skyline Rooftops. The guild will reward you handsomely — if you survive.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 300, chestId: 'street-crate', energyDrinks: 2 },
+    itemRequirements: [{ itemName: 'Storm Falchion', locationId: 'skyline-rooftops', locationName: 'Skyline Rooftops' }],
+  },
+  {
+    id: 'story_deliver_coral_trident',
+    name: 'Abyssal Retrieval',
+    description: 'Retrieve a Coral Trident from the Coral Labyrinth. The depths are unforgiving — lose this and you start over.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 800, chestId: 'metro-vault', energyDrinks: 3 },
+    itemRequirements: [{ itemName: 'Coral Trident', locationId: 'coral-labyrinth', locationName: 'Coral Labyrinth' }],
+  },
+  {
+    id: 'story_deliver_oblivion_blade',
+    name: 'Void\'s Edge',
+    description: 'Bring an Oblivion Blade from the Oblivion Throne. The ultimate delivery — death erases all progress.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 2000, chestId: 'void-reliquary', energyDrinks: 5 },
+    itemRequirements: [{ itemName: 'Oblivion Blade', locationId: 'oblivion-throne', locationName: 'Oblivion Throne' }],
   },
 ];
 
@@ -961,6 +1096,19 @@ export const STORY_MISSIONS = [
     order: 5,
     regionHint: 'Neon District',
   },
+  {
+    id: 'mission_ch1_6',
+    chapter: 1,
+    chapterName: 'The Awakening',
+    name: 'Scrap Axe Delivery',
+    description: 'The resistance needs a Scrap Axe from Shadow Alley. Get it to them alive — dying means losing it.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 200, energyDrinks: 1 },
+    order: 6,
+    regionHint: 'Neon District',
+    itemRequirements: [{ itemName: 'Scrap Axe', locationId: 'shadow-alley', locationName: 'Shadow Alley' }],
+  },
 
   // Chapter 2: Frozen Wastes - The Frost Expedition
   {
@@ -1022,6 +1170,19 @@ export const STORY_MISSIONS = [
     reward: { gold: 500, energyDrinks: 2 },
     order: 5,
     regionHint: 'Frozen Wastes',
+  },
+  {
+    id: 'mission_ch2_6',
+    chapter: 2,
+    chapterName: 'The Frost Expedition',
+    name: 'Cryo Lancet Courier',
+    description: 'The frostforgers need a Cryo Lancet from Glacier Tunnels. The cold is deadly — fall in battle and the lancet is lost.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 400, energyDrinks: 2 },
+    order: 6,
+    regionHint: 'Frozen Wastes',
+    itemRequirements: [{ itemName: 'Cryo Lancet', locationId: 'glacier-tunnels', locationName: 'Glacier Tunnels' }],
   },
 
   // Chapter 3: Scorched Badlands - Trial by Fire
@@ -1085,6 +1246,19 @@ export const STORY_MISSIONS = [
     order: 5,
     regionHint: 'Scorched Badlands',
   },
+  {
+    id: 'mission_ch3_6',
+    chapter: 3,
+    chapterName: 'Trial by Fire',
+    name: 'Sandstorm Scythe Run',
+    description: 'The desert outpost is under siege. Bring a Sandstorm Scythe from Sunscorch Canyon before you fall to the heat.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 600, energyDrinks: 2 },
+    order: 6,
+    regionHint: 'Scorched Badlands',
+    itemRequirements: [{ itemName: 'Sandstorm Scythe', locationId: 'sunscorch-canyon', locationName: 'Sunscorch Canyon' }],
+  },
 
   // Chapter 4: Toxic Marshlands - The Corruption
   {
@@ -1146,6 +1320,19 @@ export const STORY_MISSIONS = [
     reward: { gold: 1000, energyDrinks: 3 },
     order: 5,
     regionHint: 'Toxic Marshlands',
+  },
+  {
+    id: 'mission_ch4_6',
+    chapter: 4,
+    chapterName: 'The Corruption',
+    name: 'Venomstrike Extraction',
+    description: 'Extract a Venomstrike Blade from the Venomous Thicket. The marsh devours the careless — die and it\'s gone.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 800, energyDrinks: 2 },
+    order: 6,
+    regionHint: 'Toxic Marshlands',
+    itemRequirements: [{ itemName: 'Venomstrike Blade', locationId: 'venomous-thicket', locationName: 'Venomous Thicket' }],
   },
 
   // Chapter 5: Abyssal Depths - Into the Abyss
@@ -1209,6 +1396,19 @@ export const STORY_MISSIONS = [
     order: 5,
     regionHint: 'Abyssal Depths',
   },
+  {
+    id: 'mission_ch5_6',
+    chapter: 5,
+    chapterName: 'Into the Abyss',
+    name: 'Leviathan Tooth Salvage',
+    description: 'Retrieve a Leviathan Tooth from Kraken\'s Rest. The deep devours all who fall — die and it returns to the abyss.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 1500, energyDrinks: 3 },
+    order: 6,
+    regionHint: 'Abyssal Depths',
+    itemRequirements: [{ itemName: 'Leviathan Tooth', locationId: 'krakens-rest', locationName: "Kraken's Rest" }],
+  },
 
   // Chapter 6: Celestial Highlands - Ascension
   {
@@ -1271,6 +1471,19 @@ export const STORY_MISSIONS = [
     order: 5,
     regionHint: 'Celestial Highlands',
   },
+  {
+    id: 'mission_ch6_6',
+    chapter: 6,
+    chapterName: 'Ascension',
+    name: 'Starblade Offering',
+    description: 'Recover a Starblade Saber from the Solar Fields and present it to the celestial council. Perish and the stars reclaim it.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 2500, energyDrinks: 4 },
+    order: 6,
+    regionHint: 'Celestial Highlands',
+    itemRequirements: [{ itemName: 'Starblade Saber', locationId: 'solar-fields', locationName: 'Solar Fields' }],
+  },
 
   // Chapter 7: Void Nexus - The Final Stand
   {
@@ -1332,6 +1545,19 @@ export const STORY_MISSIONS = [
     reward: { gold: 5000, energyDrinks: 7 },
     order: 5,
     regionHint: 'Void Nexus',
+  },
+  {
+    id: 'mission_ch7_6',
+    chapter: 7,
+    chapterName: 'The Final Stand',
+    name: 'Rift Severer Delivery',
+    description: 'The void must be sealed. Bring a Rift Severer from the Paradox Maze. Fall to the void and it consumes the blade forever.',
+    stat: 'monstersKilled',
+    target: 0,
+    reward: { gold: 4000, energyDrinks: 5 },
+    order: 6,
+    regionHint: 'Void Nexus',
+    itemRequirements: [{ itemName: 'Rift Severer', locationId: 'paradox-maze', locationName: 'Paradox Maze' }],
   },
 ];
 
@@ -1916,6 +2142,42 @@ export const SIDE_QUEST_CHAINS = [
       { id: 'side_op_3', name: 'Haymaker', description: 'Hit harder. Land a 75+ damage hit.', stat: 'highestDamage', target: 75, reward: { gold: 250 }, order: 3 },
       { id: 'side_op_4', name: 'Skull Crusher', description: 'Destroy everything. Deal 5,000 total damage.', stat: 'damageDealt', target: 5000, reward: { gold: 400 }, order: 4 },
       { id: 'side_op_5', name: 'One Punch', description: 'The ultimate hit. Land a 120+ damage single strike.', stat: 'highestDamage', target: 120, reward: { gold: 750 }, order: 5 },
+    ],
+  },
+
+  // Chain: Courier's Guild - delivery quests across all regions (Lv 1)
+  {
+    chainId: 'couriers_guild',
+    chainName: "Courier's Guild",
+    chainDescription: 'Deliver weapons across the world. Die and you lose the package — the guild doesn\'t forgive failure.',
+    chainIcon: 'compass',
+    levelReq: 1,
+    quests: [
+      { id: 'side_cg_1', name: 'First Delivery', description: 'Prove yourself to the guild. Deliver a Rusty Shiv from Neon Mile.', stat: 'monstersKilled', target: 0, reward: { gold: 60 }, order: 1, itemRequirements: [{ itemName: 'Rusty Shiv', locationId: 'neon-mile', locationName: 'Neon Mile' }] },
+      { id: 'side_cg_2', name: 'Double Package', description: 'Two deliveries at once. Bring a Copper Dagger from Neon Mile and a Rebar Club from Shadow Alley.', stat: 'monstersKilled', target: 0, reward: { gold: 150 }, order: 2, itemRequirements: [{ itemName: 'Copper Dagger', locationId: 'neon-mile', locationName: 'Neon Mile' }, { itemName: 'Rebar Club', locationId: 'shadow-alley', locationName: 'Shadow Alley' }] },
+      { id: 'side_cg_3', name: 'Metro Express', description: 'The underpass is dangerous. Retrieve an Iron Shortsword from Metro Underpass.', stat: 'monstersKilled', target: 0, reward: { gold: 250 }, order: 3, itemRequirements: [{ itemName: 'Iron Shortsword', locationId: 'metro-underpass', locationName: 'Metro Underpass' }] },
+      { id: 'side_cg_4', name: 'Rooftop Relay', description: 'A high-altitude pickup. Deliver a Carbon Spear from the Skyline Rooftops and Twin Cleavers from the same area.', stat: 'monstersKilled', target: 0, reward: { gold: 400, energyDrinks: 1 }, order: 4, itemRequirements: [{ itemName: 'Carbon Spear', locationId: 'skyline-rooftops', locationName: 'Skyline Rooftops' }, { itemName: 'Twin Cleavers', locationId: 'skyline-rooftops', locationName: 'Skyline Rooftops' }] },
+      { id: 'side_cg_5', name: 'Frost Courier', description: 'Brave the cold. Bring a Cryo Lancet from Glacier Tunnels. The ice is unforgiving.', stat: 'monstersKilled', target: 0, reward: { gold: 500, energyDrinks: 2 }, order: 5, itemRequirements: [{ itemName: 'Cryo Lancet', locationId: 'glacier-tunnels', locationName: 'Glacier Tunnels' }] },
+      { id: 'side_cg_6', name: 'Desert Express', description: 'Run through the scorching heat. Deliver an Ember Scimitar from Sunscorch Canyon and an Ashfall Glaive from Inferno Pit.', stat: 'monstersKilled', target: 0, reward: { gold: 700, energyDrinks: 2 }, order: 6, itemRequirements: [{ itemName: 'Ember Scimitar', locationId: 'sunscorch-canyon', locationName: 'Sunscorch Canyon' }, { itemName: 'Ashfall Glaive', locationId: 'inferno-pit', locationName: 'Inferno Pit' }] },
+      { id: 'side_cg_7', name: 'Guild Master Delivery', description: 'The final test. Deliver a Coral Trident from Coral Labyrinth and a Starblade Saber from Solar Fields. Fail and the guild disowns you.', stat: 'monstersKilled', target: 0, reward: { gold: 1500, energyDrinks: 4 }, order: 7, itemRequirements: [{ itemName: 'Coral Trident', locationId: 'coral-labyrinth', locationName: 'Coral Labyrinth' }, { itemName: 'Starblade Saber', locationId: 'solar-fields', locationName: 'Solar Fields' }] },
+    ],
+  },
+
+  // Chain: Smuggler's Run - high-risk delivery sprint (Lv 10)
+  {
+    chainId: 'smugglers_run',
+    chainName: "Smuggler's Run",
+    chainDescription: 'Smuggle rare weapons through hostile territory. Get caught dead? You lose the goods.',
+    chainIcon: 'skull',
+    levelReq: 10,
+    quests: [
+      { id: 'side_sr_1', name: 'Small Time Smuggle', description: 'Start small. Move a Switchblade Special out of Shadow Alley.', stat: 'monstersKilled', target: 0, reward: { gold: 100 }, order: 1, itemRequirements: [{ itemName: 'Switchblade Special', locationId: 'shadow-alley', locationName: 'Shadow Alley' }] },
+      { id: 'side_sr_2', name: 'Ironworks Heist', description: 'Grab a Chainbreaker Axe from Ironworks Yard. Security is tight.', stat: 'monstersKilled', target: 0, reward: { gold: 200 }, order: 2, itemRequirements: [{ itemName: 'Chainbreaker Axe', locationId: 'ironworks-yard', locationName: 'Ironworks Yard' }] },
+      { id: 'side_sr_3', name: 'Midnight Run', description: 'Steal a Neon Katana from Midnight Terminal under cover of darkness.', stat: 'monstersKilled', target: 0, reward: { gold: 350, energyDrinks: 1 }, order: 3, itemRequirements: [{ itemName: 'Neon Katana', locationId: 'midnight-terminal', locationName: 'Midnight Terminal' }] },
+      { id: 'side_sr_4', name: 'Frozen Contraband', description: 'Smuggle a Glacier Fang from Crystal Caverns past the frost patrols.', stat: 'monstersKilled', target: 0, reward: { gold: 500, energyDrinks: 2 }, order: 4, itemRequirements: [{ itemName: 'Glacier Fang', locationId: 'crystal-caverns', locationName: 'Crystal Caverns' }] },
+      { id: 'side_sr_5', name: 'Toxic Cargo', description: 'Transport a Swamp Machete from the Venomous Thicket. Don\'t breathe the fumes — and don\'t die.', stat: 'monstersKilled', target: 0, reward: { gold: 700, energyDrinks: 2 }, order: 5, itemRequirements: [{ itemName: 'Swamp Machete', locationId: 'venomous-thicket', locationName: 'Venomous Thicket' }] },
+      { id: 'side_sr_6', name: 'Deep Smuggle', description: 'Retrieve a Depth Charge Blade from Sunken Bazaar. The pressure alone can kill you.', stat: 'monstersKilled', target: 0, reward: { gold: 1000, energyDrinks: 3 }, order: 6, itemRequirements: [{ itemName: 'Depth Charge Blade', locationId: 'sunken-bazaar', locationName: 'Sunken Bazaar' }] },
+      { id: 'side_sr_7', name: 'Kingpin Delivery', description: 'The big score. Deliver a Rift Severer from Paradox Maze and a Nullpoint Edge from Singularity Well. Die and everything is lost.', stat: 'monstersKilled', target: 0, reward: { gold: 2500, energyDrinks: 5 }, order: 7, itemRequirements: [{ itemName: 'Rift Severer', locationId: 'paradox-maze', locationName: 'Paradox Maze' }, { itemName: 'Nullpoint Edge', locationId: 'singularity-well', locationName: 'Singularity Well' }] },
     ],
   },
 ];

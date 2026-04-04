@@ -57,9 +57,27 @@ function PinButton({ questId, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQuests, onPin, onUnpin, showPin, chainId, subquests }) {
-  const pct = Math.min(100, Math.floor((progress / target) * 100));
-  const complete = progress >= target;
+function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQuests, onPin, onUnpin, showPin, chainId, subquests, playerInventory }) {
+  const isDelivery = task.itemRequirements && task.itemRequirements.length > 0;
+  const inv = playerInventory || [];
+
+  // For delivery quests, calculate completion based on item requirements
+  let deliveryComplete = false;
+  let itemStatus = [];
+  if (isDelivery) {
+    itemStatus = task.itemRequirements.map(req => ({
+      ...req,
+      fulfilled: inv.some(item => item.name === req.itemName && item.foundLocation === req.locationId),
+    }));
+    const allItemsFulfilled = itemStatus.every(r => r.fulfilled);
+    const statOk = task.target <= 0 || progress >= target;
+    deliveryComplete = allItemsFulfilled && statOk;
+  }
+
+  const pct = isDelivery
+    ? Math.floor((itemStatus.filter(r => r.fulfilled).length / itemStatus.length) * 100)
+    : Math.min(100, Math.floor((progress / target) * 100));
+  const complete = isDelivery ? deliveryComplete : progress >= target;
   const canClaim = complete && !claimed;
 
   return (
@@ -85,8 +103,25 @@ function TaskCard({ task, progress, target, claimed, onClaim, taskType, pinnedQu
       {task.regionHint && (
         <div className="journal-task-region">{task.regionHint}</div>
       )}
-      {/* Compound quest: show sub-objectives */}
-      {subquests && subquests.length > 0 ? (
+      {/* Delivery quest: show item checklist */}
+      {isDelivery && !subquests?.length ? (
+        <div className="journal-task-subquests">
+          {itemStatus.map((req, idx) => (
+            <div key={idx} className={`journal-task-sub ${req.fulfilled ? 'sub-complete' : ''}`}>
+              <div className="journal-task-sub-header">
+                <span className="journal-task-sub-icon">{req.fulfilled ? '\u2713' : '\u25CB'}</span>
+                <span className="journal-task-sub-name">{req.itemName} ({req.locationName})</span>
+              </div>
+            </div>
+          ))}
+          <div className="journal-task-progress-row">
+            <span className="journal-task-count" style={{ marginLeft: 'auto' }}>
+              {itemStatus.filter(r => r.fulfilled).length}/{itemStatus.length} items
+            </span>
+          </div>
+        </div>
+      ) : subquests && subquests.length > 0 ? (
+        /* Compound quest: show sub-objectives */
         <div className="journal-task-subquests">
           {subquests.map((sq, idx) => {
             const sqPct = Math.min(100, Math.floor((sq.progress / sq.target) * 100));
@@ -189,7 +224,7 @@ function StatsTab({ stats }) {
   );
 }
 
-function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, onClaim, pinnedQuests, onPin, onUnpin }) {
+function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, onClaim, pinnedQuests, onPin, onUnpin, playerInventory }) {
   const isStory = taskType === 'story' || taskType === 'tutorial' || taskType === 'mission';
 
   return (
@@ -216,6 +251,7 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
               onUnpin={onUnpin}
               showPin={taskType === 'tutorial' || taskType === 'mission' || taskType === 'story' || taskType === 'daily' || taskType === 'weekly'}
               subquests={subquests}
+              playerInventory={playerInventory}
             />
           );
         }
@@ -235,6 +271,7 @@ function TasksTab({ tasks, taskDefs, progressMap, claimedList, stats, taskType, 
             onPin={onPin}
             onUnpin={onUnpin}
             showPin={taskType === 'tutorial' || taskType === 'mission' || taskType === 'story' || taskType === 'daily' || taskType === 'weekly'}
+            playerInventory={playerInventory}
           />
         );
       })}
@@ -428,7 +465,7 @@ function QuestSlotsTab({ tasks, stats, playerLevel, onActivate, onAbandon }) {
   );
 }
 
-function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
+function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, playerInventory }) {
   const tutClaimed = tasks.tutorialClaimed || [];
   const activeLines = tasks.activeQuestLines || [];
   const isActive = isQuestLineActive(activeLines, 'tutorial');
@@ -493,6 +530,7 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
             onPin={onPin}
             onUnpin={onUnpin}
             showPin={!claimed}
+            playerInventory={playerInventory}
           />
         );
       })}
@@ -500,7 +538,7 @@ function TutorialTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
+function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, playerInventory }) {
   const [selectedChapter, setSelectedChapter] = useState(null);
   const missionClaimed = tasks.missionClaimed || [];
   const activeLines = tasks.activeQuestLines || [];
@@ -618,6 +656,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
             onPin={onPin}
             onUnpin={onUnpin}
             showPin={!claimed}
+            playerInventory={playerInventory}
           />
         );
       })}
@@ -625,7 +664,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin }) {
   );
 }
 
-function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin, onUnpin }) {
+function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin, onUnpin, playerInventory }) {
   const [selectedChain, setSelectedChain] = useState(null);
   const sideQuestClaimed = tasks.sideQuestClaimed || [];
   const activeLines = tasks.activeQuestLines || [];
@@ -733,6 +772,7 @@ function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin
             onUnpin={onUnpin}
             showPin={!claimed && isActive}
             chainId={chain.chainId}
+            playerInventory={playerInventory}
           />
         );
       })}
@@ -740,7 +780,7 @@ function SideQuestsTab({ stats, tasks, playerLevel, onClaim, pinnedQuests, onPin
   );
 }
 
-export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
+export default function JournalScreen({ stats, tasks, playerLevel, playerInventory, onClaim, onPin, onUnpin, onActivate, onAbandon, onBack }) {
   const [activeTab, setActiveTab] = useState('Quests');
   const now = Date.now();
 
@@ -750,12 +790,26 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
   const monthlyTasks = getActiveMonthlyTasks(now);
   const pinnedQuests = tasks.pinnedQuests || [];
 
-  // Count unclaimed completions for badge (supports compound quests)
+  // Check if delivery quest items are all in inventory
+  const inv = playerInventory || [];
+  const isDeliveryReady = (task) => {
+    if (!task.itemRequirements || task.itemRequirements.length === 0) return true;
+    return task.itemRequirements.every(req =>
+      inv.some(item => item.name === req.itemName && item.foundLocation === req.locationId)
+    );
+  };
+
+  // Count unclaimed completions for badge (supports compound + delivery quests)
   const countReady = (defs, progressMap, claimedList, isStory) => {
     return defs.filter(t => {
       if (claimedList.includes(t.id)) return false;
       if (t.compound && t.subquests) {
         return isCompoundQuestComplete(t, progressMap);
+      }
+      // Delivery quests: check item requirements
+      if (t.itemRequirements && t.itemRequirements.length > 0) {
+        const statOk = t.target <= 0 || (isStory ? (stats[t.stat] || 0) : (progressMap[t.id] || 0)) >= t.target;
+        return statOk && isDeliveryReady(t);
       }
       const prog = isStory ? (stats[t.stat] || 0) : (progressMap[t.id] || 0);
       return prog >= t.target;
@@ -779,7 +833,9 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
         if (missionClaimed.includes(m.id)) continue;
         const prevM = m.order > 1 ? chMissions.find(x => x.order === m.order - 1) : null;
         if (prevM && !missionClaimed.includes(prevM.id)) continue;
-        if (getQuestProgress(stats, m.id, m.stat, tasks.questBaselines) >= m.target) missionBadge++;
+        const mProg = getQuestProgress(stats, m.id, m.stat, tasks.questBaselines);
+        const mStatOk = m.target <= 0 || mProg >= m.target;
+        if (mStatOk && isDeliveryReady(m)) missionBadge++;
       }
     }
   }
@@ -790,7 +846,11 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
     const lineKey = `side_${chain.chainId}`;
     if (!isQuestLineActive(activeLines, lineKey)) continue;
     const currentQ = getCurrentSideQuest(chain.chainId, tasks.sideQuestClaimed || []);
-    if (currentQ && getQuestProgress(stats, currentQ.id, currentQ.stat, tasks.questBaselines) >= currentQ.target) sideBadge++;
+    if (currentQ) {
+      const sqProg = getQuestProgress(stats, currentQ.id, currentQ.stat, tasks.questBaselines);
+      const sqStatOk = currentQ.target <= 0 || sqProg >= currentQ.target;
+      if (sqStatOk && isDeliveryReady(currentQ)) sideBadge++;
+    }
   }
 
   // Quests tab badge = sum of quest line badges
@@ -843,6 +903,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             pinnedQuests={pinnedQuests}
             onPin={onPin}
             onUnpin={onUnpin}
+            playerInventory={playerInventory}
           />
         )}
         {activeTab === 'Missions' && (
@@ -853,6 +914,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             pinnedQuests={pinnedQuests}
             onPin={onPin}
             onUnpin={onUnpin}
+            playerInventory={playerInventory}
           />
         )}
         {activeTab === 'Side Quests' && (
@@ -864,6 +926,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             pinnedQuests={pinnedQuests}
             onPin={onPin}
             onUnpin={onUnpin}
+            playerInventory={playerInventory}
           />
         )}
         {activeTab === 'Daily' && (
@@ -878,6 +941,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             pinnedQuests={pinnedQuests}
             onPin={onPin}
             onUnpin={onUnpin}
+            playerInventory={playerInventory}
           />
         )}
         {activeTab === 'Weekly' && (
@@ -892,6 +956,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             pinnedQuests={pinnedQuests}
             onPin={onPin}
             onUnpin={onUnpin}
+            playerInventory={playerInventory}
           />
         )}
         {activeTab === 'Monthly' && (
@@ -906,6 +971,7 @@ export default function JournalScreen({ stats, tasks, playerLevel, onClaim, onPi
             pinnedQuests={pinnedQuests}
             onPin={onPin}
             onUnpin={onUnpin}
+            playerInventory={playerInventory}
           />
         )}
       </div>

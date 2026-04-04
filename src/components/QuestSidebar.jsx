@@ -83,8 +83,59 @@ function getActiveLineQuests(tasks) {
   return quests;
 }
 
-// Render a simple quest (single stat/target)
-function renderSimpleQuest(quest, stats, tasks, onClaim, playerLevel) {
+// Render a simple quest (single stat/target) or a delivery quest (itemRequirements)
+function renderSimpleQuest(quest, stats, tasks, onClaim, playerLevel, playerInventory) {
+  const isDelivery = quest.itemRequirements && quest.itemRequirements.length > 0;
+
+  if (isDelivery) {
+    // Delivery quest: show item checklist
+    const inv = playerInventory || [];
+    const itemStatus = quest.itemRequirements.map(req => ({
+      ...req,
+      fulfilled: inv.some(item => item.name === req.itemName && item.foundLocation === req.locationId),
+    }));
+    const allFulfilled = itemStatus.every(r => r.fulfilled);
+    // Also check stat target if > 0
+    const statOk = quest.target <= 0 || getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines) >= quest.target;
+    const complete = allFulfilled && statOk;
+    const fulfilledCount = itemStatus.filter(r => r.fulfilled).length;
+    const pct = Math.floor((fulfilledCount / itemStatus.length) * 100);
+    const claimInfo = complete ? getClaimInfo(quest, playerLevel) : null;
+    return (
+      <div key={quest.id} className={`quest-sidebar-item ${complete ? 'complete' : ''}`}>
+        <div className="quest-sidebar-name">{quest.name}</div>
+        <div className="quest-sidebar-desc">{quest.description}</div>
+        <div className="quest-sidebar-progress">
+          <div className="quest-sidebar-bar">
+            <div className="quest-sidebar-bar-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="quest-sidebar-count">
+            {fulfilledCount}/{itemStatus.length} items
+            {complete && ' \u2713'}
+          </div>
+        </div>
+        <div className="quest-sidebar-subquests">
+          {itemStatus.map((req, idx) => (
+            <div key={idx} className={`quest-sidebar-sub ${req.fulfilled ? 'sub-complete' : ''}`}>
+              <div className="quest-sidebar-sub-name">
+                {req.fulfilled ? '\u2713' : '\u25CB'} {req.itemName} ({req.locationName})
+              </div>
+            </div>
+          ))}
+        </div>
+        {complete && claimInfo && onClaim && (
+          <button
+            className="btn quest-sidebar-claim"
+            onClick={() => onClaim(quest.id, claimInfo.taskType, claimInfo.chainId)}
+          >
+            Claim Reward
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Regular stat-based quest
   const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
   const pct = Math.min(100, Math.floor((progress / quest.target) * 100));
   const complete = progress >= quest.target;
@@ -173,7 +224,7 @@ function renderCompoundQuest(quest, stats, tasks, onClaim, playerLevel) {
   );
 }
 
-export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim, playerLevel }) {
+export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim, playerLevel, playerInventory }) {
   const lvl = playerLevel || 1;
   // Gather quests from active quest lines (always shown)
   const lineQuests = getActiveLineQuests(tasks);
@@ -199,7 +250,7 @@ export default function QuestSidebar({ pinnedQuests, stats, tasks, onClaim, play
         if (quest.compound && quest.subquests) {
           return renderCompoundQuest(quest, stats, tasks, onClaim, lvl);
         }
-        return renderSimpleQuest(quest, stats, tasks, onClaim, lvl);
+        return renderSimpleQuest(quest, stats, tasks, onClaim, lvl, playerInventory);
       })}
     </div>
   );
