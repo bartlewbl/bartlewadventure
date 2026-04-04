@@ -366,8 +366,12 @@ export default function App() {
               <ExtraordinaryTraderScreen
                 trader={state.activeTrader}
                 playerGold={state.player.gold}
+                villageQuests={state.villageQuests}
+                stats={state.stats}
                 onBuy={actions.traderBuy}
                 onLeave={actions.traderLeave}
+                onAcceptQuest={actions.traderAcceptQuest}
+                onTurnInQuest={actions.traderTurnInQuest}
               />
             )}
 
