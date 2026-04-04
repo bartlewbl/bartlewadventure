@@ -26,6 +26,7 @@ export default function SidePanel({
   onBase,
   onPets,
   onJournal,
+  onTavern,
   onRest,
   navLocked,
   onProfile,
@@ -96,6 +97,14 @@ export default function SidePanel({
       description: 'Manage your pet companions',
       onClick: onPets,
       active: screen === 'pets',
+      disabled: navLocked,
+    },
+    {
+      id: 'tavern',
+      label: 'Tavern',
+      description: 'Talk to the locals',
+      onClick: onTavern,
+      active: screen === 'tavern',
       disabled: navLocked,
     },
     {

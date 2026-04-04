@@ -30,6 +30,7 @@ import RightPanel from './components/RightPanel';
 import ChestOpeningScreen from './components/screens/ChestOpeningScreen';
 import StatsScreen from './components/screens/StatsScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
+import TavernScreen from './components/screens/TavernScreen';
 import MobileNav from './components/MobileNav';
 import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
@@ -253,6 +254,7 @@ export default function App() {
               onBase={() => actions.showScreen('base')}
               onPets={() => actions.showScreen('pets')}
               onJournal={() => actions.showScreen('journal')}
+              onTavern={() => actions.showScreen('tavern')}
               onRest={actions.restAtInn}
               navLocked={navLocked}
               gold={state.player.gold}
@@ -565,6 +567,12 @@ export default function App() {
               />
             )}
 
+            {state.screen === 'tavern' && (
+              <TavernScreen
+                onBack={actions.goToTown}
+              />
+            )}
+
             {state.screen === 'probability-dashboard' && (
               <ProbabilityDashboard onBack={actions.goToTown} />
             )}
@@ -602,6 +610,7 @@ export default function App() {
             onBase={() => actions.showScreen('base')}
             onPets={() => actions.showScreen('pets')}
             onJournal={() => actions.showScreen('journal')}
+            onTavern={() => actions.showScreen('tavern')}
             onProfile={() => actions.showScreen('profile')}
             onSkills={() => actions.showScreen('skills')}
             onStats={() => actions.showScreen('player-stats')}
