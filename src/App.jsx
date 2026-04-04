@@ -217,6 +217,8 @@ export default function App() {
           if (eqIds.length === 0) return null;
           return owned.find(p => p.instanceId === eqIds[0]) || null;
         })()}
+        activeTrader={state.activeTrader}
+        activeVillage={state.activeVillage}
       />
 
       <div className="ui-overlay">

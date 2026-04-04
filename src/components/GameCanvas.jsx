@@ -14,7 +14,7 @@ const ANIM_DURATIONS = {
 function easeOut(t) { return 1 - (1 - t) * (1 - t); }
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
 
-export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet }) {
+export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -61,8 +61,14 @@ export default function GameCanvas({ screen, location, battle, animTick, battleA
       case 'battle-result':
         if (location) drawBackground(ctx, location.bgKey, w, h);
         break;
+      case 'extraordinary-trader':
+        renderTraderScene(ctx, w, h, animTick, activeTrader);
+        break;
+      case 'quest-village':
+        renderVillageScene(ctx, w, h, animTick, activeVillage);
+        break;
     }
-  }, [screen, location, battle, animTick, battleAnim, activePet]);
+  }, [screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage]);
 
   return <canvas ref={canvasRef} width={640} height={480} className="game-canvas" />;
 }
@@ -616,4 +622,192 @@ function drawDodgeEffect(ctx, px, py, mx, my, progress) {
   }
 
   ctx.restore();
+}
+
+// ---- TRADER SCENE ----
+function renderTraderScene(ctx, w, h, tick) {
+  // Dark mystical background
+  ctx.fillStyle = '#08061a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle stars
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  for (let i = 0; i < 30; i++) {
+    const sx = (i * 157 + 33) % w;
+    const sy = (i * 89 + 17) % (h * 0.5);
+    const twinkle = Math.sin(tick * 0.05 + i * 2) * 0.5 + 0.5;
+    ctx.globalAlpha = twinkle * 0.6;
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Ground - dark road/path
+  const groundY = h * 0.68;
+  ctx.fillStyle = '#151020';
+  ctx.fillRect(0, groundY, w, h - groundY);
+  ctx.fillStyle = '#1a1530';
+  ctx.fillRect(0, groundY, w, 3);
+
+  // Ambient fog/mist near ground
+  for (let i = 0; i < 6; i++) {
+    const fogX = (i * 120 + tick * 0.3) % (w + 100) - 50;
+    const fogY = groundY - 10 + Math.sin(tick * 0.02 + i) * 5;
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = '#8866cc';
+    ctx.fillRect(fogX, fogY, 80, 15);
+  }
+  ctx.globalAlpha = 1;
+
+  // Market cart on the left
+  if (SPRITES.marketCart) {
+    const cartBob = Math.sin(tick * 0.04) * 1;
+    drawSpriteCentered(ctx, SPRITES.marketCart, w * 0.3, groundY - 18 + cartBob, 3);
+  }
+
+  // Draw merchant sprite in center
+  if (SPRITES.merchant) {
+    const merchantBob = Math.sin(tick * 0.07) * 2;
+    drawSpriteCentered(ctx, SPRITES.merchant, w * 0.5, groundY - 28 + merchantBob, 4);
+
+    // Glow under merchant
+    ctx.globalAlpha = 0.15 + Math.sin(tick * 0.05) * 0.05;
+    ctx.fillStyle = '#9040e0';
+    ctx.fillRect(w * 0.5 - 25, groundY - 4, 50, 6);
+    ctx.globalAlpha = 1;
+  }
+
+  // Floating lanterns / magical orbs
+  for (let i = 0; i < 4; i++) {
+    const orbX = w * 0.2 + i * (w * 0.2);
+    const orbY = h * 0.25 + Math.sin(tick * 0.04 + i * 1.5) * 15;
+    const orbAlpha = 0.4 + Math.sin(tick * 0.06 + i) * 0.2;
+    ctx.globalAlpha = orbAlpha;
+    const colors = ['#ffd700', '#ff6600', '#9040e0', '#4fc3f7'];
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fillRect(orbX - 2, orbY - 2, 5, 5);
+    // Glow
+    ctx.globalAlpha = orbAlpha * 0.3;
+    ctx.fillRect(orbX - 5, orbY - 5, 11, 11);
+  }
+  ctx.globalAlpha = 1;
+
+  // Sparkle particles
+  for (let i = 0; i < 8; i++) {
+    const phase = tick * 0.08 + i * 0.8;
+    const sparkleX = w * 0.3 + Math.sin(phase) * (w * 0.25);
+    const sparkleY = h * 0.2 + ((tick * 0.5 + i * 60) % (h * 0.5));
+    const sparkleAlpha = Math.sin(phase * 2) * 0.5 + 0.3;
+    ctx.globalAlpha = Math.max(0, sparkleAlpha);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(sparkleX, sparkleY, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Signpost on the right
+  if (SPRITES.signpost) {
+    drawSpriteCentered(ctx, SPRITES.signpost, w * 0.78, groundY - 14, 2.5);
+  }
+}
+
+// ---- VILLAGE SCENE ----
+function renderVillageScene(ctx, w, h, tick) {
+  // Warm evening sky
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+  skyGrad.addColorStop(0, '#0a0e1a');
+  skyGrad.addColorStop(0.4, '#0f1528');
+  skyGrad.addColorStop(0.7, '#1a2035');
+  skyGrad.addColorStop(1, '#1e2a18');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Stars
+  ctx.fillStyle = '#fff';
+  for (let i = 0; i < 25; i++) {
+    const sx = (i * 143 + 29) % w;
+    const sy = (i * 71 + 11) % (h * 0.45);
+    const twinkle = Math.sin(tick * 0.04 + i * 1.7) * 0.5 + 0.5;
+    ctx.globalAlpha = twinkle * 0.5;
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Ground - grassy earth
+  const groundY = h * 0.65;
+  const groundGrad = ctx.createLinearGradient(0, groundY, 0, h);
+  groundGrad.addColorStop(0, '#1a2a18');
+  groundGrad.addColorStop(1, '#0f1a0d');
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, groundY, w, h - groundY);
+
+  // Grass tufts
+  ctx.fillStyle = '#2a4a22';
+  for (let i = 0; i < 20; i++) {
+    const gx = (i * 37 + 15) % w;
+    const gy = groundY + 2 + (i * 11 % 20);
+    ctx.fillRect(gx, gy, 4, 3);
+    ctx.fillRect(gx + 2, gy - 2, 2, 2);
+  }
+
+  // Village huts in background
+  if (SPRITES.villageHut) {
+    // Back row huts (smaller / farther)
+    ctx.globalAlpha = 0.6;
+    drawSpriteCentered(ctx, SPRITES.villageHut, w * 0.15, groundY - 8, 2);
+    drawSpriteCentered(ctx, SPRITES.villageHut, w * 0.85, groundY - 8, 2);
+    ctx.globalAlpha = 1;
+
+    // Front row huts
+    drawSpriteCentered(ctx, SPRITES.villageHut, w * 0.28, groundY - 14, 3);
+    drawSpriteCentered(ctx, SPRITES.villageHut, w * 0.72, groundY - 14, 3);
+  }
+
+  // Central campfire
+  if (SPRITES.campfire) {
+    drawSpriteCentered(ctx, SPRITES.campfire, w * 0.5, groundY - 6, 3);
+
+    // Animated fire glow
+    const fireGlow = 0.12 + Math.sin(tick * 0.15) * 0.05;
+    ctx.globalAlpha = fireGlow;
+    ctx.fillStyle = '#ff6600';
+    const glowSize = 35 + Math.sin(tick * 0.2) * 5;
+    ctx.fillRect(w * 0.5 - glowSize, groundY - 20 - glowSize * 0.5, glowSize * 2, glowSize);
+    ctx.globalAlpha = 1;
+
+    // Fire sparks rising
+    for (let i = 0; i < 5; i++) {
+      const sparkPhase = (tick * 0.1 + i * 1.3) % 3;
+      if (sparkPhase < 2) {
+        const sparkX = w * 0.5 + Math.sin(tick * 0.08 + i * 2) * 12;
+        const sparkY = groundY - 20 - sparkPhase * 30;
+        ctx.globalAlpha = Math.max(0, 1 - sparkPhase / 2) * 0.7;
+        ctx.fillStyle = i % 2 === 0 ? '#ffcc00' : '#ff8800';
+        ctx.fillRect(sparkX, sparkY, 2, 2);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Player sprite visiting the village
+  const playerBob = Math.sin(tick * 0.08) * 2;
+  drawSpriteCentered(ctx, SPRITES.player.idle, w * 0.5, groundY - 35 + playerBob, 3);
+
+  // Warm light overlay near ground from campfire
+  ctx.globalAlpha = 0.04;
+  const warmGrad = ctx.createRadialGradient(w * 0.5, groundY, 10, w * 0.5, groundY, 150);
+  warmGrad.addColorStop(0, '#ff8844');
+  warmGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = warmGrad;
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 1;
+
+  // Fireflies / ambient particles
+  for (let i = 0; i < 6; i++) {
+    const ffX = (Math.sin(tick * 0.02 + i * 1.1) * 0.5 + 0.5) * w;
+    const ffY = h * 0.3 + Math.sin(tick * 0.03 + i * 2.1) * (h * 0.2);
+    const ffAlpha = Math.sin(tick * 0.06 + i * 1.5) * 0.4 + 0.3;
+    ctx.globalAlpha = Math.max(0, ffAlpha);
+    ctx.fillStyle = '#88ff88';
+    ctx.fillRect(ffX, ffY, 2, 2);
+  }
+  ctx.globalAlpha = 1;
 }
