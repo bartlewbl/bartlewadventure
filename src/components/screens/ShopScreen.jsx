@@ -7,6 +7,7 @@ import { BUILDING_MATERIALS } from '../../data/baseData';
 import { getClassName, getClassColor, getClassShortName, canClassEquip } from '../../data/gameData';
 import { getStackKey } from '../../hooks/useGameState';
 import useGameClock from '../../hooks/useGameClock';
+import { TAVERN_SHOP_UNLOCKS, TAVERN_NPCS, REP_LEVELS, getRepLevel } from '../../data/tavernData';
 
 const SLOT_LABELS = {
   weapon: 'Weapon',
@@ -28,6 +29,7 @@ const SHOPS = [
   { id: 'petshop', label: 'Pet Shop', icon: '\u{1F43E}', desc: 'Buy pets & pet items' },
   { id: 'featured', label: 'Featured', icon: '\u2605', desc: 'Daily deals' },
   { id: 'trading', label: 'Trading', icon: '\u2692', desc: 'Trade materials for loot chests' },
+  { id: 'tavern', label: 'Tavern', icon: '\uD83C\uDF7A', desc: 'NPC exclusive items' },
 ];
 
 const ARMOUR_CATEGORIES = [
@@ -97,7 +99,7 @@ function isInvFullForItem(player, shopItem) {
   return true;
 }
 
-export default function ShopScreen({ player, pets, base, shopPurchases, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onBack }) {
+export default function ShopScreen({ player, pets, base, shopPurchases, tavern, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onTavernBuy, onBack }) {
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
@@ -510,6 +512,70 @@ export default function ShopScreen({ player, pets, base, shopPurchases, onBuy, o
                   </button>
                 </div>
               );
+            })}
+          </div>
+        </div>
+      )}
+
+      {activeShop === 'tavern' && (
+        <div className="shop-content">
+          <div className="shop-featured-banner">Tavern Exclusive Items</div>
+          <div className="shop-featured-banner" style={{ fontSize: '7px', color: '#8e8eb2', marginTop: '-6px' }}>
+            Build reputation with tavern NPCs to unlock rare goods
+          </div>
+          <div className="shop-list">
+            {Object.entries(TAVERN_SHOP_UNLOCKS).map(([npcId, tiers]) => {
+              const npc = TAVERN_NPCS.find(n => n.id === npcId);
+              const rep = tavern?.reputation?.[npcId] || 0;
+              const repLvl = getRepLevel(rep).level;
+              return tiers.map((tier, ti) => {
+                const repLocked = repLvl < tier.reqRep;
+                const reqLabel = REP_LEVELS.find(r => r.level === tier.reqRep)?.label || '';
+                return tier.items.map((item, ii) => {
+                  const canAfford = player.gold >= item.buyPrice;
+                  const invFull = isInvFullForItem(player, item);
+                  const stockKey = npcId + '_' + item.name;
+                  const bought = tavern?.shopPurchases?.[stockKey] || 0;
+                  const soldOut = item.type === 'gear' && bought >= 1;
+                  return (
+                    <div key={`${npcId}-${ti}-${ii}`} className={`shop-card ${repLocked ? 'unaffordable' : ''} ${soldOut ? 'unaffordable' : ''}`}>
+                      <div className="shop-card-left">
+                        <div className="shop-card-type">
+                          <span style={{ color: npc?.color || '#ccc' }}>{npc?.name || npcId}</span>
+                        </div>
+                        <div className="shop-card-name" style={{ color: item.rarity === 'Epic' ? '#ce93d8' : item.rarity === 'Rare' ? '#ffd700' : item.rarity === 'Uncommon' ? '#4fc3f7' : '#ccc' }}>
+                          {item.name}
+                        </div>
+                        <div className="shop-card-meta">
+                          <span className={`shop-rarity-badge rarity-${(item.rarity || 'common').toLowerCase()}`}>{item.rarity}</span>
+                          {item.level > 0 && <span className="shop-card-level">Lv{item.level}</span>}
+                          <span className="shop-card-stats">
+                            {item.atk > 0 ? `ATK+${item.atk}  ` : ''}
+                            {item.def > 0 ? `DEF+${item.def}  ` : ''}
+                            {item.healAmount > 0 ? `Heal ${item.healAmount}  ` : ''}
+                            {item.slot ? item.slot : ''}
+                          </span>
+                        </div>
+                        <div className="shop-card-desc" style={{ fontSize: '7px', color: '#888', marginTop: '2px' }}>{item.desc}</div>
+                        {repLocked && (
+                          <div style={{ fontSize: '6px', color: '#f88', marginTop: '3px', fontFamily: "'Press Start 2P', monospace" }}>
+                            Requires {reqLabel} rep with {npc?.name || npcId}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        className="shop-buy-btn"
+                        onClick={() => onTavernBuy(item, npcId)}
+                        disabled={repLocked || !canAfford || invFull || soldOut}
+                        title={repLocked ? 'Locked' : soldOut ? 'Sold out' : !canAfford ? 'Not enough gold' : invFull ? 'Inventory full' : ''}
+                      >
+                        <span className="shop-btn-price">{item.buyPrice}g</span>
+                        <span className="shop-btn-label">{soldOut ? 'Sold' : repLocked ? 'Locked' : 'Buy'}</span>
+                      </button>
+                    </div>
+                  );
+                });
+              });
             })}
           </div>
         </div>

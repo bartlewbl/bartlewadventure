@@ -8525,6 +8525,23 @@ body {
   transform: translateX(2px);
 }
 
+.base-recipe-item.tavern-locked {
+  opacity: 0.5;
+  pointer-events: none;
+  border-left-color: rgba(255, 100, 100, 0.3);
+}
+
+.base-recipe-tavern-lock {
+  font-size: 7px;
+  color: #ff9966;
+  background: rgba(255, 100, 50, 0.15);
+  border: 1px solid rgba(255, 100, 50, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 3px;
+  display: inline-block;
+}
+
 .base-recipe-info {
   flex: 1;
   min-width: 0;

@@ -474,12 +474,14 @@ export default function App() {
                 pets={state.pets}
                 base={state.base}
                 shopPurchases={state.shopPurchases || {}}
+                tavern={state.tavern}
                 onBuy={actions.buyItem}
                 onSell={actions.sellItem}
                 onSellUnequippable={actions.sellUnequippable}
                 onBuyPet={actions.buyPet}
                 onBuyPetItem={actions.buyPetItem}
                 onTradeForChest={actions.tradeForChest}
+                onTavernBuy={actions.tavernBuyItem}
                 onBack={actions.goToTown}
               />
             )}
@@ -503,6 +505,7 @@ export default function App() {
               <BaseScreen
                 player={state.player}
                 base={state.base}
+                tavern={state.tavern}
                 onBack={actions.goToTown}
                 onBuild={actions.baseBuild}
                 onAddFuel={actions.baseAddFuel}

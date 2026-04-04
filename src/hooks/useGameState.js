@@ -4072,6 +4072,10 @@ function gameReducer(state, action) {
 
       const recipe = BREWERY_RECIPES.find(r => r.id === action.recipeId);
       if (!recipe) return state;
+      if (recipe.tavernNpc && recipe.tavernReqRep) {
+        const tRep = state.tavern?.reputation?.[recipe.tavernNpc] || 0;
+        if (getRepLevel(tRep).level < recipe.tavernReqRep) return { ...state, message: 'Not enough tavern reputation!' };
+      }
 
       const mats = { ...state.base.materials };
       for (const [matId, qty] of Object.entries(recipe.materials)) {
@@ -4111,6 +4115,10 @@ function gameReducer(state, action) {
 
       const recipe = SMELTER_RECIPES.find(r => r.id === action.recipeId);
       if (!recipe) return state;
+      if (recipe.tavernNpc && recipe.tavernReqRep) {
+        const tRep = state.tavern?.reputation?.[recipe.tavernNpc] || 0;
+        if (getRepLevel(tRep).level < recipe.tavernReqRep) return { ...state, message: 'Not enough tavern reputation!' };
+      }
 
       const mats = { ...state.base.materials };
       if (recipe.materials) {
@@ -4161,6 +4169,10 @@ function gameReducer(state, action) {
 
       const recipe = WORKSHOP_RECIPES.find(r => r.id === action.recipeId);
       if (!recipe) return state;
+      if (recipe.tavernNpc && recipe.tavernReqRep) {
+        const tRep = state.tavern?.reputation?.[recipe.tavernNpc] || 0;
+        if (getRepLevel(tRep).level < recipe.tavernReqRep) return { ...state, message: 'Not enough tavern reputation!' };
+      }
 
       const mats = { ...state.base.materials };
       for (const [matId, qty] of Object.entries(recipe.materials)) {
