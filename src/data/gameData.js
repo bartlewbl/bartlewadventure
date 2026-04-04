@@ -4759,7 +4759,18 @@ export const QUEST_VILLAGES = {
 export const EXTRAORDINARY_TRADERS = [
   {
     id: 'trader-nyx', name: 'Nyx the Shadow Dealer',
+    title: 'Dealer of Forbidden Wares',
+    personality: 'mysterious',
     greeting: 'A cloaked figure with glowing purple eyes materializes from thin air. "I deal in things others cannot find..."',
+    dialogue: [
+      { text: "Who are you?", response: "Names are dangerous things, traveler. But you may call me Nyx. I walk between the shadows... and I bring back what I find there." },
+      { text: "What do you sell?", response: "Curiosities. Wonders. Things that fell through the cracks of reality. My Mystery Boxes are particularly popular... though not always in a good way." },
+      { text: "Any work for me?", response: "Hmm... I've been tracking something in the dark. Defeat some monsters and prove your worth, and I'll make it worth your while.", quest: 'nyx-q1' },
+      { text: "Tell me about this area.", response: "The shadows here are deeper than they look. Stay sharp, traveler. Not everything that moves in the dark is friendly." },
+    ],
+    quests: [
+      { id: 'nyx-q1', name: "Shadow Harvest", description: "Defeat 12 monsters for Nyx's shadow experiments.", stat: 'monstersKilled', target: 12, reward: { gold: 200, item: 'ring' }, giverLine: "Bring me proof of 12 fallen creatures. Their essence feeds my craft.", completeLine: "Excellent... I can feel the shadow energy. Here, you've earned this." },
+    ],
     deals: [
       { id: 'nyx-1', description: 'Mystery Box (could be amazing... or terrible)', cost: 100, type: 'mystery_box' },
       { id: 'nyx-2', description: 'Full HP restoration', cost: 50, type: 'full_heal' },
@@ -4768,7 +4779,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-grizzle', name: 'Grizzle the Wandering Smith',
+    title: 'Master Forgewright',
+    personality: 'gruff',
     greeting: 'A grizzled dwarf with a portable anvil strapped to his back waves you over. "Best prices this side of the wasteland!"',
+    dialogue: [
+      { text: "Who are you?", response: "Name's Grizzle. Been smithing since before your grandparents were born. This anvil's been with me through every wasteland, every war." },
+      { text: "What do you sell?", response: "Upgrades, mostly. Bring me your weapon or armor and I'll make it sing. Got a legendary piece too, if you've got deep pockets." },
+      { text: "Need anything done?", response: "Actually, yeah. I need someone to test my latest work in real combat. Take some swings and report back.", quest: 'grz-q1' },
+      { text: "Where are you headed?", response: "Wherever the road takes me. A smith without customers is just a dwarf with a heavy backpack. Ha!" },
+    ],
+    quests: [
+      { id: 'grz-q1', name: "Field Test", description: "Deal 1500 total damage to test Grizzle's new alloy.", stat: 'damageDealt', target: 1500, reward: { gold: 250, item: 'sword' }, giverLine: "Take this blade out and deal some real damage. I need to see how the alloy holds up!", completeLine: "That alloy held up beautifully! Here's your payment, and keep the blade — you've earned it." },
+    ],
     deals: [
       { id: 'grz-1', description: 'Weapon upgrade (+3 levels)', cost: 150, type: 'weapon_upgrade' },
       { id: 'grz-2', description: 'Armor upgrade (+3 levels)', cost: 150, type: 'armor_upgrade' },
@@ -4777,7 +4799,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-luna', name: 'Luna the Energy Witch',
+    title: 'Keeper of the Spark',
+    personality: 'playful',
     greeting: 'A woman with crackling electricity arcing between her fingers smiles. "Need a pick-me-up, traveler?"',
+    dialogue: [
+      { text: "Who are you?", response: "Luna! I channel the natural energies of the world. Lightning, mana, vitality — it's all connected, you know. Like a giant web of sparkly stuff!" },
+      { text: "What do you sell?", response: "Energy and mana restoration, mostly. Oh, and lucky charms! I infuse them with a little extra zing. Five fights of boosted loot, guaranteed!" },
+      { text: "Got a job for me?", response: "Ooh, yes! I need someone to go exploring and gather ambient energy readings. Just explore a bunch and I'll pick up the resonance!", quest: 'luna-q1' },
+      { text: "How does your magic work?", response: "It's simple, really! Everything has energy. I just... borrow it. And sometimes it zaps me. But that's part of the fun!" },
+    ],
+    quests: [
+      { id: 'luna-q1', name: "Energy Resonance", description: "Explore 10 times so Luna can gather energy readings.", stat: 'explorationsCompleted', target: 10, reward: { gold: 180, item: 'amulet' }, giverLine: "Go explore! I'll be tracking the ambient energy from here. Ten trips should give me enough data!", completeLine: "The readings are incredible! The energy patterns here are beautiful. Here, take this — I charged it with the resonance!" },
+    ],
     deals: [
       { id: 'luna-1', description: 'Restore 30 energy', cost: 80, type: 'energy_restore' },
       { id: 'luna-2', description: 'Mana crystal (full mana restore)', cost: 60, type: 'full_mana' },
@@ -4786,7 +4819,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-bones', name: 'Old Bones the Collector',
+    title: 'Purveyor of Curiosities',
+    personality: 'eerie',
     greeting: 'A skeletal figure in tattered robes rattles a bag of trinkets. "Trade you... something nice for something shiny..."',
+    dialogue: [
+      { text: "What... are you?", response: "Old Bones. Just Old Bones. Been collecting things for a long, long time. Longer than you'd believe. Longer than I remember, honestly." },
+      { text: "What do you sell?", response: "Gambles, mostly. I like games of chance. Double your gold, cursed items, mystery trades... life's more fun with a little risk, wouldn't you say?" },
+      { text: "Do you have work?", response: "Heh heh... I collect things. Bring me gold — spend some in the world — and I'll reward your... generosity.", quest: 'bones-q1' },
+      { text: "Are you dangerous?", response: "Me? Dangerous? I'm just old bones in old robes. Nothing to fear here... probably." },
+    ],
+    quests: [
+      { id: 'bones-q1', name: "The Collector's Toll", description: "Spend 300 gold on anything to satisfy Old Bones.", stat: 'goldSpent', target: 300, reward: { gold: 500, item: 'helmet' }, giverLine: "Spend 300 gold. On anything. The economy must flow, you see... and I feed on the flow.", completeLine: "Yesss... I can feel the gold moving through the world. Here, take your reward. Old Bones keeps his promises." },
+    ],
     deals: [
       { id: 'bones-1', description: 'Trade 100g for a high-level item', cost: 100, type: 'high_level_item' },
       { id: 'bones-2', description: 'Double your gold (up to 200g)', cost: 0, type: 'gold_gamble' },
@@ -4795,7 +4839,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-flora', name: 'Flora the Egg Keeper',
+    title: 'Guardian of New Life',
+    personality: 'gentle',
     greeting: 'A woman in leaf-woven robes cradles something warm and glowing. "I\'ve been nurturing these for months... perhaps one needs a new home?"',
+    dialogue: [
+      { text: "Who are you?", response: "I'm Flora. I travel the wilds searching for abandoned eggs and nurture them until they're ready for a bonded partner. Every creature deserves a loving home." },
+      { text: "Tell me about your eggs.", response: "Each one is unique! Common eggs hatch into loyal companions. Uncommon ones have special abilities. And the rare ones... well, they're something truly special." },
+      { text: "Can I help with anything?", response: "Actually, yes! I've been sensing something in the local wildlife. Could you explore the area and help me understand the ecosystem better?", quest: 'flora-q1' },
+      { text: "Where do you find eggs?", response: "Everywhere, if you know where to look. Hidden in caves, nestled in tree roots, sometimes just sitting in a field of flowers. Nature provides." },
+    ],
+    quests: [
+      { id: 'flora-q1', name: "Ecosystem Survey", description: "Defeat 8 monsters to help Flora study the local wildlife.", stat: 'monstersKilled', target: 8, reward: { gold: 150, item: 'boots' }, giverLine: "Defeat 8 creatures in the area. I don't enjoy the violence, but I need to study their behavior patterns for my research.", completeLine: "Thank you, traveler. The data is fascinating! The ecosystem here is more diverse than I thought. Here, take these for your trouble." },
+    ],
     deals: [
       { id: 'flora-1', description: 'Mysterious Egg (Common)', cost: 150, type: 'egg', eggId: 'common-egg' },
       { id: 'flora-2', description: 'Gleaming Egg (Uncommon) — RARE!', cost: 400, type: 'egg', eggId: 'uncommon-egg' },
@@ -4804,7 +4859,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-anvil', name: 'Krag the Material Hoarder',
+    title: 'Supplier of the Realms',
+    personality: 'blunt',
     greeting: 'A massive figure with arms like tree trunks drops a sack of clinking materials. "Need building supplies? I got the good stuff."',
+    dialogue: [
+      { text: "Who are you?", response: "Krag. I dig. I carry. I sell. Not much for fancy words, but my materials are the best you'll find. Period." },
+      { text: "What do you have?", response: "Wood, ore, crystals, stone. The building blocks of everything. Whatever you're crafting, I've got what you need." },
+      { text: "Need a hand?", response: "I could use someone to clear out some pests while I dig. Monsters keep interrupting my work.", quest: 'krag-q1' },
+      { text: "Where do you get all this?", response: "I dig. Everywhere. Mountains, caves, riverbeds. The earth has gifts if you're strong enough to take them." },
+    ],
+    quests: [
+      { id: 'krag-q1', name: "Pest Control", description: "Defeat 15 monsters so Krag can dig in peace.", stat: 'monstersKilled', target: 15, reward: { gold: 200, item: 'shield' }, giverLine: "Kill 15 of those things lurking around. I can't dig with monsters breathing down my neck.", completeLine: "Finally, some peace and quiet. Here — take some of the good stuff I dug up while you were working." },
+    ],
     deals: [
       { id: 'krag-1', description: 'Bundle of Scrap Wood (x3)', cost: 30, type: 'material', materialId: 'scrap-wood', quantity: 3 },
       { id: 'krag-2', description: 'Iron Ore (x2)', cost: 60, type: 'material', materialId: 'iron-ore', quantity: 2 },
@@ -4814,7 +4880,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-whisper', name: 'Whisper the Void Merchant',
+    title: 'Walker Between Worlds',
+    personality: 'otherworldly',
     greeting: 'The air shimmers and a figure steps out of nowhere. Their voice echoes strangely. "I carry things from... elsewhere."',
+    dialogue: [
+      { text: "What are you?", response: "I am Whisper. I exist in the spaces between spaces. The void is not empty — it is full of wonders, if you know how to reach them." },
+      { text: "What do you sell?", response: "Treasures from beyond. Rare eggs touched by void energy. Deep coral from dimensions where the ocean has no floor. Weapons that remember being something else." },
+      { text: "I seek purpose.", response: "The void responds to those who dare. Explore the unknown, and the void will reward you through me.", quest: 'whsp-q1' },
+      { text: "Is the void safe?", response: "Safe? No. Nothing worth having is safe. But the void is... fair. It gives as much as it takes, if you're brave enough." },
+    ],
+    quests: [
+      { id: 'whsp-q1', name: "Void Communion", description: "Explore 12 times to attune to the void's frequency.", stat: 'explorationsCompleted', target: 12, reward: { gold: 400, item: 'armor' }, giverLine: "Explore this realm 12 times. Each journey brings you closer to the void's frequency. I will sense when you are ready.", completeLine: "Yes... I can feel it. The void has accepted you. Take this — it was waiting for someone worthy." },
+    ],
     deals: [
       { id: 'whsp-1', description: 'Radiant Egg (Rare) — VERY RARE!', cost: 800, type: 'egg', eggId: 'rare-egg' },
       { id: 'whsp-2', description: 'Deep Coral (x1)', cost: 150, type: 'material', materialId: 'deep-coral', quantity: 1 },
@@ -4823,7 +4900,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-patch', name: 'Patch the Scavenger',
+    title: 'Finder of Lost Things',
+    personality: 'energetic',
     greeting: 'A scrappy kid with an oversized backpack grins up at you. "Found all this stuff! Wanna trade?"',
+    dialogue: [
+      { text: "Hey kid, who are you?", response: "I'm Patch! I find things that people lose. Or throw away. Or hide. Or forget about. Basically, if it exists, I can find it!" },
+      { text: "What have you got?", response: "Materials, gear, energy drinks — the good kind, not the gross ones! I find all sorts of stuff in the ruins. One person's trash is Patch's treasure!" },
+      { text: "Want me to find something?", response: "Oh oh oh! Can you go beat up some monsters? Sometimes they drop the coolest stuff and I'm too small to fight them myself!", quest: 'patch-q1' },
+      { text: "Aren't you too young for this?", response: "Too young?! I've been scavenging since I was five! That's like... forever ago! I'm basically a professional!" },
+    ],
+    quests: [
+      { id: 'patch-q1', name: "Scavenger's Wishlist", description: "Defeat 10 monsters so Patch can search the remains.", stat: 'monstersKilled', target: 10, reward: { gold: 120, item: 'ring' }, giverLine: "Beat up 10 monsters for me! I'll search through what they drop — I always find the best hidden stuff!", completeLine: "WOAH look at all this loot! You're amazing! Here, take this — I found it in a monster's belly once. Don't ask." },
+    ],
     deals: [
       { id: 'patch-1', description: 'Charcoal (x2)', cost: 35, type: 'material', materialId: 'charcoal', quantity: 2 },
       { id: 'patch-2', description: 'Copper Wire (x2)', cost: 50, type: 'material', materialId: 'copper-wire', quantity: 2 },
@@ -4833,7 +4921,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-ember', name: 'Ember the Fire Dancer',
+    title: 'Voice of the Flame',
+    personality: 'passionate',
     greeting: 'Flames dance around her hands as she twirls to face you. "The fire speaks to me... it says you need something."',
+    dialogue: [
+      { text: "Who are you?", response: "I am Ember. The flame chose me when I was young — it dances for me, protects me, and whispers secrets of the world. We are one." },
+      { text: "What do you sell?", response: "Materials forged in fire, eggs warmed by my flames, and weapons that carry the fire's blessing. Everything I touch carries a spark of warmth." },
+      { text: "The fire speaks to you?", response: "It does! And right now it says... you should prove your strength. The flame respects power above all.", quest: 'ember-q1' },
+      { text: "Isn't fire dangerous?", response: "Of course! That's what makes it beautiful. Danger and beauty, destruction and creation — fire is all of these things at once." },
+    ],
+    quests: [
+      { id: 'ember-q1', name: "Trial by Fire", description: "Deal 2000 total damage to prove yourself to Ember's flame.", stat: 'damageDealt', target: 2000, reward: { gold: 350, item: 'sword' }, giverLine: "The flame demands proof! Deal 2000 damage in combat and the fire will recognize you as worthy.", completeLine: "The flame burns brighter for you now! It has blessed this weapon with its essence. Carry it well, warrior." },
+    ],
     deals: [
       { id: 'ember-1', description: 'Toxic Resin (x2)', cost: 80, type: 'material', materialId: 'toxic-resin', quantity: 2 },
       { id: 'ember-2', description: 'Mysterious Egg (Common)', cost: 120, type: 'egg', eggId: 'common-egg' },
@@ -4842,7 +4941,18 @@ export const EXTRAORDINARY_TRADERS = [
   },
   {
     id: 'trader-deep', name: 'Captain Murk the Deep Diver',
+    title: 'Terror of the Abyss',
+    personality: 'weathered',
     greeting: 'A barnacle-encrusted figure emerges from the shadows, dripping wet. "From the depths I bring treasures unseen..."',
+    dialogue: [
+      { text: "Who are you?", response: "Captain Murk. I've sailed every sea and dived every trench. The deep gives up its treasures to those brave enough to reach for them." },
+      { text: "What do you sell?", response: "Coral from the deep trenches, eggs from underwater nests, and potions brewed from abyssal plants. The deep is generous to its friends." },
+      { text: "Need a crew member?", response: "Arr, I could use a strong hand. The monsters around here are disrupting my supply routes. Clear them out!", quest: 'murk-q1' },
+      { text: "What's it like down there?", response: "Dark. Cold. Beautiful. The creatures of the deep glow like stars in a sky made of water. You'd never want to surface again." },
+    ],
+    quests: [
+      { id: 'murk-q1', name: "Clear the Depths", description: "Defeat 20 monsters to secure Captain Murk's trade route.", stat: 'monstersKilled', target: 20, reward: { gold: 300, item: 'armor' }, giverLine: "Twenty beasts block my path. Clear them out and I'll share the finest treasures from my last dive.", completeLine: "The route is clear! A captain always pays his debts. Here — pulled this from a shipwreck myself." },
+    ],
     deals: [
       { id: 'murk-1', description: 'Deep Coral (x2)', cost: 250, type: 'material', materialId: 'deep-coral', quantity: 2 },
       { id: 'murk-2', description: 'Gleaming Egg (Uncommon)', cost: 350, type: 'egg', eggId: 'uncommon-egg' },

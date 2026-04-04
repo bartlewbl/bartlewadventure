@@ -218,6 +218,8 @@ export default function App() {
           if (eqIds.length === 0) return null;
           return owned.find(p => p.instanceId === eqIds[0]) || null;
         })()}
+        activeTrader={state.activeTrader}
+        activeVillage={state.activeVillage}
       />
 
       <div className="ui-overlay">
@@ -366,8 +368,12 @@ export default function App() {
               <ExtraordinaryTraderScreen
                 trader={state.activeTrader}
                 playerGold={state.player.gold}
+                villageQuests={state.villageQuests}
+                stats={state.stats}
                 onBuy={actions.traderBuy}
                 onLeave={actions.traderLeave}
+                onAcceptQuest={actions.traderAcceptQuest}
+                onTurnInQuest={actions.traderTurnInQuest}
               />
             )}
 
