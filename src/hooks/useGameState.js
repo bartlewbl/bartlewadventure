@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
-import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES, getMonsterSkillElement, canClassEquip, EVENT_BOSSES, EVENT_BOSS_GIMMICKS } from '../data/gameData';
+import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_EVENTS, QUEST_VILLAGES, EXTRAORDINARY_TRADERS, UNIVERSAL_SKILLS, LEVEL_MILESTONES, STANCES, getMonsterSkillElement, canClassEquip } from '../data/gameData';
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
@@ -920,17 +920,33 @@ function gameReducer(state, action) {
         }
       }
 
+      // Event boss encounter check (slightly higher rate than normal bosses)
+      if (loc.eventBoss && Math.random() < (loc.eventBossRate || 0.008)) {
+        let eventBossLevel = loc.levelReq;
+        if (loc.special && loc.levelRange) {
+          const [minOff, maxOff] = loc.levelRange;
+          eventBossLevel = Math.max(1, loc.levelReq + Math.floor((minOff + maxOff) / 2) + Math.floor(Math.random() * Math.ceil((maxOff - minOff) / 2)));
+        }
+        const eventBoss = scaleBoss(loc.eventBoss, eventBossLevel);
+        if (eventBoss) {
+          return {
+            ...state, screen: 'boss-confirm',
+            exploreText: text,
+            pendingBoss: eventBoss,
+            energy: exploreEnergy,
+            lastEnergyUpdate: exploreLastUpdate,
+            pets: petsAfterExplore,
+          };
+        }
+      }
+
       // Random event check (5% base chance, modified by time/weather)
       const effects = getCurrentEffects();
       const weatherId = getCurrentWeatherId();
       const eventChance = prob('explore.randomEventChance') * effects.eventChanceMult;
       if (Math.random() < eventChance) {
-        // Filter events: include universal events + weather-matching events + region-matching events
-        const regionId = state.currentRegion?.id;
-        const eligibleEvents = RANDOM_EVENTS.filter(e => {
-          if (e.region) return e.region === regionId;
-          return !e.weather || e.weather === weatherId;
-        });
+        // Filter events: include universal events + weather-matching events
+        const eligibleEvents = RANDOM_EVENTS.filter(e => !e.weather || e.weather === weatherId);
         const event = eligibleEvents[Math.floor(Math.random() * eligibleEvents.length)];
         return {
           ...state, screen: 'random-event',
@@ -1302,43 +1318,6 @@ function gameReducer(state, action) {
             battle: createBattleState(monster, p),
             battleLog: [{ text: `${ambushText}A ${monster.name} attacks!`, type: 'info' }],
             battleResult: null,
-          };
-        }
-        case 'battle_event_boss': {
-          // Spawn a region-specific event boss
-          const eventBossId = outcome.bossId;
-          const eventBossBase = EVENT_BOSSES[eventBossId];
-          if (!eventBossBase) { resultType = 'neutral'; break; }
-          const eventBossLevel = loc?.levelReq || p.level;
-          const ebScale = 1 + (eventBossLevel - 1) * prob('scaling.bossLevelScale');
-          const ebHp = Math.floor(eventBossBase.baseHp * ebScale * prob('scaling.monsterHpMult'));
-          const ebGimmick = EVENT_BOSS_GIMMICKS[eventBossId] || null;
-          const eventBoss = {
-            id: eventBossId,
-            name: eventBossBase.name,
-            sprite: eventBossBase.sprite,
-            isBoss: true,
-            title: eventBossBase.title,
-            maxHp: ebHp,
-            hp: ebHp,
-            atk: Math.floor(eventBossBase.baseAtk * ebScale * prob('scaling.monsterAtkMult')),
-            def: Math.floor(eventBossBase.baseDef * ebScale * prob('scaling.monsterDefMult')),
-            speed: Math.floor((eventBossBase.baseSpeed || 5) * (1 + (eventBossLevel - 1) * 0.02)),
-            exp: Math.floor(eventBossBase.baseExp * ebScale * (1 + (eventBossLevel - 1) * 0.07)),
-            gold: Math.floor(eventBossBase.baseGold * ebScale) + Math.floor(Math.random() * prob('scaling.bossGoldVariance')),
-            skills: eventBossBase.skills,
-            dropTable: eventBossBase.dropTable,
-            level: eventBossLevel,
-            gimmick: ebGimmick,
-          };
-          return {
-            ...state, screen: 'boss-confirm',
-            exploreText: resultText,
-            energy: newEnergy,
-            lastEnergyUpdate: eventLastUpdate,
-            player: p,
-            randomEvent: null,
-            pendingBoss: eventBoss,
           };
         }
         case 'nothing':

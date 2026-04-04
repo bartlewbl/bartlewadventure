@@ -12,6 +12,7 @@ export const LOCATIONS = [
     monsters: ['rat', 'slime', 'sewer-roach', 'stray-cat', 'neon-beetle', 'alley-mutt', 'junk-spider', 'rust-moth', 'grime-crawler', 'pixel-pest'],
     encounterRate: 0.5, lootRate: 0.2, bgKey: 'street',
     boss: 'boss-king-rat', bossRate: 0.005,
+    eventBoss: 'event-boss-neon-phantom', eventBossRate: 0.008,
   },
   {
     id: 'shadow-alley', name: 'Shadow Alley',
@@ -20,6 +21,7 @@ export const LOCATIONS = [
     monsters: ['rat', 'vagrant', 'slime', 'shadow-bat', 'dumpster-snake', 'gutter-goblin', 'alley-wolf', 'trash-golem', 'sewer-lurker', 'neon-phantom', 'wire-rat'],
     encounterRate: 0.55, lootRate: 0.2, bgKey: 'alley',
     boss: 'boss-shadow-lord', bossRate: 0.005,
+    eventBoss: 'event-boss-neon-phantom', eventBossRate: 0.008,
   },
   {
     id: 'metro-underpass', name: 'Metro Underpass',
@@ -28,6 +30,7 @@ export const LOCATIONS = [
     monsters: ['slime', 'alpha-rat', 'rogue-vagrant', 'tunnel-bat', 'rail-wraith', 'metro-snake', 'pipe-golem', 'sludge-slime', 'volt-spider', 'rust-skeleton', 'signal-ghost'],
     encounterRate: 0.6, lootRate: 0.25, bgKey: 'station',
     boss: 'boss-conductor', bossRate: 0.005,
+    eventBoss: 'event-boss-neon-phantom', eventBossRate: 0.008,
   },
   {
     id: 'skyline-rooftops', name: 'Skyline Rooftops',
@@ -36,6 +39,7 @@ export const LOCATIONS = [
     monsters: ['vagrant', 'rogue-vagrant', 'alpha-rat', 'sky-hawk', 'roof-stalker', 'antenna-golem', 'wind-phantom', 'drone-wasp', 'scaffold-wolf', 'neon-gargoyle', 'rooftop-sniper', 'sky-serpent'],
     encounterRate: 0.65, lootRate: 0.3, bgKey: 'rooftop',
     boss: 'boss-storm-sentinel', bossRate: 0.005,
+    eventBoss: 'event-boss-neon-phantom', eventBossRate: 0.008,
   },
   {
     id: 'ironworks-yard', name: 'Ironworks Yard',
@@ -44,6 +48,7 @@ export const LOCATIONS = [
     monsters: ['toxic-slime', 'rogue-vagrant', 'alpha-rat', 'forge-elemental', 'scrap-golem', 'molten-slime', 'factory-drone', 'acid-sprayer', 'iron-wolf', 'chain-wraith', 'furnace-bat', 'steam-skeleton'],
     encounterRate: 0.7, lootRate: 0.35, bgKey: 'industrial',
     boss: 'boss-iron-titan', bossRate: 0.005,
+    eventBoss: 'event-boss-neon-phantom', eventBossRate: 0.008,
   },
   {
     id: 'midnight-terminal', name: 'Midnight Terminal',
@@ -52,6 +57,7 @@ export const LOCATIONS = [
     monsters: ['rogue-vagrant', 'toxic-slime', 'terminal-enforcer', 'midnight-wolf', 'phantom-conductor', 'glitch-golem', 'void-slime', 'dark-assassin', 'shadow-dragon', 'neon-reaper'],
     encounterRate: 0.72, lootRate: 0.4, bgKey: 'station',
     boss: 'boss-void-overlord', bossRate: 0.005,
+    eventBoss: 'event-boss-neon-phantom', eventBossRate: 0.008,
   },
 ];
 
@@ -1296,6 +1302,75 @@ export const BOSSES = {
     dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'helmet', weight: 10 }, { type: 'potion', weight: 4 }],
     title: 'The Beginning and The End',
   },
+
+  // ---- EVENT BOSSES ----
+  // Special bosses that appear at a slightly higher rate than location bosses.
+  'event-boss-neon-phantom': {
+    name: 'Neon Phantom', sprite: 'ghost', isBoss: true, baseHp: 160, baseAtk: 18, baseDef: 4, baseSpeed: 10,
+    baseExp: 120, baseGold: 80, skills: ['shadowstrike', 'drain', 'screech', 'channel_fury'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Glitch in the Grid',
+  },
+  'event-boss-avalanche-yeti': {
+    name: 'Avalanche Yeti', sprite: 'golem', isBoss: true, baseHp: 220, baseAtk: 24, baseDef: 10, baseSpeed: 5,
+    baseExp: 200, baseGold: 120, skills: ['slam', 'frostbite', 'roar', 'channel_ice'],
+    dropTable: [{ type: 'armor', weight: 14 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Terror of the Snowdrifts',
+  },
+  'event-boss-mirage-djinn': {
+    name: 'Mirage Djinn', sprite: 'ghost', isBoss: true, baseHp: 280, baseAtk: 32, baseDef: 8, baseSpeed: 9,
+    baseExp: 300, baseGold: 180, skills: ['heatwave', 'firebreath', 'curse', 'channel_flame'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Lord of Burning Illusions',
+  },
+  'event-boss-plague-mother': {
+    name: 'Plague Mother', sprite: 'slime', isBoss: true, baseHp: 360, baseAtk: 34, baseDef: 12, baseSpeed: 4,
+    baseExp: 380, baseGold: 220, skills: ['poison', 'venom', 'drain', 'channel_fury'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Origin of the Blight',
+  },
+  'event-boss-leviathan-hatchling': {
+    name: 'Leviathan Hatchling', sprite: 'dragon', isBoss: true, baseHp: 440, baseAtk: 40, baseDef: 14, baseSpeed: 7,
+    baseExp: 480, baseGold: 300, skills: ['charge', 'slam', 'thunderclap', 'channel_storm'],
+    dropTable: [{ type: 'sword', weight: 14 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Spawn of the Abyss',
+  },
+  'event-boss-fallen-seraph': {
+    name: 'Fallen Seraph', sprite: 'ghost', isBoss: true, baseHp: 520, baseAtk: 48, baseDef: 16, baseSpeed: 8,
+    baseExp: 600, baseGold: 380, skills: ['holybeam', 'judgment', 'drain', 'channel_light'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Angel Cast from Grace',
+  },
+  'event-boss-reality-eater': {
+    name: 'Reality Eater', sprite: 'dragon', isBoss: true, baseHp: 650, baseAtk: 56, baseDef: 18, baseSpeed: 6,
+    baseExp: 750, baseGold: 460, skills: ['voidrift', 'entropy', 'oblivion', 'channel_void'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'ring', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Devourer of What Is',
+  },
+  'event-boss-chrono-wraith': {
+    name: 'Chrono Wraith', sprite: 'ghost', isBoss: true, baseHp: 800, baseAtk: 68, baseDef: 20, baseSpeed: 9,
+    baseExp: 950, baseGold: 600, skills: ['timewarp', 'drain', 'oblivion', 'channel_void'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Echo of a Forgotten Timeline',
+  },
+  'event-boss-sin-incarnate': {
+    name: 'Sin Incarnate', sprite: 'vagrant', isBoss: true, baseHp: 1000, baseAtk: 78, baseDef: 24, baseSpeed: 7,
+    baseExp: 1200, baseGold: 780, skills: ['soulrend', 'inferno', 'curse', 'channel_inferno'],
+    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'ring', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 6 }],
+    title: 'Walking Damnation',
+  },
+  'event-boss-memory-devourer': {
+    name: 'Memory Devourer', sprite: 'dragon', isBoss: true, baseHp: 1200, baseAtk: 88, baseDef: 26, baseSpeed: 8,
+    baseExp: 1500, baseGold: 950, skills: ['spiritfire', 'drain', 'madness', 'channel_spirit'],
+    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
+    title: 'Eater of Who You Were',
+  },
+  'event-boss-unborn-god': {
+    name: 'The Unborn God', sprite: 'dragon', isBoss: true, baseHp: 1500, baseAtk: 100, baseDef: 30, baseSpeed: 7,
+    baseExp: 2000, baseGold: 1300, skills: ['primordialsmash', 'genesis_pulse', 'oblivion', 'channel_genesis'],
+    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 4 }],
+    title: 'Deity That Never Was',
+  },
 };
 
 // ---- REGIONS ----
@@ -1313,22 +1388,22 @@ export const REGIONS = [
     locations: [
       { id: 'frostbite-outpost', name: 'Frostbite Outpost', description: 'An abandoned outpost encrusted in rime and ice.', levelReq: 5,
         monsters: ['frost-wolf', 'ice-crawler', 'crystal-beetle', 'frost-spider', 'snow-wraith', 'frozen-vagrant'],
-        encounterRate: 0.5, lootRate: 0.2, bgKey: 'tundra', boss: 'boss-frost-warden', bossRate: 0.005 },
+        encounterRate: 0.5, lootRate: 0.2, bgKey: 'tundra', boss: 'boss-frost-warden', bossRate: 0.005, eventBoss: 'event-boss-avalanche-yeti', eventBossRate: 0.008 },
       { id: 'glacier-tunnels', name: 'Glacier Tunnels', description: 'Winding passages carved through translucent blue ice.', levelReq: 8,
         monsters: ['ice-crawler', 'glacial-golem', 'frost-spider', 'snow-wraith', 'crystal-beetle', 'arctic-serpent', 'permafrost-skeleton'],
-        encounterRate: 0.55, lootRate: 0.22, bgKey: 'tundra', boss: 'boss-glacier-wyrm', bossRate: 0.005 },
+        encounterRate: 0.55, lootRate: 0.22, bgKey: 'tundra', boss: 'boss-glacier-wyrm', bossRate: 0.005, eventBoss: 'event-boss-avalanche-yeti', eventBossRate: 0.008 },
       { id: 'permafrost-ruins', name: 'Permafrost Ruins', description: 'Crumbling ruins preserved beneath layers of eternal frost.', levelReq: 12,
         monsters: ['permafrost-skeleton', 'frozen-vagrant', 'tundra-stalker', 'ice-phantom', 'glacial-golem', 'snow-wraith', 'arctic-serpent'],
-        encounterRate: 0.6, lootRate: 0.25, bgKey: 'tundra', boss: 'boss-permafrost-king', bossRate: 0.005 },
+        encounterRate: 0.6, lootRate: 0.25, bgKey: 'tundra', boss: 'boss-permafrost-king', bossRate: 0.005, eventBoss: 'event-boss-avalanche-yeti', eventBossRate: 0.008 },
       { id: 'blizzard-peak', name: 'Blizzard Peak', description: 'The summit where the wind never stops screaming.', levelReq: 16,
         monsters: ['blizzard-hawk', 'ice-phantom', 'tundra-stalker', 'frozen-vagrant', 'permafrost-skeleton', 'frost-wolf', 'glacial-golem'],
-        encounterRate: 0.65, lootRate: 0.28, bgKey: 'tundra', boss: 'boss-blizzard-lord', bossRate: 0.005 },
+        encounterRate: 0.65, lootRate: 0.28, bgKey: 'tundra', boss: 'boss-blizzard-lord', bossRate: 0.005, eventBoss: 'event-boss-avalanche-yeti', eventBossRate: 0.008 },
       { id: 'crystal-caverns', name: 'Crystal Caverns', description: 'Shimmering caves of razor-sharp crystal formations.', levelReq: 20,
         monsters: ['crystal-beetle', 'glacial-golem', 'ice-phantom', 'arctic-serpent', 'tundra-stalker', 'permafrost-skeleton', 'blizzard-hawk'],
-        encounterRate: 0.68, lootRate: 0.32, bgKey: 'tundra', boss: 'boss-crystal-titan', bossRate: 0.005 },
+        encounterRate: 0.68, lootRate: 0.32, bgKey: 'tundra', boss: 'boss-crystal-titan', bossRate: 0.005, eventBoss: 'event-boss-avalanche-yeti', eventBossRate: 0.008 },
       { id: 'frozen-citadel', name: 'Frozen Citadel', description: 'An imposing fortress of solid ice, seat of the Frozen Emperor.', levelReq: 25,
         monsters: ['frozen-vagrant', 'tundra-stalker', 'ice-phantom', 'blizzard-hawk', 'permafrost-skeleton', 'glacial-golem', 'arctic-serpent'],
-        encounterRate: 0.72, lootRate: 0.35, bgKey: 'tundra', boss: 'boss-frozen-emperor', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.35, bgKey: 'tundra', boss: 'boss-frozen-emperor', bossRate: 0.005, eventBoss: 'event-boss-avalanche-yeti', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1345,22 +1420,22 @@ export const REGIONS = [
     locations: [
       { id: 'ember-flats', name: 'Ember Flats', description: 'Cracked earth radiates heat from smoldering coal seams below.', levelReq: 10,
         monsters: ['sand-crawler', 'flame-beetle', 'ember-wolf', 'lava-slime', 'scorpion-drone', 'volcanic-bat'],
-        encounterRate: 0.52, lootRate: 0.22, bgKey: 'desert', boss: 'boss-sandstorm-king', bossRate: 0.005 },
+        encounterRate: 0.52, lootRate: 0.22, bgKey: 'desert', boss: 'boss-sandstorm-king', bossRate: 0.005, eventBoss: 'event-boss-mirage-djinn', eventBossRate: 0.008 },
       { id: 'sunscorch-canyon', name: 'Sunscorch Canyon', description: 'Narrow gorges where the sun bakes everything to ash.', levelReq: 14,
         monsters: ['sand-crawler', 'ember-wolf', 'scorpion-drone', 'heat-phantom', 'charred-skeleton', 'volcanic-bat', 'desert-vagrant'],
-        encounterRate: 0.57, lootRate: 0.24, bgKey: 'desert', boss: 'boss-canyon-drake', bossRate: 0.005 },
+        encounterRate: 0.57, lootRate: 0.24, bgKey: 'desert', boss: 'boss-canyon-drake', bossRate: 0.005, eventBoss: 'event-boss-mirage-djinn', eventBossRate: 0.008 },
       { id: 'magma-vents', name: 'Magma Vents', description: 'Geysers of molten rock erupt without warning from the ground.', levelReq: 18,
         monsters: ['lava-slime', 'ash-golem', 'magma-serpent', 'heat-phantom', 'cinder-wraith', 'ember-wolf', 'charred-skeleton'],
-        encounterRate: 0.62, lootRate: 0.27, bgKey: 'desert', boss: 'boss-magma-lord', bossRate: 0.005 },
+        encounterRate: 0.62, lootRate: 0.27, bgKey: 'desert', boss: 'boss-magma-lord', bossRate: 0.005, eventBoss: 'event-boss-mirage-djinn', eventBossRate: 0.008 },
       { id: 'ashen-ruins', name: 'Ashen Ruins', description: 'Civilization swallowed by volcanic eruptions centuries ago.', levelReq: 22,
         monsters: ['charred-skeleton', 'ash-golem', 'cinder-wraith', 'desert-vagrant', 'magma-serpent', 'heat-phantom', 'scorpion-drone'],
-        encounterRate: 0.66, lootRate: 0.3, bgKey: 'desert', boss: 'boss-ashen-warden', bossRate: 0.005 },
+        encounterRate: 0.66, lootRate: 0.3, bgKey: 'desert', boss: 'boss-ashen-warden', bossRate: 0.005, eventBoss: 'event-boss-mirage-djinn', eventBossRate: 0.008 },
       { id: 'inferno-pit', name: 'Inferno Pit', description: 'A gaping chasm where fire never ceases to burn.', levelReq: 26,
         monsters: ['lava-slime', 'cinder-wraith', 'magma-serpent', 'ash-golem', 'heat-phantom', 'desert-vagrant', 'volcanic-bat'],
-        encounterRate: 0.7, lootRate: 0.33, bgKey: 'desert', boss: 'boss-inferno-beast', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.33, bgKey: 'desert', boss: 'boss-inferno-beast', bossRate: 0.005, eventBoss: 'event-boss-mirage-djinn', eventBossRate: 0.008 },
       { id: 'volcanic-forge', name: 'Volcanic Forge', description: 'An ancient forge built into the heart of an active volcano.', levelReq: 30,
         monsters: ['ash-golem', 'lava-slime', 'cinder-wraith', 'magma-serpent', 'desert-vagrant', 'charred-skeleton', 'heat-phantom'],
-        encounterRate: 0.72, lootRate: 0.36, bgKey: 'desert', boss: 'boss-volcanic-titan', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.36, bgKey: 'desert', boss: 'boss-volcanic-titan', bossRate: 0.005, eventBoss: 'event-boss-mirage-djinn', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1370,22 +1445,22 @@ export const REGIONS = [
     locations: [
       { id: 'bogs-edge', name: 'Bog\'s Edge', description: 'Where solid ground ends and treacherous muck begins.', levelReq: 18,
         monsters: ['bog-lurker', 'plague-rat', 'toxic-frog', 'mire-snake', 'marsh-crawler', 'poison-bat'],
-        encounterRate: 0.55, lootRate: 0.22, bgKey: 'swamp', boss: 'boss-bog-horror', bossRate: 0.005 },
+        encounterRate: 0.55, lootRate: 0.22, bgKey: 'swamp', boss: 'boss-bog-horror', bossRate: 0.005, eventBoss: 'event-boss-plague-mother', eventBossRate: 0.008 },
       { id: 'mire-depths', name: 'Mire Depths', description: 'The deeper marshes where the water turns black.', levelReq: 22,
         monsters: ['mire-snake', 'bog-lurker', 'spore-cloud', 'toxic-frog', 'marsh-wolf', 'poison-bat', 'swamp-wraith'],
-        encounterRate: 0.6, lootRate: 0.25, bgKey: 'swamp', boss: 'boss-mire-queen', bossRate: 0.005 },
+        encounterRate: 0.6, lootRate: 0.25, bgKey: 'swamp', boss: 'boss-mire-queen', bossRate: 0.005, eventBoss: 'event-boss-plague-mother', eventBossRate: 0.008 },
       { id: 'fungal-hollow', name: 'Fungal Hollow', description: 'A cave system overrun by massive bioluminescent fungi.', levelReq: 26,
         monsters: ['fungal-zombie', 'spore-cloud', 'marsh-crawler', 'rot-golem', 'vine-strangler', 'poison-bat', 'swamp-wraith'],
-        encounterRate: 0.63, lootRate: 0.28, bgKey: 'swamp', boss: 'boss-fungal-behemoth', bossRate: 0.005 },
+        encounterRate: 0.63, lootRate: 0.28, bgKey: 'swamp', boss: 'boss-fungal-behemoth', bossRate: 0.005, eventBoss: 'event-boss-plague-mother', eventBossRate: 0.008 },
       { id: 'venomous-thicket', name: 'Venomous Thicket', description: 'Dense vegetation that drips with corrosive sap.', levelReq: 30,
         monsters: ['vine-strangler', 'marsh-wolf', 'mire-snake', 'toxic-frog', 'swamp-wraith', 'rot-golem', 'bog-lurker'],
-        encounterRate: 0.67, lootRate: 0.3, bgKey: 'swamp', boss: 'boss-venom-matriarch', bossRate: 0.005 },
+        encounterRate: 0.67, lootRate: 0.3, bgKey: 'swamp', boss: 'boss-venom-matriarch', bossRate: 0.005, eventBoss: 'event-boss-plague-mother', eventBossRate: 0.008 },
       { id: 'plague-ponds', name: 'Plague Ponds', description: 'Stagnant pools seething with viral contagion.', levelReq: 34,
         monsters: ['plague-rat', 'swamp-wraith', 'rot-golem', 'fungal-zombie', 'spore-cloud', 'marsh-wolf', 'vine-strangler'],
-        encounterRate: 0.7, lootRate: 0.33, bgKey: 'swamp', boss: 'boss-plague-lord', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.33, bgKey: 'swamp', boss: 'boss-plague-lord', bossRate: 0.005, eventBoss: 'event-boss-plague-mother', eventBossRate: 0.008 },
       { id: 'rot-core', name: 'Rot Core', description: 'The pulsating heart of the marshland\'s corruption.', levelReq: 38,
         monsters: ['rot-golem', 'fungal-zombie', 'swamp-wraith', 'vine-strangler', 'marsh-wolf', 'poison-bat', 'spore-cloud'],
-        encounterRate: 0.72, lootRate: 0.36, bgKey: 'swamp', boss: 'boss-rot-titan', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.36, bgKey: 'swamp', boss: 'boss-rot-titan', bossRate: 0.005, eventBoss: 'event-boss-plague-mother', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1395,22 +1470,22 @@ export const REGIONS = [
     locations: [
       { id: 'tidal-caves', name: 'Tidal Caves', description: 'Sea caves flooded by the relentless tide.', levelReq: 25,
         monsters: ['tide-crawler', 'deep-angler', 'abyssal-jellyfish', 'barnacle-beast', 'void-fish', 'drowned-vagrant'],
-        encounterRate: 0.58, lootRate: 0.25, bgKey: 'ocean', boss: 'boss-tidal-warden', bossRate: 0.005 },
+        encounterRate: 0.58, lootRate: 0.25, bgKey: 'ocean', boss: 'boss-tidal-warden', bossRate: 0.005, eventBoss: 'event-boss-leviathan-hatchling', eventBossRate: 0.008 },
       { id: 'sunken-bazaar', name: 'Sunken Bazaar', description: 'A once-thriving marketplace now drowned beneath the waves.', levelReq: 30,
         monsters: ['drowned-vagrant', 'tide-crawler', 'sea-serpent', 'coral-golem', 'abyssal-jellyfish', 'deep-angler', 'barnacle-beast'],
-        encounterRate: 0.62, lootRate: 0.28, bgKey: 'ocean', boss: 'boss-sunken-king', bossRate: 0.005 },
+        encounterRate: 0.62, lootRate: 0.28, bgKey: 'ocean', boss: 'boss-sunken-king', bossRate: 0.005, eventBoss: 'event-boss-leviathan-hatchling', eventBossRate: 0.008 },
       { id: 'coral-labyrinth', name: 'Coral Labyrinth', description: 'A twisting maze of living coral that reshapes itself.', levelReq: 35,
         monsters: ['coral-golem', 'sea-serpent', 'pressure-wraith', 'barnacle-beast', 'trench-stalker', 'void-fish', 'abyssal-jellyfish'],
-        encounterRate: 0.65, lootRate: 0.3, bgKey: 'ocean', boss: 'boss-coral-colossus', bossRate: 0.005 },
+        encounterRate: 0.65, lootRate: 0.3, bgKey: 'ocean', boss: 'boss-coral-colossus', bossRate: 0.005, eventBoss: 'event-boss-leviathan-hatchling', eventBossRate: 0.008 },
       { id: 'pressure-rift', name: 'Pressure Rift', description: 'A crack in the ocean floor where crushing pressure warps reality.', levelReq: 38,
         monsters: ['pressure-wraith', 'depth-phantom', 'trench-stalker', 'coral-golem', 'sea-serpent', 'void-fish', 'kraken-spawn'],
-        encounterRate: 0.68, lootRate: 0.32, bgKey: 'ocean', boss: 'boss-pressure-lord', bossRate: 0.005 },
+        encounterRate: 0.68, lootRate: 0.32, bgKey: 'ocean', boss: 'boss-pressure-lord', bossRate: 0.005, eventBoss: 'event-boss-leviathan-hatchling', eventBossRate: 0.008 },
       { id: 'krakens-rest', name: 'Kraken\'s Rest', description: 'The lair of something ancient and impossibly large.', levelReq: 42,
         monsters: ['kraken-spawn', 'trench-stalker', 'depth-phantom', 'pressure-wraith', 'sea-serpent', 'drowned-vagrant', 'coral-golem'],
-        encounterRate: 0.7, lootRate: 0.35, bgKey: 'ocean', boss: 'boss-kraken-prime', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.35, bgKey: 'ocean', boss: 'boss-kraken-prime', bossRate: 0.005, eventBoss: 'event-boss-leviathan-hatchling', eventBossRate: 0.008 },
       { id: 'abyssal-trench', name: 'Abyssal Trench', description: 'The deepest point of the ocean where light never reaches.', levelReq: 48,
         monsters: ['depth-phantom', 'kraken-spawn', 'pressure-wraith', 'trench-stalker', 'sea-serpent', 'void-fish', 'coral-golem'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'ocean', boss: 'boss-abyssal-leviathan', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'ocean', boss: 'boss-abyssal-leviathan', bossRate: 0.005, eventBoss: 'event-boss-leviathan-hatchling', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1420,22 +1495,22 @@ export const REGIONS = [
     locations: [
       { id: 'cloud-walkway', name: 'Cloud Walkway', description: 'Bridges of solidified cloud stretching between floating isles.', levelReq: 35,
         monsters: ['cloud-wisp', 'wind-dancer', 'storm-hawk', 'sky-wolf', 'solar-elemental', 'celestial-knight'],
-        encounterRate: 0.6, lootRate: 0.28, bgKey: 'celestial', boss: 'boss-cloud-sovereign', bossRate: 0.005 },
+        encounterRate: 0.6, lootRate: 0.28, bgKey: 'celestial', boss: 'boss-cloud-sovereign', bossRate: 0.005, eventBoss: 'event-boss-fallen-seraph', eventBossRate: 0.008 },
       { id: 'stormspire-tower', name: 'Stormspire Tower', description: 'A tower that pierces the storm clouds themselves.', levelReq: 39,
         monsters: ['storm-hawk', 'empyrean-sentinel', 'cloud-wisp', 'thunder-drake', 'celestial-knight', 'starfall-wraith', 'wind-dancer'],
-        encounterRate: 0.63, lootRate: 0.3, bgKey: 'celestial', boss: 'boss-stormspire-warden', bossRate: 0.005 },
+        encounterRate: 0.63, lootRate: 0.3, bgKey: 'celestial', boss: 'boss-stormspire-warden', bossRate: 0.005, eventBoss: 'event-boss-fallen-seraph', eventBossRate: 0.008 },
       { id: 'solar-fields', name: 'Solar Fields', description: 'Vast plains of golden light where the sun never sets.', levelReq: 43,
         monsters: ['solar-elemental', 'light-phantom', 'astral-golem', 'comet-shard', 'celestial-knight', 'sky-wolf', 'storm-hawk'],
-        encounterRate: 0.66, lootRate: 0.32, bgKey: 'celestial', boss: 'boss-solar-titan', bossRate: 0.005 },
+        encounterRate: 0.66, lootRate: 0.32, bgKey: 'celestial', boss: 'boss-solar-titan', bossRate: 0.005, eventBoss: 'event-boss-fallen-seraph', eventBossRate: 0.008 },
       { id: 'astral-gardens', name: 'Astral Gardens', description: 'Impossible gardens growing in the void between stars.', levelReq: 47,
         monsters: ['astral-golem', 'starfall-wraith', 'celestial-knight', 'light-phantom', 'empyrean-sentinel', 'cloud-wisp', 'thunder-drake'],
-        encounterRate: 0.68, lootRate: 0.34, bgKey: 'celestial', boss: 'boss-astral-guardian', bossRate: 0.005 },
+        encounterRate: 0.68, lootRate: 0.34, bgKey: 'celestial', boss: 'boss-astral-guardian', bossRate: 0.005, eventBoss: 'event-boss-fallen-seraph', eventBossRate: 0.008 },
       { id: 'comets-trail', name: 'Comet\'s Trail', description: 'A glowing path left by a comet that circles eternally.', levelReq: 51,
         monsters: ['comet-shard', 'starfall-wraith', 'light-phantom', 'thunder-drake', 'empyrean-sentinel', 'astral-golem', 'sky-wolf'],
-        encounterRate: 0.7, lootRate: 0.36, bgKey: 'celestial', boss: 'boss-comet-lord', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'celestial', boss: 'boss-comet-lord', bossRate: 0.005, eventBoss: 'event-boss-fallen-seraph', eventBossRate: 0.008 },
       { id: 'empyrean-gate', name: 'Empyrean Gate', description: 'The final gateway to the realm beyond the sky.', levelReq: 55,
         monsters: ['empyrean-sentinel', 'celestial-knight', 'thunder-drake', 'astral-golem', 'light-phantom', 'starfall-wraith', 'comet-shard'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'celestial', boss: 'boss-empyrean-judge', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'celestial', boss: 'boss-empyrean-judge', bossRate: 0.005, eventBoss: 'event-boss-fallen-seraph', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1445,22 +1520,22 @@ export const REGIONS = [
     locations: [
       { id: 'rifts-edge', name: 'Rift\'s Edge', description: 'Where the fabric of reality begins to fray and tear.', levelReq: 45,
         monsters: ['rift-stalker', 'null-wraith', 'entropy-slime', 'void-wolf', 'dimension-crawler', 'chaos-phantom'],
-        encounterRate: 0.62, lootRate: 0.3, bgKey: 'void', boss: 'boss-rift-keeper', bossRate: 0.005 },
+        encounterRate: 0.62, lootRate: 0.3, bgKey: 'void', boss: 'boss-rift-keeper', bossRate: 0.005, eventBoss: 'event-boss-reality-eater', eventBossRate: 0.008 },
       { id: 'null-chamber', name: 'Null Chamber', description: 'A vast chamber where all sensation ceases to exist.', levelReq: 49,
         monsters: ['null-wraith', 'paradox-golem', 'rift-stalker', 'singularity-shade', 'chaos-phantom', 'entropy-slime', 'void-wolf'],
-        encounterRate: 0.65, lootRate: 0.32, bgKey: 'void', boss: 'boss-null-sovereign', bossRate: 0.005 },
+        encounterRate: 0.65, lootRate: 0.32, bgKey: 'void', boss: 'boss-null-sovereign', bossRate: 0.005, eventBoss: 'event-boss-reality-eater', eventBossRate: 0.008 },
       { id: 'entropy-garden', name: 'Entropy Garden', description: 'A mockery of life where everything decays in reverse.', levelReq: 53,
         monsters: ['entropy-slime', 'reality-bender', 'dimension-crawler', 'null-wraith', 'oblivion-knight', 'chaos-phantom', 'void-wolf'],
-        encounterRate: 0.67, lootRate: 0.34, bgKey: 'void', boss: 'boss-entropy-lord', bossRate: 0.005 },
+        encounterRate: 0.67, lootRate: 0.34, bgKey: 'void', boss: 'boss-entropy-lord', bossRate: 0.005, eventBoss: 'event-boss-reality-eater', eventBossRate: 0.008 },
       { id: 'paradox-maze', name: 'Paradox Maze', description: 'A labyrinth where the path forward leads backward.', levelReq: 57,
         monsters: ['paradox-golem', 'reality-bender', 'oblivion-knight', 'singularity-shade', 'nexus-serpent', 'rift-stalker', 'abyss-watcher'],
-        encounterRate: 0.7, lootRate: 0.36, bgKey: 'void', boss: 'boss-paradox-king', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'void', boss: 'boss-paradox-king', bossRate: 0.005, eventBoss: 'event-boss-reality-eater', eventBossRate: 0.008 },
       { id: 'singularity-well', name: 'Singularity Well', description: 'A point of infinite density that devours all light.', levelReq: 61,
         monsters: ['singularity-shade', 'abyss-watcher', 'oblivion-knight', 'reality-bender', 'nexus-serpent', 'paradox-golem', 'chaos-phantom'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-singularity-titan', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-singularity-titan', bossRate: 0.005, eventBoss: 'event-boss-reality-eater', eventBossRate: 0.008 },
       { id: 'oblivion-throne', name: 'Oblivion Throne', description: 'The seat of ultimate destruction at the end of all things.', levelReq: 65,
         monsters: ['oblivion-knight', 'abyss-watcher', 'reality-bender', 'singularity-shade', 'nexus-serpent', 'paradox-golem', 'null-wraith'],
-        encounterRate: 0.75, lootRate: 0.4, bgKey: 'void', boss: 'boss-oblivion-god', bossRate: 0.005 },
+        encounterRate: 0.75, lootRate: 0.4, bgKey: 'void', boss: 'boss-oblivion-god', bossRate: 0.005, eventBoss: 'event-boss-reality-eater', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1470,22 +1545,22 @@ export const REGIONS = [
     locations: [
       { id: 'fracture-gate', name: 'Fracture Gate', description: 'The shattered entrance to a dimension torn apart by war.', levelReq: 55,
         monsters: ['fracture-fiend', 'shard-golem', 'rift-phantom', 'warp-stalker', 'echo-bat', 'shatter-skeleton'],
-        encounterRate: 0.65, lootRate: 0.32, bgKey: 'void', boss: 'boss-fracture-warden', bossRate: 0.005 },
+        encounterRate: 0.65, lootRate: 0.32, bgKey: 'void', boss: 'boss-fracture-warden', bossRate: 0.005, eventBoss: 'event-boss-chrono-wraith', eventBossRate: 0.008 },
       { id: 'mirror-wastes', name: 'Mirror Wastes', description: 'An endless desert of reflective glass shards that show impossible realities.', levelReq: 58,
         monsters: ['mirror-dragon', 'rift-phantom', 'warp-stalker', 'dimensional-serpent', 'fracture-fiend', 'shard-golem', 'temporal-wraith'],
-        encounterRate: 0.67, lootRate: 0.34, bgKey: 'void', boss: 'boss-temporal-devourer', bossRate: 0.005 },
+        encounterRate: 0.67, lootRate: 0.34, bgKey: 'void', boss: 'boss-temporal-devourer', bossRate: 0.005, eventBoss: 'event-boss-chrono-wraith', eventBossRate: 0.008 },
       { id: 'echo-chambers', name: 'Echo Chambers', description: 'Vast halls where every sound repeats infinitely, driving intruders mad.', levelReq: 62,
         monsters: ['echo-bat', 'temporal-wraith', 'rift-phantom', 'shatter-skeleton', 'warp-stalker', 'fracture-fiend', 'dimensional-serpent'],
-        encounterRate: 0.7, lootRate: 0.36, bgKey: 'void', boss: 'boss-echo-lord', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'void', boss: 'boss-echo-lord', bossRate: 0.005, eventBoss: 'event-boss-chrono-wraith', eventBossRate: 0.008 },
       { id: 'temporal-ruins', name: 'Temporal Ruins', description: 'Ancient structures frozen between moments in time.', levelReq: 66,
         monsters: ['temporal-wraith', 'mirror-dragon', 'shard-golem', 'dimensional-serpent', 'shatter-skeleton', 'rift-phantom', 'warp-stalker'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-mirror-king', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-mirror-king', bossRate: 0.005, eventBoss: 'event-boss-chrono-wraith', eventBossRate: 0.008 },
       { id: 'shattered-citadel', name: 'Shattered Citadel', description: 'A fortress that exists in multiple realities simultaneously.', levelReq: 70,
         monsters: ['mirror-dragon', 'temporal-wraith', 'shard-golem', 'warp-stalker', 'fracture-fiend', 'echo-bat', 'dimensional-serpent'],
-        encounterRate: 0.74, lootRate: 0.4, bgKey: 'void', boss: 'boss-rift-colossus', bossRate: 0.005 },
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'void', boss: 'boss-rift-colossus', bossRate: 0.005, eventBoss: 'event-boss-chrono-wraith', eventBossRate: 0.008 },
       { id: 'dimension-heart', name: 'Dimension Heart', description: 'The pulsing core of the shattered dimension where all realities converge.', levelReq: 75,
         monsters: ['mirror-dragon', 'temporal-wraith', 'shard-golem', 'rift-phantom', 'warp-stalker', 'dimensional-serpent', 'echo-bat'],
-        encounterRate: 0.76, lootRate: 0.42, bgKey: 'void', boss: 'boss-dimension-eater', bossRate: 0.005 },
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'void', boss: 'boss-dimension-eater', bossRate: 0.005, eventBoss: 'event-boss-chrono-wraith', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1495,22 +1570,22 @@ export const REGIONS = [
     locations: [
       { id: 'hellgate-entrance', name: 'Hellgate Entrance', description: 'The scorching threshold between worlds, guarded by demonic sentinels.', levelReq: 65,
         monsters: ['hellfire-imp', 'doom-bat', 'ash-wraith', 'infernal-wolf', 'lava-serpent', 'demon-knight'],
-        encounterRate: 0.68, lootRate: 0.34, bgKey: 'desert', boss: 'boss-hellgate-keeper', bossRate: 0.005 },
+        encounterRate: 0.68, lootRate: 0.34, bgKey: 'desert', boss: 'boss-hellgate-keeper', bossRate: 0.005, eventBoss: 'event-boss-sin-incarnate', eventBossRate: 0.008 },
       { id: 'brimstone-wastes', name: 'Brimstone Wastes', description: 'Endless plains of scorched rock and sulfurous geysers.', levelReq: 69,
         monsters: ['brimstone-golem', 'hellfire-imp', 'lava-serpent', 'ash-wraith', 'doom-bat', 'infernal-wolf', 'soul-harvester'],
-        encounterRate: 0.7, lootRate: 0.36, bgKey: 'desert', boss: 'boss-soul-reaver', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'desert', boss: 'boss-soul-reaver', bossRate: 0.005, eventBoss: 'event-boss-sin-incarnate', eventBossRate: 0.008 },
       { id: 'infernal-spire', name: 'Infernal Spire', description: 'A towering obsidian fortress wreathed in perpetual flame.', levelReq: 73,
         monsters: ['demon-knight', 'pit-fiend', 'soul-harvester', 'ash-wraith', 'hellfire-imp', 'brimstone-golem', 'infernal-wolf'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'desert', boss: 'boss-inferno-drake', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'desert', boss: 'boss-inferno-drake', bossRate: 0.005, eventBoss: 'event-boss-sin-incarnate', eventBossRate: 0.008 },
       { id: 'soul-furnace', name: 'Soul Furnace', description: 'Where captured souls are smelted into demonic weapons.', levelReq: 77,
         monsters: ['soul-harvester', 'pit-fiend', 'brimstone-golem', 'demon-knight', 'ash-wraith', 'lava-serpent', 'doom-bat'],
-        encounterRate: 0.74, lootRate: 0.4, bgKey: 'desert', boss: 'boss-demon-general', bossRate: 0.005 },
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'desert', boss: 'boss-demon-general', bossRate: 0.005, eventBoss: 'event-boss-sin-incarnate', eventBossRate: 0.008 },
       { id: 'obsidian-throne', name: 'Obsidian Throne', description: 'The seat of demonic power, radiating malevolent heat.', levelReq: 81,
         monsters: ['pit-fiend', 'demon-knight', 'soul-harvester', 'brimstone-golem', 'infernal-wolf', 'hellfire-imp', 'lava-serpent'],
-        encounterRate: 0.76, lootRate: 0.42, bgKey: 'desert', boss: 'boss-brimstone-lord', bossRate: 0.005 },
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'desert', boss: 'boss-brimstone-lord', bossRate: 0.005, eventBoss: 'event-boss-sin-incarnate', eventBossRate: 0.008 },
       { id: 'archdevils-sanctum', name: 'Archdevil\'s Sanctum', description: 'The innermost chamber of Hell where the Archdevil holds court.', levelReq: 85,
         monsters: ['pit-fiend', 'demon-knight', 'soul-harvester', 'brimstone-golem', 'ash-wraith', 'infernal-wolf', 'lava-serpent'],
-        encounterRate: 0.78, lootRate: 0.44, bgKey: 'desert', boss: 'boss-archdevil', bossRate: 0.005 },
+        encounterRate: 0.78, lootRate: 0.44, bgKey: 'desert', boss: 'boss-archdevil', bossRate: 0.005, eventBoss: 'event-boss-sin-incarnate', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1520,22 +1595,22 @@ export const REGIONS = [
     locations: [
       { id: 'spirit-gate', name: 'Spirit Gate', description: 'The shimmering threshold between the mortal world and the realm of spirits.', levelReq: 78,
         monsters: ['ethereal-wisp', 'phantom-knight', 'soul-serpent', 'dream-wolf', 'memory-shade', 'spirit-guardian'],
-        encounterRate: 0.7, lootRate: 0.36, bgKey: 'celestial', boss: 'boss-spirit-warden', bossRate: 0.005 },
+        encounterRate: 0.7, lootRate: 0.36, bgKey: 'celestial', boss: 'boss-spirit-warden', bossRate: 0.005, eventBoss: 'event-boss-memory-devourer', eventBossRate: 0.008 },
       { id: 'hall-of-echoes', name: 'Hall of Echoes', description: 'A vast chamber where the voices of the dead whisper endlessly.', levelReq: 81,
         monsters: ['memory-shade', 'ethereal-wisp', 'phantom-knight', 'spirit-guardian', 'dream-wolf', 'soul-serpent', 'ancestral-golem'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'celestial', boss: 'boss-dream-weaver', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'celestial', boss: 'boss-dream-weaver', bossRate: 0.005, eventBoss: 'event-boss-memory-devourer', eventBossRate: 0.008 },
       { id: 'ancestral-gardens', name: 'Ancestral Gardens', description: 'Impossible gardens tended by the spirits of ancient sages.', levelReq: 84,
         monsters: ['ancestral-golem', 'spirit-guardian', 'dream-wolf', 'ethereal-wisp', 'soul-serpent', 'phantom-knight', 'memory-shade'],
-        encounterRate: 0.74, lootRate: 0.4, bgKey: 'celestial', boss: 'boss-ancestral-titan', bossRate: 0.005 },
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'celestial', boss: 'boss-ancestral-titan', bossRate: 0.005, eventBoss: 'event-boss-memory-devourer', eventBossRate: 0.008 },
       { id: 'dreamscape', name: 'Dreamscape', description: 'A shifting landscape sculpted from the dreams and nightmares of the living.', levelReq: 87,
         monsters: ['dream-wolf', 'memory-shade', 'ethereal-wisp', 'celestial-drake', 'phantom-knight', 'ancestral-golem', 'soul-serpent'],
-        encounterRate: 0.76, lootRate: 0.42, bgKey: 'celestial', boss: 'boss-memory-dragon', bossRate: 0.005 },
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'celestial', boss: 'boss-memory-dragon', bossRate: 0.005, eventBoss: 'event-boss-memory-devourer', eventBossRate: 0.008 },
       { id: 'judgment-hall', name: 'Judgment Hall', description: 'Where souls are weighed and fates decided for eternity.', levelReq: 90,
         monsters: ['spirit-guardian', 'celestial-drake', 'ancestral-golem', 'phantom-knight', 'soul-serpent', 'memory-shade', 'dream-wolf'],
-        encounterRate: 0.78, lootRate: 0.44, bgKey: 'celestial', boss: 'boss-soul-arbiter', bossRate: 0.005 },
+        encounterRate: 0.78, lootRate: 0.44, bgKey: 'celestial', boss: 'boss-soul-arbiter', bossRate: 0.005, eventBoss: 'event-boss-memory-devourer', eventBossRate: 0.008 },
       { id: 'phoenix-nest', name: 'Phoenix Nest', description: 'The blazing aerie of the Eternal Phoenix at the apex of the sanctum.', levelReq: 93,
         monsters: ['celestial-drake', 'spirit-guardian', 'memory-shade', 'ancestral-golem', 'ethereal-wisp', 'dream-wolf', 'phantom-knight'],
-        encounterRate: 0.8, lootRate: 0.46, bgKey: 'celestial', boss: 'boss-eternal-phoenix', bossRate: 0.005 },
+        encounterRate: 0.8, lootRate: 0.46, bgKey: 'celestial', boss: 'boss-eternal-phoenix', bossRate: 0.005, eventBoss: 'event-boss-memory-devourer', eventBossRate: 0.008 },
     ],
   },
   {
@@ -1545,22 +1620,22 @@ export const REGIONS = [
     locations: [
       { id: 'genesis-rift', name: 'Genesis Rift', description: 'The outermost edge of the Primordial Core where raw energy coalesces into matter.', levelReq: 88,
         monsters: ['genesis-titan', 'primeval-wraith', 'creation-serpent', 'epoch-wolf', 'ancient-skeleton', 'cosmic-bat'],
-        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-genesis-warden', bossRate: 0.005 },
+        encounterRate: 0.72, lootRate: 0.38, bgKey: 'void', boss: 'boss-genesis-warden', bossRate: 0.005, eventBoss: 'event-boss-unborn-god', eventBossRate: 0.008 },
       { id: 'cosmic-ocean', name: 'Cosmic Ocean', description: 'An infinite sea of liquid starlight flowing between nascent universes.', levelReq: 91,
         monsters: ['creation-serpent', 'cosmic-bat', 'primeval-wraith', 'origin-wyrm', 'epoch-wolf', 'genesis-titan', 'void-archon'],
-        encounterRate: 0.74, lootRate: 0.4, bgKey: 'void', boss: 'boss-cosmic-serpent', bossRate: 0.005 },
+        encounterRate: 0.74, lootRate: 0.4, bgKey: 'void', boss: 'boss-cosmic-serpent', bossRate: 0.005, eventBoss: 'event-boss-unborn-god', eventBossRate: 0.008 },
       { id: 'epoch-spire', name: 'Epoch Spire', description: 'A pillar of frozen time stretching from the birth of the universe to its death.', levelReq: 94,
         monsters: ['epoch-wolf', 'ancient-skeleton', 'genesis-titan', 'void-archon', 'primeval-wraith', 'origin-wyrm', 'infinity-goblin'],
-        encounterRate: 0.76, lootRate: 0.42, bgKey: 'void', boss: 'boss-epoch-titan', bossRate: 0.005 },
+        encounterRate: 0.76, lootRate: 0.42, bgKey: 'void', boss: 'boss-epoch-titan', bossRate: 0.005, eventBoss: 'event-boss-unborn-god', eventBossRate: 0.008 },
       { id: 'void-sanctum', name: 'Void Sanctum', description: 'A cathedral of pure nothingness suspended in the space between realities.', levelReq: 96,
         monsters: ['void-archon', 'origin-wyrm', 'primeval-wraith', 'epoch-wolf', 'creation-serpent', 'genesis-titan', 'cosmic-bat'],
-        encounterRate: 0.78, lootRate: 0.44, bgKey: 'void', boss: 'boss-void-emperor', bossRate: 0.005 },
+        encounterRate: 0.78, lootRate: 0.44, bgKey: 'void', boss: 'boss-void-emperor', bossRate: 0.005, eventBoss: 'event-boss-unborn-god', eventBossRate: 0.008 },
       { id: 'dragon-cradle', name: 'Dragon Cradle', description: 'The nest where the first dragon was born from primordial flame.', levelReq: 98,
         monsters: ['origin-wyrm', 'void-archon', 'genesis-titan', 'epoch-wolf', 'ancient-skeleton', 'primeval-wraith', 'infinity-goblin'],
-        encounterRate: 0.8, lootRate: 0.46, bgKey: 'void', boss: 'boss-origin-dragon', bossRate: 0.005 },
+        encounterRate: 0.8, lootRate: 0.46, bgKey: 'void', boss: 'boss-origin-dragon', bossRate: 0.005, eventBoss: 'event-boss-unborn-god', eventBossRate: 0.008 },
       { id: 'the-origin', name: 'The Origin', description: 'The singular point from which all existence emerged. Here, reality itself can be unmade.', levelReq: 100,
         monsters: ['origin-wyrm', 'genesis-titan', 'void-archon', 'primeval-wraith', 'epoch-wolf', 'creation-serpent', 'infinity-goblin'],
-        encounterRate: 0.82, lootRate: 0.5, bgKey: 'void', boss: 'boss-primordial-god', bossRate: 0.005 },
+        encounterRate: 0.82, lootRate: 0.5, bgKey: 'void', boss: 'boss-primordial-god', bossRate: 0.005, eventBoss: 'event-boss-unborn-god', eventBossRate: 0.008 },
     ],
   },
 ];
@@ -2195,93 +2270,8 @@ export const BOSS_GIMMICKS = {
   'boss-void-emperor': { type: 'void_decree', name: 'Void Decree', desc: 'Nullifies all player stat bonuses and passive effects permanently. Heals 10% HP', triggerHpPct: 0.5, healPct: 0.1 },
   'boss-origin-dragon': { type: 'primordial_breath', name: 'Primordial Breath', desc: 'Charges for 2 turns then unleashes 5x damage breath attack', triggerHpPct: 0.4, channelTurns: 2, unleashMult: 5.0 },
   'boss-primordial-god': { type: 'genesis_countdown', name: 'Genesis Countdown', desc: 'Counts down from 8. At 0, resets the battle. Each player hit reduces count by 1. Boss heals 5% per turn during countdown', triggerHpPct: 0.4, countdown: 8, healPct: 0.05 },
-};
 
-// ---- EVENT BOSSES ----
-// Special bosses that only appear via random events in specific regions.
-// They are tougher than normal bosses for their level but drop better loot.
-export const EVENT_BOSSES = {
-  // Neon District
-  'event-boss-neon-phantom': {
-    name: 'Neon Phantom', sprite: 'ghost', isBoss: true, baseHp: 160, baseAtk: 18, baseDef: 4, baseSpeed: 10,
-    baseExp: 120, baseGold: 80, skills: ['shadowstrike', 'drain', 'screech', 'channel_fury'],
-    dropTable: [{ type: 'ring', weight: 14 }, { type: 'sword', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Glitch in the Grid', region: 'neon-district',
-  },
-  // Frozen Wastes
-  'event-boss-avalanche-yeti': {
-    name: 'Avalanche Yeti', sprite: 'golem', isBoss: true, baseHp: 220, baseAtk: 24, baseDef: 10, baseSpeed: 5,
-    baseExp: 200, baseGold: 120, skills: ['slam', 'frostbite', 'roar', 'channel_ice'],
-    dropTable: [{ type: 'armor', weight: 14 }, { type: 'shield', weight: 12 }, { type: 'helmet', weight: 10 }, { type: 'sword', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Terror of the Snowdrifts', region: 'frozen-wastes',
-  },
-  // Scorched Badlands
-  'event-boss-mirage-djinn': {
-    name: 'Mirage Djinn', sprite: 'ghost', isBoss: true, baseHp: 280, baseAtk: 32, baseDef: 8, baseSpeed: 9,
-    baseExp: 300, baseGold: 180, skills: ['heatwave', 'firebreath', 'curse', 'channel_flame'],
-    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Lord of Burning Illusions', region: 'scorched-badlands',
-  },
-  // Toxic Marshlands
-  'event-boss-plague-mother': {
-    name: 'Plague Mother', sprite: 'slime', isBoss: true, baseHp: 360, baseAtk: 34, baseDef: 12, baseSpeed: 4,
-    baseExp: 380, baseGold: 220, skills: ['poison', 'venom', 'drain', 'channel_fury'],
-    dropTable: [{ type: 'ring', weight: 14 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'amulet', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Origin of the Blight', region: 'toxic-marshlands',
-  },
-  // Abyssal Depths
-  'event-boss-leviathan-hatchling': {
-    name: 'Leviathan Hatchling', sprite: 'dragon', isBoss: true, baseHp: 440, baseAtk: 40, baseDef: 14, baseSpeed: 7,
-    baseExp: 480, baseGold: 300, skills: ['charge', 'slam', 'thunderclap', 'channel_storm'],
-    dropTable: [{ type: 'sword', weight: 14 }, { type: 'armor', weight: 12 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Spawn of the Abyss', region: 'abyssal-depths',
-  },
-  // Celestial Highlands
-  'event-boss-fallen-seraph': {
-    name: 'Fallen Seraph', sprite: 'ghost', isBoss: true, baseHp: 520, baseAtk: 48, baseDef: 16, baseSpeed: 8,
-    baseExp: 600, baseGold: 380, skills: ['holybeam', 'judgment', 'drain', 'channel_light'],
-    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Angel Cast from Grace', region: 'celestial-highlands',
-  },
-  // Void Nexus
-  'event-boss-reality-eater': {
-    name: 'Reality Eater', sprite: 'dragon', isBoss: true, baseHp: 650, baseAtk: 56, baseDef: 18, baseSpeed: 6,
-    baseExp: 750, baseGold: 460, skills: ['voidrift', 'entropy', 'oblivion', 'channel_void'],
-    dropTable: [{ type: 'sword', weight: 12 }, { type: 'ring', weight: 12 }, { type: 'armor', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 6 }],
-    title: 'Devourer of What Is', region: 'void-nexus',
-  },
-  // Shattered Dimension
-  'event-boss-chrono-wraith': {
-    name: 'Chrono Wraith', sprite: 'ghost', isBoss: true, baseHp: 800, baseAtk: 68, baseDef: 20, baseSpeed: 9,
-    baseExp: 950, baseGold: 600, skills: ['timewarp', 'drain', 'oblivion', 'channel_void'],
-    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Echo of a Forgotten Timeline', region: 'shattered-dimension',
-  },
-  // Infernal Dominion
-  'event-boss-sin-incarnate': {
-    name: 'Sin Incarnate', sprite: 'vagrant', isBoss: true, baseHp: 1000, baseAtk: 78, baseDef: 24, baseSpeed: 7,
-    baseExp: 1200, baseGold: 780, skills: ['soulrend', 'inferno', 'curse', 'channel_inferno'],
-    dropTable: [{ type: 'sword', weight: 12 }, { type: 'armor', weight: 12 }, { type: 'ring', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 6 }],
-    title: 'Walking Damnation', region: 'infernal-dominion',
-  },
-  // Ethereal Sanctum
-  'event-boss-memory-devourer': {
-    name: 'Memory Devourer', sprite: 'dragon', isBoss: true, baseHp: 1200, baseAtk: 88, baseDef: 26, baseSpeed: 8,
-    baseExp: 1500, baseGold: 950, skills: ['spiritfire', 'drain', 'madness', 'channel_spirit'],
-    dropTable: [{ type: 'ring', weight: 14 }, { type: 'amulet', weight: 12 }, { type: 'sword', weight: 10 }, { type: 'armor', weight: 8 }, { type: 'potion', weight: 6 }],
-    title: 'Eater of Who You Were', region: 'ethereal-sanctum',
-  },
-  // Primordial Core
-  'event-boss-unborn-god': {
-    name: 'The Unborn God', sprite: 'dragon', isBoss: true, baseHp: 1500, baseAtk: 100, baseDef: 30, baseSpeed: 7,
-    baseExp: 2000, baseGold: 1300, skills: ['primordialsmash', 'genesis_pulse', 'oblivion', 'channel_genesis'],
-    dropTable: [{ type: 'sword', weight: 10 }, { type: 'armor', weight: 10 }, { type: 'shield', weight: 10 }, { type: 'ring', weight: 10 }, { type: 'amulet', weight: 10 }, { type: 'potion', weight: 4 }],
-    title: 'Deity That Never Was', region: 'primordial-core',
-  },
-};
-
-// Event boss gimmicks
-export const EVENT_BOSS_GIMMICKS = {
+  // Event bosses
   'event-boss-neon-phantom': { type: 'phase_shift', name: 'Neon Flicker', desc: 'Flickers between tangible and intangible — 40% chance to dodge each hit', triggerHpPct: 0.7, dodgePct: 0.4 },
   'event-boss-avalanche-yeti': { type: 'enrage', name: 'Avalanche Fury', desc: 'ATK increases by 20% every 2 turns', triggerHpPct: 0.6, atkBoostPct: 0.2, interval: 2 },
   'event-boss-mirage-djinn': { type: 'whiteout', name: 'Mirage Veil', desc: 'Player attacks have 50% miss chance for 2 turns', triggerHpPct: 0.5, missPct: 0.5, duration: 2 },
@@ -2294,6 +2284,7 @@ export const EVENT_BOSS_GIMMICKS = {
   'event-boss-memory-devourer': { type: 'poison_nova', name: 'Memory Drain', desc: 'Drains memories — player takes 5% max HP per turn and healing reduced by 50%', triggerHpPct: 0.5, poisonDuration: 5, healReduction: 0.5 },
   'event-boss-unborn-god': { type: 'genesis_countdown', name: 'Unborn Pulse', desc: 'Counts down from 6. At 0, resets the battle. Boss heals 8% per turn during countdown', triggerHpPct: 0.4, countdown: 6, healPct: 0.08 },
 };
+
 
 // ---- RARITIES ----
 export const RARITIES = [
@@ -4382,250 +4373,6 @@ export const RANDOM_EVENTS = [
         outcomes: [
           { weight: 0.50, type: 'gold_big', text: 'You stoke the forge and attract a passing smith who pays well for the setup.' },
           { weight: 0.50, type: 'gold', text: 'You sell the leftover materials to a passing scavenger.' },
-        ],
-      },
-    ],
-  },
-  // ---- EVENT BOSS ENCOUNTERS ----
-  // Region-specific events that can spawn special event bosses.
-  {
-    id: 'neon-glitch-surge',
-    title: 'Glitch Surge',
-    region: 'neon-district',
-    description: 'The neon signs around you flicker violently and a distorted figure materializes from the static. It pulses with unstable energy.',
-    choices: [
-      {
-        label: 'Confront It',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-neon-phantom', text: 'The Neon Phantom solidifies and attacks with crackling energy!' },
-          { weight: 0.40, type: 'item_rare', text: 'The figure dissolves before you, leaving behind a piece of glitched equipment.' },
-        ],
-      },
-      {
-        label: 'Back Away Slowly',
-        outcomes: [
-          { weight: 0.70, type: 'nothing', text: 'The figure flickers and fades. You let out a breath you didn\'t know you were holding.' },
-          { weight: 0.30, type: 'damage', amount: 0.15, text: 'A bolt of static arcs toward you as you retreat!' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'frozen-howl',
-    title: 'Thunderous Howl',
-    region: 'frozen-wastes',
-    description: 'A deep, guttural howl shakes the snow from the trees. Massive footprints in the ice lead into a fog bank.',
-    choices: [
-      {
-        label: 'Follow the Tracks',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-avalanche-yeti', text: 'A colossal yeti bursts from the fog, fists raised to crush you!' },
-          { weight: 0.40, type: 'gold_big', text: 'The tracks lead to an abandoned camp with a frozen treasure chest.' },
-        ],
-      },
-      {
-        label: 'Find Shelter',
-        outcomes: [
-          { weight: 0.60, type: 'heal', amount: 0.15, text: 'You hunker down and wait it out. The cold eases as you find a warm overhang.' },
-          { weight: 0.40, type: 'nothing', text: 'The howling fades into the distance. Whatever it was, it moved on.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'desert-mirage',
-    title: 'Shimmering Mirage',
-    region: 'scorched-badlands',
-    description: 'The heat haze before you coalesces into what looks like a palace of gold. A robed figure beckons from its entrance.',
-    choices: [
-      {
-        label: 'Approach the Figure',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-mirage-djinn', text: 'The mirage shatters and the Djinn reveals its true form — fury incarnate!' },
-          { weight: 0.40, type: 'item_great', text: 'The figure bows and presents you with a gift before vanishing into the heat.' },
-        ],
-      },
-      {
-        label: 'Ignore the Mirage',
-        outcomes: [
-          { weight: 0.70, type: 'nothing', text: 'You know better than to trust desert illusions. You press on.' },
-          { weight: 0.30, type: 'energy_drain', amount: 4, text: 'The shimmering heat saps your will to continue. You feel drained.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'swamp-bloom',
-    title: 'Corrupted Bloom',
-    region: 'toxic-marshlands',
-    description: 'A massive flower erupts from the muck, its petals dripping with iridescent poison. Something writhes inside its bulb.',
-    choices: [
-      {
-        label: 'Cut It Open',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-plague-mother', text: 'The Plague Mother bursts free, showering you in toxic spores!' },
-          { weight: 0.40, type: 'item_rare', text: 'Inside the bulb you find a crystallized toxin — valuable alchemical gear!' },
-        ],
-      },
-      {
-        label: 'Leave It Alone',
-        outcomes: [
-          { weight: 0.60, type: 'nothing', text: 'Some things in the swamp are best left undisturbed.' },
-          { weight: 0.40, type: 'damage', amount: 0.10, text: 'Even passing near it, the spores irritate your lungs.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'deep-tremor',
-    title: 'Abyssal Tremor',
-    region: 'abyssal-depths',
-    description: 'The ocean floor shudders violently. A massive shadow passes overhead, far too large to be any normal creature.',
-    choices: [
-      {
-        label: 'Lure It Down',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-leviathan-hatchling', text: 'A Leviathan Hatchling descends with jaws wide open!' },
-          { weight: 0.40, type: 'gold_big', text: 'The creature dislodges treasure from the reef as it passes. You grab what you can.' },
-        ],
-      },
-      {
-        label: 'Hide in the Coral',
-        outcomes: [
-          { weight: 0.70, type: 'nothing', text: 'You wedge yourself between coral formations until the shadow passes.' },
-          { weight: 0.30, type: 'item', text: 'While hiding, you discover a piece of gear wedged in the coral.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'celestial-fall',
-    title: 'Falling Star',
-    region: 'celestial-highlands',
-    description: 'A brilliant streak of light crashes into a nearby cloud island, leaving a smoldering crater. Wings of tarnished gold unfurl from the impact.',
-    choices: [
-      {
-        label: 'Investigate the Crater',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-fallen-seraph', text: 'The Fallen Seraph rises, eyes burning with anguish and rage!' },
-          { weight: 0.40, type: 'item_great', text: 'The impact scattered divine fragments — you collect a radiant piece of equipment.' },
-        ],
-      },
-      {
-        label: 'Observe from Distance',
-        outcomes: [
-          { weight: 0.50, type: 'gold', text: 'Scattered coins of celestial gold rain down from the impact. You gather some.' },
-          { weight: 0.50, type: 'nothing', text: 'The light fades. Whatever fell from the sky does not stir again.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'void-tear',
-    title: 'Rift Tear',
-    region: 'void-nexus',
-    description: 'Reality cracks open before you like a wound. Something immense and hungry stares through the gap.',
-    choices: [
-      {
-        label: 'Reach Through',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-reality-eater', text: 'The Reality Eater lunges through the tear, jaws unhinged!' },
-          { weight: 0.40, type: 'item_rare', text: 'Your hand closes around something solid beyond the rift — a weapon forged in nothingness!' },
-        ],
-      },
-      {
-        label: 'Seal the Rift',
-        outcomes: [
-          { weight: 0.50, type: 'heal', amount: 0.20, text: 'You force the rift closed. Stabilizing energy washes over you.' },
-          { weight: 0.50, type: 'energy_drain', amount: 6, text: 'Closing the rift drains your life force. You feel hollow inside.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'shattered-echo',
-    title: 'Temporal Echo',
-    region: 'shattered-dimension',
-    description: 'A ghostly version of yourself walks toward you from the fractured horizon. It wears your face but its eyes are wrong — ancient and cold.',
-    choices: [
-      {
-        label: 'Face Your Echo',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-chrono-wraith', text: 'The Chrono Wraith sheds your likeness and reveals its true monstrous form!' },
-          { weight: 0.40, type: 'item_great', text: 'The echo dissolves, leaving behind gear from a timeline where you were stronger.' },
-        ],
-      },
-      {
-        label: 'Close Your Eyes',
-        outcomes: [
-          { weight: 0.60, type: 'nothing', text: 'When you open them, the echo is gone. Just another trick of this broken place.' },
-          { weight: 0.40, type: 'damage', amount: 0.20, text: 'The echo touches your forehead. Pain lances through your skull as memories scatter.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'infernal-summoning',
-    title: 'Demonic Summoning Circle',
-    region: 'infernal-dominion',
-    description: 'A pulsing circle of hellfire runes blazes on the ground. Something is being pulled through from a deeper layer of Hell.',
-    choices: [
-      {
-        label: 'Disrupt the Ritual',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-sin-incarnate', text: 'Too late! Sin Incarnate rips free from the circle and turns on you!' },
-          { weight: 0.40, type: 'gold_big', text: 'You shatter the runes. The summoning fails and scattered demonic coins materialize.' },
-        ],
-      },
-      {
-        label: 'Walk Around It',
-        outcomes: [
-          { weight: 0.60, type: 'nothing', text: 'You give the circle a wide berth. Whatever it summons is someone else\'s problem.' },
-          { weight: 0.40, type: 'damage', amount: 0.15, text: 'Hellfire lashes out at you as you skirt the edge of the circle!' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'spirit-convergence',
-    title: 'Spirit Convergence',
-    region: 'ethereal-sanctum',
-    description: 'Thousands of spirit wisps converge into a massive swirling vortex. A face forms in the maelstrom — hungry and ancient.',
-    choices: [
-      {
-        label: 'Challenge the Spirit',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-memory-devourer', text: 'The Memory Devourer crystallizes from the vortex, ready to consume your very identity!' },
-          { weight: 0.40, type: 'item_rare', text: 'The spirits scatter, leaving behind a fragment of condensed memory — powerful equipment!' },
-        ],
-      },
-      {
-        label: 'Meditate',
-        outcomes: [
-          { weight: 0.50, type: 'heal', amount: 0.25, text: 'You find peace among the spirits. They heal your wounds as they disperse.' },
-          { weight: 0.50, type: 'energy_restore', amount: 8, text: 'The spirits share their energy with you before fading away.' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'primordial-awakening',
-    title: 'Primordial Awakening',
-    region: 'primordial-core',
-    description: 'The raw energy of creation concentrates into a towering form. It opens eyes that have never seen the world before — and they burn with newborn fury.',
-    choices: [
-      {
-        label: 'Stand Your Ground',
-        outcomes: [
-          { weight: 0.60, type: 'battle_event_boss', bossId: 'event-boss-unborn-god', text: 'The Unborn God takes its first breath and its first kill — you\'re the target!' },
-          { weight: 0.40, type: 'item_great', text: 'The form collapses before fully manifesting, leaving behind raw primordial essence shaped into gear.' },
-        ],
-      },
-      {
-        label: 'Flee the Area',
-        outcomes: [
-          { weight: 0.50, type: 'nothing', text: 'You run. No shame in retreating from something that was never meant to exist.' },
-          { weight: 0.50, type: 'energy_drain', amount: 8, text: 'The gravitational pull of the awakening drains your energy as you escape.' },
         ],
       },
     ],
