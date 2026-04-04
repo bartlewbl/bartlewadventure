@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SKILLS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel } from '../../data/tavernData';
+import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SKILLS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
 
 function NpcSprite({ npcId, scale = 4 }) {
@@ -48,10 +48,11 @@ const TABS = [
   { id: 'talk', label: 'Talk' },
   { id: 'quests', label: 'Quests' },
   { id: 'skills', label: 'Skills' },
+  { id: 'faction', label: 'Faction' },
   { id: 'shop', label: 'Shop' },
 ];
 
-export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onLearnSkill, onBuyItem, onBack }) {
+export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onLearnSkill, onLearnFactionSkill, onBuyItem, onBack }) {
   const [activeNpcId, setActiveNpcId] = useState(null);
   const [activeTab, setActiveTab] = useState('talk');
   const [activeTopic, setActiveTopic] = useState(null);
@@ -239,6 +240,56 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
     );
   };
 
+  // ---- FACTION TAB ----
+  const renderFaction = () => {
+    const faction = FACTIONS[activeNpcId];
+    const factionSkills = FACTION_SKILLS[activeNpcId] || [];
+    if (!faction) return <div className="tavern-empty-text">No faction info</div>;
+
+    return (
+      <div className="tavern-faction-panel">
+        <div className="tavern-faction-header">
+          <span className="tavern-faction-icon">{faction.icon}</span>
+          <div className="tavern-faction-info">
+            <div className="tavern-faction-name" style={{ color: faction.color }}>{faction.name}</div>
+            <div className="tavern-faction-desc">{faction.desc}</div>
+            <div className="tavern-faction-specialty">Specialty: {faction.specialty}</div>
+          </div>
+        </div>
+        <div className="tavern-faction-skills-header">Combat Skills</div>
+        <div className="tavern-faction-skill-list">
+          {factionSkills.map(skill => {
+            const isLearned = (tav.learnedFactionSkills || []).includes(skill.id);
+            const repLocked = npcRepLevel < skill.reqRep;
+            const reqLabel = REP_LEVELS.find(r => r.level === skill.reqRep)?.label || '';
+
+            return (
+              <div key={skill.id} className={`tavern-faction-skill ${isLearned ? 'learned' : ''} ${repLocked ? 'locked' : ''}`}>
+                <div className="tavern-faction-skill-icon">{skill.icon}</div>
+                <div className="tavern-faction-skill-info">
+                  <div className="tavern-faction-skill-name">{skill.name}</div>
+                  <div className="tavern-faction-skill-desc">{skill.desc}</div>
+                  <div className="tavern-faction-skill-meta">
+                    <span className="tavern-faction-skill-cost">{skill.manaCost} mana</span>
+                    <span className="tavern-faction-skill-mult">{skill.multiplier}x dmg</span>
+                  </div>
+                  <div className="tavern-skill-req">Requires: {reqLabel} ({REP_LEVELS.find(r => r.level === skill.reqRep)?.min} rep)</div>
+                </div>
+                <div className="tavern-skill-action">
+                  {isLearned && <span className="tavern-badge done">Learned</span>}
+                  {!isLearned && !repLocked && (
+                    <button className="tavern-action-btn faction" onClick={() => onLearnFactionSkill(skill.id, activeNpcId)}>Learn</button>
+                  )}
+                  {!isLearned && repLocked && <span className="tavern-badge locked">Locked</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   // ---- TALK TAB ----
   const renderTalk = () => {
     const currentTopic = activeNpc?.topics.find(t => t.id === activeTopic);
@@ -300,6 +351,7 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
               <NpcSprite npcId={npc.id} scale={3} />
               <span className="tavern-npc-name" style={{ color: npc.color }}>{npc.name}</span>
               <span className="tavern-npc-role">{npc.role}</span>
+              {FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
               <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>
             </button>
           );
@@ -336,6 +388,7 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
             {activeTab === 'talk' && renderTalk()}
             {activeTab === 'quests' && renderQuests()}
             {activeTab === 'skills' && renderSkills()}
+            {activeTab === 'faction' && renderFaction()}
             {activeTab === 'shop' && renderShop()}
           </div>
         </div>

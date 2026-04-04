@@ -6,6 +6,7 @@ import { SKILLS } from '../../data/gameData';
 import { PET_MAX_BOND, PET_MAX_ENERGY } from '../../data/petData';
 import useGameClock from '../../hooks/useGameClock';
 import { ELEMENTS, getSkillElement, getWeatherSpellBuff, getWeatherSpellBuffList } from '../../engine/elements';
+import { getUnlockedFactionSkills } from '../../data/tavernData';
 
 // Animation durations (must match GameCanvas.jsx)
 const ANIM_MS = {
@@ -20,10 +21,10 @@ const ANIM_MS = {
 let floatIdCounter = 0;
 
 export default function BattleScreen({
-  battle, battleLog, player, pets,
+  battle, battleLog, player, pets, tavern,
   onAttack, onSkill, onDefend, onChannel, onPotion, onRun, onMonsterTurn,
   onTreeSkill, onToggleSkillMenu, onToggleInspect,
-  onParry, onChangeStance, onUniversalSkill,
+  onParry, onChangeStance, onUniversalSkill, onFactionSkill,
   setBattleAnim, animTick,
 }) {
   const logRef = useRef(null);
@@ -277,6 +278,7 @@ export default function BattleScreen({
   const passives = getPlayerPassiveSkills(player);
   const activeSkills = getPlayerActiveSkills(player);
   const treeActives = activeSkills.filter(s => !s.isClassSkill);
+  const factionSkills = getUnlockedFactionSkills(tavern);
 
   const ROLE_ICONS = { attacker: '\u2694', defender: '\u26E8', healer: '\u2661', buffer: '\u2606', hybrid: '\u269B' };
 
@@ -683,6 +685,25 @@ export default function BattleScreen({
               </button>
             );
           })}
+          {/* Faction combat skills */}
+          {factionSkills.map(skill => (
+            <button
+              key={skill.id}
+              className="btn btn-faction-skill"
+              disabled={disabled || player.mana < (skill.manaCost || 0)}
+              onClick={() => handlePlayerAction(() => onFactionSkill(skill.id), 'player-skill')}
+              title={`${skill.desc} [${skill.factionName}]`}
+            >
+              <span className="skill-btn-name">
+                <span className="skill-faction-icon">{skill.icon}</span>
+                {skill.name}
+              </span>
+              <span className="skill-btn-meta">
+                <span className="skill-btn-cost">{skill.manaCost || 0}mp</span>
+                <span className="skill-faction-badge">{skill.factionName}</span>
+              </span>
+            </button>
+          ))}
           <button className="btn btn-back btn-sm" disabled={disabled} onClick={onToggleSkillMenu}>
             Back
           </button>
@@ -706,9 +727,9 @@ export default function BattleScreen({
           <button
             className="btn btn-skills-toggle"
             disabled={disabled}
-            onClick={treeActives.length > 0 ? onToggleSkillMenu : handleClassSkill}
+            onClick={(treeActives.length > 0 || factionSkills.length > 0) ? onToggleSkillMenu : handleClassSkill}
           >
-            {treeActives.length > 0 ? 'Skills' : (activeSkills[0]?.name || 'Skill')}
+            {(treeActives.length > 0 || factionSkills.length > 0) ? 'Skills' : (activeSkills[0]?.name || 'Skill')}
           </button>
           <button
             className="btn btn-battle-channel"

@@ -11196,6 +11196,155 @@ body {
   align-self: center;
 }
 
+/* NPC faction badge on card */
+.tavern-npc-faction {
+  font-size: 5.5px;
+  color: #aaa;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Faction tab ---- */
+.tavern-faction-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tavern-faction-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(25, 25, 55, 0.7), rgba(20, 20, 45, 0.8));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px;
+}
+.tavern-faction-icon {
+  font-size: 24px;
+}
+.tavern-faction-info {
+  flex: 1;
+}
+.tavern-faction-name {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+.tavern-faction-desc {
+  font-size: 7.5px;
+  color: #bbb;
+  margin-top: 2px;
+}
+.tavern-faction-specialty {
+  font-size: 7px;
+  color: #8af;
+  margin-top: 3px;
+}
+.tavern-faction-skills-header {
+  font-size: 8px;
+  color: #ffd700;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255,215,0,0.2);
+  padding-bottom: 4px;
+}
+.tavern-faction-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tavern-faction-skill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(25, 25, 55, 0.6), rgba(20, 20, 45, 0.7));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-left: 3px solid rgba(255,150,50,0.4);
+  border-radius: 6px;
+  padding: 10px;
+}
+.tavern-faction-skill.learned {
+  border-left-color: rgba(100,255,100,0.5);
+  background: linear-gradient(135deg, rgba(20, 40, 20, 0.6), rgba(15, 30, 15, 0.7));
+}
+.tavern-faction-skill.locked {
+  opacity: 0.5;
+}
+.tavern-faction-skill-icon {
+  font-size: 18px;
+  width: 28px;
+  text-align: center;
+}
+.tavern-faction-skill-info {
+  flex: 1;
+  min-width: 0;
+}
+.tavern-faction-skill-name {
+  font-size: 8.5px;
+  color: #f0e0c0;
+  font-weight: bold;
+}
+.tavern-faction-skill-desc {
+  font-size: 7px;
+  color: #bbb;
+  margin-top: 2px;
+}
+.tavern-faction-skill-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 3px;
+}
+.tavern-faction-skill-cost {
+  font-size: 6.5px;
+  color: #6cf;
+}
+.tavern-faction-skill-mult {
+  font-size: 6.5px;
+  color: #fc6;
+}
+.tavern-action-btn.faction {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+}
+.tavern-action-btn.faction:hover {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+/* ---- Faction skills in battle ---- */
+.btn-faction-skill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(230, 126, 34, 0.25), rgba(211, 84, 0, 0.35));
+  border: 1px solid rgba(230, 126, 34, 0.4);
+  color: #f0e0c0;
+  font-size: 7.5px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-faction-skill:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.35), rgba(230, 126, 34, 0.45));
+  border-color: rgba(243, 156, 18, 0.6);
+}
+.btn-faction-skill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.skill-faction-icon {
+  margin-right: 4px;
+}
+.skill-faction-badge {
+  font-size: 5.5px;
+  color: #e67e22;
+  background: rgba(230, 126, 34, 0.15);
+  border: 1px solid rgba(230, 126, 34, 0.25);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 4px;
+}
+
 @media (max-width: 600px) {
   .screen-tavern {
     padding-top: 44px;

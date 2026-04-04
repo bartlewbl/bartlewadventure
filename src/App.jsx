@@ -385,6 +385,7 @@ export default function App() {
                 battleLog={state.battleLog}
                 player={state.player}
                 pets={state.pets}
+                tavern={state.tavern}
                 onAttack={actions.battleAttack}
                 onSkill={actions.battleSkill}
                 onDefend={actions.battleDefend}
@@ -398,6 +399,7 @@ export default function App() {
                 onParry={actions.battleParry}
                 onChangeStance={actions.battleChangeStance}
                 onUniversalSkill={actions.battleUniversalSkill}
+                onFactionSkill={actions.battleFactionSkill}
                 setBattleAnim={setBattleAnim}
                 animTick={animTick}
               />
@@ -578,6 +580,7 @@ export default function App() {
                 onAcceptQuest={actions.tavernAcceptQuest}
                 onTurnInQuest={actions.tavernTurnInQuest}
                 onLearnSkill={actions.tavernLearnSkill}
+                onLearnFactionSkill={actions.tavernLearnFactionSkill}
                 onBuyItem={actions.tavernBuyItem}
                 onBack={actions.goToTown}
               />

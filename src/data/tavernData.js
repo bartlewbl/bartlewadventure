@@ -1,4 +1,4 @@
-// Tavern NPC data — reputation, quests, skills, items, buffs, and shop unlocks
+// Tavern NPC data — reputation, quests, skills, items, buffs, factions, and shop unlocks
 
 // ---- REPUTATION THRESHOLDS ----
 export const REP_LEVELS = [
@@ -425,6 +425,7 @@ export const TAVERN_NPCS = [
     id: 'bartender',
     name: 'Grog Ironflask',
     role: 'Tavern Keep',
+    faction: 'ironforge_covenant',
     color: '#d4956a',
     greeting: "Welcome to the Dusty Flagon! Pull up a stool. I hear everything that goes on in this town — and beyond.",
     greetingByRep: {
@@ -459,6 +460,7 @@ export const TAVERN_NPCS = [
     id: 'whisper',
     name: 'Whisper',
     role: 'Information Broker',
+    faction: 'shadow_syndicate',
     color: '#9b59b6',
     greeting: "...You want information? Everything has a price. But I'll give you a taste, since Grog seems to trust you.",
     greetingByRep: {
@@ -493,6 +495,7 @@ export const TAVERN_NPCS = [
     id: 'fenwick',
     name: 'Old Fenwick',
     role: 'Retired Adventurer',
+    faction: 'old_guard_order',
     color: '#e67e22',
     greeting: "Eh? Another young adventurer! Sit down, sit down. Let old Fenwick tell you a thing or two about the world.",
     greetingByRep: {
@@ -527,6 +530,7 @@ export const TAVERN_NPCS = [
     id: 'mira',
     name: 'Mira Goldspark',
     role: 'Wandering Merchant',
+    faction: 'golden_cartel',
     color: '#f1c40f',
     greeting: "Ah, a fellow traveler! I've been to every corner of this land. Looking to trade stories — or something more valuable?",
     greetingByRep: {
@@ -561,6 +565,7 @@ export const TAVERN_NPCS = [
     id: 'thorne',
     name: 'Captain Thorne',
     role: 'Off-Duty Guard',
+    faction: 'steel_legion',
     color: '#3498db',
     greeting: "At ease, adventurer. I'm off the clock. But if you've got questions about the dangers out there, I'm your man.",
     greetingByRep: {
@@ -592,3 +597,182 @@ export const TAVERN_NPCS = [
     ],
   },
 ];
+
+// ---- FACTIONS ----
+// Each tavern NPC leads a faction that specializes in different combat styles.
+// Players unlock faction combat skills at high reputation, usable in battle.
+export const FACTIONS = {
+  bartender: {
+    id: 'ironforge_covenant',
+    name: 'Ironforge Covenant',
+    icon: '🔥',
+    color: '#e67e22',
+    desc: 'Masters of flame and fortification. Their attacks burn and their shields endure.',
+    specialty: 'Fire damage & damage reduction',
+  },
+  whisper: {
+    id: 'shadow_syndicate',
+    name: 'Shadow Syndicate',
+    icon: '🗡️',
+    color: '#9b59b6',
+    desc: 'Assassins who strike from the darkness. Poison and evasion are their weapons.',
+    specialty: 'Poison & evasion',
+  },
+  fenwick: {
+    id: 'old_guard_order',
+    name: 'Old Guard Order',
+    icon: '🛡️',
+    color: '#e67e22',
+    desc: 'Veterans who blend offense with recovery. They heal as they fight.',
+    specialty: 'Healing & buffs',
+  },
+  mira: {
+    id: 'golden_cartel',
+    name: 'Golden Cartel',
+    icon: '✨',
+    color: '#f1c40f',
+    desc: 'Fortune favors the bold. Their attacks are unpredictable but devastating.',
+    specialty: 'Random effects & bonus gold',
+  },
+  thorne: {
+    id: 'steel_legion',
+    name: 'Steel Legion',
+    icon: '⚔️',
+    color: '#3498db',
+    desc: 'Disciplined soldiers who break enemy defenses with overwhelming force.',
+    specialty: 'Raw damage & enemy debuffs',
+  },
+};
+
+// ---- FACTION COMBAT SKILLS ----
+// Learnable special attacks tied to NPC faction reputation.
+// Each NPC has 2 combat skills (active, usable in battle).
+// Shape mirrors tree skills: id, name, desc, manaCost, multiplier, effect, icon
+export const FACTION_SKILLS = {
+  bartender: [
+    {
+      id: 'fac_ironforge_molten_slam',
+      name: 'Molten Slam',
+      desc: '1.4x fire damage. Burns the enemy for 3 turns.',
+      manaCost: 14,
+      multiplier: 1.4,
+      effect: 'faction_molten_slam',
+      icon: '🔥',
+      reqRep: 3,   // Trusted
+    },
+    {
+      id: 'fac_ironforge_forge_shield',
+      name: 'Forge Shield',
+      desc: '0.8x damage. Gain a fire shield that reduces damage by 25% for 3 turns and reflects 15% damage.',
+      manaCost: 18,
+      multiplier: 0.8,
+      effect: 'faction_forge_shield',
+      icon: '🛡️',
+      reqRep: 5,   // Bonded
+    },
+  ],
+  whisper: [
+    {
+      id: 'fac_shadow_venomstrike',
+      name: 'Venomstrike',
+      desc: '1.3x damage. Applies deadly poison for 4 turns.',
+      manaCost: 12,
+      multiplier: 1.3,
+      effect: 'faction_venomstrike',
+      icon: '☠️',
+      reqRep: 3,
+    },
+    {
+      id: 'fac_shadow_shadowstep',
+      name: 'Shadowstep',
+      desc: '1.8x damage from the shadows. Dodge the next 2 attacks.',
+      manaCost: 22,
+      multiplier: 1.8,
+      effect: 'faction_shadowstep',
+      icon: '👤',
+      reqRep: 5,
+    },
+  ],
+  fenwick: [
+    {
+      id: 'fac_oldguard_smite',
+      name: "Guardian's Smite",
+      desc: '1.2x damage. Heal 30% of damage dealt.',
+      manaCost: 14,
+      multiplier: 1.2,
+      effect: 'faction_guardian_smite',
+      icon: '✝️',
+      reqRep: 3,
+    },
+    {
+      id: 'fac_oldguard_ancestral_ward',
+      name: 'Ancestral Ward',
+      desc: '0.6x damage. Boost ATK and DEF by 20% for 4 turns.',
+      manaCost: 20,
+      multiplier: 0.6,
+      effect: 'faction_ancestral_ward',
+      icon: '🏛️',
+      reqRep: 5,
+    },
+  ],
+  mira: [
+    {
+      id: 'fac_golden_gambit',
+      name: "Fortune's Gambit",
+      desc: '0.5x-2.5x random damage. Always drops bonus gold on kill.',
+      manaCost: 15,
+      multiplier: 1.0,
+      effect: 'faction_fortunes_gambit',
+      icon: '🎲',
+      reqRep: 3,
+    },
+    {
+      id: 'fac_golden_barrage',
+      name: 'Gilded Barrage',
+      desc: 'Hits 3 times at 0.7x each. Each hit has 25% chance to stun.',
+      manaCost: 24,
+      multiplier: 0.7,
+      effect: 'faction_gilded_barrage',
+      icon: '💰',
+      reqRep: 5,
+    },
+  ],
+  thorne: [
+    {
+      id: 'fac_steel_disciplined_strike',
+      name: 'Disciplined Strike',
+      desc: '1.5x damage. Reduce enemy ATK by 15% for 3 turns.',
+      manaCost: 14,
+      multiplier: 1.5,
+      effect: 'faction_disciplined_strike',
+      icon: '🗡️',
+      reqRep: 3,
+    },
+    {
+      id: 'fac_steel_commanders_charge',
+      name: "Commander's Charge",
+      desc: '2.0x massive damage. 40% chance to stun for 1 turn.',
+      manaCost: 26,
+      multiplier: 2.0,
+      effect: 'faction_commanders_charge',
+      icon: '⚔️',
+      reqRep: 5,
+    },
+  ],
+};
+
+// Helper: get all faction skills a player has unlocked based on tavern reputation
+export function getUnlockedFactionSkills(tavern) {
+  if (!tavern) return [];
+  const skills = [];
+  for (const [npcId, factionSkills] of Object.entries(FACTION_SKILLS)) {
+    const rep = tavern.reputation?.[npcId] || 0;
+    const repLevel = getRepLevel(rep);
+    for (const skill of factionSkills) {
+      if (repLevel.level >= skill.reqRep && tavern.learnedFactionSkills?.includes(skill.id)) {
+        skills.push({ ...skill, npcId, factionId: FACTIONS[npcId].id, factionName: FACTIONS[npcId].name, isFactionSkill: true });
+      }
+    }
+  }
+  return skills;
+}
