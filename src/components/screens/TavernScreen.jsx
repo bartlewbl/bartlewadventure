@@ -111,18 +111,33 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
           const repLocked = npcRepLevel < quest.reqRep;
           const levelLocked = player.level < quest.reqLevel;
           const locked = repLocked || levelLocked;
+          const hasRequiredItems = !quest.requiresItems || quest.requiresItems.every(
+            itemName => player.inventory?.some(item => item.name === itemName)
+          );
 
           let progress = 0;
+          let statMet = false;
           let canTurnIn = false;
           if (isAccepted) {
-            progress = (stats[quest.stat] || 0) - accepted.baseline;
-            canTurnIn = progress >= quest.target;
+            if (quest.stat === 'none' || quest.target === 0) {
+              statMet = true;
+              progress = quest.target;
+            } else {
+              progress = (stats[quest.stat] || 0) - accepted.baseline;
+              statMet = progress >= quest.target;
+            }
+            canTurnIn = statMet && hasRequiredItems;
           }
 
+          const isDeliveryQuest = !!quest.requiresItems;
+
           return (
-            <div key={quest.id} className={`tavern-quest ${isCompleted ? 'completed' : ''} ${canTurnIn ? 'ready' : ''} ${locked ? 'locked' : ''}`}>
+            <div key={quest.id} className={`tavern-quest ${isCompleted ? 'completed' : ''} ${canTurnIn ? 'ready' : ''} ${locked ? 'locked' : ''} ${isDeliveryQuest ? 'delivery' : ''}`}>
               <div className="tavern-quest-header">
-                <div className="tavern-quest-name">{quest.name}</div>
+                <div className="tavern-quest-name">
+                  {isDeliveryQuest && <span className="delivery-icon">&#128230;</span>}
+                  {quest.name}
+                </div>
                 <div className="tavern-quest-badges">
                   {isCompleted && <span className="tavern-badge done">Done</span>}
                   {canTurnIn && <span className="tavern-badge turn-in">Ready!</span>}
@@ -131,12 +146,38 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
                 </div>
               </div>
               <div className="tavern-quest-desc">{quest.desc}</div>
-              {isAccepted && !isCompleted && (
+              {quest.lore && isAccepted && !isCompleted && (
+                <div className="tavern-quest-lore">{quest.lore}</div>
+              )}
+              {isAccepted && !isCompleted && quest.stat !== 'none' && quest.target > 0 && (
                 <div className="tavern-quest-progress">
                   <div className="tavern-quest-bar-track">
                     <div className="tavern-quest-bar-fill" style={{ width: `${Math.min(100, (progress / quest.target) * 100)}%` }} />
                   </div>
                   <span className="tavern-quest-bar-text">{Math.min(progress, quest.target)} / {quest.target}</span>
+                </div>
+              )}
+              {isAccepted && !isCompleted && quest.requiresItems && (
+                <div className="tavern-quest-items">
+                  <div className="tavern-quest-items-label">Required Items:</div>
+                  {quest.requiresItems.map(itemName => {
+                    const has = player.inventory?.some(item => item.name === itemName);
+                    return (
+                      <div key={itemName} className={`tavern-quest-item-req ${has ? 'has-item' : 'missing-item'}`}>
+                        <span className="tavern-quest-item-check">{has ? '\u2714' : '\u2718'}</span>
+                        <span className="tavern-quest-item-name">{itemName}</span>
+                        {quest.questDrops?.some(d => d.itemName === itemName) && !has && (
+                          <span className="tavern-quest-item-hint">Drops from boss</span>
+                        )}
+                        {!quest.questDrops?.some(d => d.itemName === itemName) && !has && (
+                          <span className="tavern-quest-item-hint">Find or buy this item</span>
+                        )}
+                        {quest.consumeItems && has && (
+                          <span className="tavern-quest-item-consumed">Will be consumed</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <div className="tavern-quest-reward">

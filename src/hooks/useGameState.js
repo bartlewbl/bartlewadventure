@@ -5641,8 +5641,26 @@ function gameReducer(state, action) {
       if (!questDef) return state;
       const accepted = tavern.acceptedQuests.find(q => q.questId === questId);
       if (!accepted) return state;
-      const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
-      if (progress < questDef.target) return { ...state, message: 'Quest not complete yet!' };
+      // Check stat progress (skip if target is 0, meaning item-only quest)
+      if (questDef.stat !== 'none' && questDef.target > 0) {
+        const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
+        if (progress < questDef.target) return { ...state, message: 'Quest not complete yet!' };
+      }
+      // Check item requirements
+      let playerInv = [...state.player.inventory];
+      if (questDef.requiresItems && questDef.requiresItems.length > 0) {
+        for (const itemName of questDef.requiresItems) {
+          const hasItem = playerInv.some(item => item.name === itemName);
+          if (!hasItem) return { ...state, message: `Missing required item: ${itemName}` };
+        }
+        // Consume items (default true unless consumeItems explicitly false)
+        if (questDef.consumeItems !== false) {
+          for (const itemName of questDef.requiresItems) {
+            const idx = playerInv.findIndex(item => item.name === itemName);
+            if (idx !== -1) playerInv.splice(idx, 1);
+          }
+        }
+      }
       // Grant reputation to this NPC
       const newRep = { ...tavern.reputation };
       newRep[npcId] = (newRep[npcId] || 0) + questDef.repReward;
@@ -5655,7 +5673,7 @@ function gameReducer(state, action) {
       let newStats = addStat(state.stats, 'goldEarned', questDef.goldReward);
       return {
         ...state,
-        player: { ...state.player, gold: state.player.gold + questDef.goldReward },
+        player: { ...state.player, gold: state.player.gold + questDef.goldReward, inventory: playerInv },
         tavern: {
           ...tavern,
           reputation: newRep,
@@ -5992,6 +6010,39 @@ function handleVictory(state) {
     }
   }
 
+  // Drop tavern quest-specific items from bosses when relevant quests are active
+  let tavernQuestDrops = [];
+  if (m.isBoss && state.tavern) {
+    const activeQuests = state.tavern.acceptedQuests || [];
+    for (const aq of activeQuests) {
+      const npcQuests = TAVERN_QUESTS[aq.npcId];
+      if (!npcQuests) continue;
+      const questDef = npcQuests.find(q => q.id === aq.questId);
+      if (!questDef?.questDrops) continue;
+      for (const drop of questDef.questDrops) {
+        if (drop.bossId === m.id) {
+          // Only drop if player doesn't already have this item
+          const alreadyHas = p.inventory.some(item => item.name === drop.itemName);
+          if (!alreadyHas && p.inventory.length < p.maxInventory) {
+            const questItem = {
+              id: 'tqd_' + Date.now() + '_' + Math.random(),
+              name: drop.itemName,
+              type: 'quest',
+              rarity: 'Rare',
+              rarityColor: '#ffd700',
+              desc: drop.itemDesc,
+              sellPrice: 0,
+              atk: 0, def: 0,
+              isQuestItem: true,
+            };
+            p.inventory = [...p.inventory, questItem];
+            tavernQuestDrops.push(questItem);
+          }
+        }
+      }
+    }
+  }
+
   const prevLevel = state.player.level;
   const { player: leveledPlayer, pendingLevels } = processLevelUps(p);
 
@@ -6093,6 +6144,7 @@ function handleVictory(state) {
       isBoss: !!m.isBoss,
       bossName: m.isBoss ? m.name : null,
       innBonus: innBonus > 0 ? innBonus : null,
+      tavernQuestDrops: tavernQuestDrops.length > 0 ? tavernQuestDrops : null,
     },
   };
 }

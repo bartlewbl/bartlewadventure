@@ -11839,6 +11839,82 @@ body {
   border-color: rgba(255, 215, 0, 0.7);
 }
 
+/* Delivery / fetch quest styles */
+.tavern-quest.delivery {
+  border-left: 3px solid #bb8844;
+}
+
+.delivery-icon {
+  margin-right: 4px;
+  font-size: 8px;
+}
+
+.tavern-quest-lore {
+  font-size: 6px;
+  color: #bb8844;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  padding: 5px 6px;
+  background: rgba(60, 40, 20, 0.3);
+  border-left: 2px solid rgba(187, 136, 68, 0.4);
+  border-radius: 2px;
+  font-style: italic;
+}
+
+.tavern-quest-items {
+  margin-bottom: 6px;
+  padding: 5px 6px;
+  background: rgba(20, 20, 40, 0.4);
+  border-radius: 3px;
+}
+
+.tavern-quest-items-label {
+  font-size: 6px;
+  font-family: 'Press Start 2P', monospace;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+.tavern-quest-item-req {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 6px;
+  font-family: 'Press Start 2P', monospace;
+  padding: 2px 0;
+}
+
+.tavern-quest-item-req.has-item {
+  color: #88ff88;
+}
+
+.tavern-quest-item-req.missing-item {
+  color: #ff8888;
+}
+
+.tavern-quest-item-check {
+  font-size: 8px;
+  width: 10px;
+}
+
+.tavern-quest-item-name {
+  flex: 1;
+  color: #ddd;
+}
+
+.tavern-quest-item-hint {
+  font-size: 5px;
+  color: #888;
+  font-style: italic;
+}
+
+.tavern-quest-item-consumed {
+  font-size: 5px;
+  color: #ffaa44;
+  font-style: italic;
+}
+
 /* Rivalry quest styles */
 .tavern-rivalry-header {
   font-size: 9px;
@@ -11977,6 +12053,36 @@ body {
 
 .rivalry-fill {
   background: #ff4444 !important;
+}
+
+/* Battle result quest item drops */
+.battle-result-quest-drop {
+  padding: 6px 8px;
+  margin: 4px 0;
+  background: rgba(60, 50, 20, 0.5);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.battle-result-quest-drop-label {
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace;
+  color: #ffd700;
+  margin-bottom: 3px;
+}
+
+.battle-result-quest-drop-name {
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+  margin-bottom: 3px;
+}
+
+.battle-result-quest-drop-desc {
+  font-size: 5px;
+  font-family: 'Press Start 2P', monospace;
+  color: #bb8844;
+  line-height: 1.5;
 }
 
 /* Skills tab */
