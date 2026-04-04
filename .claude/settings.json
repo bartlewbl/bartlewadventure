@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | grep -qE '(src/engine/|server/)' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"REMINDER: You modified a file in src/engine/ or server/. If you changed game logic, API routes, DB schema, or formulas, update the corresponding CLAUDE.md (src/engine/CLAUDE.md or server/CLAUDE.md) to reflect your changes.\"}}' || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
