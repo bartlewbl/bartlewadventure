@@ -10664,12 +10664,17 @@ body {
   text-align: center;
 }
 
+.tavern-npc-rep {
+  font-size: 5px;
+  margin-top: 2px;
+}
+
 .tavern-conversation {
   width: 100%;
   padding: 0 8px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tavern-conv-header {
@@ -10686,6 +10691,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  flex: 1;
 }
 
 .tavern-conv-name {
@@ -10699,12 +10705,92 @@ body {
   font-family: 'Press Start 2P', monospace;
 }
 
-.tavern-dialogue-box {
+/* Reputation bar */
+.tavern-rep-bar {
+  margin-top: 4px;
+  width: 100%;
+}
+
+.tavern-rep-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace;
+  margin-bottom: 3px;
+}
+
+.tavern-rep-pts {
+  color: #888;
+  font-size: 6px;
+}
+
+.tavern-rep-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(30, 30, 60, 0.8);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(100, 100, 200, 0.15);
+}
+
+.tavern-rep-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+  opacity: 0.8;
+}
+
+.tavern-rep-next {
+  font-size: 6px;
+  color: #555;
+  margin-top: 2px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Tabs */
+.tavern-tabs {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+
+.tavern-tab {
+  flex: 1;
+  padding: 7px 0;
+  background: rgba(20, 20, 45, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 4px 4px 0 0;
+  color: #888;
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.tavern-tab:hover {
+  background: rgba(30, 30, 65, 0.8);
+  color: #bbb;
+}
+
+.tavern-tab.active {
+  background: rgba(10, 10, 30, 0.85);
+  border-bottom-color: transparent;
+  color: #ffd700;
+}
+
+.tavern-tab-content {
   background: rgba(10, 10, 30, 0.85);
   border: 1px solid rgba(100, 100, 200, 0.2);
-  border-radius: 6px;
-  padding: 14px 16px;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  padding: 12px;
   min-height: 100px;
+}
+
+/* Talk tab */
+.tavern-dialogue-box {
+  min-height: 80px;
 }
 
 .tavern-dialogue-text {
@@ -10773,6 +10859,306 @@ body {
   border-color: rgba(255, 215, 0, 0.6);
 }
 
+/* Quests tab */
+.tavern-quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tavern-quest {
+  padding: 10px;
+  background: rgba(20, 20, 50, 0.6);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 5px;
+}
+
+.tavern-quest.completed {
+  opacity: 0.5;
+  border-color: rgba(80, 200, 80, 0.3);
+}
+
+.tavern-quest.ready {
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.1);
+}
+
+.tavern-quest.locked {
+  opacity: 0.45;
+}
+
+.tavern-quest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.tavern-quest-name {
+  font-size: 8px;
+  color: #e0e0f0;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.tavern-quest-badges {
+  display: flex;
+  gap: 4px;
+}
+
+.tavern-badge {
+  font-size: 6px;
+  font-family: 'Press Start 2P', monospace;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.tavern-badge.done {
+  background: rgba(50, 180, 50, 0.3);
+  color: #6f6;
+}
+
+.tavern-badge.turn-in {
+  background: rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.tavern-badge.active {
+  background: rgba(80, 140, 255, 0.3);
+  color: #7eb8ff;
+}
+
+.tavern-badge.locked {
+  background: rgba(100, 100, 100, 0.3);
+  color: #888;
+}
+
+.tavern-badge.learned {
+  background: rgba(50, 180, 50, 0.3);
+  color: #6f6;
+}
+
+.tavern-quest-desc {
+  font-size: 7px;
+  color: #999;
+  line-height: 1.6;
+  font-family: 'Press Start 2P', monospace;
+  margin-bottom: 6px;
+}
+
+.tavern-quest-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.tavern-quest-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(30, 30, 60, 0.8);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tavern-quest-bar-fill {
+  height: 100%;
+  background: #4fc3f7;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.tavern-quest-bar-text {
+  font-size: 6px;
+  color: #aaa;
+  font-family: 'Press Start 2P', monospace;
+  white-space: nowrap;
+}
+
+.tavern-quest-reward {
+  font-size: 6px;
+  color: #ffd700;
+  font-family: 'Press Start 2P', monospace;
+  margin-bottom: 6px;
+}
+
+.tavern-action-btn {
+  padding: 6px 14px;
+  background: rgba(30, 50, 80, 0.8);
+  border: 1px solid rgba(80, 140, 255, 0.4);
+  border-radius: 4px;
+  color: #7eb8ff;
+  font-size: 7px;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tavern-action-btn:hover:not(:disabled) {
+  background: rgba(40, 60, 100, 0.9);
+  border-color: rgba(100, 160, 255, 0.6);
+}
+
+.tavern-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tavern-action-btn.turn-in {
+  border-color: rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+  background: rgba(60, 50, 20, 0.8);
+}
+
+.tavern-action-btn.turn-in:hover {
+  background: rgba(80, 65, 20, 0.9);
+  border-color: rgba(255, 215, 0, 0.7);
+}
+
+/* Skills tab */
+.tavern-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tavern-skill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(20, 20, 50, 0.6);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 5px;
+}
+
+.tavern-skill.learned {
+  border-color: rgba(80, 200, 80, 0.3);
+}
+
+.tavern-skill.locked {
+  opacity: 0.45;
+}
+
+.tavern-skill-icon {
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(40, 40, 80, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.25);
+  border-radius: 4px;
+  color: #ffd700;
+  font-family: 'Press Start 2P', monospace;
+  flex-shrink: 0;
+}
+
+.tavern-skill-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tavern-skill-name {
+  font-size: 8px;
+  color: #e0e0f0;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.tavern-skill-desc {
+  font-size: 7px;
+  color: #aaa;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.5;
+}
+
+.tavern-skill-req {
+  font-size: 6px;
+  color: #666;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.tavern-skill-action {
+  flex-shrink: 0;
+}
+
+/* Shop tab */
+.tavern-shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tavern-shop-item {
+  padding: 10px;
+  background: rgba(20, 20, 50, 0.6);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 5px;
+}
+
+.tavern-shop-item.locked {
+  opacity: 0.4;
+}
+
+.tavern-shop-item.sold-out {
+  opacity: 0.5;
+}
+
+.tavern-shop-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.tavern-shop-item-name {
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.tavern-shop-item-price {
+  font-size: 8px;
+  color: #ffd700;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.tavern-shop-item-desc {
+  font-size: 7px;
+  color: #999;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.tavern-shop-item-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 7px;
+  color: #8e8eb2;
+  font-family: 'Press Start 2P', monospace;
+  margin-bottom: 6px;
+}
+
+.tavern-shop-item-slot {
+  text-transform: capitalize;
+  color: #666;
+}
+
+.tavern-shop-locked {
+  font-size: 6px;
+  color: #888;
+  font-style: italic;
+  font-family: 'Press Start 2P', monospace;
+}
+
 .tavern-empty {
   display: flex;
   align-items: center;
@@ -10807,6 +11193,10 @@ body {
   }
   .tavern-dialogue-text {
     font-size: 8px;
+  }
+  .tavern-tab {
+    font-size: 7px;
+    padding: 6px 0;
   }
 }
 

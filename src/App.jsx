@@ -569,6 +569,13 @@ export default function App() {
 
             {state.screen === 'tavern' && (
               <TavernScreen
+                tavern={state.tavern}
+                player={state.player}
+                stats={state.stats}
+                onAcceptQuest={actions.tavernAcceptQuest}
+                onTurnInQuest={actions.tavernTurnInQuest}
+                onLearnSkill={actions.tavernLearnSkill}
+                onBuyItem={actions.tavernBuyItem}
                 onBack={actions.goToTown}
               />
             )}
