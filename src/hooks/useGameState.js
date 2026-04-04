@@ -1662,6 +1662,60 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'TRADER_ACCEPT_QUEST': {
+      const { questId, traderId } = action;
+      const trader = state.activeTrader;
+      if (!trader || !trader.quests) return state;
+      const questDef = trader.quests.find(q => q.id === questId);
+      if (!questDef) return state;
+      const vq = state.villageQuests;
+      // Don't accept duplicates
+      if ((vq.acceptedQuests || []).some(q => q.questId === questId)) return state;
+      if ((vq.completedQuests || []).includes(questId)) return state;
+      const baseline = state.stats[questDef.stat] || 0;
+      return {
+        ...state,
+        villageQuests: {
+          ...vq,
+          acceptedQuests: [...(vq.acceptedQuests || []), { questId, villageId: traderId, baseline }],
+        },
+        message: `Quest accepted: ${questDef.name}`,
+      };
+    }
+
+    case 'TRADER_TURN_IN_QUEST': {
+      const { questId, traderId } = action;
+      const trader = EXTRAORDINARY_TRADERS.find(t => t.id === traderId);
+      if (!trader || !trader.quests) return state;
+      const questDef = trader.quests.find(q => q.id === questId);
+      if (!questDef) return state;
+      const vq = state.villageQuests;
+      const accepted = (vq.acceptedQuests || []).find(q => q.questId === questId);
+      if (!accepted) return state;
+      const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
+      if (questDef.target > 0 && progress < questDef.target) return state;
+      let p = { ...state.player };
+      p.gold += questDef.reward.gold;
+      if (questDef.reward.item) {
+        const loc = state.currentLocation;
+        const lvl = Math.max(loc?.levelReq || 1, p.level);
+        const rewardItem = generateItem(questDef.reward.item, lvl + 2);
+        const questInv = addToInventory(p.inventory, rewardItem, p.maxInventory);
+        if (questInv) p = { ...p, inventory: questInv };
+      }
+      return {
+        ...state,
+        player: p,
+        villageQuests: {
+          ...vq,
+          acceptedQuests: (vq.acceptedQuests || []).filter(q => q.questId !== questId),
+          completedQuests: [...(vq.completedQuests || []), questId],
+        },
+        stats: addStat(state.stats, 'goldEarned', questDef.reward.gold),
+        message: `Quest complete: ${questDef.name}! +${questDef.reward.gold}g`,
+      };
+    }
+
     case 'BATTLE_PLAYER_ATTACK': {
       let b = { ...state.battle };
       let m = { ...b.monster };
@@ -5987,6 +6041,8 @@ export function useGameState(isLoggedIn) {
     villageLeave: () => dispatch({ type: 'VILLAGE_LEAVE' }),
     traderBuy: (dealId) => dispatch({ type: 'TRADER_BUY', dealId }),
     traderLeave: () => dispatch({ type: 'TRADER_LEAVE' }),
+    traderAcceptQuest: (questId, traderId) => dispatch({ type: 'TRADER_ACCEPT_QUEST', questId, traderId }),
+    traderTurnInQuest: (questId, traderId) => dispatch({ type: 'TRADER_TURN_IN_QUEST', questId, traderId }),
     battleAttack: () => dispatch({ type: 'BATTLE_PLAYER_ATTACK' }),
     battleSkill: () => dispatch({ type: 'BATTLE_PLAYER_SKILL' }),
     battleTreeSkill: (skillId) => dispatch({ type: 'BATTLE_USE_TREE_SKILL', skillId }),
