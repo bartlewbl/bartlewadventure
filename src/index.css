@@ -13771,7 +13771,6 @@ body {
 /* ---- ENCHANTING (Ember's tab in Tavern) ---- */
 .tavern-enchant { }
 .tavern-enchant-gold { font-size: 8px; color: #ffd700; margin-bottom: 6px; }
-.tavern-npc-ember-icon { font-size: 16px; }
 
 /* ---- GAMBLING (Tavern) ---- */
 .tavern-gambling {
@@ -14245,12 +14244,6 @@ body {
   text-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
 }
 
-/* Dealer NPC mini icon */
-.tavern-npc-dealer-mini {
-  width: 28px;
-  height: 28px;
-  image-rendering: auto;
-}
 
 /* ---- EMBER SPLASH ART ---- */
 .ember-splash {
@@ -14262,15 +14255,6 @@ body {
   width: 100%;
   height: 100%;
   filter: drop-shadow(0 2px 6px rgba(255, 112, 67, 0.3));
-}
-.tavern-npc-ember-mini {
-  width: 28px;
-  height: 28px;
-  image-rendering: auto;
-}
-.ember-conv-header .ember-splash {
-  width: 70px;
-  height: 82px;
 }
 
 /* ---- ENCHANTING V2 (Ember's improved UI) ---- */
