@@ -13774,36 +13774,841 @@ body {
 .tavern-npc-ember-icon { font-size: 16px; }
 
 /* ---- GAMBLING (Tavern) ---- */
-.tavern-gambling { background: #1a1a2e; border: 1px solid #444; border-radius: 4px; padding: 8px; margin-top: 8px; }
-.gambling-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.gambling-title { font-size: 10px; font-weight: bold; color: #ffd700; }
-.gambling-gold { font-size: 8px; color: #ffd700; }
-.gambling-game-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
-.gambling-game-tab { background: #222; border: 1px solid #333; border-radius: 3px; padding: 4px 8px; font-size: 7px; color: #999; cursor: pointer; }
-.gambling-game-tab.active { background: #333; border-color: #ffd700; color: #ffd700; }
-.gambling-desc { font-size: 7px; color: #999; margin-bottom: 8px; }
-.gambling-controls { }
-.gambling-wager-row, .gambling-bet-row { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 7px; color: #ccc; }
-.gambling-wager-btn { background: #222; border: 1px solid #444; border-radius: 3px; padding: 3px 6px; font-size: 7px; color: #ccc; cursor: pointer; }
-.gambling-wager-btn.active { border-color: #ffd700; color: #ffd700; }
-.gambling-wager-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.gambling-bet-btn { background: #222; border: 1px solid #444; border-radius: 3px; padding: 3px 8px; font-size: 7px; color: #ccc; cursor: pointer; }
-.gambling-bet-btn.active { border-color: #4fc3f7; color: #4fc3f7; background: #1a2a3a; }
-.gambling-payout { font-size: 7px; color: #4caf50; margin-bottom: 6px; }
-.gambling-roll-btn { font-size: 8px; width: 100%; }
-.gambling-result { padding: 8px; border-radius: 4px; margin-top: 8px; text-align: center; }
-.gambling-result.win { background: #1a3a1a; border: 1px solid #4caf50; }
-.gambling-result.lose { background: #3a1a1a; border: 1px solid #ff4444; }
-.gambling-result.push { background: #2a2a1a; border: 1px solid #ffa726; }
-.gambling-result-dice { font-size: 14px; margin-bottom: 4px; color: #fff; letter-spacing: 4px; }
-.gambling-result-coin { font-size: 14px; margin-bottom: 4px; color: #fff; }
-.gambling-result-wheel { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-.gambling-result-text { font-size: 8px; }
-.gambling-result.win .gambling-result-text { color: #4caf50; }
-.gambling-result.lose .gambling-result-text { color: #ff4444; }
-.gambling-result.push .gambling-result-text { color: #ffa726; }
-.gambling-wheel-segments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 7px; }
-.gambling-wheel-seg { }
+.tavern-gambling {
+  background: linear-gradient(145deg, rgba(15, 12, 25, 0.95), rgba(25, 18, 40, 0.95));
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 8px;
+}
+.gambling-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+.gambling-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+.gambling-title-icon { font-size: 14px; }
+.gambling-gold {
+  font-size: 9px;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gambling-gold-icon { font-size: 10px; }
+
+.gambling-game-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.gambling-game-tab {
+  flex: 1;
+  background: rgba(20, 18, 40, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 6px;
+  padding: 8px 6px;
+  font-size: 7px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.gambling-game-tab:hover {
+  background: rgba(30, 28, 55, 0.8);
+  color: #bbb;
+}
+.gambling-game-tab.active {
+  background: rgba(40, 30, 15, 0.8);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.08);
+}
+.gambling-tab-icon { font-size: 14px; }
+
+.gambling-desc {
+  font-size: 7px;
+  color: #888;
+  margin-bottom: 12px;
+  line-height: 1.8;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border-left: 2px solid rgba(255, 215, 0, 0.2);
+}
+
+.gambling-section-label {
+  font-size: 6px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.gambling-wager-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.gambling-wager-btn {
+  background: rgba(20, 18, 40, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 7px;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Press Start 2P', monospace;
+}
+.gambling-wager-btn:hover:not(:disabled) {
+  border-color: rgba(255, 215, 0, 0.3);
+  color: #ccc;
+}
+.gambling-wager-btn.active {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(50, 40, 10, 0.6);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.1);
+}
+.gambling-wager-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+.gambling-bet-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.gambling-bet-btn-v2 {
+  flex: 1;
+  padding: 10px 8px;
+  background: rgba(20, 18, 40, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 6px;
+  color: #999;
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.gambling-bet-btn-v2:hover {
+  border-color: rgba(150, 150, 255, 0.3);
+  color: #ccc;
+}
+.gambling-bet-btn-v2.active.over {
+  border-color: #4caf50;
+  color: #4caf50;
+  background: rgba(20, 60, 20, 0.4);
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.1);
+}
+.gambling-bet-btn-v2.active.under {
+  border-color: #4fc3f7;
+  color: #4fc3f7;
+  background: rgba(20, 40, 60, 0.4);
+  box-shadow: 0 0 10px rgba(79, 195, 247, 0.1);
+}
+.gambling-bet-btn-v2.active.heads {
+  border-color: #ffd700;
+  color: #ffd700;
+  background: rgba(50, 40, 10, 0.4);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+}
+.gambling-bet-btn-v2.active.tails {
+  border-color: #ce93d8;
+  color: #ce93d8;
+  background: rgba(40, 20, 50, 0.4);
+  box-shadow: 0 0 10px rgba(206, 147, 216, 0.1);
+}
+.bet-arrow { font-size: 8px; }
+.coin-icon { font-size: 10px; }
+
+.gambling-payout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.gambling-payout-label {
+  font-size: 7px;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+}
+.gambling-payout-value {
+  font-size: 8px;
+  color: #4caf50;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.gambling-action-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #c49000, #a07800);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 9px;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.gambling-action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d4a000, #b08800);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.2);
+}
+.gambling-action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.gambling-action-btn:disabled {
+  background: #333;
+  border-color: #444;
+  color: #555;
+  cursor: not-allowed;
+}
+.gambling-action-btn.wheel-btn {
+  background: linear-gradient(135deg, #7b1fa2, #6a1b9a);
+  border-color: rgba(206, 147, 216, 0.4);
+}
+.gambling-action-btn.wheel-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #9c27b0, #8e24aa);
+  box-shadow: 0 4px 16px rgba(206, 147, 216, 0.2);
+}
+
+.gambling-rolling {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.gambling-rolling-dice, .gambling-rolling-coin, .gambling-rolling-wheel {
+  font-size: 14px;
+  display: inline-block;
+  animation: gamblingRollSpin 0.4s linear infinite;
+}
+@keyframes gamblingRollSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Dice result */
+.gambling-result-v2 {
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+  text-align: center;
+  animation: resultSlideIn 0.3s ease;
+}
+@keyframes resultSlideIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.gambling-result-v2.win {
+  background: linear-gradient(135deg, rgba(20, 60, 20, 0.6), rgba(15, 50, 15, 0.5));
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.08);
+}
+.gambling-result-v2.lose {
+  background: linear-gradient(135deg, rgba(60, 20, 20, 0.6), rgba(50, 15, 15, 0.5));
+  border: 1px solid rgba(255, 68, 68, 0.4);
+}
+.gambling-result-v2.push {
+  background: linear-gradient(135deg, rgba(50, 40, 15, 0.6), rgba(40, 35, 10, 0.5));
+  border: 1px solid rgba(255, 167, 38, 0.4);
+}
+.gambling-result-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gambling-die-face {
+  font-size: 28px;
+  animation: dieReveal 0.3s ease;
+}
+@keyframes dieReveal {
+  from { transform: rotateX(180deg) scale(0.5); opacity: 0; }
+  to { transform: rotateX(0deg) scale(1); opacity: 1; }
+}
+.gambling-die-plus, .gambling-die-equals {
+  font-size: 12px;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+}
+.gambling-die-total {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+.gambling-result-text-v2 {
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+}
+.gambling-win-text {
+  color: #4caf50;
+  animation: winGlow 0.6s ease;
+}
+@keyframes winGlow {
+  0% { text-shadow: none; }
+  50% { text-shadow: 0 0 16px rgba(76, 175, 80, 0.6); }
+  100% { text-shadow: 0 0 6px rgba(76, 175, 80, 0.2); }
+}
+.gambling-lose-text { color: #ff6666; }
+.gambling-push-text { color: #ffa726; }
+
+/* Coin display */
+.gambling-coin-display {
+  font-size: 32px;
+  animation: coinFlipIn 0.4s ease;
+}
+@keyframes coinFlipIn {
+  from { transform: rotateY(180deg) scale(0.3); opacity: 0; }
+  to { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+.gambling-coin-label {
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 2px;
+}
+
+/* Wheel segments display */
+.gambling-wheel-display {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.gambling-wheel-segment {
+  padding: 6px 10px;
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 6px;
+  background: rgba(20, 18, 40, 0.6);
+  text-align: center;
+  transition: all 0.3s;
+  min-width: 52px;
+}
+.gambling-wheel-segment.hit {
+  border-color: var(--seg-color);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--seg-color) 30%, transparent);
+  background: rgba(30, 28, 55, 0.8);
+  animation: segHit 0.4s ease;
+  transform: scale(1.1);
+}
+@keyframes segHit {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1.1); }
+}
+.wheel-seg-mult {
+  display: block;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--seg-color);
+  font-family: 'Press Start 2P', monospace;
+}
+.wheel-seg-chance {
+  display: block;
+  font-size: 5px;
+  color: #666;
+  font-family: 'Press Start 2P', monospace;
+  margin-top: 2px;
+}
+
+.gambling-wheel-result-mult {
+  font-size: 28px;
+  font-weight: bold;
+  font-family: 'Press Start 2P', monospace;
+  animation: wheelResultPop 0.4s ease;
+}
+@keyframes wheelResultPop {
+  from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(3deg); }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ---- GAMBLING DIALOG ---- */
+.tavern-backroom-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 16px);
+  margin: 8px auto;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(30, 20, 10, 0.95), rgba(50, 35, 15, 0.9));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Press Start 2P', monospace;
+}
+.tavern-backroom-btn:hover {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, rgba(40, 28, 12, 0.95), rgba(60, 42, 18, 0.9));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.1);
+}
+.tavern-backroom-icon { font-size: 16px; }
+.tavern-backroom-label {
+  font-size: 9px;
+  color: #ffd700;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+.tavern-backroom-hint {
+  font-size: 6px;
+  color: #888;
+  margin-left: auto;
+}
+
+.gambling-dialog-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: gamblingFadeIn 0.2s ease;
+}
+@keyframes gamblingFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gambling-dialog {
+  position: relative;
+  background: linear-gradient(145deg, #12101e, #1a1830);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 10px;
+  padding: 16px;
+  max-width: 460px;
+  width: 92%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.05);
+  animation: gamblingSlideUp 0.25s ease;
+}
+@keyframes gamblingSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.gambling-dialog .tavern-gambling {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.gambling-dialog-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  z-index: 1;
+  font-family: 'Press Start 2P', monospace;
+  transition: color 0.15s;
+}
+.gambling-dialog-close:hover { color: #ff4444; }
+
+/* ---- EMBER SPLASH ART ---- */
+.ember-splash {
+  width: 60px;
+  height: 70px;
+  flex-shrink: 0;
+}
+.ember-splash-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 6px rgba(255, 112, 67, 0.3));
+}
+.tavern-npc-ember-mini {
+  width: 28px;
+  height: 28px;
+  image-rendering: auto;
+}
+.ember-conv-header .ember-splash {
+  width: 70px;
+  height: 82px;
+}
+
+/* ---- ENCHANTING V2 (Ember's improved UI) ---- */
+.tavern-enchant-v2 { }
+
+.enchant-header-splash {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(40, 15, 10, 0.6), rgba(25, 10, 35, 0.6));
+  border: 1px solid rgba(255, 112, 67, 0.2);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.enchant-header-splash .ember-splash {
+  width: 50px;
+  height: 58px;
+}
+.enchant-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.enchant-header-name {
+  font-size: 11px;
+  color: #ff7043;
+  font-weight: bold;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 0 0 10px rgba(255, 112, 67, 0.3);
+}
+.enchant-header-title {
+  font-size: 7px;
+  color: #a0806a;
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-header-gold {
+  font-size: 9px;
+  color: #ffd700;
+  font-family: 'Press Start 2P', monospace;
+  margin-top: 4px;
+}
+.enchant-gold-icon {
+  color: #ffd700;
+  margin-right: 2px;
+}
+
+.enchant-v2-layout {
+  display: flex;
+  gap: 8px;
+  min-height: 200px;
+}
+
+/* Item list */
+.enchant-v2-item-list {
+  flex: 1;
+  background: rgba(8, 8, 20, 0.8);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 6px;
+  padding: 8px;
+  overflow-y: auto;
+  max-height: 280px;
+}
+.enchant-v2-list-header {
+  font-size: 7px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(100, 100, 200, 0.1);
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-v2-empty-text {
+  font-size: 7px;
+  color: #555;
+  text-align: center;
+  padding: 20px 0;
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-v2-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: rgba(20, 18, 40, 0.7);
+  border: 1px solid rgba(100, 100, 200, 0.1);
+  border-left: 3px solid var(--rarity-color, #555);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Press Start 2P', monospace;
+  color: #ccc;
+}
+.enchant-v2-item:hover {
+  background: rgba(30, 28, 55, 0.8);
+  border-color: rgba(150, 150, 255, 0.2);
+  border-left-color: var(--rarity-color, #777);
+}
+.enchant-v2-item.selected {
+  background: rgba(40, 30, 60, 0.8);
+  border-color: rgba(255, 215, 0, 0.4);
+  border-left-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.08);
+}
+.enchant-v2-item.maxed { opacity: 0.5; }
+.enchant-v2-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.enchant-v2-item-name { font-size: 7px; }
+.enchant-v2-max-badge {
+  font-size: 5px;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.15);
+  padding: 1px 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+.enchant-v2-item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.enchant-v2-item-slot {
+  font-size: 6px;
+  color: #666;
+}
+.enchant-v2-item-stats {
+  display: flex;
+  gap: 6px;
+}
+.enchant-v2-stat {
+  font-size: 6px;
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-v2-stat.atk { color: #ff8a65; }
+.enchant-v2-stat.def { color: #4fc3f7; }
+
+/* Enchant panel */
+.enchant-v2-panel {
+  flex: 1.2;
+  background: rgba(12, 10, 28, 0.8);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.enchant-v2-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 8px;
+  opacity: 0.4;
+}
+.enchant-v2-placeholder-icon { font-size: 24px; }
+.enchant-v2-placeholder-text {
+  font-size: 7px;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.enchant-v2-selected-header {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 112, 67, 0.15);
+}
+.enchant-v2-selected-name {
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-v2-selected-stats {
+  display: flex;
+  gap: 10px;
+}
+
+/* Level track */
+.enchant-v2-level-track {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 10px 0;
+  position: relative;
+}
+.enchant-v2-level-track::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: rgba(100, 100, 200, 0.15);
+  z-index: 0;
+}
+.enchant-v2-pip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  z-index: 1;
+}
+.enchant-v2-pip-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(100, 100, 200, 0.2);
+  background: rgba(15, 15, 35, 0.9);
+  transition: all 0.3s;
+}
+.enchant-v2-pip.filled .enchant-v2-pip-dot {
+  background: #ff7043;
+  border-color: #ff7043;
+  box-shadow: 0 0 8px rgba(255, 112, 67, 0.4);
+}
+.enchant-v2-pip.next .enchant-v2-pip-dot {
+  border-color: #ffd700;
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.2);
+  animation: enchantPipPulse 1.5s ease-in-out infinite;
+}
+@keyframes enchantPipPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 215, 0, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
+}
+.enchant-v2-pip-label {
+  font-size: 6px;
+  color: #555;
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-v2-pip.filled .enchant-v2-pip-label { color: #ff7043; }
+.enchant-v2-pip.next .enchant-v2-pip-label { color: #ffd700; }
+
+/* Maxed state */
+.enchant-v2-maxed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 6px;
+  padding: 16px 0;
+}
+.enchant-v2-maxed-icon { font-size: 24px; }
+.enchant-v2-maxed-text {
+  font-size: 10px;
+  color: #ffd700;
+  font-weight: bold;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+.enchant-v2-maxed-sub {
+  font-size: 6px;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Action area */
+.enchant-v2-action-area { flex: 1; }
+.enchant-v2-preview {
+  background: rgba(20, 18, 40, 0.6);
+  border: 1px solid rgba(100, 100, 200, 0.12);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+.enchant-v2-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(100, 100, 200, 0.06);
+}
+.enchant-v2-preview-row:last-child { border-bottom: none; }
+.enchant-v2-preview-label {
+  font-size: 7px;
+  color: #777;
+  font-family: 'Press Start 2P', monospace;
+}
+.enchant-v2-preview-value {
+  font-size: 7px;
+  color: #ddd;
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.enchant-v2-preview-value.bonus { color: #4caf50; }
+.enchant-v2-preview-value.gold { color: #ffd700; }
+.enchant-v2-preview-value.cant-afford { color: #ff4444; }
+
+/* Success rate bar */
+.enchant-v2-rate-bar {
+  width: 50px;
+  height: 5px;
+  background: rgba(30, 30, 60, 0.8);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.enchant-v2-rate-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #4caf50;
+  transition: width 0.3s;
+}
+.enchant-v2-rate-text { font-size: 7px; }
+.enchant-v2-rate-text.high { color: #4caf50; }
+.enchant-v2-rate-text.mid { color: #ffa726; }
+.enchant-v2-rate-text.low { color: #ff4444; }
+
+/* Enchant button */
+.enchant-v2-btn {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #ff7043, #e65100);
+  border: 1px solid rgba(255, 112, 67, 0.5);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 9px;
+  font-family: 'Press Start 2P', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.enchant-v2-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff8a65, #ef6c00);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 112, 67, 0.3);
+}
+.enchant-v2-btn:disabled {
+  background: #333;
+  border-color: #444;
+  color: #666;
+  cursor: not-allowed;
+}
+.enchant-v2-btn-icon { font-size: 10px; }
 
 /* ---- COSMETIC SCREEN ---- */
 .screen-cosmetic { padding: 8px; }
