@@ -16,6 +16,7 @@ import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
 import { pickRitualSite, RITUAL_DISCOVER_CHANCE, RITUAL_QUEST_DISCOVER_CHANCE, RITUAL_QUEST_LOCATION_DISCOVER_CHANCE, FIRE_RITUAL_CHAIN_IDS, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
+import { TRAVELLING_NPCS, TRAVELLING_NPC_ENCOUNTER_RATE } from '../data/travellingNpcData';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
@@ -171,6 +172,7 @@ function createInitialState() {
     },
     activeTrader: null,       // current trader encounter
     activeVillage: null,      // current village encounter
+    activeTravellingNpc: null, // current travelling NPC encounter
     pendingChest: null,       // { itemId, chestId } for chest opening screen
     chestResult: null,        // result of opening a chest (displayed on screen)
     arena: null,              // { tierId, wager, gauntletActive, gauntletWins, gauntletWager }
@@ -1013,6 +1015,25 @@ function gameReducer(state, action) {
         };
       }
 
+      // Travelling NPC encounter check (~1.2% chance)
+      if (Math.random() < TRAVELLING_NPC_ENCOUNTER_RATE) {
+        // Filter NPCs by player level
+        const eligibleNpcs = TRAVELLING_NPCS.filter(n => state.player.level >= (n.minLevel || 1));
+        if (eligibleNpcs.length > 0) {
+          const tNpc = eligibleNpcs[Math.floor(Math.random() * eligibleNpcs.length)];
+          const tnpcStats = addStat(state.stats, 'travellingNpcEncounters');
+          return {
+            ...state, screen: 'travelling-npc',
+            exploreText: text,
+            energy: exploreEnergy,
+            lastEnergyUpdate: exploreLastUpdate,
+            pets: petsAfterExplore,
+            activeTravellingNpc: tNpc,
+            stats: tnpcStats,
+          };
+        }
+      }
+
       // Fire ritual site discovery — quest-aware rates
       // Check if player has an active fire ritual quest chain
       const activeLines = (state.tasks?.activeQuestLines) || [];
@@ -1727,6 +1748,134 @@ function gameReducer(state, action) {
         ...state,
         screen: 'explore',
         activeTrader: null,
+      };
+    }
+
+    // ---- TRAVELLING NPC ACTIONS ----
+
+    case 'TNPC_LEAVE': {
+      return {
+        ...state,
+        screen: 'explore',
+        activeTravellingNpc: null,
+      };
+    }
+
+    case 'TNPC_BUY': {
+      const { dealId } = action;
+      const tNpc = state.activeTravellingNpc;
+      if (!tNpc) return state;
+      const deal = tNpc.deals.find(d => d.id === dealId);
+      if (!deal) return state;
+      if (state.player.gold < deal.cost) return { ...state, message: "Not enough gold!" };
+      // Re-use the extraordinary trader buy logic for deal types
+      const matchedTrader = { ...tNpc, deals: tNpc.deals };
+      // Map deal to the same format the trader buy handler expects
+      const result = gameReducer({ ...state, activeTrader: matchedTrader }, { type: 'TRADER_BUY', dealId });
+      return { ...result, activeTrader: state.activeTrader, activeTravellingNpc: state.activeTravellingNpc };
+    }
+
+    case 'TNPC_ACCEPT_QUEST': {
+      const { questId, npcId } = action;
+      const tNpc = state.activeTravellingNpc || TRAVELLING_NPCS.find(n => n.id === npcId);
+      if (!tNpc || !tNpc.quests) return state;
+      const questDef = tNpc.quests.find(q => q.id === questId);
+      if (!questDef) return state;
+      const vq = state.villageQuests;
+      if ((vq.acceptedQuests || []).some(q => q.questId === questId)) return state;
+      if ((vq.completedQuests || []).includes(questId)) return state;
+      const baseline = state.stats[questDef.stat] || 0;
+      return {
+        ...state,
+        villageQuests: {
+          ...vq,
+          acceptedQuests: [...(vq.acceptedQuests || []), { questId, villageId: npcId, baseline }],
+        },
+        message: `Quest accepted: ${questDef.name}`,
+      };
+    }
+
+    case 'TNPC_TURN_IN_QUEST': {
+      const { questId, npcId } = action;
+      const tNpc = TRAVELLING_NPCS.find(n => n.id === npcId);
+      if (!tNpc || !tNpc.quests) return state;
+      const questDef = tNpc.quests.find(q => q.id === questId);
+      if (!questDef) return state;
+      const vq = state.villageQuests;
+      const acceptedQ = (vq.acceptedQuests || []).find(q => q.questId === questId);
+      if (!acceptedQ) return state;
+      const progress = (state.stats[questDef.stat] || 0) - acceptedQ.baseline;
+      if (questDef.target > 0 && progress < questDef.target) return state;
+      let tp = { ...state.player };
+      tp.gold += questDef.reward.gold;
+      if (questDef.reward.item) {
+        const loc = state.currentLocation;
+        const lvl = Math.max(loc?.levelReq || 1, tp.level);
+        const rewardItem = generateItem(questDef.reward.item, lvl + 2);
+        const tqInv = addToInventory(tp.inventory, rewardItem, tp.maxInventory);
+        if (tqInv) tp = { ...tp, inventory: tqInv };
+      }
+      return {
+        ...state,
+        player: tp,
+        villageQuests: {
+          ...vq,
+          acceptedQuests: (vq.acceptedQuests || []).filter(q => q.questId !== questId),
+          completedQuests: [...(vq.completedQuests || []), questId],
+        },
+        stats: addStat(state.stats, 'goldEarned', questDef.reward.gold),
+        message: `Quest complete: ${questDef.name}! +${questDef.reward.gold}g`,
+      };
+    }
+
+    case 'TNPC_ATTACK': {
+      const { npcId } = action;
+      const tNpc = TRAVELLING_NPCS.find(n => n.id === npcId);
+      if (!tNpc || !tNpc.boss) return { ...state, screen: 'explore', activeTravellingNpc: null };
+      // Scale the NPC boss based on location level or player level
+      const loc = state.currentLocation;
+      const bossLevel = Math.max(loc?.levelReq || 1, state.player.level);
+      const npcBoss = {
+        id: `tnpc-boss-${tNpc.id}`,
+        name: tNpc.name,
+        sprite: tNpc.spriteKey,
+        isBoss: true,
+        title: tNpc.boss.title,
+        maxHp: Math.floor(tNpc.boss.baseHp * (1 + (bossLevel - 1) * prob('scaling.bossLevelScale')) * prob('scaling.monsterHpMult')),
+        atk: Math.floor(tNpc.boss.baseAtk * (1 + (bossLevel - 1) * prob('scaling.bossLevelScale')) * prob('scaling.monsterAtkMult')),
+        def: Math.floor(tNpc.boss.baseDef * (1 + (bossLevel - 1) * prob('scaling.bossLevelScale')) * prob('scaling.monsterDefMult')),
+        speed: Math.floor((tNpc.boss.baseSpeed || 8) * (1 + (bossLevel - 1) * 0.02)),
+        evasion: 3 + Math.floor(bossLevel * 0.4),
+        accuracy: 3 + Math.floor(bossLevel * 0.4),
+        resistance: 2 + Math.floor(bossLevel * 0.3),
+        tenacity: 3 + Math.floor(bossLevel * 0.3),
+        aggression: 2 + Math.floor(bossLevel * 0.2),
+        luck: 2 + Math.floor(bossLevel * 0.2),
+        fortitude: 3 + Math.floor(bossLevel * 0.3),
+        exp: Math.floor(tNpc.boss.baseExp * (1 + (bossLevel - 1) * prob('scaling.bossLevelScale')) * (1 + (bossLevel - 1) * 0.07)),
+        gold: Math.floor(tNpc.boss.baseGold * (1 + (bossLevel - 1) * prob('scaling.bossLevelScale'))) + Math.floor(Math.random() * prob('scaling.bossGoldVariance')),
+        skills: tNpc.boss.skills,
+        dropTable: tNpc.boss.dropTable,
+        level: bossLevel,
+      };
+      npcBoss.hp = npcBoss.maxHp;
+      const npcBattle = createBattleState(npcBoss, state.player);
+      const npcBossLog = [
+        { text: `BOSS BATTLE!`, type: 'info' },
+        { text: `${tNpc.name} - ${tNpc.boss.title} attacks!`, type: 'info' },
+        { text: `"You chose this, traveler. Don't expect mercy."`, type: 'info' },
+      ];
+      if (npcBattle.playerIsFaster && npcBattle.monsterNextMove) {
+        npcBossLog.push({ text: `Your speed advantage lets you see the enemy's intent: ${npcBattle.monsterNextMove.name}`, type: 'info' });
+      }
+      return {
+        ...state,
+        screen: 'battle',
+        activeTravellingNpc: null,
+        battle: npcBattle,
+        battleLog: npcBossLog,
+        battleResult: null,
+        stats: addStat(state.stats, 'travellingNpcsAttacked'),
       };
     }
 
@@ -6812,6 +6961,12 @@ export function useGameState(isLoggedIn) {
     arenaGauntletContinue: () => dispatch({ type: 'ARENA_GAUNTLET_CONTINUE' }),
     arenaGauntletCashout: () => dispatch({ type: 'ARENA_GAUNTLET_CASHOUT' }),
     arenaLeave: () => dispatch({ type: 'ARENA_LEAVE' }),
+    // Travelling NPC actions
+    tnpcLeave: () => dispatch({ type: 'TNPC_LEAVE' }),
+    tnpcBuy: (dealId) => dispatch({ type: 'TNPC_BUY', dealId }),
+    tnpcAcceptQuest: (questId, npcId) => dispatch({ type: 'TNPC_ACCEPT_QUEST', questId, npcId }),
+    tnpcTurnInQuest: (questId, npcId) => dispatch({ type: 'TNPC_TURN_IN_QUEST', questId, npcId }),
+    tnpcAttack: (npcId) => dispatch({ type: 'TNPC_ATTACK', npcId }),
     // Fire ritual actions
     fireRitualLight: () => dispatch({ type: 'FIRE_RITUAL_LIGHT' }),
     fireRitualDefend: () => dispatch({ type: 'FIRE_RITUAL_DEFEND' }),

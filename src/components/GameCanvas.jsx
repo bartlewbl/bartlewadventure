@@ -14,7 +14,7 @@ const ANIM_DURATIONS = {
 function easeOut(t) { return 1 - (1 - t) * (1 - t); }
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
 
-export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage }) {
+export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage, activeTravellingNpc }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -67,8 +67,11 @@ export default function GameCanvas({ screen, location, battle, animTick, battleA
       case 'quest-village':
         renderVillageScene(ctx, w, h, animTick, activeVillage);
         break;
+      case 'travelling-npc':
+        renderTravellingNpcScene(ctx, w, h, animTick, activeTravellingNpc);
+        break;
     }
-  }, [screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage]);
+  }, [screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage, activeTravellingNpc]);
 
   return <canvas ref={canvasRef} width={640} height={480} className="game-canvas" />;
 }
@@ -240,7 +243,7 @@ function renderBattle(ctx, w, h, location, battle, tick, battleAnim, activePet) 
   }
 
   // Draw monster
-  const monsterSprite = SPRITES.monsters[battle.monster.sprite];
+  const monsterSprite = SPRITES.monsters[battle.monster.sprite] || SPRITES.travellingNpcs?.[battle.monster.sprite];
   if (monsterSprite) {
     const mBob = animType ? 0 : Math.sin(tick * 0.06 + 1) * 2;
     ctx.globalAlpha = monsterAlpha;
@@ -808,6 +811,83 @@ function renderVillageScene(ctx, w, h, tick) {
     ctx.globalAlpha = Math.max(0, ffAlpha);
     ctx.fillStyle = '#88ff88';
     ctx.fillRect(ffX, ffY, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---- TRAVELLING NPC SCENE ----
+function renderTravellingNpcScene(ctx, w, h, tick, npc) {
+  // Moody road scene with ambient lighting
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+  skyGrad.addColorStop(0, '#06081a');
+  skyGrad.addColorStop(0.5, '#0a0e20');
+  skyGrad.addColorStop(1, '#141820');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Distant stars
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  for (let i = 0; i < 20; i++) {
+    const sx = (i * 131 + 47) % w;
+    const sy = (i * 73 + 23) % (h * 0.4);
+    const twinkle = Math.sin(tick * 0.04 + i * 1.7) * 0.5 + 0.5;
+    ctx.globalAlpha = twinkle * 0.5;
+    ctx.fillRect(sx, sy, 1.5, 1.5);
+  }
+  ctx.globalAlpha = 1;
+
+  // Ground - dusty road
+  const groundY = h * 0.68;
+  ctx.fillStyle = '#1a1815';
+  ctx.fillRect(0, groundY, w, h - groundY);
+  ctx.fillStyle = '#2a2520';
+  ctx.fillRect(0, groundY, w, 3);
+
+  // Road markings
+  ctx.fillStyle = '#252218';
+  for (let i = 0; i < 12; i++) {
+    const rx = (i * 60 + 20) % w;
+    ctx.fillRect(rx, groundY + 10, 30, 2);
+  }
+
+  // Draw travelling NPC sprite in center
+  const spriteData = npc ? SPRITES.travellingNpcs?.[npc.spriteKey] : null;
+  if (spriteData) {
+    const npcBob = Math.sin(tick * 0.06) * 2;
+    drawSpriteCentered(ctx, spriteData, w * 0.5, groundY - 28 + npcBob, 4);
+
+    // Glow under NPC using their color
+    const glowColor = npc?.color || '#7b8d9e';
+    ctx.globalAlpha = 0.12 + Math.sin(tick * 0.05) * 0.04;
+    ctx.fillStyle = glowColor;
+    ctx.fillRect(w * 0.5 - 25, groundY - 4, 50, 6);
+    ctx.globalAlpha = 1;
+  }
+
+  // Campfire on the side
+  if (SPRITES.campfire) {
+    const fireBob = Math.sin(tick * 0.1) * 1;
+    drawSpriteCentered(ctx, SPRITES.campfire, w * 0.25, groundY - 12 + fireBob, 2.5);
+
+    // Fire glow
+    ctx.globalAlpha = 0.08 + Math.sin(tick * 0.08) * 0.04;
+    ctx.fillStyle = '#ff6600';
+    ctx.fillRect(w * 0.25 - 30, groundY - 30, 60, 30);
+    ctx.globalAlpha = 1;
+  }
+
+  // Signpost on the right
+  if (SPRITES.signpost) {
+    drawSpriteCentered(ctx, SPRITES.signpost, w * 0.78, groundY - 14, 2.5);
+  }
+
+  // Ambient dust particles
+  for (let i = 0; i < 5; i++) {
+    const dustX = (tick * 0.4 + i * 130) % (w + 50) - 25;
+    const dustY = groundY - 5 + Math.sin(tick * 0.03 + i) * 8;
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#886644';
+    ctx.fillRect(dustX, dustY, 3, 2);
   }
   ctx.globalAlpha = 1;
 }
