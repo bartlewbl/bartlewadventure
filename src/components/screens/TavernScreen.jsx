@@ -357,7 +357,8 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
   // ---- FACTION TAB ----
   const renderFaction = () => {
     const faction = FACTIONS[activeNpcId];
-    const factionSkills = FACTION_SKILLS[activeNpcId] || [];
+    const classFactionSkills = FACTION_SKILLS[activeNpcId] || {};
+    const factionSkills = classFactionSkills[player.characterClass] || [];
     if (!faction) return <div className="tavern-empty-text">No faction info</div>;
 
     return (
@@ -370,7 +371,7 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
             <div className="tavern-faction-specialty">Specialty: {faction.specialty}</div>
           </div>
         </div>
-        <div className="tavern-faction-skills-header">Combat Skills</div>
+        <div className="tavern-faction-skills-header">Combat Skills — {player.characterClass?.charAt(0).toUpperCase() + player.characterClass?.slice(1)}</div>
         <div className="tavern-faction-skill-list">
           {factionSkills.map(skill => {
             const isLearned = (tav.learnedFactionSkills || []).includes(skill.id);

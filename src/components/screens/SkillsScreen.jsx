@@ -45,32 +45,20 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
     }
   }
 
-  // Separate choices into passives and actives for display
+  // Render tier choices (all passives now — active skills learned via tavern NPCs)
   function renderChoices(tier, tierInfo) {
     const isLocked = tierInfo.state === 'locked';
     const isChosen = tierInfo.state === 'chosen';
     const isAvailable = tierInfo.state === 'available';
-    const passiveChoices = tier.choices.filter(c => c.type === 'passive');
-    const activeChoices = tier.choices.filter(c => c.type === 'active');
 
     return (
       <div className="skill-tree-choices-grid">
-        {passiveChoices.length > 0 && (
-          <div className="skill-tree-passives-group">
-            <div className="skill-tree-group-label passive-label">Passives</div>
-            <div className="skill-tree-group-choices">
-              {passiveChoices.map(choice => renderNode(choice, tierInfo, isLocked, isChosen, isAvailable))}
-            </div>
+        <div className="skill-tree-passives-group">
+          <div className="skill-tree-group-label passive-label">Passives</div>
+          <div className="skill-tree-group-choices">
+            {tier.choices.map(choice => renderNode(choice, tierInfo, isLocked, isChosen, isAvailable))}
           </div>
-        )}
-        {activeChoices.length > 0 && (
-          <div className="skill-tree-actives-group">
-            <div className="skill-tree-group-label active-label">Active</div>
-            <div className="skill-tree-group-choices">
-              {activeChoices.map(choice => renderNode(choice, tierInfo, isLocked, isChosen, isAvailable))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -94,14 +82,11 @@ export default function SkillsScreen({ player, onBack, onUnlockSkill }) {
       >
         <div className="skill-tree-node-header">
           <span className={`skill-tree-node-type ${choice.type}`}>
-            {choice.type === 'passive' ? 'PASSIVE' : 'ACTIVE'}
+            PASSIVE
           </span>
           <span className="skill-tree-node-name">{choice.name}</span>
         </div>
         <div className="skill-tree-node-desc">{choice.desc}</div>
-        {choice.type === 'active' && (
-          <div className="skill-tree-node-mana">{choice.manaCost} Mana • {choice.multiplier}x DMG</div>
-        )}
         {isSelected && <div className="skill-tree-node-badge">LEARNED</div>}
         {isOtherSelected && <div className="skill-tree-node-badge rejected">SKIPPED</div>}
       </div>

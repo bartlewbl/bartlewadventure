@@ -1089,130 +1089,218 @@ export const FACTIONS = {
 };
 
 // ---- FACTION COMBAT SKILLS ----
-// Learnable special attacks tied to NPC faction reputation.
-// Each NPC has 2 combat skills (active, usable in battle).
-// Shape mirrors tree skills: id, name, desc, manaCost, multiplier, effect, icon
+// Learnable special attacks tied to NPC faction reputation AND player class.
+// Structure: FACTION_SKILLS[npcId][classId] = [ 5 skills ]
+// Each skill: { id, name, desc, manaCost, multiplier, effect, icon, reqRep }
+// reqRep = reputation level required (1-5)
 export const FACTION_SKILLS = {
-  bartender: [
-    {
-      id: 'fac_ironforge_molten_slam',
-      name: 'Molten Slam',
-      desc: '1.4x fire damage. Burns the enemy for 3 turns.',
-      manaCost: 14,
-      multiplier: 1.4,
-      effect: 'faction_molten_slam',
-      icon: '🔥',
-      reqRep: 3,   // Trusted
-    },
-    {
-      id: 'fac_ironforge_forge_shield',
-      name: 'Forge Shield',
-      desc: '0.8x damage. Gain a fire shield that reduces damage by 25% for 3 turns and reflects 15% damage.',
-      manaCost: 18,
-      multiplier: 0.8,
-      effect: 'faction_forge_shield',
-      icon: '🛡️',
-      reqRep: 5,   // Bonded
-    },
-  ],
-  whisper: [
-    {
-      id: 'fac_shadow_venomstrike',
-      name: 'Venomstrike',
-      desc: '1.3x damage. Applies deadly poison for 4 turns.',
-      manaCost: 12,
-      multiplier: 1.3,
-      effect: 'faction_venomstrike',
-      icon: '☠️',
-      reqRep: 3,
-    },
-    {
-      id: 'fac_shadow_shadowstep',
-      name: 'Shadowstep',
-      desc: '1.8x damage from the shadows. Dodge the next 2 attacks.',
-      manaCost: 22,
-      multiplier: 1.8,
-      effect: 'faction_shadowstep',
-      icon: '👤',
-      reqRep: 5,
-    },
-  ],
-  fenwick: [
-    {
-      id: 'fac_oldguard_smite',
-      name: "Guardian's Smite",
-      desc: '1.2x damage. Heal 30% of damage dealt.',
-      manaCost: 14,
-      multiplier: 1.2,
-      effect: 'faction_guardian_smite',
-      icon: '✝️',
-      reqRep: 3,
-    },
-    {
-      id: 'fac_oldguard_ancestral_ward',
-      name: 'Ancestral Ward',
-      desc: '0.6x damage. Boost ATK and DEF by 20% for 4 turns.',
-      manaCost: 20,
-      multiplier: 0.6,
-      effect: 'faction_ancestral_ward',
-      icon: '🏛️',
-      reqRep: 5,
-    },
-  ],
-  mira: [
-    {
-      id: 'fac_golden_gambit',
-      name: "Fortune's Gambit",
-      desc: '0.5x-2.5x random damage. Always drops bonus gold on kill.',
-      manaCost: 15,
-      multiplier: 1.0,
-      effect: 'faction_fortunes_gambit',
-      icon: '🎲',
-      reqRep: 3,
-    },
-    {
-      id: 'fac_golden_barrage',
-      name: 'Gilded Barrage',
-      desc: 'Hits 3 times at 0.7x each. Each hit has 25% chance to stun.',
-      manaCost: 24,
-      multiplier: 0.7,
-      effect: 'faction_gilded_barrage',
-      icon: '💰',
-      reqRep: 5,
-    },
-  ],
-  thorne: [
-    {
-      id: 'fac_steel_disciplined_strike',
-      name: 'Disciplined Strike',
-      desc: '1.5x damage. Reduce enemy ATK by 15% for 3 turns.',
-      manaCost: 14,
-      multiplier: 1.5,
-      effect: 'faction_disciplined_strike',
-      icon: '🗡️',
-      reqRep: 3,
-    },
-    {
-      id: 'fac_steel_commanders_charge',
-      name: "Commander's Charge",
-      desc: '2.0x massive damage. 40% chance to stun for 1 turn.',
-      manaCost: 26,
-      multiplier: 2.0,
-      effect: 'faction_commanders_charge',
-      icon: '⚔️',
-      reqRep: 5,
-    },
-  ],
+  // ======== GROG IRONFLASK — IRONFORGE COVENANT ========
+  // Faction gimmick: Fire, forging, burning, molten fury, damage reduction
+  bartender: {
+    berserker: [
+      { id: 'fac_iron_brs_1', name: 'Molten Frenzy', desc: '1.2x fire damage. Gain +10% ATK for 3 turns from the heat of the forge.', manaCost: 8, multiplier: 1.2, effect: 'fac_molten_frenzy', icon: '🔥', reqRep: 1 },
+      { id: 'fac_iron_brs_2', name: 'Searing Rage', desc: '1.4x fire damage, take 5% recoil. Burns enemy for 3 turns.', manaCost: 12, multiplier: 1.4, effect: 'fac_searing_rage', icon: '🔥', reqRep: 2 },
+      { id: 'fac_iron_brs_3', name: 'Forge Rampage', desc: '1.6x fire damage, take 10% recoil. +20% ATK if below 50% HP.', manaCost: 16, multiplier: 1.6, effect: 'fac_forge_rampage', icon: '🔥', reqRep: 3 },
+      { id: 'fac_iron_brs_4', name: 'Inferno Recoil', desc: '2.0x fire damage, take 15% recoil. Burn enemy 4 turns. Heal 10% of damage dealt.', manaCost: 22, multiplier: 2.0, effect: 'fac_inferno_recoil', icon: '🔥', reqRep: 4 },
+      { id: 'fac_iron_brs_5', name: 'Volcanic Cataclysm', desc: '2.8x fire damage, take 20% recoil. Ignites enemy for 5 turns. If below 30% HP, damage doubled.', manaCost: 30, multiplier: 2.8, effect: 'fac_volcanic_cataclysm', icon: '🌋', reqRep: 5 },
+    ],
+    warrior: [
+      { id: 'fac_iron_war_1', name: 'Forge Guard', desc: '0.8x damage. Gain a fire shield reducing damage taken by 15% for 3 turns.', manaCost: 8, multiplier: 0.8, effect: 'fac_forge_guard', icon: '🛡️', reqRep: 1 },
+      { id: 'fac_iron_war_2', name: 'Molten Bash', desc: '1.1x fire damage. Reduces enemy ATK by 15% for 3 turns.', manaCost: 12, multiplier: 1.1, effect: 'fac_molten_bash', icon: '🔥', reqRep: 2 },
+      { id: 'fac_iron_war_3', name: 'Ironflask Bulwark', desc: '0.9x damage. Fire shield reduces damage by 25% for 4 turns and reflects 10% damage.', manaCost: 16, multiplier: 0.9, effect: 'fac_ironflask_bulwark', icon: '🛡️', reqRep: 3 },
+      { id: 'fac_iron_war_4', name: 'Molten Fortress', desc: '1.3x fire damage. +30% DEF for 4 turns. Burns enemy for 3 turns.', manaCost: 22, multiplier: 1.3, effect: 'fac_molten_fortress', icon: '🏰', reqRep: 4 },
+      { id: 'fac_iron_war_5', name: 'Anvil of the Covenant', desc: '1.8x fire damage. Fire shield blocks 40% damage for 5 turns. Enemy ATK -25%.', manaCost: 30, multiplier: 1.8, effect: 'fac_anvil_covenant', icon: '🔨', reqRep: 5 },
+    ],
+    thief: [
+      { id: 'fac_iron_thf_1', name: 'Ember Blade', desc: '1.1x fire damage. 30% chance to burn enemy for 2 turns.', manaCost: 7, multiplier: 1.1, effect: 'fac_ember_blade', icon: '🗡️', reqRep: 1 },
+      { id: 'fac_iron_thf_2', name: 'Flash Fire', desc: '1.0x fire damage. Dodge next attack. Burns enemy for 2 turns.', manaCost: 11, multiplier: 1.0, effect: 'fac_flash_fire', icon: '💨', reqRep: 2 },
+      { id: 'fac_iron_thf_3', name: 'Smoke & Cinders', desc: '1.3x fire damage. Dodge next 2 attacks. +15% gold on kill.', manaCost: 15, multiplier: 1.3, effect: 'fac_smoke_cinders', icon: '💨', reqRep: 3 },
+      { id: 'fac_iron_thf_4', name: 'Forgeborn Ambush', desc: '1.7x fire damage, ignores 30% DEF. Burns enemy for 3 turns.', manaCost: 20, multiplier: 1.7, effect: 'fac_forgeborn_ambush', icon: '🔥', reqRep: 4 },
+      { id: 'fac_iron_thf_5', name: 'Infernal Backstab', desc: '2.2x fire true damage. Burns enemy for 5 turns. Dodge next 2 attacks.', manaCost: 28, multiplier: 2.2, effect: 'fac_infernal_backstab', icon: '🌋', reqRep: 5 },
+    ],
+    mage: [
+      { id: 'fac_iron_mag_1', name: 'Forge Bolt', desc: '1.2x fire damage, ignores 20% DEF.', manaCost: 8, multiplier: 1.2, effect: 'fac_forge_bolt', icon: '🔥', reqRep: 1 },
+      { id: 'fac_iron_mag_2', name: 'Smelter Blast', desc: '1.4x fire damage, ignores all DEF. Burns enemy for 2 turns.', manaCost: 14, multiplier: 1.4, effect: 'fac_smelter_blast', icon: '🔥', reqRep: 2 },
+      { id: 'fac_iron_mag_3', name: 'Magma Surge', desc: '1.6x fire damage, ignores all DEF. Burns enemy for 3 turns. Restore 5 mana.', manaCost: 18, multiplier: 1.6, effect: 'fac_magma_surge', icon: '🌋', reqRep: 3 },
+      { id: 'fac_iron_mag_4', name: 'Pyroclasm', desc: '2.0x fire damage, ignores all DEF. Burns enemy for 4 turns. Enemy DEF -30%.', manaCost: 24, multiplier: 2.0, effect: 'fac_pyroclasm', icon: '🌋', reqRep: 4 },
+      { id: 'fac_iron_mag_5', name: 'Forge Star', desc: '2.6x fire true damage. Burns enemy for 5 turns. Restore 10 mana. +20% skill damage for 3 turns.', manaCost: 32, multiplier: 2.6, effect: 'fac_forge_star', icon: '⭐', reqRep: 5 },
+    ],
+    necromancer: [
+      { id: 'fac_iron_nec_1', name: 'Soul Ember', desc: '1.0x fire damage. Heal 15% of damage dealt.', manaCost: 8, multiplier: 1.0, effect: 'fac_soul_ember', icon: '🔥', reqRep: 1 },
+      { id: 'fac_iron_nec_2', name: 'Soulforge Drain', desc: '1.2x fire damage. Heal 20% of damage dealt. Burns enemy for 2 turns.', manaCost: 12, multiplier: 1.2, effect: 'fac_soulforge_drain', icon: '🔥', reqRep: 2 },
+      { id: 'fac_iron_nec_3', name: 'Molten Siphon', desc: '1.4x fire damage. Heal 25% of damage dealt. Burns enemy for 3 turns.', manaCost: 16, multiplier: 1.4, effect: 'fac_molten_siphon', icon: '🌋', reqRep: 3 },
+      { id: 'fac_iron_nec_4', name: 'Pyre of Souls', desc: '1.8x fire damage. Heal 30% of damage dealt. Burns enemy for 4 turns. +10% ATK for 3 turns.', manaCost: 22, multiplier: 1.8, effect: 'fac_pyre_of_souls', icon: '🌋', reqRep: 4 },
+      { id: 'fac_iron_nec_5', name: 'Ironforge Cremation', desc: '2.4x fire damage. Heal 40% of damage dealt. Burns enemy for 5 turns. Drain enemy ATK by 20%.', manaCost: 30, multiplier: 2.4, effect: 'fac_ironforge_cremation', icon: '💀', reqRep: 5 },
+    ],
+  },
+  // ======== WHISPER — SHADOW SYNDICATE ========
+  // Faction gimmick: Poison, stealth, evasion, subterfuge, espionage
+  whisper: {
+    berserker: [
+      { id: 'fac_shad_brs_1', name: 'Venomous Fury', desc: '1.1x damage. Poisons enemy for 2 turns.', manaCost: 7, multiplier: 1.1, effect: 'fac_venomous_fury', icon: '☠️', reqRep: 1 },
+      { id: 'fac_shad_brs_2', name: 'Toxic Rampage', desc: '1.3x damage, take 5% recoil. Poisons enemy for 3 turns. +10% ATK for 2 turns.', manaCost: 11, multiplier: 1.3, effect: 'fac_toxic_rampage', icon: '☠️', reqRep: 2 },
+      { id: 'fac_shad_brs_3', name: 'Shadow Frenzy', desc: '1.5x damage. Poisons enemy for 3 turns. +15% ATK when enemy is poisoned.', manaCost: 15, multiplier: 1.5, effect: 'fac_shadow_frenzy', icon: '👤', reqRep: 3 },
+      { id: 'fac_shad_brs_4', name: 'Envenomed Rage', desc: '1.8x damage, take 8% recoil. Deadly poison for 4 turns. +20% ATK below 50% HP.', manaCost: 21, multiplier: 1.8, effect: 'fac_envenomed_rage', icon: '☠️', reqRep: 4 },
+      { id: 'fac_shad_brs_5', name: 'Berserker Venom', desc: '2.5x damage, take 12% recoil. Deadly poison for 5 turns. If below 30% HP, poison damage doubled.', manaCost: 28, multiplier: 2.5, effect: 'fac_berserker_venom', icon: '💀', reqRep: 5 },
+    ],
+    warrior: [
+      { id: 'fac_shad_war_1', name: 'Poisoned Guard', desc: '0.8x damage. Poisons enemy for 2 turns. +10% DEF for 2 turns.', manaCost: 8, multiplier: 0.8, effect: 'fac_poisoned_guard', icon: '🛡️', reqRep: 1 },
+      { id: 'fac_shad_war_2', name: 'Shadow Parry', desc: '1.0x damage. Dodge next attack. Poisons enemy for 2 turns.', manaCost: 12, multiplier: 1.0, effect: 'fac_shadow_parry', icon: '👤', reqRep: 2 },
+      { id: 'fac_shad_war_3', name: 'Venomwall', desc: '0.9x damage. +25% DEF for 3 turns. Poisons enemy for 3 turns.', manaCost: 16, multiplier: 0.9, effect: 'fac_venomwall', icon: '🛡️', reqRep: 3 },
+      { id: 'fac_shad_war_4', name: 'Toxic Bulwark', desc: '1.2x damage. +30% DEF for 4 turns. Poisons enemy for 4 turns. Enemy ATK -15%.', manaCost: 22, multiplier: 1.2, effect: 'fac_toxic_bulwark', icon: '🛡️', reqRep: 4 },
+      { id: 'fac_shad_war_5', name: 'Syndicate Sentinel', desc: '1.6x damage. +40% DEF for 5 turns. Deadly poison for 5 turns. Dodge next 2 attacks.', manaCost: 30, multiplier: 1.6, effect: 'fac_syndicate_sentinel', icon: '👤', reqRep: 5 },
+    ],
+    thief: [
+      { id: 'fac_shad_thf_1', name: 'Venomstrike', desc: '1.1x damage. Poisons enemy for 3 turns.', manaCost: 6, multiplier: 1.1, effect: 'fac_venomstrike', icon: '☠️', reqRep: 1 },
+      { id: 'fac_shad_thf_2', name: 'Shadowstep', desc: '1.3x damage. Dodge next 2 attacks.', manaCost: 10, multiplier: 1.3, effect: 'fac_shadowstep', icon: '👤', reqRep: 2 },
+      { id: 'fac_shad_thf_3', name: 'Syndicate Ambush', desc: '1.6x damage, ignores 30% DEF. Poisons enemy for 3 turns. Dodge next attack.', manaCost: 15, multiplier: 1.6, effect: 'fac_syndicate_ambush', icon: '🗡️', reqRep: 3 },
+      { id: 'fac_shad_thf_4', name: 'Assassin Protocol', desc: '2.0x damage, ignores 40% DEF. Deadly poison for 4 turns. Dodge next 2 attacks.', manaCost: 22, multiplier: 2.0, effect: 'fac_assassin_protocol', icon: '☠️', reqRep: 4 },
+      { id: 'fac_shad_thf_5', name: 'Phantom Execution', desc: '2.6x true damage. Deadly poison for 5 turns. Dodge next 3 attacks. +30% gold on kill.', manaCost: 30, multiplier: 2.6, effect: 'fac_phantom_execution', icon: '💀', reqRep: 5 },
+    ],
+    mage: [
+      { id: 'fac_shad_mag_1', name: 'Shadow Bolt', desc: '1.2x shadow damage, ignores 20% DEF.', manaCost: 7, multiplier: 1.2, effect: 'fac_shadow_bolt', icon: '👤', reqRep: 1 },
+      { id: 'fac_shad_mag_2', name: 'Miasma', desc: '1.0x shadow damage. Poisons enemy for 3 turns. Restore 4 mana.', manaCost: 10, multiplier: 1.0, effect: 'fac_miasma', icon: '☠️', reqRep: 2 },
+      { id: 'fac_shad_mag_3', name: 'Void Toxin', desc: '1.5x shadow damage, ignores all DEF. Poisons enemy for 3 turns.', manaCost: 16, multiplier: 1.5, effect: 'fac_void_toxin', icon: '☠️', reqRep: 3 },
+      { id: 'fac_shad_mag_4', name: 'Eldritch Venom', desc: '1.8x shadow damage, ignores all DEF. Deadly poison for 4 turns. Restore 6 mana.', manaCost: 22, multiplier: 1.8, effect: 'fac_eldritch_venom', icon: '☠️', reqRep: 4 },
+      { id: 'fac_shad_mag_5', name: 'Annihilation Shroud', desc: '2.4x shadow true damage. Deadly poison for 5 turns. Enemy ATK & DEF -25%. Restore 8 mana.', manaCost: 30, multiplier: 2.4, effect: 'fac_annihilation_shroud', icon: '💀', reqRep: 5 },
+    ],
+    necromancer: [
+      { id: 'fac_shad_nec_1', name: 'Soul Poison', desc: '1.0x shadow damage. Poisons enemy for 2 turns. Heal 10% of damage dealt.', manaCost: 7, multiplier: 1.0, effect: 'fac_soul_poison', icon: '☠️', reqRep: 1 },
+      { id: 'fac_shad_nec_2', name: 'Shadow Drain', desc: '1.2x shadow damage. Poisons enemy for 3 turns. Heal 15% of damage dealt.', manaCost: 11, multiplier: 1.2, effect: 'fac_shadow_drain', icon: '👤', reqRep: 2 },
+      { id: 'fac_shad_nec_3', name: 'Toxic Siphon', desc: '1.4x shadow damage. Poisons enemy for 3 turns. Heal 20% of damage dealt. Drain enemy ATK by 10%.', manaCost: 16, multiplier: 1.4, effect: 'fac_toxic_siphon', icon: '☠️', reqRep: 3 },
+      { id: 'fac_shad_nec_4', name: 'Plague Leech', desc: '1.7x shadow damage. Deadly poison for 4 turns. Heal 25% of damage dealt. Drain enemy ATK by 15%.', manaCost: 22, multiplier: 1.7, effect: 'fac_plague_leech', icon: '☠️', reqRep: 4 },
+      { id: 'fac_shad_nec_5', name: 'Syndicate Reaper', desc: '2.2x shadow damage. Deadly poison for 5 turns. Heal 35% of damage dealt. Drain enemy ATK & DEF by 20%.', manaCost: 28, multiplier: 2.2, effect: 'fac_syndicate_reaper', icon: '💀', reqRep: 5 },
+    ],
+  },
+  // ======== OLD FENWICK — OLD GUARD ORDER ========
+  // Faction gimmick: Healing, buffs, protection, ancestral wisdom, veteran tactics
+  fenwick: {
+    berserker: [
+      { id: 'fac_old_brs_1', name: "Veteran's Strike", desc: '1.2x damage. Heal 10% of damage dealt.', manaCost: 8, multiplier: 1.2, effect: 'fac_veteran_strike', icon: '✝️', reqRep: 1 },
+      { id: 'fac_old_brs_2', name: 'Battle Mend', desc: '1.3x damage, take 5% recoil. Heal 20% of damage dealt.', manaCost: 12, multiplier: 1.3, effect: 'fac_battle_mend', icon: '✝️', reqRep: 2 },
+      { id: 'fac_old_brs_3', name: 'Ancestral Fury', desc: '1.5x damage. Heal 20% of damage dealt. +15% ATK for 3 turns.', manaCost: 16, multiplier: 1.5, effect: 'fac_ancestral_fury', icon: '🏛️', reqRep: 3 },
+      { id: 'fac_old_brs_4', name: "Old Guard's Wrath", desc: '1.8x damage, take 10% recoil. Heal 25% of damage dealt. +20% ATK for 3 turns.', manaCost: 22, multiplier: 1.8, effect: 'fac_oldguard_wrath', icon: '🏛️', reqRep: 4 },
+      { id: 'fac_old_brs_5', name: 'Ancestral Rampage', desc: '2.4x damage, take 15% recoil. Heal 30% of damage dealt. +30% ATK & DEF for 4 turns.', manaCost: 30, multiplier: 2.4, effect: 'fac_ancestral_rampage', icon: '⚔️', reqRep: 5 },
+    ],
+    warrior: [
+      { id: 'fac_old_war_1', name: "Guardian's Smite", desc: '1.0x damage. Heal 15% of damage dealt. +10% DEF for 2 turns.', manaCost: 8, multiplier: 1.0, effect: 'fac_guardian_smite', icon: '✝️', reqRep: 1 },
+      { id: 'fac_old_war_2', name: 'Ancestral Ward', desc: '0.6x damage. +20% ATK and DEF for 3 turns.', manaCost: 12, multiplier: 0.6, effect: 'fac_ancestral_ward', icon: '🏛️', reqRep: 2 },
+      { id: 'fac_old_war_3', name: 'Holy Bastion', desc: '0.8x damage. +25% DEF for 4 turns. Heal 15% max HP.', manaCost: 16, multiplier: 0.8, effect: 'fac_holy_bastion', icon: '���️', reqRep: 3 },
+      { id: 'fac_old_war_4', name: 'Fenwick Formation', desc: '1.3x damage. +30% ATK & DEF for 4 turns. Heal 20% of damage dealt.', manaCost: 22, multiplier: 1.3, effect: 'fac_fenwick_formation', icon: '🏛️', reqRep: 4 },
+      { id: 'fac_old_war_5', name: 'Immortal Vanguard', desc: '1.6x damage. +40% DEF for 5 turns. Heal 25% max HP. Survive next lethal hit at 20% HP.', manaCost: 30, multiplier: 1.6, effect: 'fac_immortal_vanguard', icon: '⚔️', reqRep: 5 },
+    ],
+    thief: [
+      { id: 'fac_old_thf_1', name: 'Veteran Trick', desc: '1.1x damage. Dodge next attack. Heal 5% max HP.', manaCost: 7, multiplier: 1.1, effect: 'fac_veteran_trick', icon: '✝️', reqRep: 1 },
+      { id: 'fac_old_thf_2', name: "Scout's Gambit", desc: '1.2x damage, ignores 20% DEF. Heal 10% of damage dealt.', manaCost: 11, multiplier: 1.2, effect: 'fac_scouts_gambit', icon: '🗡️', reqRep: 2 },
+      { id: 'fac_old_thf_3', name: 'Old Guard Feint', desc: '1.4x damage. Dodge next 2 attacks. Heal 10% max HP.', manaCost: 15, multiplier: 1.4, effect: 'fac_oldguard_feint', icon: '🏛️', reqRep: 3 },
+      { id: 'fac_old_thf_4', name: 'Ancestral Ambush', desc: '1.8x damage, ignores 30% DEF. Heal 15% of damage dealt. +15% ATK for 3 turns.', manaCost: 20, multiplier: 1.8, effect: 'fac_ancestral_ambush', icon: '���️', reqRep: 4 },
+      { id: 'fac_old_thf_5', name: 'Wisdom of the Blade', desc: '2.2x true damage. Dodge next 2 attacks. Heal 20% max HP. +25% gold on kill.', manaCost: 28, multiplier: 2.2, effect: 'fac_wisdom_blade', icon: '⚔️', reqRep: 5 },
+    ],
+    mage: [
+      { id: 'fac_old_mag_1', name: 'Ancestral Bolt', desc: '1.2x holy damage, ignores 20% DEF. Heal 5% max HP.', manaCost: 7, multiplier: 1.2, effect: 'fac_ancestral_bolt', icon: '✝️', reqRep: 1 },
+      { id: 'fac_old_mag_2', name: 'Blessing of the Old Guard', desc: '0.8x damage. +20% ATK & DEF for 3 turns. Restore 5 mana.', manaCost: 10, multiplier: 0.8, effect: 'fac_blessing_oldguard', icon: '🏛️', reqRep: 2 },
+      { id: 'fac_old_mag_3', name: 'Ancient Arcana', desc: '1.5x holy damage, ignores all DEF. Heal 15% of damage dealt. Restore 4 mana.', manaCost: 16, multiplier: 1.5, effect: 'fac_ancient_arcana', icon: '🏛️', reqRep: 3 },
+      { id: 'fac_old_mag_4', name: "Fenwick's Incantation", desc: '1.8x holy true damage. +20% skill damage for 3 turns. Heal 15% max HP.', manaCost: 22, multiplier: 1.8, effect: 'fac_fenwick_incantation', icon: '✝️', reqRep: 4 },
+      { id: 'fac_old_mag_5', name: 'Primordial Wisdom', desc: '2.4x holy true damage. +30% skill damage for 4 turns. Heal 20% max HP. Restore 10 mana.', manaCost: 30, multiplier: 2.4, effect: 'fac_primordial_wisdom', icon: '⭐', reqRep: 5 },
+    ],
+    necromancer: [
+      { id: 'fac_old_nec_1', name: 'Spirit Mend', desc: '1.0x damage. Heal 20% of damage dealt.', manaCost: 7, multiplier: 1.0, effect: 'fac_spirit_mend', icon: '✝️', reqRep: 1 },
+      { id: 'fac_old_nec_2', name: 'Ancestral Drain', desc: '1.2x damage. Heal 25% of damage dealt. +10% ATK for 2 turns.', manaCost: 11, multiplier: 1.2, effect: 'fac_ancestral_drain', icon: '🏛️', reqRep: 2 },
+      { id: 'fac_old_nec_3', name: 'Guardian Spirit', desc: '1.3x damage. Heal 25% of damage dealt. +15% DEF for 3 turns.', manaCost: 15, multiplier: 1.3, effect: 'fac_guardian_spirit', icon: '🏛️', reqRep: 3 },
+      { id: 'fac_old_nec_4', name: 'Ancestral Reaping', desc: '1.6x damage. Heal 30% of damage dealt. Drain enemy ATK by 15%. +15% ATK for 3 turns.', manaCost: 21, multiplier: 1.6, effect: 'fac_ancestral_reaping', icon: '✝️', reqRep: 4 },
+      { id: 'fac_old_nec_5', name: 'Old Guard Revenant', desc: '2.0x damage. Heal 40% of damage dealt. Drain enemy ATK & DEF by 20%. +25% ATK & DEF for 4 turns.', manaCost: 28, multiplier: 2.0, effect: 'fac_oldguard_revenant', icon: '💀', reqRep: 5 },
+    ],
+  },
+  // ======== MIRA GOLDSPARK — GOLDEN CARTEL ========
+  // Faction gimmick: Chaos, randomness, gambling, gold, fortune, wild effects
+  mira: {
+    berserker: [
+      { id: 'fac_gold_brs_1', name: 'Wild Swing', desc: '0.8x-1.6x random damage. +5% ATK for 2 turns.', manaCost: 7, multiplier: 1.2, effect: 'fac_wild_swing', icon: '🎲', reqRep: 1 },
+      { id: 'fac_gold_brs_2', name: 'Reckless Gamble', desc: '0.5x-2.0x random damage, take 5% recoil. +15% ATK for 2 turns.', manaCost: 11, multiplier: 1.25, effect: 'fac_reckless_gamble', icon: '🎲', reqRep: 2 },
+      { id: 'fac_gold_brs_3', name: "Fortune's Fury", desc: '0.5x-2.5x random damage. If high roll, +25% ATK for 3 turns. +15% gold on kill.', manaCost: 16, multiplier: 1.5, effect: 'fac_fortunes_fury', icon: '💰', reqRep: 3 },
+      { id: 'fac_gold_brs_4', name: 'Golden Rampage', desc: '1.0x-3.0x random damage, take 10% recoil. Bonus gold on kill. 30% chance to stun.', manaCost: 22, multiplier: 2.0, effect: 'fac_golden_rampage', icon: '💰', reqRep: 4 },
+      { id: 'fac_gold_brs_5', name: 'Jackpot Annihilation', desc: '1.0x-4.0x random damage, take 15% recoil. If max roll, heal to full. Always bonus gold.', manaCost: 30, multiplier: 2.5, effect: 'fac_jackpot_annihilation', icon: '🎰', reqRep: 5 },
+    ],
+    warrior: [
+      { id: 'fac_gold_war_1', name: 'Lucky Block', desc: '0.8x damage. 50% chance to gain +20% DEF for 2 turns, else +10% ATK.', manaCost: 8, multiplier: 0.8, effect: 'fac_lucky_block', icon: '🎲', reqRep: 1 },
+      { id: 'fac_gold_war_2', name: 'Coin Toss', desc: '1.0x damage. 50% chance to double damage, 50% chance to gain +25% DEF for 3 turns.', manaCost: 12, multiplier: 1.0, effect: 'fac_coin_toss', icon: '🪙', reqRep: 2 },
+      { id: 'fac_gold_war_3', name: 'Gilded Shield', desc: '0.7x damage. Gain +30% DEF for 4 turns. 40% chance to also stun enemy.', manaCost: 16, multiplier: 0.7, effect: 'fac_gilded_shield', icon: '🛡️', reqRep: 3 },
+      { id: 'fac_gold_war_4', name: "Merchant's Gambit", desc: '1.2x damage. Randomly gain +25% ATK or +25% DEF or +25% both for 4 turns. Bonus gold.', manaCost: 22, multiplier: 1.2, effect: 'fac_merchant_gambit', icon: '💰', reqRep: 4 },
+      { id: 'fac_gold_war_5', name: 'Golden Aegis', desc: '1.5x damage. +40% DEF for 5 turns. 50% chance to stun. Heal 15% max HP. Always bonus gold.', manaCost: 30, multiplier: 1.5, effect: 'fac_golden_aegis', icon: '🎰', reqRep: 5 },
+    ],
+    thief: [
+      { id: 'fac_gold_thf_1', name: 'Loaded Dice', desc: '1.0x-1.8x random damage. +20% gold on kill.', manaCost: 6, multiplier: 1.4, effect: 'fac_loaded_dice', icon: '🎲', reqRep: 1 },
+      { id: 'fac_gold_thf_2', name: 'Pickpocket Strike', desc: '1.2x damage. +30% gold on kill. Dodge next attack.', manaCost: 10, multiplier: 1.2, effect: 'fac_pickpocket_strike', icon: '💰', reqRep: 2 },
+      { id: 'fac_gold_thf_3', name: 'Golden Backstab', desc: '1.5x damage, ignores 25% DEF. +40% gold on kill. 30% chance for double gold.', manaCost: 15, multiplier: 1.5, effect: 'fac_golden_backstab', icon: '💰', reqRep: 3 },
+      { id: 'fac_gold_thf_4', name: "Cartel's Precision", desc: '1.8x damage, ignores 35% DEF. +50% gold on kill. Dodge next 2 attacks.', manaCost: 21, multiplier: 1.8, effect: 'fac_cartel_precision', icon: '🪙', reqRep: 4 },
+      { id: 'fac_gold_thf_5', name: 'Grand Heist', desc: '2.3x true damage. +100% gold on kill. Dodge next 3 attacks. 30% chance to stun.', manaCost: 28, multiplier: 2.3, effect: 'fac_grand_heist', icon: '🎰', reqRep: 5 },
+    ],
+    mage: [
+      { id: 'fac_gold_mag_1', name: 'Chaos Spark', desc: '0.8x-1.6x random damage, ignores 20% DEF. Restore 3 mana.', manaCost: 7, multiplier: 1.2, effect: 'fac_chaos_spark', icon: '🎲', reqRep: 1 },
+      { id: 'fac_gold_mag_2', name: 'Arcane Roulette', desc: '0.5x-2.0x random damage, ignores all DEF. Restore 4 mana.', manaCost: 11, multiplier: 1.25, effect: 'fac_arcane_roulette', icon: '🎲', reqRep: 2 },
+      { id: 'fac_gold_mag_3', name: 'Gilded Barrage', desc: 'Hits 3 times at 0.7x each, ignores all DEF. Each hit has 20% chance to stun.', manaCost: 17, multiplier: 0.7, effect: 'fac_gilded_barrage', icon: '💰', reqRep: 3 },
+      { id: 'fac_gold_mag_4', name: "Fortune's Arcana", desc: '0.5x-3.0x random true damage. Restore 8 mana. +20% skill damage for 3 turns.', manaCost: 22, multiplier: 1.75, effect: 'fac_fortune_arcana', icon: '💰', reqRep: 4 },
+      { id: 'fac_gold_mag_5', name: 'Chaos Singularity', desc: '1.0x-4.0x random true damage. Restore 12 mana. If max roll, enemy ATK & DEF -40%.', manaCost: 30, multiplier: 2.5, effect: 'fac_chaos_singularity', icon: '🎰', reqRep: 5 },
+    ],
+    necromancer: [
+      { id: 'fac_gold_nec_1', name: 'Soul Wager', desc: '0.8x-1.6x random damage. Heal 15% of damage dealt.', manaCost: 7, multiplier: 1.2, effect: 'fac_soul_wager', icon: '🎲', reqRep: 1 },
+      { id: 'fac_gold_nec_2', name: 'Death Lottery', desc: '0.5x-2.0x random damage. Heal 20% of damage dealt. +10% ATK for 2 turns.', manaCost: 11, multiplier: 1.25, effect: 'fac_death_lottery', icon: '🎲', reqRep: 2 },
+      { id: 'fac_gold_nec_3', name: 'Golden Reap', desc: '1.3x damage. Heal 25% of damage dealt. +25% gold on kill. Drain enemy ATK by 10%.', manaCost: 16, multiplier: 1.3, effect: 'fac_golden_reap', icon: '💰', reqRep: 3 },
+      { id: 'fac_gold_nec_4', name: "Cartel's Harvest", desc: '1.6x damage. Heal 30% of damage dealt. +40% gold on kill. Drain enemy ATK & DEF by 15%.', manaCost: 22, multiplier: 1.6, effect: 'fac_cartel_harvest', icon: '💰', reqRep: 4 },
+      { id: 'fac_gold_nec_5', name: "Fortune's Reaper", desc: '2.0x-3.0x random damage. Heal 40% of damage dealt. Always bonus gold. Drain ATK & DEF by 25%.', manaCost: 28, multiplier: 2.5, effect: 'fac_fortune_reaper', icon: '🎰', reqRep: 5 },
+    ],
+  },
+  // ======== CAPTAIN THORNE — STEEL LEGION ========
+  // Faction gimmick: Military discipline, raw damage, enemy debuffs, tactical warfare
+  thorne: {
+    berserker: [
+      { id: 'fac_steel_brs_1', name: 'Disciplined Fury', desc: '1.2x damage. Enemy ATK -10% for 2 turns.', manaCost: 8, multiplier: 1.2, effect: 'fac_disciplined_fury', icon: '⚔️', reqRep: 1 },
+      { id: 'fac_steel_brs_2', name: 'Legion Charge', desc: '1.4x damage, take 5% recoil. Enemy ATK -15% for 3 turns.', manaCost: 12, multiplier: 1.4, effect: 'fac_legion_charge', icon: '⚔️', reqRep: 2 },
+      { id: 'fac_steel_brs_3', name: 'Steel Rampage', desc: '1.7x damage, take 8% recoil. Enemy ATK & DEF -15% for 3 turns.', manaCost: 16, multiplier: 1.7, effect: 'fac_steel_rampage', icon: '🗡️', reqRep: 3 },
+      { id: 'fac_steel_brs_4', name: 'Warpath Fury', desc: '2.0x damage, take 10% recoil. Enemy ATK & DEF -20%. 30% chance to stun.', manaCost: 22, multiplier: 2.0, effect: 'fac_warpath_fury', icon: '⚔️', reqRep: 4 },
+      { id: 'fac_steel_brs_5', name: 'Legion Annihilation', desc: '2.8x damage, take 15% recoil. Enemy ATK & DEF -30%. 50% chance to stun. +20% ATK for 3 turns.', manaCost: 30, multiplier: 2.8, effect: 'fac_legion_annihilation', icon: '💀', reqRep: 5 },
+    ],
+    warrior: [
+      { id: 'fac_steel_war_1', name: 'Shield Formation', desc: '0.8x damage. +15% DEF for 3 turns. Enemy ATK -10%.', manaCost: 8, multiplier: 0.8, effect: 'fac_shield_formation', icon: '🛡️', reqRep: 1 },
+      { id: 'fac_steel_war_2', name: 'Tactical Strike', desc: '1.2x damage. Enemy ATK -15% for 3 turns. +10% DEF for 3 turns.', manaCost: 12, multiplier: 1.2, effect: 'fac_tactical_strike', icon: '⚔️', reqRep: 2 },
+      { id: 'fac_steel_war_3', name: 'Iron Phalanx', desc: '1.0x damage. +30% DEF for 4 turns. Enemy ATK -20%. Heal 10% max HP.', manaCost: 16, multiplier: 1.0, effect: 'fac_iron_phalanx', icon: '🛡️', reqRep: 3 },
+      { id: 'fac_steel_war_4', name: "Commander's Defense", desc: '1.3x damage. +35% DEF for 4 turns. Enemy ATK & DEF -20%. Heal 15% max HP.', manaCost: 22, multiplier: 1.3, effect: 'fac_commanders_defense', icon: '🛡️', reqRep: 4 },
+      { id: 'fac_steel_war_5', name: 'Steel Citadel', desc: '1.6x damage. +50% DEF for 5 turns. Enemy ATK & DEF -30%. 40% chance to stun. Heal 20% max HP.', manaCost: 30, multiplier: 1.6, effect: 'fac_steel_citadel', icon: '🏰', reqRep: 5 },
+    ],
+    thief: [
+      { id: 'fac_steel_thf_1', name: 'Precision Strike', desc: '1.2x damage, ignores 15% DEF. Enemy ATK -10% for 2 turns.', manaCost: 7, multiplier: 1.2, effect: 'fac_precision_strike', icon: '🗡️', reqRep: 1 },
+      { id: 'fac_steel_thf_2', name: 'Tactical Ambush', desc: '1.4x damage, ignores 25% DEF. Dodge next attack. Enemy DEF -15%.', manaCost: 11, multiplier: 1.4, effect: 'fac_tactical_ambush', icon: '⚔️', reqRep: 2 },
+      { id: 'fac_steel_thf_3', name: 'Legion Saboteur', desc: '1.6x damage, ignores 30% DEF. Enemy ATK & DEF -15%. Dodge next attack.', manaCost: 16, multiplier: 1.6, effect: 'fac_legion_saboteur', icon: '🗡️', reqRep: 3 },
+      { id: 'fac_steel_thf_4', name: 'Steel Phantom', desc: '2.0x damage, ignores 40% DEF. Enemy ATK & DEF -20%. Dodge next 2 attacks.', manaCost: 22, multiplier: 2.0, effect: 'fac_steel_phantom', icon: '👤', reqRep: 4 },
+      { id: 'fac_steel_thf_5', name: "Commander's Shadow", desc: '2.5x true damage. Enemy ATK & DEF -30%. Dodge next 3 attacks. 40% chance to stun.', manaCost: 30, multiplier: 2.5, effect: 'fac_commanders_shadow', icon: '💀', reqRep: 5 },
+    ],
+    mage: [
+      { id: 'fac_steel_mag_1', name: 'Siege Bolt', desc: '1.2x damage, ignores 25% DEF. Enemy DEF -10% for 2 turns.', manaCost: 7, multiplier: 1.2, effect: 'fac_siege_bolt', icon: '⚔️', reqRep: 1 },
+      { id: 'fac_steel_mag_2', name: 'Tactical Arcana', desc: '1.4x damage, ignores all DEF. Enemy ATK -15% for 3 turns. Restore 4 mana.', manaCost: 12, multiplier: 1.4, effect: 'fac_tactical_arcana', icon: '⚔️', reqRep: 2 },
+      { id: 'fac_steel_mag_3', name: 'Legion Barrage', desc: 'Hits 2 times at 1.0x each, ignores all DEF. Enemy DEF -20%.', manaCost: 17, multiplier: 1.0, effect: 'fac_legion_barrage', icon: '🗡️', reqRep: 3 },
+      { id: 'fac_steel_mag_4', name: 'Siege Engine', desc: '2.0x true damage. Enemy ATK & DEF -25%. Restore 6 mana.', manaCost: 22, multiplier: 2.0, effect: 'fac_siege_engine', icon: '🏰', reqRep: 4 },
+      { id: 'fac_steel_mag_5', name: 'Iron Judgment', desc: '2.6x true damage. Enemy ATK & DEF -35%. +25% skill damage for 3 turns. Restore 8 mana.', manaCost: 30, multiplier: 2.6, effect: 'fac_iron_judgment', icon: '💀', reqRep: 5 },
+    ],
+    necromancer: [
+      { id: 'fac_steel_nec_1', name: 'Death March', desc: '1.0x damage. Heal 10% of damage dealt. Enemy ATK -10% for 2 turns.', manaCost: 7, multiplier: 1.0, effect: 'fac_death_march', icon: '⚔️', reqRep: 1 },
+      { id: 'fac_steel_nec_2', name: 'Legion Drain', desc: '1.2x damage. Heal 15% of damage dealt. Enemy ATK -15% for 3 turns.', manaCost: 11, multiplier: 1.2, effect: 'fac_legion_drain', icon: '⚔️', reqRep: 2 },
+      { id: 'fac_steel_nec_3', name: 'Tactical Reaping', desc: '1.4x damage. Heal 20% of damage dealt. Enemy ATK & DEF -15%.', manaCost: 16, multiplier: 1.4, effect: 'fac_tactical_reaping', icon: '🗡️', reqRep: 3 },
+      { id: 'fac_steel_nec_4', name: "Commander's Harvest", desc: '1.7x damage. Heal 25% of damage dealt. Enemy ATK & DEF -20%. Drain enemy ATK by 10%.', manaCost: 22, multiplier: 1.7, effect: 'fac_commanders_harvest', icon: '⚔️', reqRep: 4 },
+      { id: 'fac_steel_nec_5', name: 'Steel Reaper', desc: '2.2x damage. Heal 35% of damage dealt. Enemy ATK & DEF -30%. Drain enemy ATK by 20%. 30% stun.', manaCost: 28, multiplier: 2.2, effect: 'fac_steel_reaper', icon: '💀', reqRep: 5 },
+    ],
+  },
 };
 
-// Helper: get all faction skills a player has unlocked based on tavern reputation
-export function getUnlockedFactionSkills(tavern) {
-  if (!tavern) return [];
+// Helper: get all faction skills a player has unlocked based on tavern reputation and class
+export function getUnlockedFactionSkills(tavern, characterClass) {
+  if (!tavern || !characterClass) return [];
   const skills = [];
-  for (const [npcId, factionSkills] of Object.entries(FACTION_SKILLS)) {
+  for (const [npcId, classFactionSkills] of Object.entries(FACTION_SKILLS)) {
+    const classSkills = classFactionSkills[characterClass];
+    if (!classSkills) continue;
     const rep = tavern.reputation?.[npcId] || 0;
     const repLevel = getRepLevel(rep);
-    for (const skill of factionSkills) {
+    for (const skill of classSkills) {
       if (repLevel.level >= skill.reqRep && tavern.learnedFactionSkills?.includes(skill.id)) {
         skills.push({ ...skill, npcId, factionId: FACTIONS[npcId].id, factionName: FACTIONS[npcId].name, isFactionSkill: true });
       }

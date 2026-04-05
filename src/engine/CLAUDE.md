@@ -70,22 +70,27 @@ scaling.js ← standalone (used by encounter spawning)
 
 ## Faction Combat Skills (skillEffects.js)
 
-10 faction-specific effects tied to tavern NPC reputation (defined in `data/tavernData.js`):
+125 class-specific faction skills tied to tavern NPC reputation (defined in `data/tavernData.js`).
 
-| Effect | Faction | Description |
-|--------|---------|-------------|
-| faction_molten_slam | Ironforge Covenant (Grog) | Burn DoT 3 turns (5% maxHP/turn) |
-| faction_forge_shield | Ironforge Covenant (Grog) | -25% dmg taken + 15% thorns for 3 turns |
-| faction_venomstrike | Shadow Syndicate (Whisper) | Poison 4 turns |
-| faction_shadowstep | Shadow Syndicate (Whisper) | +2 dodge charges |
-| faction_guardian_smite | Old Guard Order (Fenwick) | Heal 30% of damage dealt |
-| faction_ancestral_ward | Old Guard Order (Fenwick) | +20% ATK & DEF for 4 turns |
-| faction_fortunes_gambit | Golden Cartel (Mira) | Random 0.5x-2.5x damage + gold on kill |
-| faction_gilded_barrage | Golden Cartel (Mira) | 2 extra hits at 0.7x, 25% stun each |
-| faction_disciplined_strike | Steel Legion (Thorne) | -15% enemy ATK for 3 turns |
-| faction_commanders_charge | Steel Legion (Thorne) | 40% chance stun 1 turn |
+**Structure:** `FACTION_SKILLS[npcId][classId]` = array of 5 skills, gated at rep levels 1-5.
 
-Battle state keys added: `monsterBurnTurns`, `forgeShieldTurns`, `forgeShieldReduction`, `forgeShieldThorns`, `ancestralWardTurns`, `ancestralWardBonus`, `goldenGambitActive`
+Each NPC offers different skills per class, blending the faction gimmick with class identity:
+
+| Faction (NPC) | Gimmick | Berserker | Warrior | Thief | Mage | Necromancer |
+|---------------|---------|-----------|---------|-------|------|-------------|
+| Ironforge (Grog) | Fire/burn/forge | Fire + recoil | Fire + shields | Fire + evasion | Fire + true damage | Fire + lifesteal |
+| Shadow Syndicate (Whisper) | Poison/stealth | Poison + rage | Poison + defense | Poison + dodge | Shadow + DEF ignore | Shadow + drain |
+| Old Guard (Fenwick) | Healing/buffs | Heal + rage | Heal + defense | Heal + dodge | Holy + mana regen | Heal + drain |
+| Golden Cartel (Mira) | Chaos/gold/random | Random + recoil | Random + DEF | Gold + dodge | Random + true damage | Random + lifesteal |
+| Steel Legion (Thorne) | Military/debuffs | Debuff + rage | Debuff + DEF | Debuff + dodge | Debuff + true damage | Debuff + drain |
+
+**Skill trees no longer have active skills** — tiers are 3 passives (pick 1). Active skills come only from:
+1. Class innate skill (always available)
+2. Tavern faction skills (learned via NPC reputation)
+
+Helper: `getUnlockedFactionSkills(tavern, characterClass)` returns learned skills for the player's class.
+
+Battle state keys: `monsterBurnTurns`, `forgeShieldTurns`, `forgeShieldReduction`, `forgeShieldThorns`, `ancestralWardTurns`, `ancestralWardBonus`, `goldenGambitActive`
 
 ## Fire Ritual & Wave Defense System
 
