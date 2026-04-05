@@ -460,7 +460,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                 {item.slot && <span className="tavern-shop-item-slot">{item.slot}</span>}
                 {item.level > 0 && <span>Lv{item.level}</span>}
                 {item.passive && (
-                  <span style={{ color: '#8f8', fontSize: '0.8em' }}>
+                  <span style={{ color: '#8f8' }}>
                     +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
                   </span>
                 )}
@@ -753,7 +753,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                       {item.atk > 0 && <span className="enchant-v2-stat atk">ATK {item.atk}</span>}
                       {item.def > 0 && <span className="enchant-v2-stat def">DEF {item.def}</span>}
                       {item.passive && (
-                        <span style={{ color: '#8f8', fontSize: '0.8em' }}>
+                        <span style={{ color: '#8f8' }}>
                           +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
                         </span>
                       )}

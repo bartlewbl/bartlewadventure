@@ -64,7 +64,7 @@ export default function ProfileScreen({ player, onBack, onLogout }) {
                       <div className="equip-name">{item.name}</div>
                       <div className="equip-stats">ATK +{item.atk || 0} / DEF +{item.def || 0}</div>
                       {item.passive && (
-                        <div className="equip-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                        <div className="equip-passive" style={{ color: '#8f8' }}>
                           +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
                         </div>
                       )}

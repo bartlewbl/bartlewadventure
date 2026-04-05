@@ -270,7 +270,7 @@ export default function InventoryScreen({
                       {itemStatLine(item)}
                     </div>
                     {itemPassiveText(item) && (
-                      <div className="equip-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                      <div className="equip-passive" style={{ color: '#8f8' }}>
                         {itemPassiveText(item)}
                       </div>
                     )}
@@ -361,7 +361,7 @@ export default function InventoryScreen({
                     {itemStatLine(item)}
                   </span>
                   {itemPassiveText(item) && (
-                    <span className="inv-item-passive" style={{ color: '#8f8', fontSize: '0.85em' }}>
+                    <span className="inv-item-passive" style={{ color: '#8f8' }}>
                       {itemPassiveText(item)}
                     </span>
                   )}
