@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { getShopItems, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
@@ -9,6 +9,7 @@ import { getStackKey } from '../../hooks/useGameState';
 import useGameClock from '../../hooks/useGameClock';
 import { TAVERN_SHOP_UNLOCKS, TAVERN_NPCS, REP_LEVELS, getRepLevel } from '../../data/tavernData';
 import { COSMETICS } from '../../data/goldSinks';
+import { SPRITES, drawSpriteCentered, buildCosmeticSprite, drawHatOverlay, drawAura } from '../../data/sprites';
 
 const SLOT_LABELS = {
   weapon: 'Weapon',
@@ -32,6 +33,7 @@ const SHOPS = [
   { id: 'trading', label: 'Trading', icon: '\u2692', desc: 'Trade materials for loot chests' },
   { id: 'tavern', label: 'Tavern', icon: '\uD83C\uDF7A', desc: 'NPC exclusive items' },
   { id: 'cosmetics', label: 'Cosmetics', icon: '\u2728', desc: 'Titles, colors & frames' },
+  { id: 'sprite', label: 'Appearance', icon: '\uD83C\uDFA8', desc: 'Hair, skin, armor & more' },
 ];
 
 const ARMOUR_CATEGORIES = [
@@ -101,7 +103,52 @@ function isInvFullForItem(player, shopItem) {
   return true;
 }
 
-export default function ShopScreen({ player, pets, base, shopPurchases, tavern, cosmetics, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onTavernBuy, onBuyCosmetic, onEquipCosmetic, onBack }) {
+// Small canvas that previews the player sprite with cosmetics applied
+function SpritePreview({ cosmetics }) {
+  const canvasRef = useRef(null);
+  const tickRef = useRef(0);
+  const animRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    const equipped = cosmetics?.equipped;
+    const sprite = buildCosmeticSprite(SPRITES.player.idle, equipped, COSMETICS);
+    const auraColor = equipped?.aura ? COSMETICS.auras?.find(a => a.id === equipped.aura)?.color : null;
+    const hatId = equipped?.hat || null;
+
+    function draw() {
+      tickRef.current += 1;
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Dark background
+      ctx.fillStyle = '#0a0a14';
+      ctx.fillRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2 + 2;
+      const scale = 5;
+
+      if (auraColor) drawAura(ctx, auraColor, cx, cy, scale, sprite[0].length, sprite.length, tickRef.current);
+      drawSpriteCentered(ctx, sprite, cx, cy, scale);
+      if (hatId) drawHatOverlay(ctx, hatId, cx, cy, scale, sprite[0].length, sprite.length);
+
+      animRef.current = requestAnimationFrame(draw);
+    }
+
+    draw();
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, [cosmetics?.equipped]);
+
+  return <canvas ref={canvasRef} width={80} height={80} style={{ borderRadius: '4px', border: '1px solid #333', imageRendering: 'pixelated' }} />;
+}
+
+export default function ShopScreen({ player, pets, base, shopPurchases, tavern, cosmetics, stats, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onTavernBuy, onBuyCosmetic, onEquipCosmetic, onBack }) {
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
@@ -638,6 +685,103 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
                         <button className="shop-buy-btn" disabled={!canAfford} onClick={() => onBuyCosmetic(item.id)}>
                           <span className="shop-btn-price">{item.cost}g</span>
                           <span className="shop-btn-label">{canAfford ? 'Buy' : 'Need gold'}</span>
+                        </button>
+                      )}
+                      {isOwned && !isEquipped && (
+                        <button className="shop-buy-btn" onClick={() => onEquipCosmetic(item.id, item.type)}>
+                          <span className="shop-btn-label">Equip</span>
+                        </button>
+                      )}
+                      {isEquipped && (
+                        <button className="shop-buy-btn" onClick={() => onEquipCosmetic(null, item.type)} style={{ opacity: 0.6 }}>
+                          <span className="shop-btn-label">Unequip</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeShop === 'sprite' && (
+        <div className="shop-content">
+          <div className="shop-featured-banner">Appearance Shop</div>
+          <div className="shop-featured-banner" style={{ fontSize: '7px', color: '#8e8eb2', marginTop: '-6px' }}>
+            Customize your character sprite
+          </div>
+          {/* Sprite cosmetic preview canvas */}
+          <div className="cosmetic-preview" style={{ textAlign: 'center', padding: '6px 0' }}>
+            <SpritePreview cosmetics={cosmetics} />
+          </div>
+          <div className="shop-list">
+            {[
+              { key: 'hairColors', label: 'Hair Colors', typeKey: 'hairColor' },
+              { key: 'skinTones', label: 'Skin Tones', typeKey: 'skinTone' },
+              { key: 'armorDyes', label: 'Armor Dyes', typeKey: 'armorDye' },
+              { key: 'hats', label: 'Hats', typeKey: 'hat' },
+              { key: 'auras', label: 'Auras', typeKey: 'aura' },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <div className="shop-featured-banner" style={{ fontSize: '8px', marginTop: '4px' }}>{label}</div>
+                {(COSMETICS[key] || []).map(item => {
+                  const owned = cosmetics?.owned || [];
+                  const equipped = cosmetics?.equipped || {};
+                  const isOwned = owned.includes(item.id);
+                  const isEquipped = equipped[item.type] === item.id;
+                  const canAfford = player.gold >= item.cost;
+
+                  // Check unlock requirements
+                  let locked = false;
+                  let lockReason = '';
+                  if (item.reqFaction) {
+                    const rep = tavern?.reputation?.[item.reqFaction] || 0;
+                    const repLevel = getRepLevel(rep);
+                    if (repLevel.level < item.reqRep) {
+                      locked = true;
+                      const npcName = item.reqFaction.charAt(0).toUpperCase() + item.reqFaction.slice(1);
+                      lockReason = `Requires ${npcName} rep level ${item.reqRep}`;
+                    }
+                  }
+                  if (item.reqStat) {
+                    const statVal = stats?.[item.reqStat] || 0;
+                    if (statVal < item.reqStatValue) {
+                      locked = true;
+                      const statLabels = {
+                        bossesKilled: 'Bosses Killed',
+                        monstersKilled: 'Monsters Killed',
+                        deaths: 'Deaths',
+                        battlesWon: 'Battles Won',
+                        damageDealt: 'Damage Dealt',
+                        totalHealing: 'Total Healing',
+                      };
+                      lockReason = `Requires ${statLabels[item.reqStat] || item.reqStat}: ${item.reqStatValue} (${statVal})`;
+                    }
+                  }
+
+                  return (
+                    <div key={item.id} className={`shop-card ${isEquipped ? 'equipped-cosmetic' : ''} ${locked && !isOwned ? 'locked-cosmetic' : ''}`}>
+                      <div className="shop-card-left">
+                        <div className="shop-card-name" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {item.color && <span className="cosmetic-color-swatch" style={{ background: item.color }} />}
+                          {item.name}
+                        </div>
+                        {item.desc && <div className="shop-card-meta"><span className="shop-card-stats">{item.desc}</span></div>}
+                        {locked && !isOwned && (
+                          <div className="shop-card-meta" style={{ color: '#ff6666', fontSize: '6px' }}>{lockReason}</div>
+                        )}
+                      </div>
+                      {!isOwned && !locked && (
+                        <button className="shop-buy-btn" disabled={!canAfford} onClick={() => onBuyCosmetic(item.id)}>
+                          <span className="shop-btn-price">{item.cost}g</span>
+                          <span className="shop-btn-label">{canAfford ? 'Buy' : 'Need gold'}</span>
+                        </button>
+                      )}
+                      {!isOwned && locked && (
+                        <button className="shop-buy-btn" disabled style={{ opacity: 0.4 }}>
+                          <span className="shop-btn-label">Locked</span>
                         </button>
                       )}
                       {isOwned && !isEquipped && (

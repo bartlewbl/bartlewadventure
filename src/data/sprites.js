@@ -564,6 +564,152 @@ export const BACKGROUNDS = {
   industrial: { sky: '#080707', ground: '#151313', accent: '#2b251f' },
 };
 
+// ---- HAT OVERLAY PIXEL DATA ----
+// Each hat is { pixels: [[row, col, color], ...], offsetY: number }
+// Coordinates relative to the base sprite grid (9-wide, 12-tall)
+export const HAT_OVERLAYS = {
+  'hat-crown': {
+    pixels: [
+      [0, 2, '#ffd700'], [0, 3, '#ffd700'], [0, 4, '#ffd700'], [0, 5, '#ffd700'], [0, 6, '#ffd700'],
+      [-1, 2, '#ffd700'], [-1, 4, '#ffd700'], [-1, 6, '#ffd700'],
+      [-2, 2, '#ff4444'], [-2, 4, '#4444ff'], [-2, 6, '#ff4444'],
+    ],
+  },
+  'hat-hood': {
+    pixels: [
+      [-1, 2, '#2a2a2a'], [-1, 3, '#333'], [-1, 4, '#333'], [-1, 5, '#333'], [-1, 6, '#2a2a2a'],
+      [0, 1, '#2a2a2a'], [0, 2, '#3a3a3a'], [0, 3, '#3a3a3a'], [0, 4, '#3a3a3a'], [0, 5, '#3a3a3a'], [0, 6, '#3a3a3a'], [0, 7, '#2a2a2a'],
+      [1, 1, '#2a2a2a'], [1, 7, '#2a2a2a'],
+    ],
+  },
+  'hat-horns': {
+    pixels: [
+      [-1, 1, '#8b0000'], [-2, 1, '#aa2222'], [-3, 2, '#cc3333'],
+      [-1, 7, '#8b0000'], [-2, 7, '#aa2222'], [-3, 6, '#cc3333'],
+    ],
+  },
+  'hat-halo': {
+    pixels: [
+      [-2, 2, '#ffee44'], [-2, 3, '#ffee44'], [-2, 4, '#ffee44'], [-2, 5, '#ffee44'], [-2, 6, '#ffee44'],
+      [-3, 3, '#ffee44'], [-3, 4, '#ffdd22'], [-3, 5, '#ffee44'],
+    ],
+  },
+  'hat-helmet': {
+    pixels: [
+      [-1, 2, '#6a6a6a'], [-1, 3, '#7a7a7a'], [-1, 4, '#8a8a8a'], [-1, 5, '#7a7a7a'], [-1, 6, '#6a6a6a'],
+      [0, 2, '#7a7a7a'], [0, 3, '#8a8a8a'], [0, 4, '#9a9a9a'], [0, 5, '#8a8a8a'], [0, 6, '#7a7a7a'],
+      [1, 1, '#5a5a5a'], [1, 7, '#5a5a5a'],
+      [2, 1, '#4a4a4a'], [2, 7, '#4a4a4a'],
+    ],
+  },
+  'hat-witch': {
+    pixels: [
+      [-4, 4, '#3a1a50'],
+      [-3, 3, '#3a1a50'], [-3, 4, '#4a2a60'], [-3, 5, '#3a1a50'],
+      [-2, 2, '#3a1a50'], [-2, 3, '#4a2a60'], [-2, 4, '#5a3a70'], [-2, 5, '#4a2a60'], [-2, 6, '#3a1a50'],
+      [-1, 1, '#3a1a50'], [-1, 2, '#4a2a60'], [-1, 3, '#4a2a60'], [-1, 4, '#5a3a70'], [-1, 5, '#4a2a60'], [-1, 6, '#4a2a60'], [-1, 7, '#3a1a50'],
+      [0, 1, '#2a0a40'], [0, 2, '#2a0a40'], [0, 3, '#2a0a40'], [0, 4, '#2a0a40'], [0, 5, '#2a0a40'], [0, 6, '#2a0a40'], [0, 7, '#2a0a40'],
+    ],
+  },
+  'hat-bandana': {
+    pixels: [
+      [0, 2, '#cc2222'], [0, 3, '#dd3333'], [0, 4, '#dd3333'], [0, 5, '#dd3333'], [0, 6, '#cc2222'],
+      [1, 1, '#cc2222'], [1, 7, '#cc2222'], [1, 8, '#aa1111'],
+    ],
+  },
+};
+
+// ---- SPRITE COLOR MAPS (base player colors) ----
+const BASE_HAIR_COLOR = '#4a3728';
+const BASE_SKIN_COLOR = '#fcd5b0';
+const BASE_SKIN_ACCENT = '#d4956a';
+const BASE_ARMOR_COLOR = '#3a6bc5';
+const BASE_BOOT_COLOR = '#5a3a1a';
+
+// Build a cosmetic-aware player sprite by remapping colors
+export function buildCosmeticSprite(baseSprite, equippedCosmetics, cosmeticsData) {
+  if (!equippedCosmetics) return baseSprite;
+
+  const colorMap = {};
+
+  // Hair color remap
+  if (equippedCosmetics.hairColor) {
+    const hair = cosmeticsData.hairColors?.find(h => h.id === equippedCosmetics.hairColor);
+    if (hair) colorMap[BASE_HAIR_COLOR] = hair.color;
+  }
+
+  // Skin tone remap
+  if (equippedCosmetics.skinTone) {
+    const skin = cosmeticsData.skinTones?.find(s => s.id === equippedCosmetics.skinTone);
+    if (skin) {
+      colorMap[BASE_SKIN_COLOR] = skin.color;
+      colorMap[BASE_SKIN_ACCENT] = skin.accent;
+    }
+  }
+
+  // Armor dye remap
+  if (equippedCosmetics.armorDye) {
+    const dye = cosmeticsData.armorDyes?.find(d => d.id === equippedCosmetics.armorDye);
+    if (dye) colorMap[BASE_ARMOR_COLOR] = dye.color;
+  }
+
+  // If no remaps needed, return base
+  if (Object.keys(colorMap).length === 0) return baseSprite;
+
+  // Clone sprite and apply color swaps
+  return baseSprite.map(row =>
+    row.map(pixel => {
+      if (pixel && colorMap[pixel]) return colorMap[pixel];
+      return pixel;
+    })
+  );
+}
+
+// Draw hat overlay on top of player sprite
+export function drawHatOverlay(ctx, hatId, cx, cy, scale, spriteWidth, spriteHeight) {
+  const hat = HAT_OVERLAYS[hatId];
+  if (!hat) return;
+
+  // Calculate top-left of the sprite from center
+  const x = cx - (spriteWidth * scale) / 2;
+  const y = cy - (spriteHeight * scale) / 2;
+
+  for (const [row, col, color] of hat.pixels) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
+  }
+}
+
+// Draw aura glow effect behind the player sprite
+export function drawAura(ctx, auraColor, cx, cy, scale, spriteWidth, spriteHeight, tick) {
+  if (!auraColor) return;
+
+  const pulse = 0.4 + 0.3 * Math.sin(tick * 0.06);
+  const w = spriteWidth * scale;
+  const h = spriteHeight * scale;
+  const pad = scale * 2 + Math.sin(tick * 0.08) * scale;
+
+  ctx.save();
+  ctx.globalAlpha = pulse * 0.35;
+  ctx.shadowColor = auraColor;
+  ctx.shadowBlur = 12 + Math.sin(tick * 0.1) * 4;
+  ctx.fillStyle = auraColor;
+
+  const rw = w + pad * 2;
+  const rh = h + pad * 2;
+
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rw / 2, rh / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = pulse * 0.15;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rw / 2 + scale, rh / 2 + scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 export function drawSprite(ctx, spriteData, x, y, scale = 3) {
   for (let row = 0; row < spriteData.length; row++) {
     for (let col = 0; col < spriteData[row].length; col++) {

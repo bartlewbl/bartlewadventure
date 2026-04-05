@@ -1,5 +1,6 @@
-import { useRef, useEffect } from 'react';
-import { SPRITES, drawBackground, drawSpriteCentered } from '../data/sprites';
+import { useRef, useEffect, useMemo } from 'react';
+import { SPRITES, drawBackground, drawSpriteCentered, buildCosmeticSprite, drawHatOverlay, drawAura } from '../data/sprites';
+import { COSMETICS } from '../data/goldSinks';
 
 // Animation durations in milliseconds
 const ANIM_DURATIONS = {
@@ -14,8 +15,19 @@ const ANIM_DURATIONS = {
 function easeOut(t) { return 1 - (1 - t) * (1 - t); }
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2; }
 
-export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage, activeTravellingNpc }) {
+export default function GameCanvas({ screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage, activeTravellingNpc, cosmetics }) {
   const canvasRef = useRef(null);
+
+  // Build cosmetic-aware player sprites (memoized on equipped cosmetics)
+  const equipped = cosmetics?.equipped;
+  const cosmeticIdle = useMemo(() => buildCosmeticSprite(SPRITES.player.idle, equipped, COSMETICS), [equipped]);
+  const cosmeticAttack = useMemo(() => buildCosmeticSprite(SPRITES.player.attack, equipped, COSMETICS), [equipped]);
+  const equippedHat = equipped?.hat || null;
+  const auraId = equipped?.aura || null;
+  const equippedAuraColor = useMemo(() => {
+    if (!auraId) return null;
+    return COSMETICS.auras?.find(a => a.id === auraId)?.color || null;
+  }, [auraId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -37,14 +49,18 @@ export default function GameCanvas({ screen, location, battle, animTick, battleA
       case 'shop':
         drawBackground(ctx, 'town', w, h);
         if (screen === 'town') {
-          drawSpriteCentered(ctx, SPRITES.player.idle, w / 2, h * 0.55, 4);
+          if (equippedAuraColor) drawAura(ctx, equippedAuraColor, w / 2, h * 0.55, 4, cosmeticIdle[0].length, cosmeticIdle.length, animTick);
+          drawSpriteCentered(ctx, cosmeticIdle, w / 2, h * 0.55, 4);
+          if (equippedHat) drawHatOverlay(ctx, equippedHat, w / 2, h * 0.55, 4, cosmeticIdle[0].length, cosmeticIdle.length);
         }
         break;
       case 'explore':
         if (location) {
           drawBackground(ctx, location.bgKey, w, h);
           const bobY = Math.sin(animTick * 0.1) * 2;
-          drawSpriteCentered(ctx, SPRITES.player.idle, w * 0.25, h * 0.55 + bobY, 3);
+          if (equippedAuraColor) drawAura(ctx, equippedAuraColor, w * 0.25, h * 0.55 + bobY, 3, cosmeticIdle[0].length, cosmeticIdle.length, animTick);
+          drawSpriteCentered(ctx, cosmeticIdle, w * 0.25, h * 0.55 + bobY, 3);
+          if (equippedHat) drawHatOverlay(ctx, equippedHat, w * 0.25, h * 0.55 + bobY, 3, cosmeticIdle[0].length, cosmeticIdle.length);
           // Draw active pet following player during exploration
           if (activePet) {
             const petSprite = SPRITES.pets?.[activePet.icon || activePet.id];
@@ -56,22 +72,22 @@ export default function GameCanvas({ screen, location, battle, animTick, battleA
         }
         break;
       case 'battle':
-        renderBattle(ctx, w, h, location, battle, animTick, battleAnim, activePet);
+        renderBattle(ctx, w, h, location, battle, animTick, battleAnim, activePet, cosmeticIdle, cosmeticAttack, equippedHat, equippedAuraColor);
         break;
       case 'battle-result':
         if (location) drawBackground(ctx, location.bgKey, w, h);
         break;
       case 'extraordinary-trader':
-        renderTraderScene(ctx, w, h, animTick, activeTrader);
+        renderTraderScene(ctx, w, h, animTick, activeTrader, cosmeticIdle, equippedHat, equippedAuraColor);
         break;
       case 'quest-village':
-        renderVillageScene(ctx, w, h, animTick, activeVillage);
+        renderVillageScene(ctx, w, h, animTick, activeVillage, cosmeticIdle, equippedHat, equippedAuraColor);
         break;
       case 'travelling-npc':
-        renderTravellingNpcScene(ctx, w, h, animTick, activeTravellingNpc);
+        renderTravellingNpcScene(ctx, w, h, animTick, activeTravellingNpc, cosmeticIdle, equippedHat, equippedAuraColor);
         break;
     }
-  }, [screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage, activeTravellingNpc]);
+  }, [screen, location, battle, animTick, battleAnim, activePet, activeTrader, activeVillage, activeTravellingNpc, cosmeticIdle, cosmeticAttack, equippedHat, equippedAuraColor]);
 
   return <canvas ref={canvasRef} width={640} height={480} className="game-canvas" />;
 }
@@ -92,7 +108,7 @@ function renderMenu(ctx, w, h, tick) {
   drawSpriteCentered(ctx, SPRITES.monsters.rat, w * 0.35, h * 0.35, 2);
 }
 
-function renderBattle(ctx, w, h, location, battle, tick, battleAnim, activePet) {
+function renderBattle(ctx, w, h, location, battle, tick, battleAnim, activePet, cosmeticIdle, cosmeticAttack, equippedHat, equippedAuraColor) {
   if (!location || !battle?.monster) return;
 
   // Get animation state
@@ -225,8 +241,10 @@ function renderBattle(ctx, w, h, location, battle, tick, battleAnim, activePet) 
   // Draw player
   const pBob = animType ? 0 : Math.sin(tick * 0.08) * 2;
   ctx.globalAlpha = playerAlpha;
-  const playerSprite = useAttackSprite ? SPRITES.player.attack : SPRITES.player.idle;
+  const playerSprite = useAttackSprite ? (cosmeticAttack || SPRITES.player.attack) : (cosmeticIdle || SPRITES.player.idle);
+  if (equippedAuraColor) drawAura(ctx, equippedAuraColor, playerX, playerY + pBob, 4, playerSprite[0].length, playerSprite.length, tick);
   drawSpriteCentered(ctx, playerSprite, playerX, playerY + pBob, 4);
+  if (equippedHat) drawHatOverlay(ctx, equippedHat, playerX, playerY + pBob, 4, (cosmeticIdle || SPRITES.player.idle)[0].length, (cosmeticIdle || SPRITES.player.idle).length);
   ctx.globalAlpha = 1;
 
   // Draw active pet beside the player
@@ -628,7 +646,7 @@ function drawDodgeEffect(ctx, px, py, mx, my, progress) {
 }
 
 // ---- TRADER SCENE ----
-function renderTraderScene(ctx, w, h, tick) {
+function renderTraderScene(ctx, w, h, tick, _trader, cosmeticIdle, equippedHat, equippedAuraColor) {
   // Dark mystical background
   ctx.fillStyle = '#08061a';
   ctx.fillRect(0, 0, w, h);
@@ -713,7 +731,7 @@ function renderTraderScene(ctx, w, h, tick) {
 }
 
 // ---- VILLAGE SCENE ----
-function renderVillageScene(ctx, w, h, tick) {
+function renderVillageScene(ctx, w, h, tick, _village, cosmeticIdle, equippedHat, equippedAuraColor) {
   // Warm evening sky
   const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
   skyGrad.addColorStop(0, '#0a0e1a');
@@ -792,7 +810,10 @@ function renderVillageScene(ctx, w, h, tick) {
 
   // Player sprite visiting the village
   const playerBob = Math.sin(tick * 0.08) * 2;
-  drawSpriteCentered(ctx, SPRITES.player.idle, w * 0.5, groundY - 35 + playerBob, 3);
+  const villagePlayerSprite = cosmeticIdle || SPRITES.player.idle;
+  if (equippedAuraColor) drawAura(ctx, equippedAuraColor, w * 0.5, groundY - 35 + playerBob, 3, villagePlayerSprite[0].length, villagePlayerSprite.length, tick);
+  drawSpriteCentered(ctx, villagePlayerSprite, w * 0.5, groundY - 35 + playerBob, 3);
+  if (equippedHat) drawHatOverlay(ctx, equippedHat, w * 0.5, groundY - 35 + playerBob, 3, villagePlayerSprite[0].length, villagePlayerSprite.length);
 
   // Warm light overlay near ground from campfire
   ctx.globalAlpha = 0.04;
@@ -816,7 +837,7 @@ function renderVillageScene(ctx, w, h, tick) {
 }
 
 // ---- TRAVELLING NPC SCENE ----
-function renderTravellingNpcScene(ctx, w, h, tick, npc) {
+function renderTravellingNpcScene(ctx, w, h, tick, npc, cosmeticIdle, equippedHat, equippedAuraColor) {
   // Moody road scene with ambient lighting
   const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
   skyGrad.addColorStop(0, '#06081a');

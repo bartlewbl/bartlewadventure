@@ -188,7 +188,7 @@ function createInitialState() {
     mercenary: null,    // { mercId, name, atkBonus, defBonus, battlesRemaining, rarity } or null
     cosmetics: {
       owned: [],        // [cosmeticId, ...]
-      equipped: {},     // { title: id|null, nameColor: id|null, frame: id|null }
+      equipped: {},     // { title, nameColor, frame, hairColor, skinTone, armorDye, hat, aura }
     },
   };
 }
@@ -6508,7 +6508,7 @@ function gameReducer(state, action) {
     // ---- GOLD SINK: COSMETIC SHOP ----
     case 'BUY_COSMETIC': {
       const { cosmeticId } = action;
-      const allCosmetics = [...COSMETICS.titles, ...COSMETICS.nameColors, ...COSMETICS.frames];
+      const allCosmetics = [...COSMETICS.titles, ...COSMETICS.nameColors, ...COSMETICS.frames, ...(COSMETICS.hairColors || []), ...(COSMETICS.skinTones || []), ...(COSMETICS.armorDyes || []), ...(COSMETICS.hats || []), ...(COSMETICS.auras || [])];
       const cosmetic = allCosmetics.find(c => c.id === cosmeticId);
       if (!cosmetic) return state;
       const cs = state.cosmetics || { owned: [], equipped: {} };

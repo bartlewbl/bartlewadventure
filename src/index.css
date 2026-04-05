@@ -14639,4 +14639,6 @@ body {
 .cosmetic-item-actions { }
 .cosmetic-buy-btn, .cosmetic-equip-btn, .cosmetic-unequip-btn { font-size: 7px; }
 .equipped-cosmetic { border-color: #4caf50 !important; }
+.locked-cosmetic { opacity: 0.6; }
+.locked-cosmetic .shop-card-name { color: #888 !important; }
 

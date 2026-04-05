@@ -223,6 +223,7 @@ export default function App() {
         activeTrader={state.activeTrader}
         activeVillage={state.activeVillage}
         activeTravellingNpc={state.activeTravellingNpc}
+        cosmetics={state.cosmetics}
       />
 
       <div className="ui-overlay">
@@ -513,6 +514,7 @@ export default function App() {
                 shopPurchases={state.shopPurchases || {}}
                 tavern={state.tavern}
                 cosmetics={state.cosmetics}
+                stats={state.stats}
                 onBuy={actions.buyItem}
                 onSell={actions.sellItem}
                 onSellUnequippable={actions.sellUnequippable}
