@@ -306,23 +306,27 @@ export default function BattleScreen({
         </div>
       ))}
 
-      {/* === TOP HUD: Info panels pinned to top === */}
+      {/* === TOP HUD: Minimal bar pinned to top === */}
       <div className="battle-hud-top">
-
-      {/* === TOP BAR: Turn indicator + Mana === */}
-      <div className="battle-top-bar">
-        <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
-          {battle.isPlayerTurn && !pendingTurnRef.current ? 'YOUR TURN' : 'ENEMY TURN'}
+        <div className="battle-top-bar">
+          <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
+            {battle.isPlayerTurn && !pendingTurnRef.current ? 'YOUR TURN' : 'ENEMY TURN'}
+          </div>
+          {waveDefense && (
+            <div className="battle-wave-tag">
+              Wave {waveDefense.currentWave}/{waveDefense.totalWaves}
+            </div>
+          )}
+          <div className="battle-mana-display">
+            Mana: {player.mana}/{getBattleMaxMana(player)}
+          </div>
         </div>
-        <div className="battle-mana-display">
-          Mana: {player.mana}/{getBattleMaxMana(player)}
-        </div>
-      </div>
+      </div>{/* end battle-hud-top */}
 
-      {/* === COMBATANTS: Player vs Monster === */}
-      <div className="battle-combatants">
-        {/* Player side */}
-        <div className="battle-combatant battle-player-side">
+      {/* === VIEWPORT: Clear zone for canvas sprites with HP overlays === */}
+      <div className="battle-viewport">
+        {/* Player HP overlay - bottom left of viewport */}
+        <div className="viewport-overlay viewport-overlay-player">
           <span className="combatant-name player-name-tag">{player.name} Lv.{player.level}</span>
           <div className="stat-bar">
             <span className="bar-label">HP</span>
@@ -331,7 +335,6 @@ export default function BattleScreen({
             </div>
             <span className="bar-text">{player.hp}/{player.maxHp}</span>
           </div>
-          {/* Pet companion under player */}
           {equippedPets.length > 0 && (() => {
             const pet = equippedPets[0];
             return (
@@ -346,18 +349,8 @@ export default function BattleScreen({
           })()}
         </div>
 
-        {/* Wave defense indicator */}
-        {waveDefense && (
-          <div style={{ textAlign: 'center', padding: '4px 8px', background: 'rgba(255,100,30,0.15)', borderRadius: 6, marginBottom: 4, border: '1px solid rgba(255,100,30,0.3)', fontSize: '0.85em', color: '#ffa040' }}>
-            Defending the Fire — Wave {waveDefense.currentWave}/{waveDefense.totalWaves}
-          </div>
-        )}
-
-        {/* VS indicator */}
-        <div className="battle-vs">VS</div>
-
-        {/* Monster side */}
-        <div className="battle-combatant battle-monster-side">
+        {/* Monster HP overlay - top right of viewport */}
+        <div className="viewport-overlay viewport-overlay-monster">
           <div className="monster-header">
             {isBoss && <span className="boss-badge">BOSS</span>}
             <span className={`combatant-name ${isBoss ? 'boss-name' : 'monster-name-tag'}`}>
@@ -379,6 +372,9 @@ export default function BattleScreen({
           </div>
         </div>
       </div>
+
+      {/* === BOTTOM HUD: Controls pinned to bottom === */}
+      <div className="battle-hud-bottom">
 
       {/* === STATUS PANEL: Debuffs on both sides === */}
       {(hasMonsterDebuffs || hasPlayerBuffsDebuffs) && (
@@ -498,14 +494,6 @@ export default function BattleScreen({
           )}
         </div>
       )}
-
-      </div>{/* end battle-hud-top */}
-
-      {/* === VIEWPORT: Clear zone for canvas sprites === */}
-      <div className="battle-viewport" />
-
-      {/* === BOTTOM HUD: Controls pinned to bottom === */}
-      <div className="battle-hud-bottom">
 
       {/* === COMBAT INFO: Speed, Stance, Momentum, Combos, Weather, Passives === */}
       <div className="battle-combat-info">

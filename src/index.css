@@ -2749,8 +2749,57 @@ body {
 /* Clear viewport zone - sprites show through here */
 .battle-viewport {
   flex: 1;
-  min-height: 60px;
-  pointer-events: none;
+  min-height: 100px;
+  position: relative;
+}
+
+/* HP bar overlays inside the viewport */
+.viewport-overlay {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 2;
+  background: rgba(5, 5, 15, 0.55);
+  border-radius: 4px;
+  padding: 4px 8px;
+  max-width: 45%;
+}
+
+.viewport-overlay-player {
+  bottom: 8px;
+  left: 8px;
+  text-align: left;
+}
+
+.viewport-overlay-monster {
+  top: 8px;
+  right: 8px;
+  text-align: right;
+}
+
+.viewport-overlay-monster .stat-bar {
+  flex-direction: row-reverse;
+}
+
+.viewport-overlay-monster .bar-label {
+  text-align: right;
+}
+
+.viewport-overlay-monster .bar-text {
+  text-align: left;
+}
+
+.viewport-overlay-monster .monster-header {
+  justify-content: flex-end;
+}
+
+/* Wave defense tag in top bar */
+.battle-wave-tag {
+  font-size: 7px;
+  padding: 2px 8px;
+  background: rgba(255, 100, 30, 0.15);
+  border: 1px solid rgba(255, 100, 30, 0.3);
+  border-radius: 3px;
+  color: #ffa040;
 }
 
 /* Bottom HUD: combat info, log, actions - pinned to bottom */
@@ -4313,16 +4362,13 @@ body {
 
   /* Battle */
   .battle-actions .btn { font-size: 8px; padding: 8px 10px; }
-  .battle-combatants { flex-direction: column; gap: 6px; }
-  .battle-vs { display: none; }
-  .battle-monster-side .stat-bar { flex-direction: row; }
-  .battle-monster-side .bar-text { text-align: right; }
+  .viewport-overlay { max-width: 48%; padding: 3px 6px; }
   .floating-damage { font-size: 11px; }
   .turn-indicator { font-size: 7px; }
   .combatant-name { font-size: 8px; }
   .battle-log { max-height: 50px; font-size: 6px; }
   .screen-battle { padding-top: 44px; }
-  .battle-viewport { min-height: 40px; }
+  .battle-viewport { min-height: 60px; }
 
   /* Inventory */
   .equipment-grid { grid-template-columns: repeat(2, 1fr); }
@@ -4641,7 +4687,7 @@ body {
   .inventory-list { max-height: 100px; }
   .result-title { font-size: 14px; margin-bottom: 10px; }
   .result-rewards { font-size: 8px; }
-  .battle-combatants { gap: 4px; }
+  .viewport-overlay { max-width: 50%; padding: 2px 5px; }
   .turn-indicator { font-size: 6px; padding: 2px 8px; }
   .floating-damage { font-size: 10px; }
 }
