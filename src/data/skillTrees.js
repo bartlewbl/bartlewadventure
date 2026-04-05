@@ -520,11 +520,11 @@ export const SKILL_TREES = {
     tiers: [
       { level: 2, label: 'Tier 1', choices: [
         { id: 'thf_t1a', name: 'Shadow Step', type: 'passive', desc: '8% chance to dodge enemy attacks', icon: 'P' },
-        { id: 'thf_t1c', name: 'Nimble Fingers', type: 'passive', desc: '+15% gold from battles', icon: 'P' },
+        { id: 'thf_t1c', name: 'Nimble Fingers', type: 'passive', desc: '+10% gold from battles', icon: 'P' },
         { id: 'thf_t1d', name: 'Keen Edge', type: 'passive', desc: '+5% ATK permanently', icon: 'P' },
       ]},
       { level: 4, label: 'Tier 2', choices: [
-        { id: 'thf_t2a', name: 'Plunder', type: 'passive', desc: '+50% gold from battles', icon: 'P' },
+        { id: 'thf_t2a', name: 'Plunder', type: 'passive', desc: '+25% gold from battles', icon: 'P' },
         { id: 'thf_t2c', name: 'Quick Reflexes', type: 'passive', desc: '+3% dodge chance', icon: 'P' },
         { id: 'thf_t2d', name: 'Venom Knowledge', type: 'passive', desc: 'Poison damage increased by 25%', icon: 'P' },
       ]},
@@ -564,7 +564,7 @@ export const SKILL_TREES = {
         { id: 'thf_t9d', name: 'Shadow Cloak', type: 'passive', desc: '+8% dodge chance at full HP', icon: 'P' },
       ]},
       { level: 20, label: 'Tier 10', choices: [
-        { id: 'thf_t10a', name: 'Master Thief', type: 'passive', desc: 'Double gold + guaranteed rare+ loot drops', icon: 'P' },
+        { id: 'thf_t10a', name: 'Master Thief', type: 'passive', desc: '+30% gold + guaranteed rare+ loot drops', icon: 'P' },
         { id: 'thf_t10c', name: 'Killing Spree', type: 'passive', desc: 'After killing an enemy, start next battle with +10% ATK', icon: 'P' },
         { id: 'thf_t10d', name: 'Perfect Evasion', type: 'passive', desc: '+5% dodge chance total', icon: 'P' },
       ]},
@@ -599,7 +599,7 @@ export const SKILL_TREES = {
         { id: 'thf_t16d', name: 'Phantom Speed', type: 'passive', desc: '+6% dodge, +6% ATK', icon: 'P' },
       ]},
       { level: 34, label: 'Tier 17', choices: [
-        { id: 'thf_t17a', name: 'Pickpocket', type: 'passive', desc: 'Triple gold from battles, +8% rare item chance', icon: 'P' },
+        { id: 'thf_t17a', name: 'Pickpocket', type: 'passive', desc: '+40% gold from battles, +8% rare item chance', icon: 'P' },
         { id: 'thf_t17c', name: 'Assassin Instinct', type: 'passive', desc: '+2% ATK per level above 25', icon: 'P' },
         { id: 'thf_t17d', name: 'Evasive Maneuvers', type: 'passive', desc: 'Take 8% less damage from all sources', icon: 'P' },
       ]},
@@ -616,7 +616,7 @@ export const SKILL_TREES = {
       { level: 40, label: '★ Tier 20', milestone: true, choices: [
         { id: 'thf_t20a', name: 'Living Shadow', type: 'passive', desc: '21% dodge chance. Your ATK is reduced by 10%. Normal attacks apply lethal poison (2% enemy max HP/turn). You become untouchable but rely on time to kill.', icon: 'P', milestone: true },
         { id: 'thf_t20c', name: 'Dance of Blades', type: 'passive', desc: 'Attack 2 times per turn. Each attack deals 13% normal damage. Every dodge gives +6% ATK for the rest of the battle. A whirlwind.', icon: 'P', milestone: true },
-        { id: 'thf_t20d', name: 'Kingpin', type: 'passive', desc: 'Quadruple gold. Guaranteed legendary loot. +12% ATK. You take +5% damage. Greed is power.', icon: 'P', milestone: true },
+        { id: 'thf_t20d', name: 'Kingpin', type: 'passive', desc: '+50% gold. Guaranteed legendary loot. +12% ATK. You take +5% damage. Greed is power.', icon: 'P', milestone: true },
       ]},
       { level: 42, label: 'Tier 21', choices: [
         { id: 'thf_t21a', name: 'Smoke Bomb', type: 'passive', desc: 'When hit, 10% chance to gain dodge for next attack', icon: 'P' },
@@ -641,13 +641,13 @@ export const SKILL_TREES = {
       { level: 50, label: '★ Tier 25', milestone: true, choices: [
         { id: 'thf_t25a', name: 'One with Nothing', type: 'passive', desc: 'Unequip all gear — your ATK and DEF become based on your level x3. Dodge chance 60%. Every hit you land steals 3% enemy max HP. You transcend equipment.', icon: 'P', milestone: true },
         { id: 'thf_t25c', name: 'Eternal Shadow', type: 'passive', desc: '23% dodge. ATK reduced to 25%. Every dodge deals 3% enemy max HP as shadow damage. You cannot be hit, but you barely hit back.', icon: 'P', milestone: true },
-        { id: 'thf_t25d', name: 'God of Thieves', type: 'passive', desc: '3x gold. All loot is legendary. +17% ATK. You take +10% more damage. Crits deal 2.5x. Fortune favors the bold.', icon: 'P', milestone: true },
+        { id: 'thf_t25d', name: 'God of Thieves', type: 'passive', desc: '+60% gold. All loot is legendary. +17% ATK. You take +10% more damage. Crits deal 2.5x. Fortune favors the bold.', icon: 'P', milestone: true },
       ]},
       // ---- Tiers 26-50 (Levels 52-100) ----
       { level: 52, label: 'Tier 26', choices: [
         { id: 'thf_t26a', name: 'Shadow Mastery', type: 'passive', desc: '+2% dodge and +2% ATK per level above 40', icon: 'P' },
         { id: 'thf_t26c', name: 'Venom Supremacy', type: 'passive', desc: 'All poison effects tripled and cannot be cleansed', icon: 'P' },
-        { id: 'thf_t26d', name: 'Fortune Seeker', type: 'passive', desc: '2x gold from battles, +10% rare item chance', icon: 'P' },
+        { id: 'thf_t26d', name: 'Fortune Seeker', type: 'passive', desc: '+35% gold from battles, +10% rare item chance', icon: 'P' },
       ]},
       { level: 54, label: 'Tier 27', choices: [
         { id: 'thf_t27a', name: 'Lightning Reflexes', type: 'passive', desc: '14% chance to attack twice each turn', icon: 'P' },
@@ -667,7 +667,7 @@ export const SKILL_TREES = {
       { level: 60, label: '★ Tier 30', milestone: true, choices: [
         { id: 'thf_t30a', name: 'Aspect of Shadow', type: 'passive', desc: '19% dodge chance. Every dodge deals 4% enemy max HP as shadow damage. ATK reduced by 30%. You are unhittable, death by a thousand shadows.', icon: 'P', milestone: true },
         { id: 'thf_t30c', name: 'Venom God', type: 'passive', desc: 'All poison damage +20%. Every attack applies lethal poison. Your direct damage is reduced by 50%. Venom does all the work.', icon: 'P', milestone: true },
-        { id: 'thf_t30d', name: 'Master of Fortune', type: 'passive', desc: '3x gold. All loot is epic+. Lucky Strike chance 13%. +12% ATK. You take +6% damage. The luckiest thief alive.', icon: 'P', milestone: true },
+        { id: 'thf_t30d', name: 'Master of Fortune', type: 'passive', desc: '+60% gold. All loot is epic+. Lucky Strike chance 13%. +12% ATK. You take +6% damage. The luckiest thief alive.', icon: 'P', milestone: true },
       ]},
       { level: 62, label: 'Tier 31', choices: [
         { id: 'thf_t31a', name: 'Phantom Agility', type: 'passive', desc: '13% chance to attack twice, dodge also triggers extra attack', icon: 'P' },
@@ -687,12 +687,12 @@ export const SKILL_TREES = {
       { level: 68, label: 'Tier 34', choices: [
         { id: 'thf_t34a', name: 'Shadow Strike Master', type: 'passive', desc: 'After dodging, next attack deals +20% damage and ignores all DEF', icon: 'P' },
         { id: 'thf_t34c', name: 'Mythic Agility', type: 'passive', desc: '+17% ATK, +5% dodge, take 8% less damage', icon: 'P' },
-        { id: 'thf_t34d', name: 'Plunderer Supreme', type: 'passive', desc: '2x gold, all items drop at rare+ quality minimum', icon: 'P' },
+        { id: 'thf_t34d', name: 'Plunderer Supreme', type: 'passive', desc: '+40% gold, all items drop at rare+ quality minimum', icon: 'P' },
       ]},
       { level: 70, label: '★ Tier 35', milestone: true, choices: [
         { id: 'thf_t35a', name: 'Mythic Shadow', type: 'passive', desc: '20% dodge. ATK reduced by 25%. Every dodge deals 3% enemy max HP. Attacks apply lethal poison. You are the shadow of death itself.', icon: 'P', milestone: true },
         { id: 'thf_t35c', name: 'Blade Typhoon', type: 'passive', desc: 'Attack 2 times per turn at 70% damage each. Every dodge grants +3% ATK permanently per battle. 17% dodge chance. A whirlwind of steel.', icon: 'P', milestone: true },
-        { id: 'thf_t35d', name: 'Emperor of Thieves', type: 'passive', desc: '4x gold. All loot legendary. Crits deal 2.5x. +7% dodge. You take +7% damage. The richest corpse or the richest king.', icon: 'P', milestone: true },
+        { id: 'thf_t35d', name: 'Emperor of Thieves', type: 'passive', desc: '+70% gold. All loot legendary. Crits deal 2.5x. +7% dodge. You take +7% damage. The richest corpse or the richest king.', icon: 'P', milestone: true },
       ]},
       { level: 72, label: 'Tier 36', choices: [
         { id: 'thf_t36a', name: 'Ethereal Form', type: 'passive', desc: '+9% dodge, heal 1% max HP per dodge', icon: 'P' },
@@ -707,7 +707,7 @@ export const SKILL_TREES = {
       { level: 76, label: 'Tier 38', choices: [
         { id: 'thf_t38a', name: 'Apex Assassin', type: 'passive', desc: '+17% damage to enemies below 50% HP, first attack each battle ignores all DEF', icon: 'P' },
         { id: 'thf_t38c', name: 'Untouchable Legend', type: 'passive', desc: '+9% dodge, immune to all debuffs', icon: 'P' },
-        { id: 'thf_t38d', name: 'Shadow Economy', type: 'passive', desc: '3x gold, +13% item drop rate, all skills cost 12% less mana', icon: 'P' },
+        { id: 'thf_t38d', name: 'Shadow Economy', type: 'passive', desc: '+50% gold, +13% item drop rate, all skills cost 12% less mana', icon: 'P' },
       ]},
       { level: 78, label: 'Tier 39', choices: [
         { id: 'thf_t39a', name: 'Ascended Thief', type: 'passive', desc: '+3% ATK and dodge per level above 60', icon: 'P' },
@@ -732,7 +732,7 @@ export const SKILL_TREES = {
       { level: 86, label: 'Tier 43', choices: [
         { id: 'thf_t43a', name: 'Ethereal Assassin', type: 'passive', desc: 'All equipment bonuses increased by 40%, +12% ATK', icon: 'P' },
         { id: 'thf_t43c', name: 'Spectral Agility', type: 'passive', desc: '17% chance to attack twice, each attack has 12% crit chance', icon: 'P' },
-        { id: 'thf_t43d', name: 'Grand Larceny', type: 'passive', desc: '3x gold, all loot epic+, +17% item drop rate', icon: 'P' },
+        { id: 'thf_t43d', name: 'Grand Larceny', type: 'passive', desc: '+60% gold, all loot epic+, +17% item drop rate', icon: 'P' },
       ]},
       { level: 88, label: 'Tier 44', choices: [
         { id: 'thf_t44a', name: 'Shadow Transcendence', type: 'passive', desc: '+10% dodge chance, dodge also restores 3% max HP and 5 mana', icon: 'P' },
@@ -742,7 +742,7 @@ export const SKILL_TREES = {
       { level: 90, label: '★ Tier 45', milestone: true, choices: [
         { id: 'thf_t45a', name: 'Primordial Shadow', type: 'passive', desc: '23% dodge. Every dodge deals 5% enemy max HP. ATK -10%. Heal 2% max HP per dodge. You are the darkness between heartbeats.', icon: 'P', milestone: true },
         { id: 'thf_t45c', name: 'Eternal Blade Dance', type: 'passive', desc: 'Attack 2 times per turn at 70% damage. 20% dodge. Every dodge grants +3% ATK permanently. Crits deal 2.5x. An endless storm of steel.', icon: 'P', milestone: true },
-        { id: 'thf_t45d', name: 'Primordial Fortune', type: 'passive', desc: '4x gold. All loot legendary. Crits deal 2.5x. +17% ATK. +9% dodge. You take +10% more damage. The ultimate risk-reward existence.', icon: 'P', milestone: true },
+        { id: 'thf_t45d', name: 'Primordial Fortune', type: 'passive', desc: '+80% gold. All loot legendary. Crits deal 2.5x. +17% ATK. +9% dodge. You take +10% more damage. The ultimate risk-reward existence.', icon: 'P', milestone: true },
       ]},
       { level: 92, label: 'Tier 46', choices: [
         { id: 'thf_t46a', name: 'Godlike Agility', type: 'passive', desc: '+10% dodge, +17% ATK, heal 1% max HP per dodge', icon: 'P' },
@@ -762,12 +762,12 @@ export const SKILL_TREES = {
       { level: 98, label: 'Tier 49', choices: [
         { id: 'thf_t49a', name: 'Mythic Assassin', type: 'passive', desc: '+25% ATK, +10% dodge, all attacks have +10% crit chance', icon: 'P' },
         { id: 'thf_t49c', name: 'Absolute Stealth', type: 'passive', desc: '+12% dodge, +17% ATK, immune to all negative effects', icon: 'P' },
-        { id: 'thf_t49d', name: 'Infinite Fortune', type: 'passive', desc: '4x gold, all loot legendary, +20% item drop rate', icon: 'P' },
+        { id: 'thf_t49d', name: 'Infinite Fortune', type: 'passive', desc: '+75% gold, all loot legendary, +20% item drop rate', icon: 'P' },
       ]},
       { level: 100, label: '★ Tier 50', milestone: true, choices: [
         { id: 'thf_t50a', name: 'God of Shadows', type: 'passive', desc: '24% dodge. Every dodge deals 7% enemy max HP. Heal 2% max HP per dodge. ATK -10%. You are shadow incarnate — untouchable, inevitable.', icon: 'P', milestone: true },
         { id: 'thf_t50c', name: 'Eternal Phantom', type: 'passive', desc: 'Attack 2 times per turn at 70% damage. 20% dodge. Crits deal 2.5x. Every dodge heals 5%. An infinite cascade of phantom blades.', icon: 'P', milestone: true },
-        { id: 'thf_t50d', name: 'Primordial God of Fortune', type: 'passive', desc: '10x gold. All loot legendary. Crits deal 2.5x. Lucky Strike 20%. +25% ATK. You take +15% more damage. The ultimate gambler.', icon: 'P', milestone: true },
+        { id: 'thf_t50d', name: 'Primordial God of Fortune', type: 'passive', desc: '+100% gold. All loot legendary. Crits deal 2.5x. Lucky Strike 20%. +25% ATK. You take +15% more damage. The ultimate gambler.', icon: 'P', milestone: true },
       ]},
     ],
   },
