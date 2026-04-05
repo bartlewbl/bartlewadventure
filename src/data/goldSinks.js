@@ -2,7 +2,7 @@
 // GOLD SINKS - Data definitions for gold spending features
 // ============================================================
 
-// ---- STAT RESPEC ----
+// ---- STAT RESPEC (via Grog the bartender) ----
 // Cost scales with player level
 export function getRespecCost(playerLevel) {
   return Math.floor(50 * playerLevel);
@@ -17,7 +17,7 @@ export const CLASS_BASE_STATS = {
   ranger: { maxHp: 50, maxMana: 35, baseAtk: 6, baseDef: 3, charisma: 3, wisdom: 3, athletics: 4, speed: 6, evasion: 4, accuracy: 6, resistance: 3, tenacity: 3, aggression: 3, luck: 4, fortitude: 3 },
 };
 
-// ---- ITEM ENCHANTING ----
+// ---- ITEM ENCHANTING (via Ember NPC in tavern) ----
 export const ENCHANT_LEVELS = [
   { level: 1, label: '+1', costMult: 1, statBonus: 1, successRate: 0.90 },
   { level: 2, label: '+2', costMult: 2, statBonus: 2, successRate: 0.75 },
@@ -39,90 +39,145 @@ export function getEnchantSuccess(currentEnchantLevel) {
 
 export const MAX_ENCHANT_LEVEL = ENCHANT_LEVELS.length;
 
-// ---- BOUNTY BOARD ----
-export const BOUNTIES = [
-  {
-    id: 'bounty-street-thug', name: 'Street Thug Cleanup', desc: 'Clear out the street thugs roaming the alleys.',
-    fee: 50, killTarget: 5, goldReward: 150, expReward: 80,
-    minLevel: 1, region: 'neon-district',
-  },
-  {
-    id: 'bounty-sewer-rats', name: 'Sewer Rat Infestation', desc: 'Exterminate the giant rats in the sewers.',
-    fee: 80, killTarget: 8, goldReward: 250, expReward: 120,
-    minLevel: 3, region: 'neon-district',
-  },
-  {
-    id: 'bounty-fire-elemental', name: 'Scorched Patrol', desc: 'Hunt fire elementals in the badlands.',
-    fee: 150, killTarget: 6, goldReward: 450, expReward: 200,
-    minLevel: 8, region: 'scorched-badlands',
-  },
-  {
-    id: 'bounty-frost-beast', name: 'Frozen Hunt', desc: 'Track and kill frost beasts in the tundra.',
-    fee: 200, killTarget: 5, goldReward: 600, expReward: 300,
-    minLevel: 12, region: 'frozen-wastes',
-  },
-  {
-    id: 'bounty-toxic-crawler', name: 'Swamp Purge', desc: 'Eliminate toxic crawlers from the marshlands.',
-    fee: 300, killTarget: 7, goldReward: 850, expReward: 400,
-    minLevel: 16, region: 'toxic-marshlands',
-  },
-  {
-    id: 'bounty-deep-lurker', name: 'Abyssal Stalker', desc: 'Dive deep and slay the lurking horrors below.',
-    fee: 500, killTarget: 5, goldReward: 1400, expReward: 600,
-    minLevel: 22, region: 'abyssal-depths',
-  },
-  {
-    id: 'bounty-celestial', name: 'Celestial Warden', desc: 'Challenge the celestial guardians in the highlands.',
-    fee: 750, killTarget: 4, goldReward: 2200, expReward: 900,
-    minLevel: 28, region: 'celestial-highlands',
-  },
-];
+// ---- NPC BOUNTIES (per tavern NPC) ----
+// Each NPC posts bounties through their faction contacts
+export const NPC_BOUNTIES = {
+  bartender: [
+    {
+      id: 'grog-bounty-1', name: 'Bar Tab Enforcement', desc: "Some deadbeats skipped their tab and fled to the alleys. Rough 'em up.",
+      fee: 50, killTarget: 5, goldReward: 150, expReward: 80, reqRep: 1, reqLevel: 1,
+    },
+    {
+      id: 'grog-bounty-2', name: 'Cellar Infestation', desc: 'Giant rats got into the cellar again. Clear them out before they spoil the ale.',
+      fee: 80, killTarget: 8, goldReward: 250, expReward: 120, reqRep: 2, reqLevel: 3,
+    },
+    {
+      id: 'grog-bounty-3', name: "Ironflask's Revenge", desc: "The creatures that killed my brother roam the deep. Hunt them for me.",
+      fee: 300, killTarget: 6, goldReward: 850, expReward: 400, reqRep: 3, reqLevel: 12,
+    },
+  ],
+  whisper: [
+    {
+      id: 'whis-bounty-1', name: 'Loose Ends', desc: 'Some informants have gone rogue. Silence them permanently.',
+      fee: 80, killTarget: 6, goldReward: 200, expReward: 100, reqRep: 1, reqLevel: 3,
+    },
+    {
+      id: 'whis-bounty-2', name: 'Shadow Purge', desc: 'A rival syndicate is moving in. Remove their enforcers.',
+      fee: 200, killTarget: 8, goldReward: 600, expReward: 250, reqRep: 2, reqLevel: 8,
+    },
+    {
+      id: 'whis-bounty-3', name: 'The Dead Drop', desc: 'Eliminate the couriers carrying intelligence to our enemies in the depths.',
+      fee: 500, killTarget: 5, goldReward: 1400, expReward: 600, reqRep: 4, reqLevel: 20,
+    },
+  ],
+  fenwick: [
+    {
+      id: 'fen-bounty-1', name: "Old Guard's Honor", desc: "Monsters dishonor the old battlefields. Show them what we're made of.",
+      fee: 60, killTarget: 7, goldReward: 180, expReward: 90, reqRep: 1, reqLevel: 2,
+    },
+    {
+      id: 'fen-bounty-2', name: 'Frozen Memories', desc: 'The frost beasts guard relics of the Old Guard. Recover them.',
+      fee: 200, killTarget: 5, goldReward: 600, expReward: 300, reqRep: 2, reqLevel: 10,
+    },
+    {
+      id: 'fen-bounty-3', name: 'Avenge the Fallen', desc: 'The creatures of the Abyss killed my comrades. Make them pay.',
+      fee: 500, killTarget: 5, goldReward: 1400, expReward: 600, reqRep: 4, reqLevel: 22,
+    },
+  ],
+  mira: [
+    {
+      id: 'mira-bounty-1', name: 'Route Clearance', desc: 'Bandits are disrupting my trade routes. Handle it.',
+      fee: 70, killTarget: 6, goldReward: 200, expReward: 100, reqRep: 1, reqLevel: 2,
+    },
+    {
+      id: 'mira-bounty-2', name: 'Specimen Collection', desc: 'Kill rare creatures and their parts will fetch a fortune. I keep the parts, you keep the bounty.',
+      fee: 150, killTarget: 6, goldReward: 450, expReward: 200, reqRep: 2, reqLevel: 8,
+    },
+    {
+      id: 'mira-bounty-3', name: "Cartel's Wrath", desc: "Someone stole a Golden Cartel shipment. The creatures guarding it must die so we can recover the goods.",
+      fee: 750, killTarget: 4, goldReward: 2200, expReward: 900, reqRep: 4, reqLevel: 25,
+    },
+  ],
+  thorne: [
+    {
+      id: 'thorne-bounty-1', name: 'Patrol Duty', desc: 'Clear hostiles from the patrol routes so the guards can move freely.',
+      fee: 60, killTarget: 8, goldReward: 200, expReward: 100, reqRep: 1, reqLevel: 2,
+    },
+    {
+      id: 'thorne-bounty-2', name: 'Scorched Earth', desc: 'Fire elementals threaten the outpost. Eliminate them.',
+      fee: 150, killTarget: 6, goldReward: 450, expReward: 200, reqRep: 2, reqLevel: 8,
+    },
+    {
+      id: 'thorne-bounty-3', name: "Legion's Justice", desc: "High-value targets in the celestial highlands. The Legion needs them dead.",
+      fee: 750, killTarget: 4, goldReward: 2200, expReward: 900, reqRep: 4, reqLevel: 28,
+    },
+  ],
+};
 
-// ---- MERCENARY HIRE ----
-export const MERCENARIES = [
-  {
-    id: 'merc-bruiser', name: 'Street Bruiser', desc: 'A tough brawler. Deals extra damage each turn.',
-    cost: 100, duration: 5, // 5 battles
-    atkBonus: 5, defBonus: 0, minLevel: 1, rarity: 'Common',
-  },
-  {
-    id: 'merc-bodyguard', name: 'Iron Bodyguard', desc: 'A defensive specialist. Absorbs hits for you.',
-    cost: 200, duration: 5,
-    atkBonus: 2, defBonus: 8, minLevel: 5, rarity: 'Uncommon',
-  },
-  {
-    id: 'merc-assassin', name: 'Shadow Assassin', desc: 'Quick and deadly. High damage, low defense.',
-    cost: 400, duration: 5,
-    atkBonus: 12, defBonus: 0, minLevel: 10, rarity: 'Rare',
-  },
-  {
-    id: 'merc-knight', name: 'Veteran Knight', desc: 'Balanced fighter. Solid ATK and DEF.',
-    cost: 750, duration: 5,
-    atkBonus: 8, defBonus: 6, minLevel: 15, rarity: 'Rare',
-  },
-  {
-    id: 'merc-arcane', name: 'Arcane Battlemage', desc: 'Empowers your attacks with magical energy.',
-    cost: 1200, duration: 5,
-    atkBonus: 15, defBonus: 3, minLevel: 20, rarity: 'Epic',
-  },
-  {
-    id: 'merc-champion', name: 'Arena Champion', desc: 'The best money can buy. Devastating power.',
-    cost: 2500, duration: 5,
-    atkBonus: 20, defBonus: 10, minLevel: 25, rarity: 'Legendary',
-  },
-];
+// Flat list for reducer lookups
+export const ALL_BOUNTIES = Object.values(NPC_BOUNTIES).flat();
 
-// ---- GAMBLING / DICE GAME ----
+// ---- FACTION MERCENARIES (per NPC, require rep) ----
+export const NPC_MERCENARIES = {
+  bartender: [
+    { id: 'merc-tavern-brawler', name: 'Tavern Brawler', desc: "One of Grog's regulars who fights for drink money.", cost: 100, duration: 5, atkBonus: 5, defBonus: 2, reqRep: 1, rarity: 'Common' },
+    { id: 'merc-ironforge-guard', name: 'Ironforge Guard', desc: 'A loyal Covenant defender.', cost: 500, duration: 5, atkBonus: 8, defBonus: 8, reqRep: 3, rarity: 'Rare' },
+  ],
+  whisper: [
+    { id: 'merc-shadow-blade', name: 'Shadow Blade', desc: 'A Syndicate assassin. Deadly but fragile.', cost: 200, duration: 5, atkBonus: 10, defBonus: 0, reqRep: 1, rarity: 'Uncommon' },
+    { id: 'merc-phantom', name: 'Phantom Operative', desc: 'Elite Syndicate agent. Strikes from the dark.', cost: 800, duration: 5, atkBonus: 18, defBonus: 2, reqRep: 3, rarity: 'Epic' },
+  ],
+  fenwick: [
+    { id: 'merc-old-guard-recruit', name: 'Old Guard Recruit', desc: 'A young soldier trained in the old ways.', cost: 150, duration: 5, atkBonus: 4, defBonus: 6, reqRep: 1, rarity: 'Common' },
+    { id: 'merc-old-guard-veteran', name: 'Old Guard Veteran', desc: 'A seasoned warrior from the old order.', cost: 700, duration: 5, atkBonus: 10, defBonus: 10, reqRep: 3, rarity: 'Rare' },
+  ],
+  mira: [
+    { id: 'merc-cartel-enforcer', name: 'Cartel Enforcer', desc: "Mira's hired muscle. Fights for gold.", cost: 200, duration: 5, atkBonus: 7, defBonus: 3, reqRep: 1, rarity: 'Uncommon' },
+    { id: 'merc-gold-champion', name: 'Goldspark Champion', desc: "The Cartel's finest warrior.", cost: 1200, duration: 5, atkBonus: 15, defBonus: 5, reqRep: 4, rarity: 'Epic' },
+  ],
+  thorne: [
+    { id: 'merc-legion-soldier', name: 'Legion Soldier', desc: 'An off-duty Steel Legion trooper.', cost: 150, duration: 5, atkBonus: 4, defBonus: 8, reqRep: 1, rarity: 'Uncommon' },
+    { id: 'merc-legion-captain', name: 'Legion Captain', desc: 'A commanding officer of the Steel Legion.', cost: 1000, duration: 5, atkBonus: 12, defBonus: 12, reqRep: 4, rarity: 'Epic' },
+  ],
+};
+
+// Flat list for reducer lookups
+export const ALL_MERCENARIES = Object.values(NPC_MERCENARIES).flat();
+
+// ---- ENCHANTER NPC (new tavern NPC) ----
+export const ENCHANTER_NPC = {
+  id: 'ember',
+  name: 'Ember Ashveil',
+  role: 'Enchantress',
+  color: '#ff7043',
+  greeting: "Ah, another soul seeking power beyond the forge. I weave magic into steel — for a price. Bring me your finest gear and enough gold, and I'll make it sing.",
+  topics: [
+    {
+      id: 'enchanting',
+      label: 'How does enchanting work?',
+      lines: [
+        "I channel raw magical energy into your equipment, strengthening its bonuses. Each enhancement level increases ATK and DEF.",
+        "The first enchantment is almost guaranteed. But as I push further, the magic becomes unstable. Higher levels risk failure.",
+        "A failed enchantment won't destroy your gear — the magic simply dissipates. But you still pay for my time and materials.",
+        "The finest warriors in the land carry +5 gear. Getting there takes gold, patience, and a fair bit of luck.",
+      ],
+    },
+    {
+      id: 'backstory',
+      label: 'Where did you learn this?',
+      lines: [
+        "I studied under the Crystal Weavers in the highlands. They taught me to see the threads of magic in all things.",
+        "Most enchanters burned out — literally. The magic consumes you if you're not careful. I survived because I respect the flame.",
+        "Grog lets me work here in exchange for keeping the tavern's heating crystals charged. A fair trade.",
+      ],
+    },
+  ],
+};
+
+// ---- GAMBLING / DICE GAME (in tavern) ----
 export const DICE_WAGERS = [25, 50, 100, 250, 500, 1000];
 
-// Roll 2d6, player picks over/under 7
-// Over 7 (8-12): pays 2x
-// Under 7 (2-6): pays 2x
-// Exactly 7: house wins (probability 6/36 = 16.7%)
-// Player edge: 41.7% to win on either side
-
 export const COIN_FLIP_WAGERS = [10, 25, 50, 100, 250, 500];
-// Simple heads/tails, 48% win rate (slight house edge), pays 2x
 
 export const WHEEL_SEGMENTS = [
   { label: 'x0', mult: 0, weight: 20, color: '#444' },
@@ -152,11 +207,10 @@ export function rollDice() {
 }
 
 export function flipCoin() {
-  // 48% heads (player wins on heads)
   return Math.random() < 0.48 ? 'heads' : 'tails';
 }
 
-// ---- COSMETIC SHOP ----
+// ---- COSMETIC SHOP (in shop screen) ----
 export const COSMETICS = {
   titles: [
     { id: 'title-slayer', name: 'Monster Slayer', desc: 'A title for the battle-hardened.', cost: 200, type: 'title' },

@@ -12,7 +12,7 @@ import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/loo
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
 import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills, RIVALRY_QUESTS } from '../data/tavernData';
-import { getRespecCost, CLASS_BASE_STATS, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, BOUNTIES, MERCENARIES, COSMETICS } from '../data/goldSinks';
+import { getRespecCost, CLASS_BASE_STATS, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, ALL_BOUNTIES, ALL_MERCENARIES, COSMETICS } from '../data/goldSinks';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
@@ -6259,13 +6259,13 @@ function gameReducer(state, action) {
     // ---- GOLD SINK: BOUNTY BOARD ----
     case 'ACCEPT_BOUNTY': {
       const { bountyId } = action;
-      const bounty = BOUNTIES.find(b => b.id === bountyId);
+      const bounty = ALL_BOUNTIES.find(b => b.id === bountyId);
       if (!bounty) return state;
       const bounties = state.bounties || { active: [], completed: [] };
       if (bounties.completed.includes(bountyId)) return { ...state, message: 'Bounty already completed!' };
       if (bounties.active.some(b => b.bountyId === bountyId)) return { ...state, message: 'Bounty already active!' };
       if (state.player.gold < bounty.fee) return { ...state, message: 'Not enough gold!' };
-      if (state.player.level < bounty.minLevel) return state;
+      if (state.player.level < (bounty.reqLevel || 1)) return state;
       let newStats = addStat(state.stats, 'goldSpent', bounty.fee);
       let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', bounty.fee);
       return {
@@ -6283,7 +6283,7 @@ function gameReducer(state, action) {
 
     case 'CLAIM_BOUNTY': {
       const { bountyId } = action;
-      const bounty = BOUNTIES.find(b => b.id === bountyId);
+      const bounty = ALL_BOUNTIES.find(b => b.id === bountyId);
       if (!bounty) return state;
       const bounties = state.bounties || { active: [], completed: [] };
       const active = bounties.active.find(b => b.bountyId === bountyId);
@@ -6311,11 +6311,11 @@ function gameReducer(state, action) {
     // ---- GOLD SINK: MERCENARY HIRE ----
     case 'HIRE_MERCENARY': {
       const { mercId } = action;
-      const merc = MERCENARIES.find(m => m.id === mercId);
+      const merc = ALL_MERCENARIES.find(m => m.id === mercId);
       if (!merc) return state;
       if (state.mercenary) return { ...state, message: 'You already have a mercenary hired!' };
       if (state.player.gold < merc.cost) return { ...state, message: 'Not enough gold!' };
-      if (state.player.level < merc.minLevel) return state;
+      if (state.player.level < (merc.reqLevel || 1)) return state;
       let newStats = addStat(state.stats, 'goldSpent', merc.cost);
       let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', merc.cost);
       return {
