@@ -33,10 +33,16 @@ import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import TavernScreen from './components/screens/TavernScreen';
 import FireRitualScreen from './components/screens/FireRitualScreen';
 import TravellingNpcScreen from './components/screens/TravellingNpcScreen';
+import RespecScreen from './components/screens/RespecScreen';
+import EnchantScreen from './components/screens/EnchantScreen';
+import BountyScreen from './components/screens/BountyScreen';
+import MercenaryScreen from './components/screens/MercenaryScreen';
+import CosmeticScreen from './components/screens/CosmeticScreen';
 import MobileNav from './components/MobileNav';
 import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
-import { canClassEquip } from './data/gameData';
+import { canClassEquip, CHARACTER_CLASSES } from './data/gameData';
+import { CLASS_BASE_STATS } from './data/goldSinks';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -266,6 +272,11 @@ export default function App() {
               onProfile={() => actions.showScreen('profile')}
               onSkills={() => actions.showScreen('skills')}
               onStats={() => actions.showScreen('player-stats')}
+              onRespec={() => actions.showScreen('respec')}
+              onEnchant={() => actions.showScreen('enchant')}
+              onBounty={() => actions.showScreen('bounty')}
+              onMercenary={() => actions.showScreen('mercenary')}
+              onCosmetic={() => actions.showScreen('cosmetic')}
               canRest={canRest}
               lastEnergyUpdate={state.lastEnergyUpdate}
               lastHpManaRegenUpdate={state.lastHpManaRegenUpdate}
@@ -618,6 +629,55 @@ export default function App() {
                 onTurnInRivalryQuest={actions.tavernTurnInRivalryQuest}
                 onLearnFactionSkill={actions.tavernLearnFactionSkill}
                 onBuyItem={actions.tavernBuyItem}
+                onGamble={actions.gamble}
+                onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'respec' && (
+              <RespecScreen
+                player={state.player}
+                baseStats={CLASS_BASE_STATS[state.player.characterClass] || {}}
+                onRespec={actions.respecStats}
+                onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'enchant' && (
+              <EnchantScreen
+                player={state.player}
+                onEnchant={actions.enchantItem}
+                onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'bounty' && (
+              <BountyScreen
+                player={state.player}
+                activeBounties={state.bounties?.active}
+                completedBounties={state.bounties?.completed}
+                stats={state.stats}
+                onAcceptBounty={actions.acceptBounty}
+                onClaimBounty={actions.claimBounty}
+                onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'mercenary' && (
+              <MercenaryScreen
+                player={state.player}
+                activeMercenary={state.mercenary}
+                onHire={actions.hireMercenary}
+                onBack={actions.goToTown}
+              />
+            )}
+
+            {state.screen === 'cosmetic' && (
+              <CosmeticScreen
+                player={state.player}
+                cosmetics={state.cosmetics}
+                onBuyCosmetic={actions.buyCosmetic}
+                onEquipCosmetic={actions.equipCosmetic}
                 onBack={actions.goToTown}
               />
             )}

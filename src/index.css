@@ -2730,9 +2730,38 @@ body {
 .screen-battle {
   justify-content: flex-start;
   padding-top: 50px;
+  gap: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+/* Top HUD: HP bars, status, alerts - pinned to top */
+.battle-hud-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 3px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+/* Clear viewport zone - sprites show through here */
+.battle-viewport {
+  flex: 1;
+  min-height: 60px;
+  pointer-events: none;
+}
+
+/* Bottom HUD: combat info, log, actions - pinned to bottom */
+.battle-hud-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: auto;
   padding-bottom: 8px;
 }
 
@@ -2754,8 +2783,8 @@ body {
   width: 95%;
   max-width: 500px;
   padding: 4px 6px;
-  background: rgba(10, 10, 25, 0.6);
-  border: 1px solid rgba(255, 100, 100, 0.15);
+  background: rgba(10, 10, 25, 0.35);
+  border: 1px solid rgba(255, 100, 100, 0.1);
   border-radius: 4px;
 }
 
@@ -2974,8 +3003,8 @@ body {
   max-width: 500px;
   gap: 8px;
   padding: 4px 6px;
-  background: rgba(10, 10, 30, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 10, 30, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 4px;
 }
 
@@ -2994,14 +3023,14 @@ body {
 .battle-log {
   width: 95%;
   max-width: 500px;
-  max-height: 90px;
-  min-height: 40px;
+  max-height: 70px;
+  min-height: 30px;
   overflow-y: auto;
   font-size: 8px;
   line-height: 1.8;
   color: #ccc;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 4px 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   -webkit-overflow-scrolling: touch;
@@ -4286,8 +4315,9 @@ body {
   .floating-damage { font-size: 11px; }
   .turn-indicator { font-size: 7px; }
   .combatant-name { font-size: 8px; }
-  .battle-log { max-height: 60px; font-size: 6px; }
+  .battle-log { max-height: 50px; font-size: 6px; }
   .screen-battle { padding-top: 44px; }
+  .battle-viewport { min-height: 40px; }
 
   /* Inventory */
   .equipment-grid { grid-template-columns: repeat(2, 1fr); }
@@ -13642,3 +13672,184 @@ body {
     display: none;
   }
 }
+
+/* ============================================================
+   GOLD SINK FEATURES - Respec, Enchant, Bounty, Mercenary,
+   Gambling, Cosmetics
+   ============================================================ */
+
+/* ---- SHARED ---- */
+.screen-header { margin-bottom: 8px; }
+.screen-title { font-size: 12px; font-weight: bold; color: #fff; }
+.screen-subtitle { font-size: 7px; color: #999; margin-top: 2px; }
+
+/* ---- RESPEC SCREEN ---- */
+.screen-respec { padding: 8px; }
+.respec-cost-panel { background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 8px; margin-bottom: 8px; text-align: center; }
+.respec-cost-label { font-size: 7px; color: #999; }
+.respec-cost-value { font-size: 14px; font-weight: bold; color: #ffd700; margin: 4px 0; }
+.respec-cost-value.cant-afford { color: #ff4444; }
+.respec-cost-note { font-size: 6px; color: #666; }
+.respec-stats-comparison { background: #111; border: 1px solid #333; border-radius: 4px; padding: 6px; margin-bottom: 8px; }
+.respec-stats-header { display: flex; font-size: 6px; color: #888; border-bottom: 1px solid #333; padding-bottom: 3px; margin-bottom: 3px; }
+.respec-stat-row { display: flex; font-size: 7px; padding: 2px 0; }
+.respec-stat-row.changed { color: #ffd700; }
+.respec-col-stat { flex: 1; }
+.respec-col-current { flex: 1; text-align: center; }
+.respec-col-after { flex: 1; text-align: center; }
+.respec-diff.negative { color: #ff6666; font-size: 6px; }
+.respec-info { font-size: 6px; color: #888; margin-bottom: 8px; line-height: 1.6; }
+.respec-info p { margin: 2px 0; }
+.respec-no-changes { font-size: 7px; color: #4caf50; text-align: center; padding: 8px; }
+.respec-btn { width: 100%; margin-bottom: 6px; }
+.respec-confirm { background: #2a1a1a; border: 1px solid #ff4444; border-radius: 4px; padding: 8px; margin-bottom: 6px; }
+.respec-confirm-text { font-size: 7px; color: #ff8888; margin-bottom: 6px; }
+.respec-confirm-buttons { display: flex; gap: 6px; }
+.btn-danger { background: #d32f2f; color: #fff; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 7px; }
+.btn-danger:hover { background: #f44336; }
+.btn-secondary { background: #555; color: #fff; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 7px; }
+
+/* ---- ENCHANT SCREEN ---- */
+.screen-enchant { padding: 8px; }
+.enchant-gold { font-size: 8px; color: #ffd700; margin-bottom: 8px; }
+.enchant-layout { display: flex; gap: 8px; min-height: 200px; }
+.enchant-item-list { flex: 1; background: #111; border: 1px solid #333; border-radius: 4px; padding: 6px; overflow-y: auto; max-height: 300px; }
+.enchant-list-title { font-size: 7px; color: #888; margin-bottom: 4px; }
+.enchant-item-btn { display: block; width: 100%; text-align: left; background: #1a1a2e; border: 1px solid #333; border-radius: 3px; padding: 4px 6px; margin-bottom: 3px; cursor: pointer; color: #ccc; font-size: 7px; }
+.enchant-item-btn:hover { border-color: #555; }
+.enchant-item-btn.selected { border-color: #ffd700; background: #2a2a3e; }
+.enchant-item-btn.maxed { opacity: 0.6; }
+.enchant-item-name { display: block; }
+.enchant-item-slot { font-size: 6px; color: #888; }
+.enchant-item-stat { font-size: 6px; color: #4fc3f7; margin-left: 4px; }
+.enchant-maxed-badge { font-size: 5px; color: #ffd700; background: #333; padding: 1px 3px; border-radius: 2px; margin-left: 4px; }
+.enchant-panel { flex: 1; background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 8px; }
+.enchant-empty { font-size: 7px; color: #666; text-align: center; padding-top: 40px; }
+.enchant-selected-name { font-size: 10px; font-weight: bold; margin-bottom: 4px; }
+.enchant-current-stats { font-size: 7px; color: #4fc3f7; margin-bottom: 8px; }
+.enchant-current-stats span { margin-right: 8px; }
+.enchant-maxed { font-size: 8px; color: #ffd700; text-align: center; padding: 16px; }
+.enchant-preview { background: #111; border: 1px solid #444; border-radius: 4px; padding: 8px; margin-bottom: 8px; }
+.enchant-preview-title { font-size: 8px; color: #fff; margin-bottom: 4px; }
+.enchant-preview-bonus { font-size: 7px; color: #4caf50; }
+.enchant-preview-rate { font-size: 7px; color: #ffa726; margin-top: 2px; }
+.enchant-preview-cost { font-size: 8px; color: #ffd700; margin-top: 4px; }
+.enchant-preview-cost.cant-afford { color: #ff4444; }
+.enchant-btn { width: 100%; margin-bottom: 8px; }
+.enchant-level-track { display: flex; gap: 4px; justify-content: center; }
+.enchant-level-pip { font-size: 6px; padding: 2px 6px; border: 1px solid #333; border-radius: 3px; color: #666; }
+.enchant-level-pip.filled { background: #ffd700; color: #000; border-color: #ffd700; }
+.enchant-level-pip.next { border-color: #ffd700; color: #ffd700; }
+.enchant-result { padding: 6px; border-radius: 4px; font-size: 8px; text-align: center; margin-top: 8px; }
+.enchant-result.success { background: #1a3a1a; color: #4caf50; border: 1px solid #4caf50; }
+.enchant-result.failure { background: #3a1a1a; color: #ff4444; border: 1px solid #ff4444; }
+
+/* ---- BOUNTY SCREEN ---- */
+.screen-bounty { padding: 8px; }
+.bounty-gold { font-size: 8px; color: #ffd700; margin-bottom: 8px; }
+.bounty-list { display: flex; flex-direction: column; gap: 6px; }
+.bounty-card { background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 8px; }
+.bounty-card.completed { opacity: 0.5; }
+.bounty-card.locked { opacity: 0.4; }
+.bounty-card.ready { border-color: #4caf50; }
+.bounty-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.bounty-name { font-size: 9px; font-weight: bold; color: #fff; }
+.bounty-badges { display: flex; gap: 4px; }
+.bounty-badge { font-size: 5px; padding: 1px 4px; border-radius: 2px; }
+.bounty-badge.done { background: #333; color: #4caf50; }
+.bounty-badge.claim { background: #1a3a1a; color: #4caf50; }
+.bounty-badge.active { background: #1a2a3a; color: #4fc3f7; }
+.bounty-badge.locked { background: #333; color: #888; }
+.bounty-desc { font-size: 7px; color: #999; margin-bottom: 4px; }
+.bounty-details { display: flex; gap: 8px; font-size: 6px; color: #888; flex-wrap: wrap; }
+.bounty-detail { }
+.bounty-reward { color: #ffd700; }
+.bounty-progress { margin-top: 6px; }
+.bounty-progress-track { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+.bounty-progress-fill { height: 100%; background: #4fc3f7; border-radius: 3px; transition: width 0.3s; }
+.bounty-progress-text { font-size: 6px; color: #888; margin-top: 2px; }
+.bounty-accept-btn, .bounty-claim-btn { margin-top: 6px; font-size: 7px; }
+
+/* ---- MERCENARY SCREEN ---- */
+.screen-mercenary { padding: 8px; }
+.merc-gold { font-size: 8px; color: #ffd700; margin-bottom: 8px; }
+.merc-active-panel { background: #1a2a1a; border: 1px solid #4caf50; border-radius: 4px; padding: 8px; margin-bottom: 8px; }
+.merc-active-title { font-size: 7px; color: #4caf50; margin-bottom: 4px; }
+.merc-active-card { padding: 6px; }
+.merc-active-name { font-size: 10px; font-weight: bold; color: #fff; }
+.merc-active-stats { font-size: 7px; color: #4fc3f7; margin: 4px 0; }
+.merc-stat { margin-right: 8px; }
+.merc-active-remaining { font-size: 7px; color: #ffa726; }
+.merc-list { display: flex; flex-direction: column; gap: 6px; }
+.merc-card { background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 8px; }
+.merc-card.locked { opacity: 0.4; }
+.merc-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.merc-name { font-size: 9px; font-weight: bold; color: #fff; }
+.merc-rarity { font-size: 6px; }
+.rarity-text-common { color: #ccc; }
+.rarity-text-uncommon { color: #4fc3f7; }
+.rarity-text-rare { color: #ffd700; }
+.rarity-text-epic { color: #ce93d8; }
+.rarity-text-legendary { color: #ff6b6b; }
+.merc-desc { font-size: 7px; color: #999; margin-bottom: 4px; }
+.merc-details { display: flex; gap: 8px; font-size: 7px; color: #4fc3f7; margin-bottom: 4px; }
+.merc-cost { font-size: 9px; color: #ffd700; font-weight: bold; }
+.merc-locked-text { font-size: 6px; color: #888; margin-top: 4px; }
+.merc-hire-btn { margin-top: 6px; font-size: 7px; }
+.merc-badge.active { font-size: 6px; color: #4caf50; background: #1a3a1a; padding: 2px 6px; border-radius: 3px; margin-top: 4px; display: inline-block; }
+
+/* ---- GAMBLING (Tavern) ---- */
+.tavern-gambling { background: #1a1a2e; border: 1px solid #444; border-radius: 4px; padding: 8px; margin-top: 8px; }
+.gambling-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.gambling-title { font-size: 10px; font-weight: bold; color: #ffd700; }
+.gambling-gold { font-size: 8px; color: #ffd700; }
+.gambling-game-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.gambling-game-tab { background: #222; border: 1px solid #333; border-radius: 3px; padding: 4px 8px; font-size: 7px; color: #999; cursor: pointer; }
+.gambling-game-tab.active { background: #333; border-color: #ffd700; color: #ffd700; }
+.gambling-desc { font-size: 7px; color: #999; margin-bottom: 8px; }
+.gambling-controls { }
+.gambling-wager-row, .gambling-bet-row { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 7px; color: #ccc; }
+.gambling-wager-btn { background: #222; border: 1px solid #444; border-radius: 3px; padding: 3px 6px; font-size: 7px; color: #ccc; cursor: pointer; }
+.gambling-wager-btn.active { border-color: #ffd700; color: #ffd700; }
+.gambling-wager-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.gambling-bet-btn { background: #222; border: 1px solid #444; border-radius: 3px; padding: 3px 8px; font-size: 7px; color: #ccc; cursor: pointer; }
+.gambling-bet-btn.active { border-color: #4fc3f7; color: #4fc3f7; background: #1a2a3a; }
+.gambling-payout { font-size: 7px; color: #4caf50; margin-bottom: 6px; }
+.gambling-roll-btn { font-size: 8px; width: 100%; }
+.gambling-result { padding: 8px; border-radius: 4px; margin-top: 8px; text-align: center; }
+.gambling-result.win { background: #1a3a1a; border: 1px solid #4caf50; }
+.gambling-result.lose { background: #3a1a1a; border: 1px solid #ff4444; }
+.gambling-result.push { background: #2a2a1a; border: 1px solid #ffa726; }
+.gambling-result-dice { font-size: 14px; margin-bottom: 4px; color: #fff; letter-spacing: 4px; }
+.gambling-result-coin { font-size: 14px; margin-bottom: 4px; color: #fff; }
+.gambling-result-wheel { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+.gambling-result-text { font-size: 8px; }
+.gambling-result.win .gambling-result-text { color: #4caf50; }
+.gambling-result.lose .gambling-result-text { color: #ff4444; }
+.gambling-result.push .gambling-result-text { color: #ffa726; }
+.gambling-wheel-segments { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 7px; }
+.gambling-wheel-seg { }
+
+/* ---- COSMETIC SCREEN ---- */
+.screen-cosmetic { padding: 8px; }
+.cosmetic-gold { font-size: 8px; color: #ffd700; margin-bottom: 8px; }
+.cosmetic-preview { background: #111; border: 1px solid #444; border-radius: 4px; padding: 12px; margin-bottom: 8px; text-align: center; }
+.cosmetic-preview-frame { display: inline-block; padding: 8px 16px; border-radius: 4px; }
+.cosmetic-preview-name { font-size: 12px; font-weight: bold; }
+.cosmetic-preview-title { font-size: 7px; color: #ffd700; margin-top: 4px; }
+.cosmetic-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.cosmetic-tab { background: #222; border: 1px solid #333; border-radius: 3px; padding: 4px 8px; font-size: 7px; color: #999; cursor: pointer; }
+.cosmetic-tab.active { border-color: #ffd700; color: #ffd700; background: #333; }
+.cosmetic-tab-icon { margin-right: 2px; }
+.cosmetic-item-list { display: flex; flex-direction: column; gap: 6px; }
+.cosmetic-item-card { background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 8px; }
+.cosmetic-item-card.equipped { border-color: #4caf50; }
+.cosmetic-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.cosmetic-item-name { font-size: 8px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 4px; }
+.cosmetic-color-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #555; }
+.cosmetic-item-price { font-size: 8px; color: #ffd700; }
+.cosmetic-item-desc { font-size: 6px; color: #999; margin-bottom: 4px; }
+.cosmetic-frame-preview { width: 40px; height: 20px; border-radius: 3px; margin-bottom: 4px; }
+.cosmetic-item-actions { }
+.cosmetic-buy-btn, .cosmetic-equip-btn, .cosmetic-unequip-btn { font-size: 7px; }
+
