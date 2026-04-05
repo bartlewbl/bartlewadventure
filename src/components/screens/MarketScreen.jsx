@@ -384,7 +384,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                       </span>
                       <span className="market-card-stats">{statLine(listing.item)}</span>
                       {listing.item?.passive && (
-                        <span className="market-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                        <span className="market-card-passive" style={{ color: '#8f8' }}>
                           +{listing.item.passive.value}{listing.item.passive.format === 'pct' ? '%' : ''} {listing.item.passive.label}
                         </span>
                       )}
@@ -540,7 +540,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                         <span>Lv.{item.level}</span>
                         <span className="market-sell-row-stats">{statLine(item)}</span>
                         {item.passive && (
-                          <span className="market-sell-row-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                          <span className="market-sell-row-passive" style={{ color: '#8f8' }}>
                             +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
                           </span>
                         )}
@@ -588,7 +588,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                     </span>
                     <span className="market-card-stats">{statLine(listing.item)}</span>
                     {listing.item?.passive && (
-                      <span className="market-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                      <span className="market-card-passive" style={{ color: '#8f8' }}>
                         +{listing.item.passive.value}{listing.item.passive.format === 'pct' ? '%' : ''} {listing.item.passive.label}
                       </span>
                     )}

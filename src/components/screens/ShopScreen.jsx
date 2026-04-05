@@ -227,7 +227,7 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
                           {item.level && <span className="shop-card-level">Lv{item.level}</span>}
                           <span className="shop-card-stats">{statLine(item)}</span>
                           {item.passive && (
-                            <span className="shop-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                            <span className="shop-card-passive" style={{ color: '#8f8' }}>
                               +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
                             </span>
                           )}
@@ -563,7 +563,7 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
                             {item.slot ? item.slot : ''}
                           </span>
                           {item.passive && (
-                            <span className="shop-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                            <span className="shop-card-passive" style={{ color: '#8f8' }}>
                               +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
                             </span>
                           )}
