@@ -15,7 +15,7 @@ export function scaleMonster(monsterId, areaLevel) {
   const hp = Math.floor(base.baseHp * scale * prob('scaling.monsterHpMult'));
   const baseSpeed = getMonsterBaseSpeed(base);
   const cs = getMonsterBaseCombatStats(base);
-  const statScale = 1 + (areaLevel - 1) * 0.05;
+  const statScale = 1 + (areaLevel - 1) * 0.07;
   return {
     id: monsterId,
     name: base.name,

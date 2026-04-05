@@ -22,11 +22,11 @@ Pure game logic, no UI. All files are imported by components and the main game l
 - **Dodge chance:** `min(0.6, max(0, evasion - accuracy) * 0.015)`
 - **Resistance:** `min(0.5, resistance * 0.01)` per point = 1% reduction
 - **Tenacity:** Reduces debuff duration by ~3%/point (cap 60%)
-- **Monster HP scaling:** `baseHp * (1 + (level-1) * 0.25) * 1.45`
-- **Boss HP scaling:** `baseHp * (1 + (level-1) * 0.32) * 1.45`
-- **Monster ATK scaling:** `baseAtk * (1 + (level-1) * 0.25) * 1.3`
-- **Monster DEF scaling:** `baseDef * (1 + (level-1) * 0.25) * 1.25`
-- **Monster combat stat scaling:** `+5% per level` (bosses: `+6% per level`)
+- **Monster HP scaling:** `baseHp * (1 + (level-1) * 0.3) * 1.65`
+- **Boss HP scaling:** `baseHp * (1 + (level-1) * 0.32) * 1.65`
+- **Monster ATK scaling:** `baseAtk * (1 + (level-1) * 0.3) * 1.45`
+- **Monster DEF scaling:** `baseDef * (1 + (level-1) * 0.3) * 1.35`
+- **Monster combat stat scaling:** `+7% per level` (bosses: `+6% per level`)
 - **Monster crit:** `5% base + 0.1%/level` (cap 12%), `1.6x` multiplier
 - **Monster skill chance:** `40%`
 - **Item rarity multipliers:** Common 0.7, Uncommon 1.0, Rare 1.7, Epic 2.5, Legendary 3.5
