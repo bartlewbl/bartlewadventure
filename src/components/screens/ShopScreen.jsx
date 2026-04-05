@@ -8,6 +8,7 @@ import { getClassName, getClassColor, getClassShortName, canClassEquip } from '.
 import { getStackKey } from '../../hooks/useGameState';
 import useGameClock from '../../hooks/useGameClock';
 import { TAVERN_SHOP_UNLOCKS, TAVERN_NPCS, REP_LEVELS, getRepLevel } from '../../data/tavernData';
+import { COSMETICS } from '../../data/goldSinks';
 
 const SLOT_LABELS = {
   weapon: 'Weapon',
@@ -30,6 +31,7 @@ const SHOPS = [
   { id: 'featured', label: 'Featured', icon: '\u2605', desc: 'Daily deals' },
   { id: 'trading', label: 'Trading', icon: '\u2692', desc: 'Trade materials for loot chests' },
   { id: 'tavern', label: 'Tavern', icon: '\uD83C\uDF7A', desc: 'NPC exclusive items' },
+  { id: 'cosmetics', label: 'Cosmetics', icon: '\u2728', desc: 'Titles, colors & frames' },
 ];
 
 const ARMOUR_CATEGORIES = [
@@ -99,7 +101,7 @@ function isInvFullForItem(player, shopItem) {
   return true;
 }
 
-export default function ShopScreen({ player, pets, base, shopPurchases, tavern, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onTavernBuy, onBack }) {
+export default function ShopScreen({ player, pets, base, shopPurchases, tavern, cosmetics, onBuy, onSell, onSellUnequippable, onBuyPet, onBuyPetItem, onTradeForChest, onTavernBuy, onBuyCosmetic, onEquipCosmetic, onBack }) {
   const [activeShop, setActiveShop] = useState('armourer');
   const [tab, setTab] = useState('buy');
   const [category, setCategory] = useState('all');
@@ -587,6 +589,72 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
                 });
               });
             })}
+          </div>
+        </div>
+      )}
+
+      {activeShop === 'cosmetics' && (
+        <div className="shop-content">
+          <div className="shop-featured-banner">Cosmetic Shop</div>
+          <div className="shop-featured-banner" style={{ fontSize: '7px', color: '#8e8eb2', marginTop: '-6px' }}>
+            Titles, name colors, and portrait frames
+          </div>
+          {/* Cosmetic preview */}
+          <div className="cosmetic-preview">
+            <div className="cosmetic-preview-frame"
+              style={{ border: cosmetics?.equipped?.frame ? COSMETICS.frames.find(f => f.id === cosmetics.equipped.frame)?.style || 'none' : 'solid 1px #555' }}>
+              <div className="cosmetic-preview-name"
+                style={{ color: cosmetics?.equipped?.nameColor ? COSMETICS.nameColors.find(c => c.id === cosmetics.equipped.nameColor)?.color || '#fff' : '#fff' }}>
+                {player.name}
+              </div>
+              {cosmetics?.equipped?.title && (
+                <div className="cosmetic-preview-title">{COSMETICS.titles.find(t => t.id === cosmetics.equipped.title)?.name || ''}</div>
+              )}
+            </div>
+          </div>
+          <div className="shop-list">
+            {['titles', 'nameColors', 'frames'].map(category => (
+              <div key={category}>
+                <div className="shop-featured-banner" style={{ fontSize: '8px', marginTop: '4px' }}>
+                  {category === 'titles' ? 'Titles' : category === 'nameColors' ? 'Name Colors' : 'Portrait Frames'}
+                </div>
+                {(COSMETICS[category] || []).map(item => {
+                  const owned = cosmetics?.owned || [];
+                  const equipped = cosmetics?.equipped || {};
+                  const isOwned = owned.includes(item.id);
+                  const isEquipped = equipped[item.type] === item.id;
+                  const canAfford = player.gold >= item.cost;
+                  return (
+                    <div key={item.id} className={`shop-card ${isEquipped ? 'equipped-cosmetic' : ''}`}>
+                      <div className="shop-card-left">
+                        <div className="shop-card-name" style={{ color: item.color || '#fff' }}>
+                          {item.type === 'nameColor' && <span className="cosmetic-color-swatch" style={{ background: item.color }} />}
+                          {item.name}
+                        </div>
+                        {item.desc && <div className="shop-card-meta"><span className="shop-card-stats">{item.desc}</span></div>}
+                        {item.type === 'frame' && <div className="cosmetic-frame-preview" style={{ border: item.style }} />}
+                      </div>
+                      {!isOwned && (
+                        <button className="shop-buy-btn" disabled={!canAfford} onClick={() => onBuyCosmetic(item.id)}>
+                          <span className="shop-btn-price">{item.cost}g</span>
+                          <span className="shop-btn-label">{canAfford ? 'Buy' : 'Need gold'}</span>
+                        </button>
+                      )}
+                      {isOwned && !isEquipped && (
+                        <button className="shop-buy-btn" onClick={() => onEquipCosmetic(item.id, item.type)}>
+                          <span className="shop-btn-label">Equip</span>
+                        </button>
+                      )}
+                      {isEquipped && (
+                        <button className="shop-buy-btn" onClick={() => onEquipCosmetic(null, item.type)} style={{ opacity: 0.6 }}>
+                          <span className="shop-btn-label">Unequip</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       )}

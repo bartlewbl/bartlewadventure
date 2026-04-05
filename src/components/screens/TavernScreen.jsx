@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS, RIVALRY_QUESTS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
-import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel } from '../../data/goldSinks';
+import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
 
 function NpcSprite({ npcId, scale = 4 }) {
   const canvasRef = useRef(null);
@@ -45,11 +45,17 @@ function RepBar({ rep, npcColor }) {
   );
 }
 
-const TABS = [
+const NPC_TABS = [
   { id: 'talk', label: 'Talk' },
   { id: 'quests', label: 'Quests' },
+  { id: 'bounties', label: 'Bounties' },
   { id: 'faction', label: 'Faction' },
   { id: 'shop', label: 'Shop' },
+];
+
+const EMBER_TABS = [
+  { id: 'talk', label: 'Talk' },
+  { id: 'enchant', label: 'Enchant' },
 ];
 
 const GAMBLING_GAMES = [
@@ -58,22 +64,30 @@ const GAMBLING_GAMES = [
   { id: 'wheel', label: 'Wheel of Fortune' },
 ];
 
-export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onAcceptRivalryQuest, onTurnInRivalryQuest, onLearnFactionSkill, onBuyItem, onGamble, onBack }) {
+// Combined NPC list: original tavern NPCs + the enchanter
+const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC];
+
+export default function TavernScreen({ tavern, player, stats, bounties, mercenary, onAcceptQuest, onTurnInQuest, onAcceptRivalryQuest, onTurnInRivalryQuest, onLearnFactionSkill, onBuyItem, onGamble, onAcceptBounty, onClaimBounty, onHireMercenary, onEnchantItem, onRespecStats, onBack }) {
   const [activeNpcId, setActiveNpcId] = useState(null);
   const [activeTab, setActiveTab] = useState('talk');
   const [activeTopic, setActiveTopic] = useState(null);
   const [lineIndex, setLineIndex] = useState(0);
   const [gamblingGame, setGamblingGame] = useState('dice');
   const [diceWager, setDiceWager] = useState(DICE_WAGERS[0]);
-  const [diceBet, setDiceBet] = useState('over'); // 'over' or 'under'
+  const [diceBet, setDiceBet] = useState('over');
   const [coinWager, setCoinWager] = useState(COIN_FLIP_WAGERS[0]);
   const [coinBet, setCoinBet] = useState('heads');
   const [wheelWager, setWheelWager] = useState(WHEEL_WAGERS[0]);
   const [gamblingResult, setGamblingResult] = useState(null);
   const [isRolling, setIsRolling] = useState(false);
+  const [enchantSelected, setEnchantSelected] = useState(null);
+  const [respecConfirm, setRespecConfirm] = useState(false);
 
   const tav = tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
-  const activeNpc = TAVERN_NPCS.find(n => n.id === activeNpcId);
+  const activeNpc = ALL_TAVERN_NPCS.find(n => n.id === activeNpcId);
+  const isEmber = activeNpcId === 'ember';
+  const isRegularNpc = activeNpc && !isEmber;
+  const activeTabs = isEmber ? EMBER_TABS : NPC_TABS;
   const npcRep = activeNpcId ? (tav.reputation[activeNpcId] || 0) : 0;
   const npcRepLevel = getRepLevel(npcRep).level;
 
@@ -460,6 +474,226 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
     );
   };
 
+  // ---- BOUNTIES TAB (per NPC) ----
+  const renderBounties = () => {
+    const npcBounties = NPC_BOUNTIES[activeNpcId] || [];
+    const ab = bounties?.active || [];
+    const cb = bounties?.completed || [];
+
+    if (npcBounties.length === 0) return <div className="tavern-empty-text">No bounties available from this contact.</div>;
+
+    return (
+      <div className="tavern-bounty-list">
+        {npcBounties.map(bounty => {
+          const active = ab.find(b => b.bountyId === bounty.id);
+          const completed = cb.includes(bounty.id);
+          const repLocked = npcRepLevel < bounty.reqRep;
+          const levelLocked = player.level < bounty.reqLevel;
+          const locked = repLocked || levelLocked;
+          const canAfford = player.gold >= bounty.fee;
+
+          let progress = 0;
+          let canClaim = false;
+          if (active) {
+            progress = (stats.monstersKilled || 0) - active.baseline;
+            canClaim = progress >= bounty.killTarget;
+          }
+
+          return (
+            <div key={bounty.id} className={`bounty-card ${completed ? 'completed' : ''} ${locked ? 'locked' : ''} ${canClaim ? 'ready' : ''}`}>
+              <div className="bounty-card-header">
+                <div className="bounty-name">{bounty.name}</div>
+                <div className="bounty-badges">
+                  {completed && <span className="bounty-badge done">Done</span>}
+                  {canClaim && <span className="bounty-badge claim">Ready!</span>}
+                  {active && !canClaim && <span className="bounty-badge active">Active</span>}
+                  {locked && !completed && <span className="bounty-badge locked">{repLocked ? `Rep ${bounty.reqRep}` : `Lv${bounty.reqLevel}`}</span>}
+                </div>
+              </div>
+              <div className="bounty-desc">{bounty.desc}</div>
+              <div className="bounty-details">
+                <span className="bounty-detail">Fee: {bounty.fee}g</span>
+                <span className="bounty-detail">Kill: {bounty.killTarget} monsters</span>
+                <span className="bounty-detail bounty-reward">Reward: {bounty.goldReward}g + {bounty.expReward} XP</span>
+              </div>
+              {active && !canClaim && (
+                <div className="bounty-progress">
+                  <div className="bounty-progress-track">
+                    <div className="bounty-progress-fill" style={{ width: `${Math.min(100, (progress / bounty.killTarget) * 100)}%` }} />
+                  </div>
+                  <span className="bounty-progress-text">{Math.min(progress, bounty.killTarget)} / {bounty.killTarget}</span>
+                </div>
+              )}
+              {!completed && !active && !locked && (
+                <button className="tavern-action-btn" disabled={!canAfford} onClick={() => onAcceptBounty(bounty.id)}>
+                  {canAfford ? `Accept (${bounty.fee}g)` : `Need ${bounty.fee}g`}
+                </button>
+              )}
+              {canClaim && (
+                <button className="tavern-action-btn turn-in" onClick={() => onClaimBounty(bounty.id)}>Claim Reward</button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ---- MERCENARIES (in faction tab, after faction skills) ----
+  const renderMercenaries = () => {
+    const npcMercs = NPC_MERCENARIES[activeNpcId] || [];
+    if (npcMercs.length === 0) return null;
+
+    return (
+      <div className="tavern-merc-section">
+        <div className="tavern-merc-header">Mercenaries for Hire</div>
+        {mercenary && (
+          <div className="tavern-merc-active">
+            Active: <strong>{mercenary.name}</strong> — {mercenary.battlesRemaining} battle{mercenary.battlesRemaining !== 1 ? 's' : ''} left
+            {mercenary.atkBonus > 0 && <span className="merc-stat"> ATK+{mercenary.atkBonus}</span>}
+            {mercenary.defBonus > 0 && <span className="merc-stat"> DEF+{mercenary.defBonus}</span>}
+          </div>
+        )}
+        {npcMercs.map(m => {
+          const repLocked = npcRepLevel < m.reqRep;
+          const canAfford = player.gold >= m.cost;
+          const isActive = mercenary?.mercId === m.id;
+          return (
+            <div key={m.id} className={`tavern-merc-card ${repLocked ? 'locked' : ''}`}>
+              <div className="tavern-merc-card-header">
+                <span className={`tavern-merc-name rarity-text-${m.rarity.toLowerCase()}`}>{m.name}</span>
+                <span className="tavern-merc-cost">{m.cost}g</span>
+              </div>
+              <div className="tavern-merc-desc">{m.desc}</div>
+              <div className="tavern-merc-stats">
+                {m.atkBonus > 0 && <span>ATK+{m.atkBonus}</span>}
+                {m.defBonus > 0 && <span>DEF+{m.defBonus}</span>}
+                <span>{m.duration} battles</span>
+              </div>
+              {repLocked && <div className="tavern-shop-locked">Requires {REP_LEVELS.find(r => r.level === m.reqRep)?.label} reputation</div>}
+              {!repLocked && !isActive && (
+                <button className="tavern-action-btn" disabled={!canAfford || !!mercenary} onClick={() => onHireMercenary(m.id)}>
+                  {mercenary ? 'Already hired' : canAfford ? 'Hire' : 'Need gold'}
+                </button>
+              )}
+              {isActive && <span className="tavern-badge done">Active</span>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ---- ENCHANT TAB (Ember only) ----
+  const renderEnchant = () => {
+    const equipment = player.inventory.filter(i => i.slot);
+    const equippedItems = Object.entries(player.equipment || {})
+      .filter(([, item]) => item)
+      .map(([slot, item]) => ({ ...item, _equippedSlot: slot }));
+    const allGear = [...equippedItems, ...equipment];
+
+    const selected = enchantSelected ? allGear.find(i => i.id === enchantSelected.id) || enchantSelected : null;
+    const currentLevel = selected?.enchantLevel || 0;
+    const cost = selected ? getEnchantCost(selected, currentLevel) : 0;
+    const successRate = selected ? getEnchantSuccess(currentLevel) : 0;
+    const maxed = currentLevel >= MAX_ENCHANT_LEVEL;
+    const canAfford = player.gold >= cost;
+
+    const getItemLabel = (item) => {
+      const enchant = item.enchantLevel ? ` +${item.enchantLevel}` : '';
+      return `${item.name}${enchant}`;
+    };
+
+    return (
+      <div className="tavern-enchant">
+        <div className="tavern-enchant-gold">Your Gold: {player.gold}g</div>
+        <div className="enchant-layout">
+          <div className="enchant-item-list">
+            <div className="enchant-list-title">Select Equipment</div>
+            {allGear.length === 0 && <div className="tavern-empty-text">No equipment to enchant</div>}
+            {allGear.map(item => {
+              const el = item.enchantLevel || 0;
+              const isMaxed = el >= MAX_ENCHANT_LEVEL;
+              return (
+                <button key={item.id} className={`enchant-item-btn ${enchantSelected?.id === item.id ? 'selected' : ''} ${isMaxed ? 'maxed' : ''}`}
+                  onClick={() => setEnchantSelected(item)}>
+                  <span className={`enchant-item-name ${item.rarityClass || ''}`}>{getItemLabel(item)}</span>
+                  <span className="enchant-item-slot">{item._equippedSlot ? '(equipped)' : item.slot}</span>
+                  {item.atk > 0 && <span className="enchant-item-stat">ATK+{item.atk}</span>}
+                  {item.def > 0 && <span className="enchant-item-stat">DEF+{item.def}</span>}
+                  {isMaxed && <span className="enchant-maxed-badge">MAX</span>}
+                </button>
+              );
+            })}
+          </div>
+          <div className="enchant-panel">
+            {!selected && <div className="enchant-empty">Select an item to enchant</div>}
+            {selected && (
+              <>
+                <div className={`enchant-selected-name ${selected.rarityClass || ''}`}>{getItemLabel(selected)}</div>
+                <div className="enchant-current-stats">
+                  {selected.atk > 0 && <span>ATK +{selected.atk}</span>}
+                  {selected.def > 0 && <span>DEF +{selected.def}</span>}
+                </div>
+                {maxed ? (
+                  <div className="enchant-maxed">Fully enchanted!</div>
+                ) : (
+                  <>
+                    <div className="enchant-preview">
+                      <div className="enchant-preview-title">Enchant to {ENCHANT_LEVELS[currentLevel].label}</div>
+                      <div className="enchant-preview-bonus">+{ENCHANT_LEVELS[currentLevel].statBonus} to ATK/DEF</div>
+                      <div className="enchant-preview-rate">Success: {Math.round(successRate * 100)}%</div>
+                      <div className={`enchant-preview-cost ${canAfford ? '' : 'cant-afford'}`}>Cost: {cost}g</div>
+                    </div>
+                    <button className="tavern-action-btn" disabled={!canAfford}
+                      onClick={() => onEnchantItem(selected, selected._equippedSlot || null)}>
+                      {canAfford ? `Enchant (${cost}g)` : `Need ${cost}g`}
+                    </button>
+                  </>
+                )}
+                <div className="enchant-level-track">
+                  {ENCHANT_LEVELS.map((tier, i) => (
+                    <div key={i} className={`enchant-level-pip ${i < currentLevel ? 'filled' : ''} ${i === currentLevel ? 'next' : ''}`}>{tier.label}</div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ---- RESPEC (Grog bartender special option in Talk tab) ----
+  const renderRespec = () => {
+    if (activeNpcId !== 'bartender') return null;
+    const cost = getRespecCost(player.level);
+    const canAfford = player.gold >= cost;
+
+    return (
+      <div className="tavern-respec-section">
+        <div className="tavern-respec-title">Stat Respec Service</div>
+        <div className="tavern-respec-desc">
+          &quot;I know a mystic who owes me a favor. For <strong>{cost}g</strong>, I can get your stats reset to your class defaults.
+          You'll get to redistribute all your level-up picks from scratch.&quot;
+        </div>
+        {!respecConfirm ? (
+          <button className="tavern-action-btn" disabled={!canAfford || player.level <= 1} onClick={() => setRespecConfirm(true)}>
+            {player.level <= 1 ? 'Nothing to reset' : canAfford ? `Respec Stats (${cost}g)` : `Need ${cost}g`}
+          </button>
+        ) : (
+          <div className="respec-confirm">
+            <div className="respec-confirm-text">This will cost {cost}g and reset ALL your stats. Are you sure?</div>
+            <div className="respec-confirm-buttons">
+              <button className="tavern-action-btn turn-in" onClick={() => { onRespecStats(); setRespecConfirm(false); }}>Confirm Respec</button>
+              <button className="tavern-action-btn" onClick={() => setRespecConfirm(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ---- GAMBLING HALL ----
   const handleDiceRoll = () => {
     if (isRolling || player.gold < diceWager) return;
@@ -632,20 +866,22 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
 
       {/* NPC selector row */}
       <div className="tavern-npc-list">
-        {TAVERN_NPCS.map(npc => {
+        {ALL_TAVERN_NPCS.map(npc => {
           const rep = tav.reputation[npc.id] || 0;
           const repInfo = getRepLevel(rep);
+          const isEnchanter = npc.id === 'ember';
           return (
             <button
               key={npc.id}
               className={`tavern-npc-card ${activeNpcId === npc.id ? 'active' : ''}`}
               onClick={() => handleSelectNpc(npc.id)}
             >
-              <NpcSprite npcId={npc.id} scale={3} />
+              {!isEnchanter && <NpcSprite npcId={npc.id} scale={3} />}
+              {isEnchanter && <span className="tavern-npc-ember-icon">&#128293;</span>}
               <span className="tavern-npc-name" style={{ color: npc.color }}>{npc.name}</span>
               <span className="tavern-npc-role">{npc.role}</span>
-              {FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
-              <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>
+              {!isEnchanter && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
+              {!isEnchanter && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
             </button>
           );
         })}
@@ -665,7 +901,7 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
 
           {/* Sub-tabs */}
           <div className="tavern-tabs">
-            {TABS.map(tab => (
+            {activeTabs.map(tab => (
               <button
                 key={tab.id}
                 className={`tavern-tab ${activeTab === tab.id ? 'active' : ''}`}
@@ -679,9 +915,13 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
           {/* Tab content */}
           <div className="tavern-tab-content">
             {activeTab === 'talk' && renderTalk()}
-            {activeTab === 'quests' && renderQuests()}
-            {activeTab === 'faction' && renderFaction()}
-            {activeTab === 'shop' && renderShop()}
+            {activeTab === 'talk' && isRegularNpc && activeNpcId === 'bartender' && renderRespec()}
+            {activeTab === 'quests' && isRegularNpc && renderQuests()}
+            {activeTab === 'bounties' && isRegularNpc && renderBounties()}
+            {activeTab === 'faction' && isRegularNpc && renderFaction()}
+            {activeTab === 'faction' && isRegularNpc && renderMercenaries()}
+            {activeTab === 'shop' && isRegularNpc && renderShop()}
+            {activeTab === 'enchant' && isEmber && renderEnchant()}
           </div>
         </div>
       )}
