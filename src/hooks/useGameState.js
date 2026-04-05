@@ -7061,9 +7061,10 @@ export function useGameState(isLoggedIn) {
   // Auto-save to server on every meaningful state change (debounced)
   useEffect(() => {
     if (!isLoggedIn) return;
-    if (state.screen === 'town' && state.player.level === 1 && state.player.exp === 0 && state.player.gold === 30) {
-      // Don't save the initial default state
-    }
+    // Don't save the initial default state — this can happen when isLoggedIn
+    // flips to true before the server save has been loaded, which would
+    // overwrite the real save with defaults and cause a character reset.
+    if (!state.player.characterClass) return;
 
     const data = extractSaveData(state);
     const serialized = JSON.stringify(data);
