@@ -2182,7 +2182,8 @@ export const SIDE_QUEST_CHAINS = [
     ],
   },
 
-  // Chain: Fire Keeper - find ritual sites, light fires, defend them from waves (Lv 3)
+  // Chain: Fire Keeper - location-directed fire ritual quests (Lv 3)
+  // fireRitual field: { locationId, requiresDefense } — drives discovery & ritual screen behavior
   {
     chainId: 'fire_keeper',
     chainName: 'Fire Keeper',
@@ -2190,17 +2191,17 @@ export const SIDE_QUEST_CHAINS = [
     chainIcon: 'flame',
     levelReq: 3,
     quests: [
-      { id: 'side_fk_1', name: 'First Spark', description: 'Find a burned-out campfire while exploring and light it with fuel.', stat: 'fireRitualsLit', target: 1, reward: { gold: 50 }, order: 1 },
-      { id: 'side_fk_2', name: 'Fuel Gatherer', description: 'Light 2 more ritual fires. You\'re getting the hang of this.', stat: 'fireRitualsLit', target: 3, reward: { gold: 100, energyDrinks: 1 }, order: 2 },
-      { id: 'side_fk_3', name: 'Night Watch', description: 'Light a fire and defend it through the night. Survive all waves of attackers.', stat: 'fireRitualsDefended', target: 1, reward: { gold: 200, energyDrinks: 1 }, order: 3 },
-      { id: 'side_fk_4', name: 'Burning Bright', description: 'Light 5 total fires across different locations. The flame spreads.', stat: 'fireRitualsLit', target: 5, reward: { gold: 250 }, order: 4 },
-      { id: 'side_fk_5', name: 'Siege of Flames', description: 'Defend 3 ritual fires from the creatures of the night.', stat: 'fireRitualsDefended', target: 3, reward: { gold: 400, energyDrinks: 2 }, order: 5 },
-      { id: 'side_fk_6', name: 'Pyre Warden', description: 'Light 10 fires total. The darkness fears your flame.', stat: 'fireRitualsLit', target: 10, reward: { gold: 500 }, order: 6 },
-      { id: 'side_fk_7', name: 'Eternal Flame', description: 'Defend 6 ritual fires. You are the Fire Keeper — nothing extinguishes your light.', stat: 'fireRitualsDefended', target: 6, reward: { gold: 800, energyDrinks: 3 }, order: 7 },
+      { id: 'side_fk_1', name: 'First Spark', description: 'Find a burned-out campfire in the Neon Mile and light it with fuel.', stat: 'fireRitualLit_neon-mile', target: 1, reward: { gold: 50 }, order: 1, fireRitual: { locationId: 'neon-mile', requiresDefense: false } },
+      { id: 'side_fk_2', name: 'Shadow Flames', description: 'Venture into Shadow Alley and light a ritual fire in the darkness.', stat: 'fireRitualLit_shadow-alley', target: 1, reward: { gold: 80, energyDrinks: 1 }, order: 2, fireRitual: { locationId: 'shadow-alley', requiresDefense: false } },
+      { id: 'side_fk_3', name: 'Night Watch', description: 'Light a fire in Shadow Alley and defend it through the night. Survive all waves of attackers.', stat: 'fireRitualDefended_shadow-alley', target: 1, reward: { gold: 200, energyDrinks: 1 }, order: 3, fireRitual: { locationId: 'shadow-alley', requiresDefense: true } },
+      { id: 'side_fk_4', name: 'Tunnel Torch', description: 'The Metro Underpass is pitch black. Find a ritual circle and bring light to the tunnels.', stat: 'fireRitualLit_metro-underpass', target: 1, reward: { gold: 150 }, order: 4, fireRitual: { locationId: 'metro-underpass', requiresDefense: false } },
+      { id: 'side_fk_5', name: 'Underground Siege', description: 'Light a fire deep in the Metro Underpass and hold it against the tunnel creatures.', stat: 'fireRitualDefended_metro-underpass', target: 1, reward: { gold: 300, energyDrinks: 2 }, order: 5, fireRitual: { locationId: 'metro-underpass', requiresDefense: true } },
+      { id: 'side_fk_6', name: 'Flame Network', description: 'Return to the Neon Mile and Shadow Alley. Light more fires to create a network of safe havens.', stat: 'fireRitualsLit', target: 6, reward: { gold: 350 }, order: 6 },
+      { id: 'side_fk_7', name: 'Eternal Keeper', description: 'Defend 3 ritual fires across any location. You are the Fire Keeper — nothing extinguishes your light.', stat: 'fireRitualsDefended', target: 3, reward: { gold: 600, energyDrinks: 3 }, order: 7 },
     ],
   },
 
-  // Chain: Flame Sentinel - harder fire defense quests (Lv 14)
+  // Chain: Flame Sentinel - harder location-directed fire defense quests (Lv 14)
   {
     chainId: 'flame_sentinel',
     chainName: 'Flame Sentinel',
@@ -2208,13 +2209,13 @@ export const SIDE_QUEST_CHAINS = [
     chainIcon: 'flame',
     levelReq: 14,
     quests: [
-      { id: 'side_fs_1', name: 'Signal Fire', description: 'Find and light an abandoned signal pyre in dangerous territory.', stat: 'fireRitualsLit', target: 12, reward: { gold: 300 }, order: 1 },
-      { id: 'side_fs_2', name: 'Holding the Line', description: 'Defend a ritual fire and slay 15 monsters during wave defense.', stat: 'fireRitualMonstersKilled', target: 15, reward: { gold: 400 }, order: 2 },
-      { id: 'side_fs_3', name: 'Dark Tide', description: 'Survive the defense of 5 more ritual fires against the night hordes.', stat: 'fireRitualsDefended', target: 8, reward: { gold: 550, energyDrinks: 2 }, order: 3 },
-      { id: 'side_fs_4', name: 'Infernal Beacon', description: 'Light 20 fires total. Your beacons mark safe paths through the darkness.', stat: 'fireRitualsLit', target: 20, reward: { gold: 600 }, order: 4 },
-      { id: 'side_fs_5', name: 'Ironclad Vigil', description: 'Defend 12 ritual fires. The waves grow fiercer but you stand firm.', stat: 'fireRitualsDefended', target: 12, reward: { gold: 800, energyDrinks: 2 }, order: 5 },
-      { id: 'side_fs_6', name: 'Ashen Warlord', description: 'Kill 50 monsters during fire defense. They burn in your light.', stat: 'fireRitualMonstersKilled', target: 50, reward: { gold: 1000 }, order: 6 },
-      { id: 'side_fs_7', name: 'Flame Sentinel', description: 'Defend 20 ritual fires. You are the last line between the flame and the void.', stat: 'fireRitualsDefended', target: 20, reward: { gold: 1500, energyDrinks: 4 }, order: 7 },
+      { id: 'side_fs_1', name: 'Rooftop Beacon', description: 'Climb to the Skyline Rooftops and light a signal pyre. The city needs to see the flame.', stat: 'fireRitualLit_skyline-rooftops', target: 1, reward: { gold: 250 }, order: 1, fireRitual: { locationId: 'skyline-rooftops', requiresDefense: false } },
+      { id: 'side_fs_2', name: 'Skyline Siege', description: 'The rooftop gangs attack at night. Defend the signal pyre on Skyline Rooftops.', stat: 'fireRitualDefended_skyline-rooftops', target: 1, reward: { gold: 400, energyDrinks: 1 }, order: 2, fireRitual: { locationId: 'skyline-rooftops', requiresDefense: true } },
+      { id: 'side_fs_3', name: 'Iron Forge Ritual', description: 'Find the ancient forge circle in the Ironworks Yard. Light it and defend it from the machines.', stat: 'fireRitualDefended_ironworks-yard', target: 1, reward: { gold: 500, energyDrinks: 2 }, order: 3, fireRitual: { locationId: 'ironworks-yard', requiresDefense: true } },
+      { id: 'side_fs_4', name: 'Midnight Vigil', description: 'The darkest location demands the brightest fire. Light and defend at Midnight Terminal.', stat: 'fireRitualDefended_midnight-terminal', target: 1, reward: { gold: 650, energyDrinks: 2 }, order: 4, fireRitual: { locationId: 'midnight-terminal', requiresDefense: true } },
+      { id: 'side_fs_5', name: 'Warden\'s Trail', description: 'Retrace your steps. Light fires in the Ironworks Yard and Midnight Terminal.', stat: 'fireRitualsLit', target: 12, reward: { gold: 500 }, order: 5 },
+      { id: 'side_fs_6', name: 'Ashen Warlord', description: 'Kill 50 creatures during fire defense across any location. They burn in your light.', stat: 'fireRitualMonstersKilled', target: 50, reward: { gold: 800 }, order: 6 },
+      { id: 'side_fs_7', name: 'Flame Sentinel', description: 'Defend 10 ritual fires total. You are the last line between the flame and the void.', stat: 'fireRitualsDefended', target: 10, reward: { gold: 1200, energyDrinks: 4 }, order: 7 },
     ],
   },
 ];
@@ -2455,10 +2456,11 @@ export function createInitialStats() {
     winsWithoutPotion: 0,
     bossKilledNoDefend: 0,
     bossKilledNoPotion: 0,
-    // Fire ritual stats
+    // Fire ritual stats (global)
     fireRitualsLit: 0,
     fireRitualsDefended: 0,
     fireRitualMonstersKilled: 0,
     wavesSurvived: 0,
+    // Fire ritual stats (per-location) - dynamically extended via addStat
   };
 }

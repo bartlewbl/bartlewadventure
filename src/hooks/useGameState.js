@@ -15,7 +15,7 @@ import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FAC
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
-import { pickRitualSite, RITUAL_DISCOVER_CHANCE, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
+import { pickRitualSite, RITUAL_DISCOVER_CHANCE, RITUAL_QUEST_DISCOVER_CHANCE, RITUAL_QUEST_LOCATION_DISCOVER_CHANCE, FIRE_RITUAL_CHAIN_IDS, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
@@ -1011,19 +1011,53 @@ function gameReducer(state, action) {
         };
       }
 
-      // Fire ritual site discovery check (~4% chance)
-      if (Math.random() < RITUAL_DISCOVER_CHANCE) {
+      // Fire ritual site discovery — quest-aware rates
+      // Check if player has an active fire ritual quest chain
+      const activeLines = (state.tasks?.activeQuestLines) || [];
+      let activeFireQuest = null;
+      let activeFireChainId = null;
+      for (const cid of FIRE_RITUAL_CHAIN_IDS) {
+        if (activeLines.includes(`side_${cid}`)) {
+          const chain = getSideQuestChain(cid);
+          if (chain) {
+            const currentQ = getCurrentSideQuest(cid, state.tasks?.sideQuestClaimed);
+            if (currentQ) {
+              activeFireQuest = currentQ;
+              activeFireChainId = cid;
+              break;
+            }
+          }
+        }
+      }
+      // Determine discovery chance: quest targeting this location > quest active > base rate
+      let ritualChance = RITUAL_DISCOVER_CHANCE;
+      if (activeFireQuest) {
+        if (activeFireQuest.fireRitual?.locationId === loc.id) {
+          ritualChance = RITUAL_QUEST_LOCATION_DISCOVER_CHANCE; // 40% in quest target location
+        } else {
+          ritualChance = RITUAL_QUEST_DISCOVER_CHANCE; // 25% when any fire quest active
+        }
+      }
+      if (Math.random() < ritualChance) {
         const ritualSite = pickRitualSite(loc.id);
         if (ritualSite) {
-          // Determine if this site can trigger a wave defense (50% chance for non-trivial locations)
-          const canDefend = loc.levelReq >= 3 && Math.random() < 0.5;
+          // Quest-driven defense: if active quest requires defense at this location, force it
+          const questRequiresDefense = activeFireQuest?.fireRitual?.locationId === loc.id && activeFireQuest?.fireRitual?.requiresDefense;
+          // Otherwise, 50% chance for defense option in non-trivial locations
+          const canDefend = questRequiresDefense || (loc.levelReq >= 3 && Math.random() < 0.5);
           return {
             ...state, screen: 'fire-ritual',
             exploreText: text,
             energy: exploreEnergy,
             lastEnergyUpdate: exploreLastUpdate,
             pets: petsAfterExplore,
-            activeRitualSite: { ...ritualSite, canDefend, locationId: loc.id, locationLevelReq: loc.levelReq },
+            activeRitualSite: {
+              ...ritualSite, canDefend, locationId: loc.id, locationLevelReq: loc.levelReq,
+              // Attach active quest info so the ritual screen can display it
+              activeQuest: activeFireQuest || null,
+              activeQuestChainId: activeFireChainId || null,
+              questRequiresDefense: !!questRequiresDefense,
+            },
           };
         }
       }
@@ -1714,8 +1748,12 @@ function gameReducer(state, action) {
           inv.splice(idx, 1);
         }
       }
+      // Track global + per-location stats
       let newStats = addStat(state.stats, 'fireRitualsLit');
+      newStats = addStat(newStats, `fireRitualLit_${site.locationId}`);
       let newTasks = incrementTaskProgress(state.tasks, 'fireRitualsLit');
+      newTasks = incrementTaskProgress(newTasks, `fireRitualLit_${site.locationId}`);
+      const questMsg = site.activeQuest ? ` (Quest: ${site.activeQuest.name})` : '';
       return {
         ...state,
         screen: 'explore',
@@ -1723,7 +1761,7 @@ function gameReducer(state, action) {
         activeRitualSite: null,
         stats: newStats,
         tasks: newTasks,
-        exploreText: `You light the ${site.name}. Warm flames dance in the darkness, and the area feels safer.`,
+        exploreText: `You light the ${site.name}. Warm flames dance in the darkness, and the area feels safer.${questMsg}`,
       };
     }
 
@@ -1744,9 +1782,11 @@ function gameReducer(state, action) {
           inv.splice(idx, 1);
         }
       }
-      // Track the light stat
+      // Track global + per-location light stats
       let newStats = addStat(state.stats, 'fireRitualsLit');
+      newStats = addStat(newStats, `fireRitualLit_${site.locationId}`);
       let newTasks = incrementTaskProgress(state.tasks, 'fireRitualsLit');
+      newTasks = incrementTaskProgress(newTasks, `fireRitualLit_${site.locationId}`);
       // Set up wave defense
       const tier = getWaveTier(site.locationLevelReq);
       const config = WAVE_CONFIGS[tier];
@@ -1760,6 +1800,7 @@ function gameReducer(state, action) {
       monster.hp = monster.maxHp;
       monster.atk = Math.floor(monster.atk * config.atkScale);
       const encBattle = createBattleState(monster, state.player);
+      const questName = site.activeQuest?.name;
       const waveDefense = {
         tier,
         currentWave: 1,
@@ -1778,6 +1819,7 @@ function gameReducer(state, action) {
         tasks: newTasks,
         battle: encBattle,
         battleLog: [
+          ...(questName ? [{ text: `Quest: ${questName}`, type: 'info' }] : []),
           { text: 'Night falls. Creatures stir in the darkness...', type: 'info' },
           { text: `Wave 1/${config.waves} - A ${monster.name} attacks the fire!`, type: 'info' },
         ],
@@ -6193,17 +6235,21 @@ function handleVictory(state) {
     updatedPets = progressPetQuests(updatedPets, 'slay_boss', 1, regionId);
   }
 
-  // Track fire ritual wave defense stats
+  // Track fire ritual wave defense stats (global + per-location)
   const wd = state.waveDefense;
   if (wd) {
     newStats = addStat(newStats, 'fireRitualMonstersKilled');
     newStats = addStat(newStats, 'wavesSurvived');
     newTasks = incrementTaskProgress(newTasks, 'fireRitualMonstersKilled');
     newTasks = incrementTaskProgress(newTasks, 'wavesSurvived');
-    // If this was the last wave, track the full defense completion
+    // If this was the last wave, track the full defense completion (global + per-location)
     if (wd.currentWave >= wd.totalWaves) {
       newStats = addStat(newStats, 'fireRitualsDefended');
       newTasks = incrementTaskProgress(newTasks, 'fireRitualsDefended');
+      if (wd.locationId) {
+        newStats = addStat(newStats, `fireRitualDefended_${wd.locationId}`);
+        newTasks = incrementTaskProgress(newTasks, `fireRitualDefended_${wd.locationId}`);
+      }
     }
   }
 
