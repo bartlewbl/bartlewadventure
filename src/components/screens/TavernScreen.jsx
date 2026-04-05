@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS } from '../../data/tavernData';
+import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS, RIVALRY_QUESTS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
 
 function NpcSprite({ npcId, scale = 4 }) {
@@ -51,7 +51,7 @@ const TABS = [
   { id: 'shop', label: 'Shop' },
 ];
 
-export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onLearnFactionSkill, onBuyItem, onBack }) {
+export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onAcceptRivalryQuest, onTurnInRivalryQuest, onLearnFactionSkill, onBuyItem, onBack }) {
   const [activeNpcId, setActiveNpcId] = useState(null);
   const [activeTab, setActiveTab] = useState('talk');
   const [activeTopic, setActiveTopic] = useState(null);
@@ -99,6 +99,9 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
   // ---- QUESTS TAB ----
   const renderQuests = () => {
     const quests = TAVERN_QUESTS[activeNpcId] || [];
+    // Find rivalry quests involving this NPC
+    const npcRivalryQuests = RIVALRY_QUESTS.filter(rq => rq.involvedNpcs.includes(activeNpcId));
+
     return (
       <div className="tavern-quest-list">
         {quests.map(quest => {
@@ -108,18 +111,33 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
           const repLocked = npcRepLevel < quest.reqRep;
           const levelLocked = player.level < quest.reqLevel;
           const locked = repLocked || levelLocked;
+          const hasRequiredItems = !quest.requiresItems || quest.requiresItems.every(
+            itemName => player.inventory?.some(item => item.name === itemName)
+          );
 
           let progress = 0;
+          let statMet = false;
           let canTurnIn = false;
           if (isAccepted) {
-            progress = (stats[quest.stat] || 0) - accepted.baseline;
-            canTurnIn = progress >= quest.target;
+            if (quest.stat === 'none' || quest.target === 0) {
+              statMet = true;
+              progress = quest.target;
+            } else {
+              progress = (stats[quest.stat] || 0) - accepted.baseline;
+              statMet = progress >= quest.target;
+            }
+            canTurnIn = statMet && hasRequiredItems;
           }
 
+          const isDeliveryQuest = !!quest.requiresItems;
+
           return (
-            <div key={quest.id} className={`tavern-quest ${isCompleted ? 'completed' : ''} ${canTurnIn ? 'ready' : ''} ${locked ? 'locked' : ''}`}>
+            <div key={quest.id} className={`tavern-quest ${isCompleted ? 'completed' : ''} ${canTurnIn ? 'ready' : ''} ${locked ? 'locked' : ''} ${isDeliveryQuest ? 'delivery' : ''}`}>
               <div className="tavern-quest-header">
-                <div className="tavern-quest-name">{quest.name}</div>
+                <div className="tavern-quest-name">
+                  {isDeliveryQuest && <span className="delivery-icon">&#128230;</span>}
+                  {quest.name}
+                </div>
                 <div className="tavern-quest-badges">
                   {isCompleted && <span className="tavern-badge done">Done</span>}
                   {canTurnIn && <span className="tavern-badge turn-in">Ready!</span>}
@@ -128,12 +146,38 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
                 </div>
               </div>
               <div className="tavern-quest-desc">{quest.desc}</div>
-              {isAccepted && !isCompleted && (
+              {quest.lore && isAccepted && !isCompleted && (
+                <div className="tavern-quest-lore">{quest.lore}</div>
+              )}
+              {isAccepted && !isCompleted && quest.stat !== 'none' && quest.target > 0 && (
                 <div className="tavern-quest-progress">
                   <div className="tavern-quest-bar-track">
                     <div className="tavern-quest-bar-fill" style={{ width: `${Math.min(100, (progress / quest.target) * 100)}%` }} />
                   </div>
                   <span className="tavern-quest-bar-text">{Math.min(progress, quest.target)} / {quest.target}</span>
+                </div>
+              )}
+              {isAccepted && !isCompleted && quest.requiresItems && (
+                <div className="tavern-quest-items">
+                  <div className="tavern-quest-items-label">Required Items:</div>
+                  {quest.requiresItems.map(itemName => {
+                    const has = player.inventory?.some(item => item.name === itemName);
+                    return (
+                      <div key={itemName} className={`tavern-quest-item-req ${has ? 'has-item' : 'missing-item'}`}>
+                        <span className="tavern-quest-item-check">{has ? '\u2714' : '\u2718'}</span>
+                        <span className="tavern-quest-item-name">{itemName}</span>
+                        {quest.questDrops?.some(d => d.itemName === itemName) && !has && (
+                          <span className="tavern-quest-item-hint">Drops from boss</span>
+                        )}
+                        {!quest.questDrops?.some(d => d.itemName === itemName) && !has && (
+                          <span className="tavern-quest-item-hint">Find or buy this item</span>
+                        )}
+                        {quest.consumeItems && has && (
+                          <span className="tavern-quest-item-consumed">Will be consumed</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <div className="tavern-quest-reward">
@@ -148,6 +192,109 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
             </div>
           );
         })}
+
+        {/* Rivalry Quests */}
+        {npcRivalryQuests.length > 0 && (
+          <>
+            <div className="tavern-rivalry-header">Rivalry Quests</div>
+            <div className="tavern-rivalry-subtitle">Choose a side. There is no going back.</div>
+            {npcRivalryQuests.map(rq => {
+              const chosenNpc = tav.completedRivalryQuests?.[rq.id];
+              const isCompleted = !!chosenNpc;
+              const wonThisNpc = chosenNpc === activeNpcId;
+              const lostThisNpc = isCompleted && !wonThisNpc;
+              const accepted = (tav.acceptedRivalryQuests || []).find(q => q.questId === rq.id);
+              const isAccepted = !!accepted;
+              const levelLocked = player.level < rq.reqLevel;
+              const hasRep = rq.involvedNpcs.some(npcId => {
+                const rep = tav.reputation[npcId] || 0;
+                return getRepLevel(rep).level >= rq.reqRep;
+              });
+              const locked = levelLocked || !hasRep;
+
+              let progress = 0;
+              let canTurnIn = false;
+              if (isAccepted) {
+                progress = (stats[rq.stat] || 0) - accepted.baseline;
+                canTurnIn = progress >= rq.target;
+              }
+
+              const rivalNpc = rq.involvedNpcs.find(id => id !== activeNpcId);
+              const rivalName = TAVERN_NPCS.find(n => n.id === rivalNpc)?.name || rivalNpc;
+              const activeNpcName = activeNpc.name;
+              const reward = rq.rewards[activeNpcId];
+
+              return (
+                <div key={rq.id} className={`tavern-quest rivalry ${isCompleted ? (wonThisNpc ? 'completed' : 'betrayed') : ''} ${canTurnIn ? 'ready' : ''} ${locked && !isCompleted ? 'locked' : ''}`}>
+                  <div className="tavern-quest-header">
+                    <div className="tavern-quest-name">
+                      <span className="rivalry-icon">&#9876;</span> {rq.name}
+                    </div>
+                    <div className="tavern-quest-badges">
+                      {wonThisNpc && <span className="tavern-badge done">Sided with {activeNpcName}</span>}
+                      {lostThisNpc && <span className="tavern-badge betrayed">Sided with {TAVERN_NPCS.find(n => n.id === chosenNpc)?.name}</span>}
+                      {canTurnIn && <span className="tavern-badge turn-in">Choose a Side!</span>}
+                      {isAccepted && !canTurnIn && !isCompleted && <span className="tavern-badge active">Active</span>}
+                      {locked && !isCompleted && !isAccepted && <span className="tavern-badge locked">{levelLocked ? `Lv${rq.reqLevel}` : `Rep ${rq.reqRep}`}</span>}
+                    </div>
+                  </div>
+                  <div className="tavern-quest-desc">{rq.desc}</div>
+                  {rq.lore && <div className="tavern-rivalry-lore">{rq.lore}</div>}
+                  {isAccepted && !isCompleted && (
+                    <div className="tavern-quest-progress">
+                      <div className="tavern-quest-bar-track">
+                        <div className="tavern-quest-bar-fill rivalry-fill" style={{ width: `${Math.min(100, (progress / rq.target) * 100)}%` }} />
+                      </div>
+                      <span className="tavern-quest-bar-text">{Math.min(progress, rq.target)} / {rq.target}</span>
+                    </div>
+                  )}
+                  {!isCompleted && reward && (
+                    <div className="tavern-rivalry-rewards">
+                      <div className="tavern-rivalry-reward-option">
+                        <strong>{activeNpcName}:</strong> +{reward.repReward} rep, +{reward.goldReward}g
+                        {Object.entries(reward.repPenalties).map(([npcId, delta]) => (
+                          <span key={npcId} className="rivalry-penalty"> | {TAVERN_NPCS.find(n => n.id === npcId)?.name}: {delta} rep</span>
+                        ))}
+                      </div>
+                      {rq.rewards[rivalNpc] && (
+                        <div className="tavern-rivalry-reward-option rival">
+                          <strong>{rivalName}:</strong> +{rq.rewards[rivalNpc].repReward} rep, +{rq.rewards[rivalNpc].goldReward}g
+                          {Object.entries(rq.rewards[rivalNpc].repPenalties).map(([npcId, delta]) => (
+                            <span key={npcId} className="rivalry-penalty"> | {TAVERN_NPCS.find(n => n.id === npcId)?.name}: {delta} rep</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!isCompleted && !isAccepted && !locked && (
+                    <button className="tavern-action-btn" onClick={() => onAcceptRivalryQuest(rq.id)}>Accept Rivalry Quest</button>
+                  )}
+                  {canTurnIn && (
+                    <div className="tavern-rivalry-choice">
+                      <div className="tavern-rivalry-warning">This choice is PERMANENT. Choose wisely.</div>
+                      {rq.involvedNpcs.map(npcId => {
+                        const choiceReward = rq.rewards[npcId];
+                        const choiceName = TAVERN_NPCS.find(n => n.id === npcId)?.name || npcId;
+                        return (
+                          <button
+                            key={npcId}
+                            className={`tavern-action-btn rivalry-choice ${npcId === activeNpcId ? 'ally' : 'betray'}`}
+                            onClick={() => onTurnInRivalryQuest(rq.id, npcId)}
+                          >
+                            {choiceReward.turnInText}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {lostThisNpc && (
+                    <div className="tavern-rivalry-lost">You chose another side. This path is closed forever.</div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
     );
   };

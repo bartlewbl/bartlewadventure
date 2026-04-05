@@ -11,7 +11,7 @@ import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateReward
 import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
-import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills } from '../data/tavernData';
+import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills, RIVALRY_QUESTS } from '../data/tavernData';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
@@ -166,6 +166,8 @@ function createInitialState() {
       completedQuests: [],    // [questId, ...]
       learnedFactionSkills: [], // [factionSkillId, ...]
       shopPurchases: {},      // { itemKey: count }
+      acceptedRivalryQuests: [],    // [{ questId, baseline }]
+      completedRivalryQuests: {},   // { questId: chosenNpcId } — permanent, no going back
     },
     activeTrader: null,       // current trader encounter
     activeVillage: null,      // current village encounter
@@ -5867,8 +5869,26 @@ function gameReducer(state, action) {
       if (!questDef) return state;
       const accepted = tavern.acceptedQuests.find(q => q.questId === questId);
       if (!accepted) return state;
-      const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
-      if (progress < questDef.target) return { ...state, message: 'Quest not complete yet!' };
+      // Check stat progress (skip if target is 0, meaning item-only quest)
+      if (questDef.stat !== 'none' && questDef.target > 0) {
+        const progress = (state.stats[questDef.stat] || 0) - accepted.baseline;
+        if (progress < questDef.target) return { ...state, message: 'Quest not complete yet!' };
+      }
+      // Check item requirements
+      let playerInv = [...state.player.inventory];
+      if (questDef.requiresItems && questDef.requiresItems.length > 0) {
+        for (const itemName of questDef.requiresItems) {
+          const hasItem = playerInv.some(item => item.name === itemName);
+          if (!hasItem) return { ...state, message: `Missing required item: ${itemName}` };
+        }
+        // Consume items (default true unless consumeItems explicitly false)
+        if (questDef.consumeItems !== false) {
+          for (const itemName of questDef.requiresItems) {
+            const idx = playerInv.findIndex(item => item.name === itemName);
+            if (idx !== -1) playerInv.splice(idx, 1);
+          }
+        }
+      }
       // Grant reputation to this NPC
       const newRep = { ...tavern.reputation };
       newRep[npcId] = (newRep[npcId] || 0) + questDef.repReward;
@@ -5881,7 +5901,7 @@ function gameReducer(state, action) {
       let newStats = addStat(state.stats, 'goldEarned', questDef.goldReward);
       return {
         ...state,
-        player: { ...state.player, gold: state.player.gold + questDef.goldReward },
+        player: { ...state.player, gold: state.player.gold + questDef.goldReward, inventory: playerInv },
         tavern: {
           ...tavern,
           reputation: newRep,
@@ -6039,6 +6059,65 @@ function gameReducer(state, action) {
       return { ...state, player: p, battle: b, battleLog: log, stats: newStats, tasks: newTasks, pets: petResult.state.pets };
     }
 
+    case 'TAVERN_ACCEPT_RIVALRY_QUEST': {
+      const { questId } = action;
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {}, acceptedRivalryQuests: [], completedRivalryQuests: {} };
+      const rivalryDef = RIVALRY_QUESTS.find(q => q.id === questId);
+      if (!rivalryDef) return state;
+      if (tavern.completedRivalryQuests?.[questId]) return { ...state, message: 'Already completed!' };
+      if ((tavern.acceptedRivalryQuests || []).some(q => q.questId === questId)) return { ...state, message: 'Already accepted!' };
+      if (state.player.level < rivalryDef.reqLevel) return { ...state, message: `Requires level ${rivalryDef.reqLevel}!` };
+      // Check that at least one involved NPC meets the rep requirement
+      const hasRep = rivalryDef.involvedNpcs.some(npcId => {
+        const rep = tavern.reputation[npcId] || 0;
+        return getRepLevel(rep).level >= rivalryDef.reqRep;
+      });
+      if (!hasRep) return { ...state, message: 'Not enough reputation with any involved NPC!' };
+      return {
+        ...state,
+        tavern: {
+          ...tavern,
+          acceptedRivalryQuests: [...(tavern.acceptedRivalryQuests || []), { questId, baseline: state.stats[rivalryDef.stat] || 0 }],
+        },
+        message: `Rivalry quest accepted: ${rivalryDef.name}`,
+      };
+    }
+
+    case 'TAVERN_TURN_IN_RIVALRY_QUEST': {
+      const { questId, chosenNpcId } = action;
+      const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {}, acceptedRivalryQuests: [], completedRivalryQuests: {} };
+      const rivalryDef = RIVALRY_QUESTS.find(q => q.id === questId);
+      if (!rivalryDef) return state;
+      if (tavern.completedRivalryQuests?.[questId]) return { ...state, message: 'Already completed!' };
+      if (!rivalryDef.involvedNpcs.includes(chosenNpcId)) return state;
+      const accepted = (tavern.acceptedRivalryQuests || []).find(q => q.questId === questId);
+      if (!accepted) return state;
+      const progress = (state.stats[rivalryDef.stat] || 0) - accepted.baseline;
+      if (progress < rivalryDef.target) return { ...state, message: 'Quest not complete yet!' };
+      const reward = rivalryDef.rewards[chosenNpcId];
+      if (!reward) return state;
+      // Grant reputation to chosen NPC
+      const newRep = { ...tavern.reputation };
+      newRep[chosenNpcId] = (newRep[chosenNpcId] || 0) + reward.repReward;
+      // Apply rivalry penalties — these are HARSH and permanent
+      for (const [penaltyNpcId, delta] of Object.entries(reward.repPenalties)) {
+        newRep[penaltyNpcId] = Math.max(0, (newRep[penaltyNpcId] || 0) + delta);
+      }
+      let newStats = addStat(state.stats, 'goldEarned', reward.goldReward);
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold + reward.goldReward },
+        tavern: {
+          ...tavern,
+          reputation: newRep,
+          acceptedRivalryQuests: (tavern.acceptedRivalryQuests || []).filter(q => q.questId !== questId),
+          completedRivalryQuests: { ...(tavern.completedRivalryQuests || {}), [questId]: chosenNpcId },
+        },
+        stats: newStats,
+        message: `Sided with ${chosenNpcId}! +${reward.goldReward}g, +${reward.repReward} rep. Rivalries have consequences...`,
+      };
+    }
+
     case 'TAVERN_BUY_ITEM': {
       const { itemDef, npcId } = action;
       const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
@@ -6156,6 +6235,39 @@ function handleVictory(state) {
       lootAdded = true;
     } else {
       lostItemName = droppedItem.name;
+    }
+  }
+
+  // Drop tavern quest-specific items from bosses when relevant quests are active
+  let tavernQuestDrops = [];
+  if (m.isBoss && state.tavern) {
+    const activeQuests = state.tavern.acceptedQuests || [];
+    for (const aq of activeQuests) {
+      const npcQuests = TAVERN_QUESTS[aq.npcId];
+      if (!npcQuests) continue;
+      const questDef = npcQuests.find(q => q.id === aq.questId);
+      if (!questDef?.questDrops) continue;
+      for (const drop of questDef.questDrops) {
+        if (drop.bossId === m.id) {
+          // Only drop if player doesn't already have this item
+          const alreadyHas = p.inventory.some(item => item.name === drop.itemName);
+          if (!alreadyHas && p.inventory.length < p.maxInventory) {
+            const questItem = {
+              id: 'tqd_' + Date.now() + '_' + Math.random(),
+              name: drop.itemName,
+              type: 'quest',
+              rarity: 'Rare',
+              rarityColor: '#ffd700',
+              desc: drop.itemDesc,
+              sellPrice: 0,
+              atk: 0, def: 0,
+              isQuestItem: true,
+            };
+            p.inventory = [...p.inventory, questItem];
+            tavernQuestDrops.push(questItem);
+          }
+        }
+      }
     }
   }
 
@@ -6291,6 +6403,7 @@ function handleVictory(state) {
       isBoss: !!m.isBoss,
       bossName: m.isBoss ? m.name : null,
       innBonus: innBonus > 0 ? innBonus : null,
+      tavernQuestDrops: tavernQuestDrops.length > 0 ? tavernQuestDrops : null,
       // Wave defense info
       isWaveDefense: !!wd,
       waveNumber: wd?.currentWave || 0,
@@ -6602,6 +6715,8 @@ export function useGameState(isLoggedIn) {
     traderTurnInQuest: (questId, traderId) => dispatch({ type: 'TRADER_TURN_IN_QUEST', questId, traderId }),
     tavernAcceptQuest: (questId, npcId) => dispatch({ type: 'TAVERN_ACCEPT_QUEST', questId, npcId }),
     tavernTurnInQuest: (questId, npcId) => dispatch({ type: 'TAVERN_TURN_IN_QUEST', questId, npcId }),
+    tavernAcceptRivalryQuest: (questId) => dispatch({ type: 'TAVERN_ACCEPT_RIVALRY_QUEST', questId }),
+    tavernTurnInRivalryQuest: (questId, chosenNpcId) => dispatch({ type: 'TAVERN_TURN_IN_RIVALRY_QUEST', questId, chosenNpcId }),
     tavernBuyItem: (itemDef, npcId) => dispatch({ type: 'TAVERN_BUY_ITEM', itemDef, npcId }),
     tavernLearnFactionSkill: (skillId, npcId) => dispatch({ type: 'TAVERN_LEARN_FACTION_SKILL', skillId, npcId }),
     battleFactionSkill: (skillId) => dispatch({ type: 'BATTLE_USE_FACTION_SKILL', skillId }),
