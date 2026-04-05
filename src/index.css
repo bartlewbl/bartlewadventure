@@ -14156,92 +14156,101 @@ body {
   to { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* ---- GAMBLING DIALOG ---- */
-.tavern-backroom-btn {
+/* Rolling dice animation area */
+.gambling-rolling-area {
+  padding: 16px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.gambling-rolling-dice-display {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  width: calc(100% - 16px);
-  margin: 8px auto;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, rgba(30, 20, 10, 0.95), rgba(50, 35, 15, 0.9));
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Press Start 2P', monospace;
+  justify-content: center;
+  gap: 16px;
 }
-.tavern-backroom-btn:hover {
-  border-color: rgba(255, 215, 0, 0.6);
-  background: linear-gradient(135deg, rgba(40, 28, 12, 0.95), rgba(60, 42, 18, 0.9));
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.1);
+.gambling-die-rolling {
+  font-size: 36px;
+  display: inline-block;
+  animation: diceShake 0.08s linear infinite;
+  filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.3));
 }
-.tavern-backroom-icon { font-size: 16px; }
-.tavern-backroom-label {
-  font-size: 9px;
-  color: #ffd700;
-  font-weight: bold;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
-}
-.tavern-backroom-hint {
-  font-size: 6px;
-  color: #888;
-  margin-left: auto;
+@keyframes diceShake {
+  0% { transform: rotate(-8deg) scale(1.05); }
+  25% { transform: rotate(8deg) scale(0.95); }
+  50% { transform: rotate(-5deg) scale(1.02); }
+  75% { transform: rotate(5deg) scale(0.98); }
+  100% { transform: rotate(-8deg) scale(1.05); }
 }
 
-.gambling-dialog-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+/* Coin spinning animation */
+.gambling-coin-spinning-area {
+  padding: 20px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.gambling-coin-spinner {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700, #c49000, #ffd700);
+  border: 3px solid #ffd700;
+  animation: coinSpin3D 0.3s linear infinite;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  animation: gamblingFadeIn 0.2s ease;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
-@keyframes gamblingFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.gambling-coin-spin-face {
+  font-size: 22px;
+  color: #1a1a2e;
 }
-.gambling-dialog {
+@keyframes coinSpin3D {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+/* SVG Wheel */
+.gambling-wheel-visual {
   position: relative;
-  background: linear-gradient(145deg, #12101e, #1a1830);
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  border-radius: 10px;
-  padding: 16px;
-  max-width: 460px;
-  width: 92%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.05);
-  animation: gamblingSlideUp 0.25s ease;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
 }
-@keyframes gamblingSlideUp {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+.gambling-wheel-svg {
+  width: 180px;
+  height: 180px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s;
 }
-.gambling-dialog .tavern-gambling {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
+.gambling-wheel-svg.spinning {
+  animation: wheelSpin 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
 }
-.gambling-dialog-close {
+@keyframes wheelSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.gambling-wheel-pointer {
   position: absolute;
-  top: 8px;
-  right: 10px;
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px 8px;
-  z-index: 1;
-  font-family: 'Press Start 2P', monospace;
-  transition: color 0.15s;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  color: #ff4444;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  z-index: 2;
+  text-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
 }
-.gambling-dialog-close:hover { color: #ff4444; }
+
+/* Dealer NPC mini icon */
+.tavern-npc-dealer-mini {
+  width: 28px;
+  height: 28px;
+  image-rendering: auto;
+}
 
 /* ---- EMBER SPLASH ART ---- */
 .ember-splash {

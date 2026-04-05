@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS, RIVALRY_QUESTS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
-import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
+import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, DEALER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
 
 function NpcSprite({ npcId, scale = 4 }) {
   const canvasRef = useRef(null);
@@ -58,14 +58,19 @@ const EMBER_TABS = [
   { id: 'enchant', label: 'Enchant' },
 ];
 
+const DEALER_TABS = [
+  { id: 'talk', label: 'Talk' },
+  { id: 'gamble', label: 'Gamble' },
+];
+
 const GAMBLING_GAMES = [
   { id: 'dice', label: 'Dice (Over/Under)' },
   { id: 'coin', label: 'Coin Flip' },
   { id: 'wheel', label: 'Wheel of Fortune' },
 ];
 
-// Combined NPC list: original tavern NPCs + the enchanter
-const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC];
+// Combined NPC list: original tavern NPCs + the enchanter + the dealer
+const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC, DEALER_NPC];
 
 function EmberSplash() {
   return (
@@ -173,13 +178,13 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
   const [isRolling, setIsRolling] = useState(false);
   const [enchantSelected, setEnchantSelected] = useState(null);
   const [respecConfirm, setRespecConfirm] = useState(false);
-  const [showGambling, setShowGambling] = useState(false);
 
   const tav = tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
   const activeNpc = ALL_TAVERN_NPCS.find(n => n.id === activeNpcId);
   const isEmber = activeNpcId === 'ember';
-  const isRegularNpc = activeNpc && !isEmber;
-  const activeTabs = isEmber ? EMBER_TABS : NPC_TABS;
+  const isDealer = activeNpcId === 'dealer';
+  const isRegularNpc = activeNpc && !isEmber && !isDealer;
+  const activeTabs = isEmber ? EMBER_TABS : isDealer ? DEALER_TABS : NPC_TABS;
   const npcRep = activeNpcId ? (tav.reputation[activeNpcId] || 0) : 0;
   const npcRepLevel = getRepLevel(npcRep).level;
 
@@ -856,18 +861,28 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
   };
 
   // ---- GAMBLING HALL ----
+  const [rollingDice, setRollingDice] = useState(null); // transient dice animation faces
+
   const handleDiceRoll = () => {
     if (isRolling || player.gold < diceWager) return;
     setIsRolling(true);
     setGamblingResult(null);
-    setTimeout(() => {
-      const result = rollDice();
-      const won = (diceBet === 'over' && result.total > 7) || (diceBet === 'under' && result.total < 7);
-      const payout = won ? diceWager * 2 : 0;
-      setGamblingResult({ type: 'dice', ...result, won, payout, wager: diceWager });
-      onGamble(diceWager, payout);
-      setIsRolling(false);
-    }, 600);
+    // Animate dice faces rapidly before reveal
+    let ticks = 0;
+    const interval = setInterval(() => {
+      setRollingDice({ d1: Math.floor(Math.random() * 6) + 1, d2: Math.floor(Math.random() * 6) + 1 });
+      ticks++;
+      if (ticks >= 8) {
+        clearInterval(interval);
+        const result = rollDice();
+        const won = (diceBet === 'over' && result.total > 7) || (diceBet === 'under' && result.total < 7);
+        const payout = won ? diceWager * 2 : 0;
+        setRollingDice(null);
+        setGamblingResult({ type: 'dice', ...result, won, payout, wager: diceWager });
+        onGamble(diceWager, payout);
+        setIsRolling(false);
+      }
+    }, 80);
   };
 
   const handleCoinFlip = () => {
@@ -881,7 +896,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       setGamblingResult({ type: 'coin', result, won, payout, wager: coinWager });
       onGamble(coinWager, payout);
       setIsRolling(false);
-    }, 600);
+    }, 900);
   };
 
   const handleWheelSpin = () => {
@@ -894,7 +909,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       setGamblingResult({ type: 'wheel', segment, payout, wager: wheelWager, won: segment.mult > 1 });
       onGamble(wheelWager, payout);
       setIsRolling(false);
-    }, 800);
+    }, 1200);
   };
 
   const renderGambling = () => {
@@ -958,6 +973,15 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                 ) : `Roll Dice (${diceWager}g)`}
               </button>
             </div>
+            {/* Rolling dice animation */}
+            {rollingDice && (
+              <div className="gambling-rolling-area">
+                <div className="gambling-rolling-dice-display">
+                  <span className="gambling-die-rolling">{DICE_FACES[rollingDice.d1]}</span>
+                  <span className="gambling-die-rolling">{DICE_FACES[rollingDice.d2]}</span>
+                </div>
+              </div>
+            )}
             {gamblingResult?.type === 'dice' && (
               <div className={`gambling-result-v2 ${gamblingResult.won ? 'win' : 'lose'}`}>
                 <div className="gambling-result-visual">
@@ -1013,11 +1037,19 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                 ) : `Flip Coin (${coinWager}g)`}
               </button>
             </div>
+            {/* Coin spin animation */}
+            {isRolling && gamblingGame === 'coin' && (
+              <div className="gambling-coin-spinning-area">
+                <div className="gambling-coin-spinner">
+                  <div className="gambling-coin-spin-face">&#9733;</div>
+                </div>
+              </div>
+            )}
             {gamblingResult?.type === 'coin' && (
               <div className={`gambling-result-v2 ${gamblingResult.won ? 'win' : 'lose'}`}>
                 <div className="gambling-result-visual">
-                  <div className={`gambling-coin-display ${isRolling ? '' : 'landed'}`}>
-                    {gamblingResult.result === 'heads' ? '&#9737;' : '&#9738;'}
+                  <div className="gambling-coin-display landed">
+                    {gamblingResult.result === 'heads' ? '\u2609' : '\u260A'}
                   </div>
                   <div className="gambling-coin-label">{gamblingResult.result === 'heads' ? 'HEADS' : 'TAILS'}</div>
                 </div>
@@ -1037,10 +1069,57 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
         {gamblingGame === 'wheel' && (
           <div className="gambling-wheel">
             <div className="gambling-desc">Spin the wheel! Land on a multiplier to win big.</div>
+            {/* SVG Wheel */}
+            <div className="gambling-wheel-visual">
+              <svg viewBox="0 0 200 200" className={`gambling-wheel-svg ${isRolling ? 'spinning' : ''}`}>
+                {WHEEL_SEGMENTS.map((seg, i) => {
+                  const total = WHEEL_SEGMENTS.length;
+                  const angle = (360 / total);
+                  const startAngle = i * angle - 90;
+                  const endAngle = startAngle + angle;
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+                  const x1 = 100 + 85 * Math.cos(startRad);
+                  const y1 = 100 + 85 * Math.sin(startRad);
+                  const x2 = 100 + 85 * Math.cos(endRad);
+                  const y2 = 100 + 85 * Math.sin(endRad);
+                  const largeArc = angle > 180 ? 1 : 0;
+                  const midRad = ((startAngle + angle / 2) * Math.PI) / 180;
+                  const tx = 100 + 58 * Math.cos(midRad);
+                  const ty = 100 + 58 * Math.sin(midRad);
+                  const isHit = gamblingResult?.type === 'wheel' && gamblingResult.segment.label === seg.label && !isRolling;
+                  return (
+                    <g key={i}>
+                      <path
+                        d={`M100,100 L${x1},${y1} A85,85 0 ${largeArc},1 ${x2},${y2} Z`}
+                        fill={isHit ? seg.color : `${seg.color}44`}
+                        stroke={isHit ? '#fff' : '#333'}
+                        strokeWidth={isHit ? 2 : 0.5}
+                        opacity={isHit ? 1 : 0.7}
+                      />
+                      <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
+                        fill="#fff" fontSize="11" fontFamily="'Press Start 2P', monospace"
+                        style={{ textShadow: '0 1px 3px #000' }}>
+                        {seg.label}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Center */}
+                <circle cx="100" cy="100" r="18" fill="#1a1a2e" stroke="#ffd700" strokeWidth="2" />
+                <text x="100" y="103" textAnchor="middle" dominantBaseline="middle"
+                  fill="#ffd700" fontSize="7" fontFamily="'Press Start 2P', monospace">
+                  {isRolling ? '...' : 'SPIN'}
+                </text>
+              </svg>
+              {/* Pointer */}
+              <div className="gambling-wheel-pointer">&#9660;</div>
+            </div>
+            {/* Segment legend */}
             <div className="gambling-wheel-display">
               {WHEEL_SEGMENTS.map((seg, i) => (
                 <div key={i}
-                  className={`gambling-wheel-segment ${gamblingResult?.type === 'wheel' && gamblingResult.segment.label === seg.label ? 'hit' : ''}`}
+                  className={`gambling-wheel-segment ${gamblingResult?.type === 'wheel' && gamblingResult.segment.label === seg.label && !isRolling ? 'hit' : ''}`}
                   style={{ '--seg-color': seg.color }}>
                   <span className="wheel-seg-mult">{seg.label}</span>
                   <span className="wheel-seg-chance">{seg.weight}%</span>
@@ -1099,13 +1178,15 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
           const rep = tav.reputation[npc.id] || 0;
           const repInfo = getRepLevel(rep);
           const isEnchanter = npc.id === 'ember';
+          const isGambler = npc.id === 'dealer';
+          const isSpecialNpc = isEnchanter || isGambler;
           return (
             <button
               key={npc.id}
               className={`tavern-npc-card ${activeNpcId === npc.id ? 'active' : ''}`}
               onClick={() => handleSelectNpc(npc.id)}
             >
-              {!isEnchanter && <NpcSprite npcId={npc.id} scale={3} />}
+              {!isSpecialNpc && <NpcSprite npcId={npc.id} scale={3} />}
               {isEnchanter && (
                 <svg viewBox="0 0 32 32" className="tavern-npc-ember-mini">
                   <circle cx="16" cy="12" r="8" fill="#c44000" />
@@ -1119,10 +1200,28 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                   </circle>
                 </svg>
               )}
+              {isGambler && (
+                <svg viewBox="0 0 32 32" className="tavern-npc-dealer-mini">
+                  <circle cx="16" cy="11" r="7" fill="#2a2a3e" />
+                  <circle cx="16" cy="13" r="6" fill="#d4a574" />
+                  <circle cx="13" cy="12" r="1" fill="#1a1a2e" />
+                  <circle cx="19" cy="12" r="1" fill="#1a1a2e" />
+                  <path d="M14 15 Q16 16 18 15" stroke="#a0806a" strokeWidth="0.8" fill="none" />
+                  <rect x="10" y="6" width="12" height="5" rx="2" fill="#1a1a2e" />
+                  <rect x="11" y="10" width="10" height="1" fill="#ffd700" />
+                  <path d="M10 20 Q13 18 16 18 Q19 18 22 20 L24 28 L8 28Z" fill="#1a2a1a" />
+                  <circle cx="14" cy="24" r="1.5" fill="#ffd700" opacity="0.5">
+                    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="18" cy="22" r="1" fill="#ff6b6b" opacity="0.5">
+                    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+              )}
               <span className="tavern-npc-name" style={{ color: npc.color }}>{npc.name}</span>
               <span className="tavern-npc-role">{npc.role}</span>
-              {!isEnchanter && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
-              {!isEnchanter && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
+              {!isSpecialNpc && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
+              {!isSpecialNpc && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
             </button>
           );
         })}
@@ -1163,6 +1262,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
             {activeTab === 'faction' && isRegularNpc && renderMercenaries()}
             {activeTab === 'shop' && isRegularNpc && renderShop()}
             {activeTab === 'enchant' && isEmber && renderEnchant()}
+            {activeTab === 'gamble' && isDealer && renderGambling()}
           </div>
         </div>
       )}
@@ -1170,23 +1270,6 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       {!activeNpc && (
         <div className="tavern-empty">
           <div className="tavern-empty-text">Choose someone to talk to...</div>
-        </div>
-      )}
-
-      {/* Back Room button to open gambling dialog */}
-      <button className="tavern-backroom-btn" onClick={() => setShowGambling(true)}>
-        <span className="tavern-backroom-icon">&#127922;</span>
-        <span className="tavern-backroom-label">The Back Room</span>
-        <span className="tavern-backroom-hint">Gambling</span>
-      </button>
-
-      {/* Gambling dialog overlay */}
-      {showGambling && (
-        <div className="gambling-dialog-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowGambling(false); }}>
-          <div className="gambling-dialog">
-            <button className="gambling-dialog-close" onClick={() => setShowGambling(false)}>&#10005;</button>
-            {renderGambling()}
-          </div>
         </div>
       )}
 
