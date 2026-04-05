@@ -15,7 +15,7 @@ export function scaleMonster(monsterId, areaLevel) {
   const hp = Math.floor(base.baseHp * scale * prob('scaling.monsterHpMult'));
   const baseSpeed = getMonsterBaseSpeed(base);
   const cs = getMonsterBaseCombatStats(base);
-  const statScale = 1 + (areaLevel - 1) * 0.03;
+  const statScale = 1 + (areaLevel - 1) * 0.05;
   return {
     id: monsterId,
     name: base.name,
@@ -48,7 +48,7 @@ export function scaleBoss(bossId, areaLevel) {
   const hp = Math.floor(base.baseHp * scale * prob('scaling.monsterHpMult'));
   const baseSpeed = getMonsterBaseSpeed(base);
   const cs = getMonsterBaseCombatStats(base);
-  const statScale = 1 + (areaLevel - 1) * 0.04; // bosses scale combat stats faster
+  const statScale = 1 + (areaLevel - 1) * 0.06; // bosses scale combat stats faster
   const gimmick = BOSS_GIMMICKS[bossId] || null;
   return {
     id: bossId,
