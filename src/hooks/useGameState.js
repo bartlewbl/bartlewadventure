@@ -6558,12 +6558,15 @@ function handleVictory(state) {
   const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult * expPassiveMult);
   const cls = getClassData(state.player);
   let goldMult = 1.0;
-  if (cls?.passive === 'Greed') goldMult *= 1.25;
-  if (playerHasSkill(state.player, 'thf_t2a')) goldMult *= 1.50;
+  if (cls?.passive === 'Greed') goldMult += 0.10;
+  if (playerHasSkill(state.player, 'thf_t1c')) goldMult += 0.10;
+  if (playerHasSkill(state.player, 'thf_t2a')) goldMult += 0.25;
   // Item passive: goldBonus
   const goldPassive = getEquipPassiveTotal(state.player, 'goldBonus');
-  if (goldPassive > 0) goldMult *= (1 + goldPassive / 100);
+  if (goldPassive > 0) goldMult += goldPassive / 100;
   goldMult *= worldEffects.goldMult;
+  // Cap total gold multiplier to prevent runaway stacking
+  goldMult = Math.min(goldMult, 2.0);
   const goldGain = Math.floor(m.gold * goldMult);
 
   let p = { ...state.player, exp: state.player.exp + expGain, gold: state.player.gold + goldGain };

@@ -2340,7 +2340,7 @@ export const ITEM_PASSIVES = {
     { id: 'fortitude',   label: 'Fortitude',      format: 'flat', weight: 1 },
   ],
   boots: [
-    { id: 'goldBonus',   label: 'Gold Bonus',     format: 'pct', weight: 3 },
+    { id: 'goldBonus',   label: 'Gold Bonus',     format: 'pct', weight: 2 },
     { id: 'speed',       label: 'Speed',          format: 'flat', weight: 2 },
     { id: 'dodgeChance', label: 'Dodge Chance',   format: 'pct', weight: 2 },
     { id: 'evasion',     label: 'Evasion',        format: 'flat', weight: 1 },
