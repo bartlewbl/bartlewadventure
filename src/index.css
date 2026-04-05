@@ -3988,6 +3988,11 @@ body {
   color: #7cfc7c;
 }
 
+.shop-card-passive {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+}
+
 .shop-card-stock {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
@@ -7338,6 +7343,10 @@ body {
   color: #7cfc7c;
 }
 
+.market-card-passive {
+  font-size: 7px;
+}
+
 .market-card-seller {
   font-size: 6px;
   color: #5e5e8a;
@@ -7607,6 +7616,10 @@ body {
 
 .market-sell-row-stats {
   color: #7cfc7c;
+}
+
+.market-sell-row-passive {
+  color: #8f8;
 }
 
 .market-sell-row-action {
