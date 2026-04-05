@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS, RIVALRY_QUESTS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
-import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
+import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, DEALER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
 
 function NpcSprite({ npcId, scale = 4 }) {
   const canvasRef = useRef(null);
@@ -58,14 +58,110 @@ const EMBER_TABS = [
   { id: 'enchant', label: 'Enchant' },
 ];
 
+const DEALER_TABS = [
+  { id: 'talk', label: 'Talk' },
+  { id: 'gamble', label: 'Gamble' },
+];
+
 const GAMBLING_GAMES = [
   { id: 'dice', label: 'Dice (Over/Under)' },
   { id: 'coin', label: 'Coin Flip' },
   { id: 'wheel', label: 'Wheel of Fortune' },
 ];
 
-// Combined NPC list: original tavern NPCs + the enchanter
-const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC];
+// Combined NPC list: original tavern NPCs + the enchanter + the dealer
+const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC, DEALER_NPC];
+
+function EmberSplash() {
+  return (
+    <div className="ember-splash">
+      <svg viewBox="0 0 120 140" className="ember-splash-svg">
+        {/* Hair - flowing fire-red */}
+        <ellipse cx="60" cy="38" rx="32" ry="34" fill="#8b2500" />
+        <ellipse cx="60" cy="36" rx="30" ry="32" fill="#a83200" />
+        <path d="M30 40 Q28 20 38 10 Q48 2 60 4 Q72 2 82 10 Q92 20 90 40" fill="#c44000" />
+        <path d="M32 45 Q26 55 28 70 Q30 60 35 50Z" fill="#a83200" />
+        <path d="M88 45 Q94 55 92 70 Q90 60 85 50Z" fill="#a83200" />
+        {/* Flowing hair strands */}
+        <path d="M34 38 Q30 50 26 65" stroke="#ff6030" strokeWidth="2" fill="none" opacity="0.6" />
+        <path d="M86 38 Q90 50 94 65" stroke="#ff6030" strokeWidth="2" fill="none" opacity="0.6" />
+        <path d="M28 55 Q24 68 27 80" stroke="#c44000" strokeWidth="1.5" fill="none" opacity="0.4" />
+        <path d="M92 55 Q96 68 93 80" stroke="#c44000" strokeWidth="1.5" fill="none" opacity="0.4" />
+
+        {/* Face */}
+        <ellipse cx="60" cy="44" rx="22" ry="24" fill="#f4c29a" />
+        <ellipse cx="60" cy="46" rx="20" ry="22" fill="#f0b888" />
+
+        {/* Eyes - glowing amber */}
+        <ellipse cx="50" cy="42" rx="5" ry="3.5" fill="#1a1a2e" />
+        <ellipse cx="70" cy="42" rx="5" ry="3.5" fill="#1a1a2e" />
+        <ellipse cx="50" cy="42" rx="3" ry="2.5" fill="#ff7043" />
+        <ellipse cx="70" cy="42" rx="3" ry="2.5" fill="#ff7043" />
+        <circle cx="50" cy="41" r="1.2" fill="#ffd700" />
+        <circle cx="70" cy="41" r="1.2" fill="#ffd700" />
+        {/* Eye glow */}
+        <circle cx="50" cy="42" r="5" fill="none" stroke="#ff7043" strokeWidth="0.5" opacity="0.3" />
+        <circle cx="70" cy="42" r="5" fill="none" stroke="#ff7043" strokeWidth="0.5" opacity="0.3" />
+
+        {/* Eyebrows */}
+        <path d="M44 37 Q50 35 56 37" stroke="#8b2500" strokeWidth="1.5" fill="none" />
+        <path d="M64 37 Q70 35 76 37" stroke="#8b2500" strokeWidth="1.5" fill="none" />
+
+        {/* Nose & mouth */}
+        <path d="M58 48 Q60 50 62 48" stroke="#d4956a" strokeWidth="1" fill="none" />
+        <path d="M52 55 Q60 59 68 55" stroke="#c47060" strokeWidth="1.5" fill="none" />
+        <path d="M55 55 Q60 57 65 55" fill="#cc6655" opacity="0.4" />
+
+        {/* Neck */}
+        <rect x="52" y="64" width="16" height="10" fill="#f0b888" rx="2" />
+
+        {/* Robes/clothing */}
+        <path d="M36 74 Q40 68 52 68 L68 68 Q80 68 84 74 L90 100 L30 100Z" fill="#2a1a3e" />
+        <path d="M40 74 Q48 70 60 70 Q72 70 80 74 L84 95 L36 95Z" fill="#3a1a50" />
+        {/* Robe collar */}
+        <path d="M48 68 Q52 74 60 75 Q68 74 72 68" stroke="#ff7043" strokeWidth="1.5" fill="none" />
+        {/* Robe trim/embroidery */}
+        <path d="M44 80 L60 85 L76 80" stroke="#ffd700" strokeWidth="0.8" fill="none" opacity="0.6" />
+        <path d="M46 86 L60 90 L74 86" stroke="#ffd700" strokeWidth="0.6" fill="none" opacity="0.4" />
+
+        {/* Enchanting glow effects */}
+        <circle cx="42" cy="82" r="3" fill="#ff7043" opacity="0.15">
+          <animate attributeName="opacity" values="0.1;0.25;0.1" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="78" cy="82" r="3" fill="#ff7043" opacity="0.15">
+          <animate attributeName="opacity" values="0.1;0.25;0.1" dur="2.3s" repeatCount="indefinite" />
+        </circle>
+
+        {/* Hands holding magic */}
+        <ellipse cx="38" cy="88" rx="5" ry="4" fill="#f0b888" />
+        <ellipse cx="82" cy="88" rx="5" ry="4" fill="#f0b888" />
+
+        {/* Magic orb between hands */}
+        <circle cx="60" cy="100" r="8" fill="#ff7043" opacity="0.2">
+          <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="60" cy="100" r="5" fill="#ffd700" opacity="0.3">
+          <animate attributeName="opacity" values="0.2;0.4;0.2" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="60" cy="100" r="2" fill="#fff" opacity="0.5" />
+
+        {/* Sparkle particles */}
+        <circle cx="50" cy="96" r="0.8" fill="#ffd700" opacity="0.6">
+          <animate attributeName="cy" values="96;92;96" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="70" cy="94" r="0.8" fill="#ffd700" opacity="0.6">
+          <animate attributeName="cy" values="94;90;94" dur="1.8s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.6;0;0.6" dur="1.8s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="60" cy="90" r="0.6" fill="#fff" opacity="0.4">
+          <animate attributeName="cy" values="90;85;90" dur="2.2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.4;0;0.4" dur="2.2s" repeatCount="indefinite" />
+        </circle>
+      </svg>
+    </div>
+  );
+}
 
 export default function TavernScreen({ tavern, player, stats, bounties, mercenary, onAcceptQuest, onTurnInQuest, onAcceptRivalryQuest, onTurnInRivalryQuest, onLearnFactionSkill, onBuyItem, onGamble, onAcceptBounty, onClaimBounty, onHireMercenary, onEnchantItem, onRespecStats, onBack }) {
   const [activeNpcId, setActiveNpcId] = useState(null);
@@ -86,8 +182,9 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
   const tav = tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
   const activeNpc = ALL_TAVERN_NPCS.find(n => n.id === activeNpcId);
   const isEmber = activeNpcId === 'ember';
-  const isRegularNpc = activeNpc && !isEmber;
-  const activeTabs = isEmber ? EMBER_TABS : NPC_TABS;
+  const isDealer = activeNpcId === 'dealer';
+  const isRegularNpc = activeNpc && !isEmber && !isDealer;
+  const activeTabs = isEmber ? EMBER_TABS : isDealer ? DEALER_TABS : NPC_TABS;
   const npcRep = activeNpcId ? (tav.reputation[activeNpcId] || 0) : 0;
   const npcRepLevel = getRepLevel(npcRep).level;
 
@@ -604,58 +701,127 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       return `${item.name}${enchant}`;
     };
 
+    const getRarityColor = (item) => {
+      const cls = item.rarityClass || '';
+      if (cls.includes('legendary')) return '#ff6b6b';
+      if (cls.includes('epic')) return '#ce93d8';
+      if (cls.includes('rare')) return '#ffd700';
+      if (cls.includes('uncommon')) return '#4fc3f7';
+      return '#ccc';
+    };
+
     return (
-      <div className="tavern-enchant">
-        <div className="tavern-enchant-gold">Your Gold: {player.gold}g</div>
-        <div className="enchant-layout">
-          <div className="enchant-item-list">
-            <div className="enchant-list-title">Select Equipment</div>
-            {allGear.length === 0 && <div className="tavern-empty-text">No equipment to enchant</div>}
+      <div className="tavern-enchant-v2">
+        {/* Ember splash art header */}
+        <div className="enchant-header-splash">
+          <EmberSplash />
+          <div className="enchant-header-info">
+            <div className="enchant-header-name">Ember Ashveil</div>
+            <div className="enchant-header-title">Enchantress</div>
+            <div className="enchant-header-gold">
+              <span className="enchant-gold-icon">&#9733;</span> {player.gold}g
+            </div>
+          </div>
+        </div>
+
+        <div className="enchant-v2-layout">
+          {/* Left: Equipment list */}
+          <div className="enchant-v2-item-list">
+            <div className="enchant-v2-list-header">Equipment</div>
+            {allGear.length === 0 && <div className="enchant-v2-empty-text">No equipment to enchant</div>}
             {allGear.map(item => {
               const el = item.enchantLevel || 0;
               const isMaxed = el >= MAX_ENCHANT_LEVEL;
+              const rarityColor = getRarityColor(item);
               return (
-                <button key={item.id} className={`enchant-item-btn ${enchantSelected?.id === item.id ? 'selected' : ''} ${isMaxed ? 'maxed' : ''}`}
-                  onClick={() => setEnchantSelected(item)}>
-                  <span className={`enchant-item-name ${item.rarityClass || ''}`}>{getItemLabel(item)}</span>
-                  <span className="enchant-item-slot">{item._equippedSlot ? '(equipped)' : item.slot}</span>
-                  {item.atk > 0 && <span className="enchant-item-stat">ATK+{item.atk}</span>}
-                  {item.def > 0 && <span className="enchant-item-stat">DEF+{item.def}</span>}
-                  {isMaxed && <span className="enchant-maxed-badge">MAX</span>}
+                <button key={item.id}
+                  className={`enchant-v2-item ${enchantSelected?.id === item.id ? 'selected' : ''} ${isMaxed ? 'maxed' : ''}`}
+                  onClick={() => setEnchantSelected(item)}
+                  style={{ '--rarity-color': rarityColor }}>
+                  <div className="enchant-v2-item-top">
+                    <span className={`enchant-v2-item-name ${item.rarityClass || ''}`}>{getItemLabel(item)}</span>
+                    {isMaxed && <span className="enchant-v2-max-badge">MAX</span>}
+                  </div>
+                  <div className="enchant-v2-item-bottom">
+                    <span className="enchant-v2-item-slot">{item._equippedSlot ? 'Equipped' : item.slot}</span>
+                    <span className="enchant-v2-item-stats">
+                      {item.atk > 0 && <span className="enchant-v2-stat atk">ATK {item.atk}</span>}
+                      {item.def > 0 && <span className="enchant-v2-stat def">DEF {item.def}</span>}
+                    </span>
+                  </div>
                 </button>
               );
             })}
           </div>
-          <div className="enchant-panel">
-            {!selected && <div className="enchant-empty">Select an item to enchant</div>}
+
+          {/* Right: Enchant panel */}
+          <div className="enchant-v2-panel">
+            {!selected && (
+              <div className="enchant-v2-placeholder">
+                <div className="enchant-v2-placeholder-icon">&#10024;</div>
+                <div className="enchant-v2-placeholder-text">Select an item to enchant</div>
+              </div>
+            )}
             {selected && (
               <>
-                <div className={`enchant-selected-name ${selected.rarityClass || ''}`}>{getItemLabel(selected)}</div>
-                <div className="enchant-current-stats">
-                  {selected.atk > 0 && <span>ATK +{selected.atk}</span>}
-                  {selected.def > 0 && <span>DEF +{selected.def}</span>}
+                <div className="enchant-v2-selected-header">
+                  <div className={`enchant-v2-selected-name ${selected.rarityClass || ''}`}>{getItemLabel(selected)}</div>
+                  <div className="enchant-v2-selected-stats">
+                    {selected.atk > 0 && <span className="enchant-v2-stat atk">ATK +{selected.atk}</span>}
+                    {selected.def > 0 && <span className="enchant-v2-stat def">DEF +{selected.def}</span>}
+                  </div>
                 </div>
-                {maxed ? (
-                  <div className="enchant-maxed">Fully enchanted!</div>
-                ) : (
-                  <>
-                    <div className="enchant-preview">
-                      <div className="enchant-preview-title">Enchant to {ENCHANT_LEVELS[currentLevel].label}</div>
-                      <div className="enchant-preview-bonus">+{ENCHANT_LEVELS[currentLevel].statBonus} to ATK/DEF</div>
-                      <div className="enchant-preview-rate">Success: {Math.round(successRate * 100)}%</div>
-                      <div className={`enchant-preview-cost ${canAfford ? '' : 'cant-afford'}`}>Cost: {cost}g</div>
-                    </div>
-                    <button className="tavern-action-btn" disabled={!canAfford}
-                      onClick={() => onEnchantItem(selected, selected._equippedSlot || null)}>
-                      {canAfford ? `Enchant (${cost}g)` : `Need ${cost}g`}
-                    </button>
-                  </>
-                )}
-                <div className="enchant-level-track">
+
+                {/* Level track */}
+                <div className="enchant-v2-level-track">
                   {ENCHANT_LEVELS.map((tier, i) => (
-                    <div key={i} className={`enchant-level-pip ${i < currentLevel ? 'filled' : ''} ${i === currentLevel ? 'next' : ''}`}>{tier.label}</div>
+                    <div key={i} className={`enchant-v2-pip ${i < currentLevel ? 'filled' : ''} ${i === currentLevel && !maxed ? 'next' : ''}`}>
+                      <div className="enchant-v2-pip-dot" />
+                      <div className="enchant-v2-pip-label">{tier.label}</div>
+                    </div>
                   ))}
                 </div>
+
+                {maxed ? (
+                  <div className="enchant-v2-maxed">
+                    <div className="enchant-v2-maxed-icon">&#128142;</div>
+                    <div className="enchant-v2-maxed-text">Fully Enchanted</div>
+                    <div className="enchant-v2-maxed-sub">This item has reached its maximum potential</div>
+                  </div>
+                ) : (
+                  <div className="enchant-v2-action-area">
+                    <div className="enchant-v2-preview">
+                      <div className="enchant-v2-preview-row">
+                        <span className="enchant-v2-preview-label">Target</span>
+                        <span className="enchant-v2-preview-value">{ENCHANT_LEVELS[currentLevel].label}</span>
+                      </div>
+                      <div className="enchant-v2-preview-row">
+                        <span className="enchant-v2-preview-label">Bonus</span>
+                        <span className="enchant-v2-preview-value bonus">+{ENCHANT_LEVELS[currentLevel].statBonus} ATK/DEF</span>
+                      </div>
+                      <div className="enchant-v2-preview-row">
+                        <span className="enchant-v2-preview-label">Success</span>
+                        <span className="enchant-v2-preview-value">
+                          <span className="enchant-v2-rate-bar">
+                            <span className="enchant-v2-rate-fill" style={{ width: `${Math.round(successRate * 100)}%` }} />
+                          </span>
+                          <span className={`enchant-v2-rate-text ${successRate < 0.4 ? 'low' : successRate < 0.7 ? 'mid' : 'high'}`}>
+                            {Math.round(successRate * 100)}%
+                          </span>
+                        </span>
+                      </div>
+                      <div className="enchant-v2-preview-row">
+                        <span className="enchant-v2-preview-label">Cost</span>
+                        <span className={`enchant-v2-preview-value ${canAfford ? 'gold' : 'cant-afford'}`}>{cost}g</span>
+                      </div>
+                    </div>
+                    <button className="enchant-v2-btn" disabled={!canAfford}
+                      onClick={() => onEnchantItem(selected, selected._equippedSlot || null)}>
+                      <span className="enchant-v2-btn-icon">&#10024;</span>
+                      {canAfford ? `Enchant (${cost}g)` : `Need ${cost}g`}
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -695,18 +861,28 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
   };
 
   // ---- GAMBLING HALL ----
+  const [rollingDice, setRollingDice] = useState(null); // transient dice animation faces
+
   const handleDiceRoll = () => {
     if (isRolling || player.gold < diceWager) return;
     setIsRolling(true);
     setGamblingResult(null);
-    setTimeout(() => {
-      const result = rollDice();
-      const won = (diceBet === 'over' && result.total > 7) || (diceBet === 'under' && result.total < 7);
-      const payout = won ? diceWager * 2 : 0;
-      setGamblingResult({ type: 'dice', ...result, won, payout, wager: diceWager });
-      onGamble(diceWager, payout);
-      setIsRolling(false);
-    }, 600);
+    // Animate dice faces rapidly before reveal
+    let ticks = 0;
+    const interval = setInterval(() => {
+      setRollingDice({ d1: Math.floor(Math.random() * 6) + 1, d2: Math.floor(Math.random() * 6) + 1 });
+      ticks++;
+      if (ticks >= 8) {
+        clearInterval(interval);
+        const result = rollDice();
+        const won = (diceBet === 'over' && result.total > 7) || (diceBet === 'under' && result.total < 7);
+        const payout = won ? diceWager * 2 : 0;
+        setRollingDice(null);
+        setGamblingResult({ type: 'dice', ...result, won, payout, wager: diceWager });
+        onGamble(diceWager, payout);
+        setIsRolling(false);
+      }
+    }, 80);
   };
 
   const handleCoinFlip = () => {
@@ -720,7 +896,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       setGamblingResult({ type: 'coin', result, won, payout, wager: coinWager });
       onGamble(coinWager, payout);
       setIsRolling(false);
-    }, 600);
+    }, 900);
   };
 
   const handleWheelSpin = () => {
@@ -733,129 +909,261 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       setGamblingResult({ type: 'wheel', segment, payout, wager: wheelWager, won: segment.mult > 1 });
       onGamble(wheelWager, payout);
       setIsRolling(false);
-    }, 800);
+    }, 1200);
   };
 
-  const renderGambling = () => (
-    <div className="tavern-gambling">
-      <div className="gambling-header">
-        <div className="gambling-title">The Back Room</div>
-        <div className="gambling-gold">Your Gold: {player.gold}g</div>
+  const renderGambling = () => {
+    const DICE_FACES = ['', '\u2680', '\u2681', '\u2682', '\u2683', '\u2684', '\u2685'];
+
+    return (
+      <div className="tavern-gambling">
+        <div className="gambling-header">
+          <div className="gambling-title">
+            <span className="gambling-title-icon">&#127922;</span>
+            The Back Room
+          </div>
+          <div className="gambling-gold"><span className="gambling-gold-icon">&#9733;</span> {player.gold}g</div>
+        </div>
+
+        {/* Game selector */}
+        <div className="gambling-game-tabs">
+          {GAMBLING_GAMES.map(g => (
+            <button
+              key={g.id}
+              className={`gambling-game-tab ${gamblingGame === g.id ? 'active' : ''}`}
+              onClick={() => { setGamblingGame(g.id); setGamblingResult(null); }}
+            >
+              <span className="gambling-tab-icon">
+                {g.id === 'dice' ? '\u{1F3B2}' : g.id === 'coin' ? '\u{1FA99}' : '\u{1F3A1}'}
+              </span>
+              {g.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Dice Game */}
+        {gamblingGame === 'dice' && (
+          <div className="gambling-dice">
+            <div className="gambling-desc">Roll 2 dice. Bet if the total is over or under 7. Exactly 7 = house wins.</div>
+            <div className="gambling-controls">
+              <div className="gambling-section-label">Wager</div>
+              <div className="gambling-wager-row">
+                {DICE_WAGERS.map(w => (
+                  <button key={w} className={`gambling-wager-btn ${diceWager === w ? 'active' : ''}`} onClick={() => setDiceWager(w)} disabled={player.gold < w}>{w}g</button>
+                ))}
+              </div>
+              <div className="gambling-section-label">Your Call</div>
+              <div className="gambling-bet-row">
+                <button className={`gambling-bet-btn-v2 ${diceBet === 'over' ? 'active over' : ''}`} onClick={() => setDiceBet('over')}>
+                  <span className="bet-arrow">&#9650;</span> Over 7
+                </button>
+                <button className={`gambling-bet-btn-v2 ${diceBet === 'under' ? 'active under' : ''}`} onClick={() => setDiceBet('under')}>
+                  <span className="bet-arrow">&#9660;</span> Under 7
+                </button>
+              </div>
+              <div className="gambling-payout-row">
+                <span className="gambling-payout-label">Payout</span>
+                <span className="gambling-payout-value">{diceWager * 2}g (2x)</span>
+              </div>
+              <button className="gambling-action-btn" disabled={isRolling || player.gold < diceWager} onClick={handleDiceRoll}>
+                {isRolling ? (
+                  <span className="gambling-rolling">
+                    <span className="gambling-rolling-dice">&#127922;</span> Rolling...
+                  </span>
+                ) : `Roll Dice (${diceWager}g)`}
+              </button>
+            </div>
+            {/* Rolling dice animation */}
+            {rollingDice && (
+              <div className="gambling-rolling-area">
+                <div className="gambling-rolling-dice-display">
+                  <span className="gambling-die-rolling">{DICE_FACES[rollingDice.d1]}</span>
+                  <span className="gambling-die-rolling">{DICE_FACES[rollingDice.d2]}</span>
+                </div>
+              </div>
+            )}
+            {gamblingResult?.type === 'dice' && (
+              <div className={`gambling-result-v2 ${gamblingResult.won ? 'win' : 'lose'}`}>
+                <div className="gambling-result-visual">
+                  <span className="gambling-die-face">{DICE_FACES[gamblingResult.d1]}</span>
+                  <span className="gambling-die-plus">+</span>
+                  <span className="gambling-die-face">{DICE_FACES[gamblingResult.d2]}</span>
+                  <span className="gambling-die-equals">=</span>
+                  <span className="gambling-die-total">{gamblingResult.total}</span>
+                </div>
+                <div className="gambling-result-text-v2">
+                  {gamblingResult.won ? (
+                    <span className="gambling-win-text">&#10024; You won {gamblingResult.payout}g! &#10024;</span>
+                  ) : gamblingResult.total === 7 ? (
+                    <span className="gambling-lose-text">Exactly 7 &mdash; House wins!</span>
+                  ) : (
+                    <span className="gambling-lose-text">You lost {gamblingResult.wager}g</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Coin Flip */}
+        {gamblingGame === 'coin' && (
+          <div className="gambling-coin">
+            <div className="gambling-desc">Call heads or tails. Win pays 2x your wager.</div>
+            <div className="gambling-controls">
+              <div className="gambling-section-label">Wager</div>
+              <div className="gambling-wager-row">
+                {COIN_FLIP_WAGERS.map(w => (
+                  <button key={w} className={`gambling-wager-btn ${coinWager === w ? 'active' : ''}`} onClick={() => setCoinWager(w)} disabled={player.gold < w}>{w}g</button>
+                ))}
+              </div>
+              <div className="gambling-section-label">Your Call</div>
+              <div className="gambling-bet-row">
+                <button className={`gambling-bet-btn-v2 ${coinBet === 'heads' ? 'active heads' : ''}`} onClick={() => setCoinBet('heads')}>
+                  <span className="coin-icon">&#9737;</span> Heads
+                </button>
+                <button className={`gambling-bet-btn-v2 ${coinBet === 'tails' ? 'active tails' : ''}`} onClick={() => setCoinBet('tails')}>
+                  <span className="coin-icon">&#9738;</span> Tails
+                </button>
+              </div>
+              <div className="gambling-payout-row">
+                <span className="gambling-payout-label">Payout</span>
+                <span className="gambling-payout-value">{coinWager * 2}g (2x)</span>
+              </div>
+              <button className="gambling-action-btn" disabled={isRolling || player.gold < coinWager} onClick={handleCoinFlip}>
+                {isRolling ? (
+                  <span className="gambling-rolling">
+                    <span className="gambling-rolling-coin">&#129689;</span> Flipping...
+                  </span>
+                ) : `Flip Coin (${coinWager}g)`}
+              </button>
+            </div>
+            {/* Coin spin animation */}
+            {isRolling && gamblingGame === 'coin' && (
+              <div className="gambling-coin-spinning-area">
+                <div className="gambling-coin-spinner">
+                  <div className="gambling-coin-spin-face">&#9733;</div>
+                </div>
+              </div>
+            )}
+            {gamblingResult?.type === 'coin' && (
+              <div className={`gambling-result-v2 ${gamblingResult.won ? 'win' : 'lose'}`}>
+                <div className="gambling-result-visual">
+                  <div className="gambling-coin-display landed">
+                    {gamblingResult.result === 'heads' ? '\u2609' : '\u260A'}
+                  </div>
+                  <div className="gambling-coin-label">{gamblingResult.result === 'heads' ? 'HEADS' : 'TAILS'}</div>
+                </div>
+                <div className="gambling-result-text-v2">
+                  {gamblingResult.won ? (
+                    <span className="gambling-win-text">&#10024; You won {gamblingResult.payout}g! &#10024;</span>
+                  ) : (
+                    <span className="gambling-lose-text">You lost {gamblingResult.wager}g</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Wheel of Fortune */}
+        {gamblingGame === 'wheel' && (
+          <div className="gambling-wheel">
+            <div className="gambling-desc">Spin the wheel! Land on a multiplier to win big.</div>
+            {/* SVG Wheel */}
+            <div className="gambling-wheel-visual">
+              <svg viewBox="0 0 200 200" className={`gambling-wheel-svg ${isRolling ? 'spinning' : ''}`}>
+                {WHEEL_SEGMENTS.map((seg, i) => {
+                  const total = WHEEL_SEGMENTS.length;
+                  const angle = (360 / total);
+                  const startAngle = i * angle - 90;
+                  const endAngle = startAngle + angle;
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+                  const x1 = 100 + 85 * Math.cos(startRad);
+                  const y1 = 100 + 85 * Math.sin(startRad);
+                  const x2 = 100 + 85 * Math.cos(endRad);
+                  const y2 = 100 + 85 * Math.sin(endRad);
+                  const largeArc = angle > 180 ? 1 : 0;
+                  const midRad = ((startAngle + angle / 2) * Math.PI) / 180;
+                  const tx = 100 + 58 * Math.cos(midRad);
+                  const ty = 100 + 58 * Math.sin(midRad);
+                  const isHit = gamblingResult?.type === 'wheel' && gamblingResult.segment.label === seg.label && !isRolling;
+                  return (
+                    <g key={i}>
+                      <path
+                        d={`M100,100 L${x1},${y1} A85,85 0 ${largeArc},1 ${x2},${y2} Z`}
+                        fill={isHit ? seg.color : `${seg.color}44`}
+                        stroke={isHit ? '#fff' : '#333'}
+                        strokeWidth={isHit ? 2 : 0.5}
+                        opacity={isHit ? 1 : 0.7}
+                      />
+                      <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle"
+                        fill="#fff" fontSize="11" fontFamily="'Press Start 2P', monospace"
+                        style={{ textShadow: '0 1px 3px #000' }}>
+                        {seg.label}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Center */}
+                <circle cx="100" cy="100" r="18" fill="#1a1a2e" stroke="#ffd700" strokeWidth="2" />
+                <text x="100" y="103" textAnchor="middle" dominantBaseline="middle"
+                  fill="#ffd700" fontSize="7" fontFamily="'Press Start 2P', monospace">
+                  {isRolling ? '...' : 'SPIN'}
+                </text>
+              </svg>
+              {/* Pointer */}
+              <div className="gambling-wheel-pointer">&#9660;</div>
+            </div>
+            {/* Segment legend */}
+            <div className="gambling-wheel-display">
+              {WHEEL_SEGMENTS.map((seg, i) => (
+                <div key={i}
+                  className={`gambling-wheel-segment ${gamblingResult?.type === 'wheel' && gamblingResult.segment.label === seg.label && !isRolling ? 'hit' : ''}`}
+                  style={{ '--seg-color': seg.color }}>
+                  <span className="wheel-seg-mult">{seg.label}</span>
+                  <span className="wheel-seg-chance">{seg.weight}%</span>
+                </div>
+              ))}
+            </div>
+            <div className="gambling-controls">
+              <div className="gambling-section-label">Wager</div>
+              <div className="gambling-wager-row">
+                {WHEEL_WAGERS.map(w => (
+                  <button key={w} className={`gambling-wager-btn ${wheelWager === w ? 'active' : ''}`} onClick={() => setWheelWager(w)} disabled={player.gold < w}>{w}g</button>
+                ))}
+              </div>
+              <button className="gambling-action-btn wheel-btn" disabled={isRolling || player.gold < wheelWager} onClick={handleWheelSpin}>
+                {isRolling ? (
+                  <span className="gambling-rolling">
+                    <span className="gambling-rolling-wheel">&#127905;</span> Spinning...
+                  </span>
+                ) : `Spin Wheel (${wheelWager}g)`}
+              </button>
+            </div>
+            {gamblingResult?.type === 'wheel' && (
+              <div className={`gambling-result-v2 ${gamblingResult.won ? 'win' : gamblingResult.segment.mult === 1 ? 'push' : 'lose'}`}>
+                <div className="gambling-result-visual">
+                  <div className="gambling-wheel-result-mult" style={{ color: gamblingResult.segment.color }}>
+                    {gamblingResult.segment.label}
+                  </div>
+                </div>
+                <div className="gambling-result-text-v2">
+                  {gamblingResult.segment.mult === 0 ? (
+                    <span className="gambling-lose-text">Bust! You lost {gamblingResult.wager}g!</span>
+                  ) : gamblingResult.segment.mult === 1 ? (
+                    <span className="gambling-push-text">Push! Got your {gamblingResult.wager}g back.</span>
+                  ) : (
+                    <span className="gambling-win-text">&#10024; You won {gamblingResult.payout}g! ({gamblingResult.segment.label}) &#10024;</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {/* Game selector */}
-      <div className="gambling-game-tabs">
-        {GAMBLING_GAMES.map(g => (
-          <button
-            key={g.id}
-            className={`gambling-game-tab ${gamblingGame === g.id ? 'active' : ''}`}
-            onClick={() => { setGamblingGame(g.id); setGamblingResult(null); }}
-          >
-            {g.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Dice Game */}
-      {gamblingGame === 'dice' && (
-        <div className="gambling-dice">
-          <div className="gambling-desc">Roll 2 dice. Bet if the total is over or under 7. Exactly 7 = house wins.</div>
-          <div className="gambling-controls">
-            <div className="gambling-wager-row">
-              <span>Wager:</span>
-              {DICE_WAGERS.map(w => (
-                <button key={w} className={`gambling-wager-btn ${diceWager === w ? 'active' : ''}`} onClick={() => setDiceWager(w)} disabled={player.gold < w}>{w}g</button>
-              ))}
-            </div>
-            <div className="gambling-bet-row">
-              <span>Bet:</span>
-              <button className={`gambling-bet-btn ${diceBet === 'over' ? 'active' : ''}`} onClick={() => setDiceBet('over')}>Over 7</button>
-              <button className={`gambling-bet-btn ${diceBet === 'under' ? 'active' : ''}`} onClick={() => setDiceBet('under')}>Under 7</button>
-            </div>
-            <div className="gambling-payout">Win: {diceWager * 2}g (2x)</div>
-            <button className="btn btn-primary gambling-roll-btn" disabled={isRolling || player.gold < diceWager} onClick={handleDiceRoll}>
-              {isRolling ? 'Rolling...' : `Roll Dice (${diceWager}g)`}
-            </button>
-          </div>
-          {gamblingResult?.type === 'dice' && (
-            <div className={`gambling-result ${gamblingResult.won ? 'win' : 'lose'}`}>
-              <div className="gambling-result-dice">[{gamblingResult.d1}] [{gamblingResult.d2}] = {gamblingResult.total}</div>
-              <div className="gambling-result-text">
-                {gamblingResult.won ? `You won ${gamblingResult.payout}g!` : gamblingResult.total === 7 ? 'Exactly 7 - House wins!' : `You lost ${gamblingResult.wager}g!`}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Coin Flip */}
-      {gamblingGame === 'coin' && (
-        <div className="gambling-coin">
-          <div className="gambling-desc">Call heads or tails. Win pays 2x your wager.</div>
-          <div className="gambling-controls">
-            <div className="gambling-wager-row">
-              <span>Wager:</span>
-              {COIN_FLIP_WAGERS.map(w => (
-                <button key={w} className={`gambling-wager-btn ${coinWager === w ? 'active' : ''}`} onClick={() => setCoinWager(w)} disabled={player.gold < w}>{w}g</button>
-              ))}
-            </div>
-            <div className="gambling-bet-row">
-              <span>Call:</span>
-              <button className={`gambling-bet-btn ${coinBet === 'heads' ? 'active' : ''}`} onClick={() => setCoinBet('heads')}>Heads</button>
-              <button className={`gambling-bet-btn ${coinBet === 'tails' ? 'active' : ''}`} onClick={() => setCoinBet('tails')}>Tails</button>
-            </div>
-            <div className="gambling-payout">Win: {coinWager * 2}g (2x)</div>
-            <button className="btn btn-primary gambling-roll-btn" disabled={isRolling || player.gold < coinWager} onClick={handleCoinFlip}>
-              {isRolling ? 'Flipping...' : `Flip Coin (${coinWager}g)`}
-            </button>
-          </div>
-          {gamblingResult?.type === 'coin' && (
-            <div className={`gambling-result ${gamblingResult.won ? 'win' : 'lose'}`}>
-              <div className="gambling-result-coin">{gamblingResult.result === 'heads' ? 'HEADS' : 'TAILS'}</div>
-              <div className="gambling-result-text">
-                {gamblingResult.won ? `You won ${gamblingResult.payout}g!` : `You lost ${gamblingResult.wager}g!`}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Wheel of Fortune */}
-      {gamblingGame === 'wheel' && (
-        <div className="gambling-wheel">
-          <div className="gambling-desc">Spin the wheel! Land on a multiplier to win big.</div>
-          <div className="gambling-wheel-segments">
-            {WHEEL_SEGMENTS.map((seg, i) => (
-              <span key={i} className="gambling-wheel-seg" style={{ color: seg.color }}>{seg.label} ({seg.weight}%)</span>
-            ))}
-          </div>
-          <div className="gambling-controls">
-            <div className="gambling-wager-row">
-              <span>Wager:</span>
-              {WHEEL_WAGERS.map(w => (
-                <button key={w} className={`gambling-wager-btn ${wheelWager === w ? 'active' : ''}`} onClick={() => setWheelWager(w)} disabled={player.gold < w}>{w}g</button>
-              ))}
-            </div>
-            <button className="btn btn-primary gambling-roll-btn" disabled={isRolling || player.gold < wheelWager} onClick={handleWheelSpin}>
-              {isRolling ? 'Spinning...' : `Spin Wheel (${wheelWager}g)`}
-            </button>
-          </div>
-          {gamblingResult?.type === 'wheel' && (
-            <div className={`gambling-result ${gamblingResult.won ? 'win' : gamblingResult.segment.mult === 1 ? 'push' : 'lose'}`}>
-              <div className="gambling-result-wheel" style={{ color: gamblingResult.segment.color }}>
-                {gamblingResult.segment.label}
-              </div>
-              <div className="gambling-result-text">
-                {gamblingResult.segment.mult === 0 ? `Bust! You lost ${gamblingResult.wager}g!`
-                  : gamblingResult.segment.mult === 1 ? `Push! You got your ${gamblingResult.wager}g back.`
-                  : `You won ${gamblingResult.payout}g! (${gamblingResult.segment.label})`}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="screen screen-tavern">
@@ -870,18 +1178,50 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
           const rep = tav.reputation[npc.id] || 0;
           const repInfo = getRepLevel(rep);
           const isEnchanter = npc.id === 'ember';
+          const isGambler = npc.id === 'dealer';
+          const isSpecialNpc = isEnchanter || isGambler;
           return (
             <button
               key={npc.id}
               className={`tavern-npc-card ${activeNpcId === npc.id ? 'active' : ''}`}
               onClick={() => handleSelectNpc(npc.id)}
             >
-              {!isEnchanter && <NpcSprite npcId={npc.id} scale={3} />}
-              {isEnchanter && <span className="tavern-npc-ember-icon">&#128293;</span>}
+              {!isSpecialNpc && <NpcSprite npcId={npc.id} scale={3} />}
+              {isEnchanter && (
+                <svg viewBox="0 0 32 32" className="tavern-npc-ember-mini">
+                  <circle cx="16" cy="12" r="8" fill="#c44000" />
+                  <circle cx="16" cy="13" r="6" fill="#f0b888" />
+                  <circle cx="13" cy="12" r="1" fill="#ff7043" />
+                  <circle cx="19" cy="12" r="1" fill="#ff7043" />
+                  <path d="M14 15 Q16 17 18 15" stroke="#c47060" strokeWidth="0.8" fill="none" />
+                  <path d="M10 20 Q13 18 16 18 Q19 18 22 20 L24 28 L8 28Z" fill="#3a1a50" />
+                  <circle cx="16" cy="26" r="2" fill="#ffd700" opacity="0.4">
+                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+              )}
+              {isGambler && (
+                <svg viewBox="0 0 32 32" className="tavern-npc-dealer-mini">
+                  <circle cx="16" cy="11" r="7" fill="#2a2a3e" />
+                  <circle cx="16" cy="13" r="6" fill="#d4a574" />
+                  <circle cx="13" cy="12" r="1" fill="#1a1a2e" />
+                  <circle cx="19" cy="12" r="1" fill="#1a1a2e" />
+                  <path d="M14 15 Q16 16 18 15" stroke="#a0806a" strokeWidth="0.8" fill="none" />
+                  <rect x="10" y="6" width="12" height="5" rx="2" fill="#1a1a2e" />
+                  <rect x="11" y="10" width="10" height="1" fill="#ffd700" />
+                  <path d="M10 20 Q13 18 16 18 Q19 18 22 20 L24 28 L8 28Z" fill="#1a2a1a" />
+                  <circle cx="14" cy="24" r="1.5" fill="#ffd700" opacity="0.5">
+                    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="18" cy="22" r="1" fill="#ff6b6b" opacity="0.5">
+                    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+              )}
               <span className="tavern-npc-name" style={{ color: npc.color }}>{npc.name}</span>
               <span className="tavern-npc-role">{npc.role}</span>
-              {!isEnchanter && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
-              {!isEnchanter && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
+              {!isSpecialNpc && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
+              {!isSpecialNpc && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
             </button>
           );
         })}
@@ -890,8 +1230,8 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       {/* Active NPC panel */}
       {activeNpc && (
         <div className="tavern-conversation">
-          <div className="tavern-conv-header">
-            <NpcSprite npcId={activeNpc.id} scale={5} />
+          <div className={`tavern-conv-header ${isEmber ? 'ember-conv-header' : ''}`}>
+            {isEmber ? <EmberSplash /> : <NpcSprite npcId={activeNpc.id} scale={5} />}
             <div className="tavern-conv-info">
               <div className="tavern-conv-name" style={{ color: activeNpc.color }}>{activeNpc.name}</div>
               <div className="tavern-conv-role">{activeNpc.role}</div>
@@ -922,6 +1262,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
             {activeTab === 'faction' && isRegularNpc && renderMercenaries()}
             {activeTab === 'shop' && isRegularNpc && renderShop()}
             {activeTab === 'enchant' && isEmber && renderEnchant()}
+            {activeTab === 'gamble' && isDealer && renderGambling()}
           </div>
         </div>
       )}
@@ -931,9 +1272,6 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
           <div className="tavern-empty-text">Choose someone to talk to...</div>
         </div>
       )}
-
-      {/* Gambling Hall - always visible in the tavern */}
-      {renderGambling()}
 
       <button className="btn btn-back tavern-back-btn" onClick={onBack}>Leave Tavern</button>
     </div>
