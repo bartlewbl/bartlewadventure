@@ -937,12 +937,8 @@ function gameReducer(state, action) {
 
       // Boss encounter check
       if (loc.boss && Math.random() < (loc.bossRate || prob('explore.bossRate'))) {
-        // Special locations scale bosses with random level offset
-        let bossLevel = loc.levelReq;
-        if (loc.special && loc.levelRange) {
-          const [minOff, maxOff] = loc.levelRange;
-          bossLevel = Math.max(1, loc.levelReq + Math.floor((minOff + maxOff) / 2) + Math.floor(Math.random() * Math.ceil((maxOff - minOff) / 2)));
-        }
+        // Bosses use their own bossLevel, independent of location level
+        const bossLevel = loc.bossLevel || loc.levelReq;
         const boss = scaleBoss(loc.boss, bossLevel);
         if (boss) {
           return {
@@ -958,11 +954,8 @@ function gameReducer(state, action) {
 
       // Event boss encounter check (slightly higher rate than normal bosses)
       if (loc.eventBoss && Math.random() < (loc.eventBossRate || 0.008)) {
-        let eventBossLevel = loc.levelReq;
-        if (loc.special && loc.levelRange) {
-          const [minOff, maxOff] = loc.levelRange;
-          eventBossLevel = Math.max(1, loc.levelReq + Math.floor((minOff + maxOff) / 2) + Math.floor(Math.random() * Math.ceil((maxOff - minOff) / 2)));
-        }
+        // Event bosses use bossLevel if set, otherwise fall back to levelReq + 2
+        const eventBossLevel = loc.bossLevel || (loc.levelReq + 2);
         const eventBoss = scaleBoss(loc.eventBoss, eventBossLevel);
         if (eventBoss) {
           return {
@@ -1105,14 +1098,14 @@ function gameReducer(state, action) {
       const adjustedEncounterRate = loc.encounterRate * effects.encounterMult;
       if (Math.random() < adjustedEncounterRate) {
         const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
-        // Special locations have random-level encounters within their levelRange
+        // Randomize monster level within the location's levelRange
         let encounterLevel = loc.levelReq;
-        if (loc.special && loc.levelRange) {
+        if (loc.levelRange) {
           const [minOffset, maxOffset] = loc.levelRange;
           encounterLevel = Math.max(1, loc.levelReq + minOffset + Math.floor(Math.random() * (maxOffset - minOffset + 1)));
         }
         const monster = scaleMonster(monsterId, encounterLevel);
-        const levelInfo = loc.special ? ` (Lv.${encounterLevel})` : '';
+        const levelInfo = ` (Lv.${encounterLevel})`;
         const encBattle = createBattleState(monster, state.player);
         const encLog = [{ text: `A ${monster.name}${levelInfo} appears!`, type: 'info' }];
         if (encBattle.playerIsFaster && encBattle.monsterNextMove) {
@@ -1408,7 +1401,12 @@ function gameReducer(state, action) {
         case 'ambush': {
           // Start a battle with a scaled monster from current location
           const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
-          const monster = scaleMonster(monsterId, loc.levelReq);
+          let ambushLevel = loc.levelReq;
+          if (loc.levelRange) {
+            const [minOff, maxOff] = loc.levelRange;
+            ambushLevel = Math.max(1, loc.levelReq + minOff + Math.floor(Math.random() * (maxOff - minOff + 1)));
+          }
+          const monster = scaleMonster(monsterId, ambushLevel);
           // Ambush: monster gets slight stat boost
           monster.hp = Math.floor(monster.hp * 1.15);
           monster.maxHp = monster.hp;
@@ -1961,7 +1959,12 @@ function gameReducer(state, action) {
       const loc = state.currentLocation;
       // Spawn first wave monster
       const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
-      const monster = scaleMonster(monsterId, loc.levelReq);
+      let waveLevel = loc.levelReq;
+      if (loc.levelRange) {
+        const [minOff, maxOff] = loc.levelRange;
+        waveLevel = Math.max(1, loc.levelReq + minOff + Math.floor(Math.random() * (maxOff - minOff + 1)));
+      }
+      const monster = scaleMonster(monsterId, waveLevel);
       if (!monster) return state;
       // Apply wave scaling
       monster.maxHp = Math.floor(monster.maxHp * config.hpScale);
@@ -2013,7 +2016,12 @@ function gameReducer(state, action) {
       if (nextWave > wd.totalWaves) return state; // shouldn't happen
       const loc = state.currentLocation;
       const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
-      const monster = scaleMonster(monsterId, loc.levelReq);
+      let nextWaveLevel = loc.levelReq;
+      if (loc.levelRange) {
+        const [minOff, maxOff] = loc.levelRange;
+        nextWaveLevel = Math.max(1, loc.levelReq + minOff + Math.floor(Math.random() * (maxOff - minOff + 1)));
+      }
+      const monster = scaleMonster(monsterId, nextWaveLevel);
       if (!monster) return state;
       // Scale monster stats for wave (later waves are slightly stronger)
       const waveBonus = 1 + (nextWave - 1) * 0.1; // +10% per wave
