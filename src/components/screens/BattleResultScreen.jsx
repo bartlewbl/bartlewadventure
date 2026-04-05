@@ -68,16 +68,26 @@ export default function BattleResultScreen({ result, onContinue }) {
     <div className="screen screen-result">
       <div className={`result-title ${result.victory ? 'victory' : 'defeat'} ${isBoss ? 'boss-result' : ''}`}>
         {result.victory
-          ? (isBoss ? 'BOSS DEFEATED!' : 'VICTORY!')
-          : 'DEFEATED...'}
+          ? result.isWaveDefense
+            ? (result.waveDefenseComplete ? 'FIRE DEFENDED!' : `WAVE ${result.waveNumber} CLEAR!`)
+            : (isBoss ? 'BOSS DEFEATED!' : 'VICTORY!')
+          : result.isWaveDefense ? 'THE FIRE IS EXTINGUISHED...' : 'DEFEATED...'}
       </div>
+
+      {result.isWaveDefense && result.victory && (
+        <div style={{ textAlign: 'center', padding: '6px 10px', margin: '4px 0', background: 'rgba(255,100,30,0.12)', borderRadius: 6, border: '1px solid rgba(255,100,30,0.3)', color: '#ffa040', fontSize: '0.9em' }}>
+          {result.waveDefenseComplete
+            ? `All ${result.totalWaves} waves defeated! The flame burns eternal.`
+            : `Wave ${result.waveNumber} of ${result.totalWaves} complete. Prepare for the next assault...`}
+        </div>
+      )}
 
       <div className="result-rewards">
         {result.victory ? (
           <>
             {isBoss && <div className="boss-victory-text">You conquered {result.bossName}!</div>}
-            <div>+{result.expGain} EXP{result.innBonus ? ` (Inn +${Math.round(result.innBonus * 100)}%)` : ''}</div>
-            <div>+{result.goldGain} Gold</div>
+            <div>+{result.expGain} EXP{result.innBonus ? ` (Inn +${Math.round(result.innBonus * 100)}%)` : ''}{result.waveDefenseComplete ? ` (${result.waveTier} defense bonus!)` : ''}</div>
+            <div>+{result.goldGain} Gold{result.waveDefenseComplete ? ' (defense bonus!)' : ''}</div>
             {result.droppedItem && (
               <ItemDropWindow item={result.droppedItem} label="Loot Drop!" />
             )}
@@ -127,7 +137,11 @@ export default function BattleResultScreen({ result, onContinue }) {
       )}
 
       <button className="btn btn-primary" onClick={onContinue}>
-        {result.defeated ? 'Return to Town' : 'Continue'}
+        {result.defeated
+          ? 'Return to Town'
+          : result.isWaveDefense && !result.waveDefenseComplete
+            ? 'Face Next Wave'
+            : 'Continue'}
       </button>
     </div>
   );

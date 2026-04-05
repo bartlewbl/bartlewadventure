@@ -82,6 +82,30 @@ scaling.js ← standalone (used by encounter spawning)
 
 Battle state keys added: `monsterBurnTurns`, `forgeShieldTurns`, `forgeShieldReduction`, `forgeShieldThorns`, `ancestralWardTurns`, `ancestralWardBonus`, `goldenGambitActive`
 
+## Fire Ritual & Wave Defense System
+
+Quest-driven mechanic in `data/fireRitualData.js` + `hooks/useGameState.js`:
+
+- **Discovery:** Base 4% chance per step; **25% when a fire quest chain is active**; **40% in the quest's target location**
+- **Quest-connected:** Quests have `fireRitual: { locationId, requiresDefense }` metadata
+  - Quests direct players to specific locations (e.g. "Light a fire in Shadow Alley")
+  - Some quests force wave defense (can't just light and leave)
+  - `activeRitualSite` carries `activeQuest`, `activeQuestChainId`, `questRequiresDefense`
+  - FireRitualScreen shows quest info and forces defense when required
+- **Lighting:** Consumes fuel materials (Scrap Wood, Charcoal, Coal Chunk, Oil Canister, Plasma Core)
+- **Wave Defense:** Defend-the-fire mode spawns sequential monster waves
+  - Tiers: easy (2 waves), medium (3), hard (4), brutal (5)
+  - Tier based on location level: Lv1=easy, Lv3+=medium, Lv10+=hard, Lv18+=brutal
+  - Monsters scale +10% per wave; player heals between waves (25%/20%/15%/10% by tier)
+  - Completion bonus: 1.5x/2x/2.5x/3x gold+exp on final wave
+  - Cannot run during wave defense
+- **Stats tracked:** Global: `fireRitualsLit`, `fireRitualsDefended`, `fireRitualMonstersKilled`, `wavesSurvived`
+  Per-location (dynamic keys): `fireRitualLit_<locationId>`, `fireRitualDefended_<locationId>`
+- **Quest chains:** Fire Keeper (Lv3, 7 quests) and Flame Sentinel (Lv14, 7 quests) in `data/tasks.js`
+  - `FIRE_RITUAL_CHAIN_IDS` in fireRitualData.js lists which chains are fire-ritual chains
+- **State keys:** `state.activeRitualSite`, `state.waveDefense`, `battleResult.isWaveDefense`
+- **Screen:** `fire-ritual` → `FireRitualScreen.jsx`
+
 ## Common Pitfalls
 
 - Stat getters in combat.js check 30+ skill flags — always verify skill IDs match data/skills

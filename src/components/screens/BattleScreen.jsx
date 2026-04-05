@@ -21,7 +21,7 @@ const ANIM_MS = {
 let floatIdCounter = 0;
 
 export default function BattleScreen({
-  battle, battleLog, player, pets, tavern,
+  battle, battleLog, player, pets, tavern, waveDefense,
   onAttack, onSkill, onDefend, onChannel, onPotion, onRun, onMonsterTurn,
   onTreeSkill, onToggleSkillMenu, onToggleInspect,
   onParry, onChangeStance, onUniversalSkill, onFactionSkill,
@@ -343,6 +343,13 @@ export default function BattleScreen({
             );
           })()}
         </div>
+
+        {/* Wave defense indicator */}
+        {waveDefense && (
+          <div style={{ textAlign: 'center', padding: '4px 8px', background: 'rgba(255,100,30,0.15)', borderRadius: 6, marginBottom: 4, border: '1px solid rgba(255,100,30,0.3)', fontSize: '0.85em', color: '#ffa040' }}>
+            Defending the Fire — Wave {waveDefense.currentWave}/{waveDefense.totalWaves}
+          </div>
+        )}
 
         {/* VS indicator */}
         <div className="battle-vs">VS</div>
@@ -763,8 +770,8 @@ export default function BattleScreen({
           >
             Potion
           </button>
-          <button className="btn btn-back" disabled={disabled || battle.noRun} onClick={handleRun}>
-            {isBoss ? (battle.noRun ? 'Trapped!' : 'No Escape') : (battle.noRun ? 'Trapped!' : 'Run')}
+          <button className="btn btn-back" disabled={disabled || battle.noRun || !!waveDefense} onClick={handleRun}>
+            {waveDefense ? 'Defend!' : isBoss ? (battle.noRun ? 'Trapped!' : 'No Escape') : (battle.noRun ? 'Trapped!' : 'Run')}
           </button>
         </div>
       )}
