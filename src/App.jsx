@@ -32,6 +32,7 @@ import StatsScreen from './components/screens/StatsScreen';
 import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import TavernScreen from './components/screens/TavernScreen';
 import FireRitualScreen from './components/screens/FireRitualScreen';
+import TravellingNpcScreen from './components/screens/TravellingNpcScreen';
 import RespecScreen from './components/screens/RespecScreen';
 import EnchantScreen from './components/screens/EnchantScreen';
 import BountyScreen from './components/screens/BountyScreen';
@@ -227,6 +228,7 @@ export default function App() {
         })()}
         activeTrader={state.activeTrader}
         activeVillage={state.activeVillage}
+        activeTravellingNpc={state.activeTravellingNpc}
       />
 
       <div className="ui-overlay">
@@ -396,6 +398,21 @@ export default function App() {
                 onLeave={actions.traderLeave}
                 onAcceptQuest={actions.traderAcceptQuest}
                 onTurnInQuest={actions.traderTurnInQuest}
+              />
+            )}
+
+            {state.screen === 'travelling-npc' && (
+              <TravellingNpcScreen
+                npc={state.activeTravellingNpc}
+                playerGold={state.player.gold}
+                playerLevel={state.player.level}
+                villageQuests={state.villageQuests}
+                stats={state.stats}
+                onBuy={actions.tnpcBuy}
+                onLeave={actions.tnpcLeave}
+                onAcceptQuest={actions.tnpcAcceptQuest}
+                onTurnInQuest={actions.tnpcTurnInQuest}
+                onAttack={actions.tnpcAttack}
               />
             )}
 
