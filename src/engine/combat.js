@@ -22,17 +22,17 @@ export function playerHasSkill(player, skillId) {
 
 export function getEffectiveManaCost(player, baseCost, battle) {
   let cost = baseCost;
-  // Mage Mana Surge: skills cost 25% less
+  // Mage Mana Surge: skills cost 10% less
   if (playerHasSkill(player, 'mag_t4a')) {
-    cost = Math.floor(cost * 0.75);
+    cost = Math.floor(cost * 0.90);
   }
-  // Archmage (mag_t15a): skills cost 50% less
+  // Archmage (mag_t15a): skills cost 15% less
   if (playerHasSkill(player, 'mag_t15a')) {
-    cost = Math.floor(cost * 0.5);
+    cost = Math.floor(cost * 0.85);
   }
-  // Blood Oath (brs_t15a): skills cost 50% less mana
+  // Blood Oath (brs_t15a): skills cost 10% less mana
   if (playerHasSkill(player, 'brs_t15a')) {
-    cost = Math.floor(cost * 0.5);
+    cost = Math.floor(cost * 0.90);
   }
   // Endless Rage stacks: reduce by 1 per turn
   if (battle && (battle.endlessRageStacks || 0) > 0) {
@@ -54,42 +54,42 @@ export function getPlayerAtk(player, battle) {
       equipAtk += (item.atk || 0);
     }
   }
-  // Titan's Grip (war_t13a): equipment ATK +20%
+  // Titan's Grip (war_t13a): equipment ATK +8%
   if (playerHasSkill(player, 'war_t13a')) {
-    atk += Math.floor(equipAtk * 0.20);
+    atk += Math.floor(equipAtk * 0.08);
   }
   const cls = getClassData(player);
-  // Berserker Rage: +30% ATK when below 40% HP
+  // Berserker Rage: +10% ATK when below 40% HP
   if (cls?.passive === 'Rage' && player.hp < player.maxHp * 0.4) {
-    atk = Math.floor(atk * 1.3);
+    atk = Math.floor(atk * 1.10);
   }
-  // Blood Frenzy: +3% ATK per 10% HP missing
+  // Blood Frenzy: +1% ATK per 10% HP missing
   if (playerHasSkill(player, 'brs_t1a')) {
     const missingPct = Math.floor((1 - player.hp / player.maxHp) * 10);
-    atk = Math.floor(atk * (1 + missingPct * 0.03));
+    atk = Math.floor(atk * (1 + missingPct * 0.01));
   }
-  // War Machine: +15% ATK, +25% when below 50% HP
+  // War Machine: +5% ATK, +8% when below 50% HP
   if (playerHasSkill(player, 'brs_t4a')) {
-    atk = Math.floor(atk * 1.15);
+    atk = Math.floor(atk * 1.05);
     if (player.hp < player.maxHp * 0.5) {
-      atk = Math.floor(atk * 1.25);
+      atk = Math.floor(atk * 1.08);
     }
   }
-  // Relentless: +20% ATK when above 80% HP
+  // Relentless: +6% ATK when above 80% HP
   if (playerHasSkill(player, 'brs_t9a') && player.hp > player.maxHp * 0.8) {
-    atk = Math.floor(atk * 1.2);
+    atk = Math.floor(atk * 1.06);
   }
-  // Immortal Rage: ATK doubled when below 10% HP
+  // Immortal Rage: +25% ATK when below 10% HP
   if (playerHasSkill(player, 'brs_t10a') && player.hp < player.maxHp * 0.1) {
-    atk = atk * 2;
-  }
-  // Dark Pact: +25% ATK
-  if (playerHasSkill(player, 'nec_t4a')) {
     atk = Math.floor(atk * 1.25);
   }
-  // Lich Form: +20% ATK
+  // Dark Pact: +8% ATK
+  if (playerHasSkill(player, 'nec_t4a')) {
+    atk = Math.floor(atk * 1.08);
+  }
+  // Lich Form: +6% ATK
   if (playerHasSkill(player, 'nec_t10a')) {
-    atk = Math.floor(atk * 1.2);
+    atk = Math.floor(atk * 1.06);
   }
   // Arcane Overflow: +1 ATK per 10 current mana
   if (playerHasSkill(player, 'mag_t3a')) {
@@ -102,80 +102,80 @@ export function getPlayerAtk(player, battle) {
   }
   // Spellweaver bonus tracked via battle.spellweaverActive
   if (battle?.spellweaverActive && playerHasSkill(player, 'mag_t8a')) {
-    atk = Math.floor(atk * 1.5);
+    atk = Math.floor(atk * 1.12);
   }
-  // Berserker Stance (brs_t12a): +30% ATK
+  // Berserker Stance (brs_t12a): +10% ATK
   if (playerHasSkill(player, 'brs_t12a')) {
-    atk = Math.floor(atk * 1.3);
+    atk = Math.floor(atk * 1.10);
   }
-  // Blood Oath (brs_t15a): +60% ATK
+  // Blood Oath (brs_t15a): +15% ATK
   if (playerHasSkill(player, 'brs_t15a')) {
-    atk = Math.floor(atk * 1.6);
+    atk = Math.floor(atk * 1.15);
   }
-  // Frenzy stacks (brs_t14a): +5% per stack
+  // Frenzy stacks (brs_t14a): +2% per stack
   if (battle?.frenzyStacks > 0 && playerHasSkill(player, 'brs_t14a')) {
-    atk = Math.floor(atk * (1 + battle.frenzyStacks * 0.05));
+    atk = Math.floor(atk * (1 + battle.frenzyStacks * 0.02));
   }
-  // Warlord (brs_t17a): +2% ATK per level above 30
+  // Warlord (brs_t17a): +0.5% ATK per level above 30
   if (playerHasSkill(player, 'brs_t17a') && player.level > 30) {
-    atk = Math.floor(atk * (1 + (player.level - 30) * 0.02));
+    atk = Math.floor(atk * (1 + (player.level - 30) * 0.005));
   }
-  // Deathless active (brs_t22a): +50% ATK after revive
+  // Deathless active (brs_t22a): +15% ATK after revive
   if (battle?.deathlessActive) {
-    atk = Math.floor(atk * 1.5);
+    atk = Math.floor(atk * 1.15);
   }
-  // Avatar of Carnage (brs_t20a): all damage +100%
+  // Avatar of Carnage (brs_t20a): all damage +25%
   if (playerHasSkill(player, 'brs_t20a')) {
-    atk = atk * 2;
+    atk = Math.floor(atk * 1.25);
   }
-  // Godslayer (brs_t25a): +5% per 1% HP missing
+  // Godslayer (brs_t25a): +1% per 1% HP missing
   if (playerHasSkill(player, 'brs_t25a')) {
     const maxHp = getBattleMaxHp(player);
     const hpPctMissing = Math.max(0, Math.floor((1 - player.hp / maxHp) * 100));
-    atk = Math.floor(atk * (1 + hpPctMissing * 0.05));
+    atk = Math.floor(atk * (1 + hpPctMissing * 0.01));
   }
-  // Undying Servitude upgrades Dark Pact to +50%
+  // Undying Servitude upgrades Dark Pact to +13%
   if (playerHasSkill(player, 'nec_t17a') && playerHasSkill(player, 'nec_t4a')) {
-    atk = Math.floor(atk * 1.2); // Extra 20% on top of Dark Pact's 25%
+    atk = Math.floor(atk * 1.05); // Extra 5% on top of Dark Pact's 8%
   }
-  // Phantom Existence (thf_t15a): 30% less damage
+  // Phantom Existence (thf_t15a): 10% less damage
   if (playerHasSkill(player, 'thf_t15a')) {
-    atk = Math.floor(atk * 0.7);
+    atk = Math.floor(atk * 0.90);
   }
-  // Living Shadow (thf_t20a): ATK halved
+  // Living Shadow (thf_t20a): ATK -20%
   if (playerHasSkill(player, 'thf_t20a')) {
-    atk = Math.floor(atk * 0.5);
+    atk = Math.floor(atk * 0.80);
   }
-  // Eternal Guardian (war_t20a): ATK -35%
+  // Eternal Guardian (war_t20a): ATK -12%
   if (playerHasSkill(player, 'war_t20a')) {
-    atk = Math.floor(atk * 0.65);
+    atk = Math.floor(atk * 0.88);
   }
-  // Cutthroat (thf_t14a): +30% vs enemies below 40% HP
+  // Cutthroat (thf_t14a): +10% vs enemies below 40% HP
   if (playerHasSkill(player, 'thf_t14a') && battle?.monster && battle.monster.hp < (battle.monsterMaxHp || battle.monster.hp) * 0.4) {
-    atk = Math.floor(atk * 1.3);
+    atk = Math.floor(atk * 1.10);
   }
-  // Elusive (thf_t16a): +40% after dodge
+  // Elusive (thf_t16a): +12% after dodge
   if (playerHasSkill(player, 'thf_t16a') && battle?.dodgedLastTurn) {
-    atk = Math.floor(atk * 1.4);
+    atk = Math.floor(atk * 1.12);
   }
-  // Predator (thf_t19a): +3% per turn
+  // Predator (thf_t19a): +1% per turn
   if (playerHasSkill(player, 'thf_t19a') && (battle?.predatorTurns || 0) > 0) {
-    atk = Math.floor(atk * (1 + battle.predatorTurns * 0.03));
+    atk = Math.floor(atk * (1 + battle.predatorTurns * 0.01));
   }
   // Shadowmeld first attack crit (thf_t18a) - tracked via battle.firstAttack
   if (playerHasSkill(player, 'thf_t18a') && battle && !battle.firstAttackDone) {
-    atk = atk * 3;
+    atk = Math.floor(atk * 1.5);
   }
-  // Overcharge (mag_t19a): +25% when mana above 75%
+  // Overcharge (mag_t19a): +8% when mana above 75%
   if (playerHasSkill(player, 'mag_t19a')) {
     const battleMana = getBattleMaxMana(player);
     if (player.mana > battleMana * 0.75) {
-      atk = Math.floor(atk * 1.25);
+      atk = Math.floor(atk * 1.08);
     }
   }
   // Warpath (brs_t24a): tracked via battle.warpathActive
   if (battle?.warpathActive && playerHasSkill(player, 'brs_t24a')) {
-    atk = Math.floor(atk * 1.3);
+    atk = Math.floor(atk * 1.10);
   }
   // Player ATK buff from battle effects
   if (battle?.playerAtkBuff) {
@@ -201,34 +201,34 @@ export function getPlayerDef(player, battle) {
   for (const item of Object.values(player.equipment)) {
     if (item) def += (item.def || 0);
   }
-  // Armor Mastery: equipment DEF +15%
+  // Armor Mastery: equipment DEF +5%
   if (playerHasSkill(player, 'war_t7a')) {
     let equipDef = 0;
     for (const item of Object.values(player.equipment)) {
       if (item) equipDef += (item.def || 0);
     }
-    def += Math.floor(equipDef * 0.15);
+    def += Math.floor(equipDef * 0.05);
   }
   // Titan's Grip (war_t13a): equipment ATK +20% (DEF function but for ATK - handled in getPlayerAtk)
-  // Stalwart: +5 DEF in battle
+  // Stalwart: +2 DEF in battle
   if (playerHasSkill(player, 'war_t5a')) {
-    def += 5;
+    def += 2;
   }
-  // Undead Fortitude: +10% DEF
+  // Undead Fortitude: +4% DEF
   if (playerHasSkill(player, 'nec_t7a')) {
-    def = Math.floor(def * 1.1);
+    def = Math.floor(def * 1.04);
   }
-  // Last Stand: +30% DEF when below 40% HP
+  // Last Stand: +10% DEF when below 40% HP
   if (playerHasSkill(player, 'war_t8a') && player.hp < player.maxHp * 0.4) {
-    def = Math.floor(def * 1.3);
+    def = Math.floor(def * 1.10);
   }
-  // Ironclad (war_t16a): +25% DEF from all sources
+  // Ironclad (war_t16a): +8% DEF from all sources
   if (playerHasSkill(player, 'war_t16a')) {
-    def = Math.floor(def * 1.25);
+    def = Math.floor(def * 1.08);
   }
-  // Living Fortress (war_t25a): DEF doubled
+  // Living Fortress (war_t25a): +25% DEF
   if (playerHasSkill(player, 'war_t25a')) {
-    def = def * 2;
+    def = Math.floor(def * 1.25);
   }
   // Spectral Armor (nec_t22a): +1 DEF per 5% HP missing
   if (playerHasSkill(player, 'nec_t22a')) {
@@ -238,7 +238,7 @@ export function getPlayerDef(player, battle) {
   }
   // Avatar of War buff
   if (battle?.avatarTurns > 0) {
-    def = Math.floor(def * 1.5);
+    def = Math.floor(def * 1.15);
   }
   // Wrath of Ancients zeroed DEF
   if (battle?.warDefZeroed) {
@@ -263,12 +263,12 @@ export function getPlayerDodgeChance(player) {
 
 export function getBattleMaxHp(player) {
   let maxHp = player.maxHp;
-  if (playerHasSkill(player, 'war_t3a')) maxHp = Math.floor(maxHp * 1.15);
-  if (playerHasSkill(player, 'nec_t7a')) maxHp = Math.floor(maxHp * 1.1);
-  // Blood Oath (brs_t15a): -30% max HP permanently
-  if (playerHasSkill(player, 'brs_t15a')) maxHp = Math.floor(maxHp * 0.7);
-  // Archmage (mag_t15a): max HP halved
-  if (playerHasSkill(player, 'mag_t15a')) maxHp = Math.floor(maxHp * 0.5);
+  if (playerHasSkill(player, 'war_t3a')) maxHp = Math.floor(maxHp * 1.05);
+  if (playerHasSkill(player, 'nec_t7a')) maxHp = Math.floor(maxHp * 1.04);
+  // Blood Oath (brs_t15a): -10% max HP permanently
+  if (playerHasSkill(player, 'brs_t15a')) maxHp = Math.floor(maxHp * 0.90);
+  // Archmage (mag_t15a): -15% max HP
+  if (playerHasSkill(player, 'mag_t15a')) maxHp = Math.floor(maxHp * 0.85);
   return maxHp;
 }
 
@@ -277,19 +277,19 @@ export function getBattleMaxMana(player) {
   const wisdom = player.wisdom || 0;
   const wisdomBonus = 1 + wisdom * 0.02;
   let maxMana = Math.floor(player.maxMana * wisdomBonus);
-  // Mana Well (mag_t12a): +30% max mana
-  if (playerHasSkill(player, 'mag_t12a')) maxMana = Math.floor(maxMana * 1.3);
+  // Mana Well (mag_t12a): +10% max mana
+  if (playerHasSkill(player, 'mag_t12a')) maxMana = Math.floor(maxMana * 1.10);
   return maxMana;
 }
 
 // Compute passive skill damage bonus for class skills and tree skills
 export function getSkillPassiveBonus(player) {
   const cls = getClassData(player);
-  let bonus = (cls?.passive === 'Arcane Mind') ? 1.4 : 1.0;
-  if (playerHasSkill(player, 'mag_t6a')) bonus *= 1.2; // Elemental Mastery
-  if (playerHasSkill(player, 'mag_t14a')) bonus *= 1.3; // Spell Mastery
-  // Arcane Attunement (mag_t21a): +1% per level
-  if (playerHasSkill(player, 'mag_t21a')) bonus *= (1 + player.level * 0.01);
+  let bonus = (cls?.passive === 'Arcane Mind') ? 1.12 : 1.0;
+  if (playerHasSkill(player, 'mag_t6a')) bonus *= 1.06; // Elemental Mastery
+  if (playerHasSkill(player, 'mag_t14a')) bonus *= 1.08; // Spell Mastery
+  // Arcane Attunement (mag_t21a): +0.3% per level
+  if (playerHasSkill(player, 'mag_t21a')) bonus *= (1 + player.level * 0.003);
   return bonus;
 }
 

@@ -33,16 +33,21 @@ Pure game logic, no UI. All files are imported by components and the main game l
 
 ## Damage Modifier Stacking
 
-ATK modifiers are **multiplicative**. Key ones by power:
-- Godslayer (brs_t25a): +5% per 1% HP missing (strongest scaling)
-- Avatar of Carnage: ×2 damage
-- Shadowmeld: ×3 on first attack
-- Berserker Rage: +30% below 40% HP
-- War Machine: +15% base, +25% below 50% HP
+ATK modifiers are **multiplicative**. Key ones by power (post-balance pass):
+- Godslayer (brs_t25a): +1% per 1% HP missing (strongest scaling, was +5%)
+- Avatar of Carnage: ×1.25 damage (was ×2)
+- Shadowmeld: ×1.5 on first attack (was ×3)
+- Berserker Rage: +10% below 40% HP (was +30%)
+- War Machine: +5% base, +8% below 50% HP (was +15%/+25%)
+- Blood Oath: +15% ATK (was +60%)
+- Berserker Stance: +10% ATK (was +30%)
 
 DEF reductions are also multiplicative:
-- Iron Skin: ×0.90 → Thick Skin: ×0.85 → Fortress: ×0.80 → Soul Fortress: ×0.75
-- Berserker Stance *increases* damage taken: ×1.15
+- Iron Skin: ×0.97 → Thick Skin: ×0.98 → Fortress: ×0.95 → Soul Fortress: ×0.97
+- Berserker Stance *increases* damage taken: ×1.05 (was ×1.15)
+
+**Balance philosophy**: Passives are minor incremental upgrades (+2-8% per tier).
+Milestone skills are slightly enhanced versions, not game-changing transformations.
 
 ## Elemental Weather Bonuses
 
