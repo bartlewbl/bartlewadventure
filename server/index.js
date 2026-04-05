@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { initDb } from './db.js';
+import pool, { initDb } from './db.js';
+import { runMigrations } from './migrations/runner.js';
 import authRouter from './routes/auth.js';
 import saveRouter from './routes/save.js';
 import invitesRouter from './routes/invites.js';
@@ -36,6 +37,7 @@ app.get('/{*path}', (req, res) => {
 
 // Initialize database then start server
 initDb()
+  .then(() => runMigrations(pool))
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

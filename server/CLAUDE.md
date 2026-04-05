@@ -90,6 +90,26 @@ CREATE TABLE probability_config (
 );
 ```
 
+## Migrations
+
+Database migrations live in `server/migrations/`. The runner (`server/migrations/runner.js`) tracks applied migrations in a `migrations` table and runs them in order on server startup (after `initDb()`).
+
+```sql
+CREATE TABLE IF NOT EXISTS migrations (
+  id TEXT PRIMARY KEY,
+  applied_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+To add a new migration:
+1. Create `server/migrations/NNN_description.js` exporting `async function up(pool)`
+2. Register it in the `MIGRATIONS` array in `server/migrations/runner.js`
+
+### Applied migrations
+| ID | Description |
+|----|-------------|
+| 001_buff_enemy_difficulty | Increases monster scaling, crit, and skill chance in probability_config |
+
 ## API Endpoints
 
 ### Auth (`/api/auth`) — No auth required for register/login
