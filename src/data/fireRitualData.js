@@ -32,7 +32,7 @@ export const RITUAL_SITE_BY_LOCATION = {
 };
 
 // Chance to discover a ritual site during exploration (per step)
-export const RITUAL_DISCOVER_CHANCE = 0.04;
+export const RITUAL_DISCOVER_CHANCE = 0.005;
 
 // Wave defense configurations by difficulty tier
 // tier is determined by the quest or by location level
@@ -118,9 +118,9 @@ export function getWaveTier(locationLevelReq) {
 }
 
 // Boosted discovery chance when a fire ritual quest is active
-export const RITUAL_QUEST_DISCOVER_CHANCE = 0.25;
+export const RITUAL_QUEST_DISCOVER_CHANCE = 0.05;
 // Even higher when in the exact location a quest targets
-export const RITUAL_QUEST_LOCATION_DISCOVER_CHANCE = 0.40;
+export const RITUAL_QUEST_LOCATION_DISCOVER_CHANCE = 0.05;
 
 // Fire ritual quest chain IDs
 export const FIRE_RITUAL_CHAIN_IDS = ['fire_keeper', 'flame_sentinel'];
