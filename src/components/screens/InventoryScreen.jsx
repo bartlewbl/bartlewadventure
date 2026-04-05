@@ -76,6 +76,12 @@ function itemStatLine(item) {
   return `Heal ${item.healAmount} HP`;
 }
 
+function itemPassiveText(item) {
+  if (!item?.passive) return null;
+  const p = item.passive;
+  return `+${p.value}${p.format === 'pct' ? '%' : ''} ${p.label}`;
+}
+
 function getItemLocationText(itemName, discoveredItemLocations) {
   const locations = discoveredItemLocations?.[itemName];
   if (!locations || locations.length === 0) return null;
@@ -263,6 +269,11 @@ export default function InventoryScreen({
                       {item.level ? `Lv${item.level} · ` : ''}
                       {itemStatLine(item)}
                     </div>
+                    {itemPassiveText(item) && (
+                      <div className="equip-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                        {itemPassiveText(item)}
+                      </div>
+                    )}
                     {getItemLocationText(item.name, discoveredItemLocations) && (
                       <div className="equip-location">{getItemLocationText(item.name, discoveredItemLocations)}</div>
                     )}
@@ -333,6 +344,7 @@ export default function InventoryScreen({
                   title={[
                     `${item.name} ${itemMetaTag(item)}`,
                     itemStatLine(item),
+                    itemPassiveText(item) ? `Passive: ${itemPassiveText(item)}` : null,
                     classText ? `Class: ${classText}` : null,
                     locked ? `Requires Level ${item.level}` : null,
                     classLocked ? `Wrong class` : null,
@@ -348,6 +360,11 @@ export default function InventoryScreen({
                   <span className="inv-item-stats">
                     {itemStatLine(item)}
                   </span>
+                  {itemPassiveText(item) && (
+                    <span className="inv-item-passive" style={{ color: '#8f8', fontSize: '0.85em' }}>
+                      {itemPassiveText(item)}
+                    </span>
+                  )}
                   {classText && (
                     <span className="inv-item-class" style={{ color: item.classes?.length === 1 ? getClassColor(item.classes[0]) : '#aaa' }}>
                       {classText}

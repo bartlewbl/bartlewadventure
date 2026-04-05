@@ -31,6 +31,35 @@ Pure game logic, no UI. All files are imported by components and the main game l
 - **Monster skill chance:** `40%`
 - **Item rarity multipliers:** Common 0.7, Uncommon 1.0, Rare 1.7, Epic 2.5, Legendary 3.5
 
+## Item Passives
+
+Uncommon+ gear rolls one random passive bonus from a slot-specific pool. Passives scale with rarity:
+- **Uncommon:** 1-2% / 1-2 flat
+- **Rare:** 2-4% / 2-4 flat
+- **Epic:** 3-6% / 3-6 flat
+- **Legendary:** 5-8% / 5-9 flat
+
+**Passive types by slot:**
+| Slot | Possible Passives |
+|------|------------------|
+| Weapon | Crit Chance%, Life Steal%, ATK%, Aggression |
+| Shield | DEF%, Max HP, Fortitude, Resistance |
+| Helmet | EXP Bonus%, DEF%, Max HP, Resistance |
+| Armor | DEF%, Max HP, Tenacity, Fortitude |
+| Boots | Gold Bonus%, Speed, Dodge Chance%, Evasion |
+| Gloves | Crit Chance%, ATK%, Accuracy, Life Steal% |
+| Belt | Max HP, Gold Bonus%, DEF%, Tenacity |
+| Cape | Dodge Chance%, ATK%, Evasion, Speed |
+| Amulet | EXP Bonus%, Mana Regen, Resistance, Luck |
+| Ring | Crit Chance%, Gold Bonus%, Luck, Dodge Chance%, Mana Regen |
+
+**Where passives apply:**
+- Combat stats (atkPct, defPct, critChance, dodgeChance, speed, evasion, accuracy, resistance, tenacity, aggression, luck, fortitude, hpFlat): `combat.js` stat getters via `getEquipPassiveTotal()`
+- Life Steal, Mana Regen: `passives.js` (attack passives / turn-start)
+- Gold Bonus, EXP Bonus: `useGameState.js` battle reward calculation
+
+**Item data shape:** `item.passive = { id, label, format: 'pct'|'flat', value }` (undefined for Common items)
+
 ## Damage Modifier Stacking
 
 ATK modifiers are **multiplicative**. Key ones by power (post-balance pass):

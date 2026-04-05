@@ -3,7 +3,7 @@ import { expForLevel, SKILLS, EXPLORE_TEXTS, CHARACTER_CLASSES, REGIONS, RANDOM_
 import { getTimePeriod, getWeather, getCombinedEffects } from './useGameClock';
 import { getSkillElement, getWeatherSpellBuff } from '../engine/elements';
 import { SKILL_TREES, getTreeSkill } from '../data/skillTrees';
-import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getHealCost, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER, PERFECT_PARRY_COUNTER_MULTIPLIER, calcMonsterElementalDamage, calcStanceMomentum } from '../engine/combat';
+import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlayerAtk, getPlayerDef, getPlayerDodgeChance, getBattleMaxHp, getBattleMaxMana, getSkillPassiveBonus, rollSpellEcho, getEffectiveDef, getExecuteMultiplier, getCharismaPriceBonus, getHealCost, getPlayerCritChance, getPlayerCritMultiplier, getMonsterCritChance, getMonsterCritMultiplier, getPlayerSpeed, playerGoesFirst, pickMonsterNextMove, PLAYER_CHANNEL_BONUS, PLAYER_CHANNEL_MANA_COST, getPlayerEvasion, getPlayerAccuracy, calcEvasionDodgeChance, getPlayerResistance, calcResistanceReduction, getPlayerTenacity, reduceDurationByTenacity, getPlayerAggression, calcAggressionDmgDealt, calcAggressionDmgTaken, getPlayerLuck, luckCritBonus, luckEnemyCritReduction, luckDodgeBonus, getPlayerFortitude, calcFortitudeSurviveChance, STUN_BASE_CHANCE, CONFUSION_BASE_CHANCE, calcElementalDamageMultiplier, checkComboChains, getStanceModifiers, PARRY_DAMAGE_REDUCTION, PARRY_COUNTER_MULTIPLIER, PERFECT_PARRY_COUNTER_MULTIPLIER, calcMonsterElementalDamage, calcStanceMomentum, getEquipPassiveTotal } from '../engine/combat';
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
@@ -6552,11 +6552,17 @@ function handleVictory(state) {
 
   const innBonus = getInnExpBonus(state.base);
   const worldEffects = getCurrentEffects();
-  const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult);
+  // Item passive: expBonus
+  const expPassive = getEquipPassiveTotal(state.player, 'expBonus');
+  const expPassiveMult = expPassive > 0 ? (1 + expPassive / 100) : 1;
+  const expGain = Math.floor(m.exp * (1 + innBonus) * worldEffects.xpMult * expPassiveMult);
   const cls = getClassData(state.player);
   let goldMult = 1.0;
   if (cls?.passive === 'Greed') goldMult *= 1.25;
   if (playerHasSkill(state.player, 'thf_t2a')) goldMult *= 1.50;
+  // Item passive: goldBonus
+  const goldPassive = getEquipPassiveTotal(state.player, 'goldBonus');
+  if (goldPassive > 0) goldMult *= (1 + goldPassive / 100);
   goldMult *= worldEffects.goldMult;
   const goldGain = Math.floor(m.gold * goldMult);
 

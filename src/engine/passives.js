@@ -1,7 +1,7 @@
 // Centralized passive skill application
 // Handles all passive triggers during: attacks, skill use, defense, potions, monster turns
 
-import { playerHasSkill, getBattleMaxHp, getBattleMaxMana } from './combat';
+import { playerHasSkill, getBattleMaxHp, getBattleMaxMana, getEquipPassiveTotal } from './combat';
 import { prob } from '../data/probabilityStore';
 
 /**
@@ -28,6 +28,15 @@ export function applyAttackPassives({ player, monster, battle, log, dmg, cls }) 
     if (healAmt > 0 && p.hp < battleMaxHp) {
       p = { ...p, hp: Math.min(battleMaxHp, p.hp + healAmt) };
       log.push({ text: `Vampiric Aura heals ${healAmt} HP!`, type: 'heal' });
+    }
+  }
+  // Item passive: lifeSteal
+  const lifeStealPct = getEquipPassiveTotal(p, 'lifeSteal');
+  if (lifeStealPct > 0) {
+    const lsHeal = Math.floor(dmg * lifeStealPct / 100);
+    if (lsHeal > 0 && p.hp < battleMaxHp) {
+      p = { ...p, hp: Math.min(battleMaxHp, p.hp + lsHeal) };
+      log.push({ text: `Life Steal heals ${lsHeal} HP!`, type: 'heal' });
     }
   }
   // Soul Siphon: chance to restore 5 mana
@@ -200,6 +209,13 @@ export function applyTurnStartPassives({ player, battle, log }) {
     const manaAmt = Math.floor(battleMana * prob('passive.leylineTap'));
     p = { ...p, mana: Math.min(battleMana, p.mana + manaAmt) };
     log.push({ text: `Leyline Tap restores ${manaAmt} mana!`, type: 'heal' });
+  }
+  // Item passive: manaRegen (flat mana per turn)
+  const manaRegenPassive = getEquipPassiveTotal(p, 'manaRegen');
+  if (manaRegenPassive > 0) {
+    const battleMana = getBattleMaxMana(p);
+    p = { ...p, mana: Math.min(battleMana, p.mana + manaRegenPassive) };
+    log.push({ text: `Mana Regen restores ${manaRegenPassive} mana!`, type: 'heal' });
   }
   // Dark Pact: sacrifice HP per turn
   if (playerHasSkill(p, 'nec_t4a')) {

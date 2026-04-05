@@ -95,6 +95,11 @@ export default function ItemDropWindow({ item, label }) {
             {item.rarity}
           </div>
           {statLine && <div className="item-drop-stats">{statLine}</div>}
+          {item.passive && (
+            <div className="item-drop-passive" style={{ color: '#8f8', fontSize: '0.8em', marginTop: '2px' }}>
+              +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+            </div>
+          )}
           {item.classes && (
             <div className="item-drop-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em', marginTop: '2px' }}
               title={item.classes.map(c => getClassName(c)).join(', ')}>
