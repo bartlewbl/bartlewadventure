@@ -226,6 +226,11 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
                           <span className={`shop-rarity-badge ${item.rarityClass || ''}`}>{item.rarity}</span>
                           {item.level && <span className="shop-card-level">Lv{item.level}</span>}
                           <span className="shop-card-stats">{statLine(item)}</span>
+                          {item.passive && (
+                            <span className="shop-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                              +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                            </span>
+                          )}
                           {item.classes && (
                             <span className="shop-card-class" style={{ color: item.classes.length === 1 ? getClassColor(item.classes[0]) : '#aaa', fontSize: '0.75em' }}
                               title={item.classes.map(c => getClassName(c)).join(', ')}>
@@ -557,6 +562,11 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
                             {item.healAmount > 0 ? `Heal ${item.healAmount}  ` : ''}
                             {item.slot ? item.slot : ''}
                           </span>
+                          {item.passive && (
+                            <span className="shop-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                              +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                            </span>
+                          )}
                         </div>
                         <div className="shop-card-desc" style={{ fontSize: '7px', color: '#888', marginTop: '2px' }}>{item.desc}</div>
                         {repLocked && (

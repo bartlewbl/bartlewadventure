@@ -31,18 +31,52 @@ Pure game logic, no UI. All files are imported by components and the main game l
 - **Monster skill chance:** `40%`
 - **Item rarity multipliers:** Common 0.7, Uncommon 1.0, Rare 1.7, Epic 2.5, Legendary 3.5
 
+## Item Passives
+
+Uncommon+ gear rolls one random passive bonus from a slot-specific pool. Passives scale with rarity:
+- **Uncommon:** 1-2% / 1-2 flat
+- **Rare:** 2-4% / 2-4 flat
+- **Epic:** 3-6% / 3-6 flat
+- **Legendary:** 5-8% / 5-9 flat
+
+**Passive types by slot:**
+| Slot | Possible Passives |
+|------|------------------|
+| Weapon | Crit Chance%, Life Steal%, ATK%, Aggression |
+| Shield | DEF%, Max HP, Fortitude, Resistance |
+| Helmet | EXP Bonus%, DEF%, Max HP, Resistance |
+| Armor | DEF%, Max HP, Tenacity, Fortitude |
+| Boots | Gold Bonus%, Speed, Dodge Chance%, Evasion |
+| Gloves | Crit Chance%, ATK%, Accuracy, Life Steal% |
+| Belt | Max HP, Gold Bonus%, DEF%, Tenacity |
+| Cape | Dodge Chance%, ATK%, Evasion, Speed |
+| Amulet | EXP Bonus%, Mana Regen, Resistance, Luck |
+| Ring | Crit Chance%, Gold Bonus%, Luck, Dodge Chance%, Mana Regen |
+
+**Where passives apply:**
+- Combat stats (atkPct, defPct, critChance, dodgeChance, speed, evasion, accuracy, resistance, tenacity, aggression, luck, fortitude, hpFlat): `combat.js` stat getters via `getEquipPassiveTotal()`
+- Life Steal, Mana Regen: `passives.js` (attack passives / turn-start)
+- Gold Bonus, EXP Bonus: `useGameState.js` battle reward calculation
+
+**Item data shape:** `item.passive = { id, label, format: 'pct'|'flat', value }` (undefined for Common items)
+
 ## Damage Modifier Stacking
 
-ATK modifiers are **multiplicative**. Key ones by power:
-- Godslayer (brs_t25a): +5% per 1% HP missing (strongest scaling)
-- Avatar of Carnage: ×2 damage
-- Shadowmeld: ×3 on first attack
-- Berserker Rage: +30% below 40% HP
-- War Machine: +15% base, +25% below 50% HP
+ATK modifiers are **multiplicative**. Key ones by power (post-balance pass):
+- Godslayer (brs_t25a): +1% per 1% HP missing (strongest scaling, was +5%)
+- Avatar of Carnage: ×1.25 damage (was ×2)
+- Shadowmeld: ×1.5 on first attack (was ×3)
+- Berserker Rage: +10% below 40% HP (was +30%)
+- War Machine: +5% base, +8% below 50% HP (was +15%/+25%)
+- Blood Oath: +15% ATK (was +60%)
+- Berserker Stance: +10% ATK (was +30%)
 
 DEF reductions are also multiplicative:
-- Iron Skin: ×0.90 → Thick Skin: ×0.85 → Fortress: ×0.80 → Soul Fortress: ×0.75
-- Berserker Stance *increases* damage taken: ×1.15
+- Iron Skin: ×0.97 → Thick Skin: ×0.98 → Fortress: ×0.95 → Soul Fortress: ×0.97
+- Berserker Stance *increases* damage taken: ×1.05 (was ×1.15)
+
+**Balance philosophy**: Passives are minor incremental upgrades (+2-8% per tier).
+Milestone skills are slightly enhanced versions, not game-changing transformations.
 
 ## Elemental Weather Bonuses
 
@@ -120,5 +154,7 @@ Quest-driven mechanic in `data/fireRitualData.js` + `hooks/useGameState.js`:
 
 - Stat getters in combat.js check 30+ skill flags — always verify skill IDs match data/skills
 - Scaling formulas have a hardcoded 0.5 multiplier on HP — don't remove it thinking it's a bug
-- Item generation uses Gaussian weighting (σ=4 above, σ=6 below player level) — items far above level are intentionally rare
+- Item generation uses Gaussian weighting (σ=4 above, σ=6 below player level) with a hard cap of +5 levels above target — items cannot exceed targetLevel + 5
+- Armourer shop and crafted items use template level as the equip requirement (not `Math.max(template.level, playerLevel)`)
+- Loot chest and daily reward fallbacks also cap item level at playerLevel + 5
 - Rarity multipliers affect both ATK and DEF on gear

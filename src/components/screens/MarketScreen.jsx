@@ -383,6 +383,11 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                         {listing.rarity}
                       </span>
                       <span className="market-card-stats">{statLine(listing.item)}</span>
+                      {listing.item?.passive && (
+                        <span className="market-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                          +{listing.item.passive.value}{listing.item.passive.format === 'pct' ? '%' : ''} {listing.item.passive.label}
+                        </span>
+                      )}
                     </div>
                     <div className="market-card-seller">
                       Listed by <strong>{listing.sellerName}</strong>
@@ -534,6 +539,11 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                         </span>
                         <span>Lv.{item.level}</span>
                         <span className="market-sell-row-stats">{statLine(item)}</span>
+                        {item.passive && (
+                          <span className="market-sell-row-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                            +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="market-sell-row-action">
@@ -577,6 +587,11 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                       {listing.rarity}
                     </span>
                     <span className="market-card-stats">{statLine(listing.item)}</span>
+                    {listing.item?.passive && (
+                      <span className="market-card-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                        +{listing.item.passive.value}{listing.item.passive.format === 'pct' ? '%' : ''} {listing.item.passive.label}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="market-card-actions">

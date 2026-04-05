@@ -306,6 +306,9 @@ export default function BattleScreen({
         </div>
       ))}
 
+      {/* === TOP HUD: Info panels pinned to top === */}
+      <div className="battle-hud-top">
+
       {/* === TOP BAR: Turn indicator + Mana === */}
       <div className="battle-top-bar">
         <div className={`turn-indicator ${battle.isPlayerTurn && !pendingTurnRef.current ? 'your-turn' : 'enemy-turn'}`}>
@@ -495,6 +498,14 @@ export default function BattleScreen({
           )}
         </div>
       )}
+
+      </div>{/* end battle-hud-top */}
+
+      {/* === VIEWPORT: Clear zone for canvas sprites === */}
+      <div className="battle-viewport" />
+
+      {/* === BOTTOM HUD: Controls pinned to bottom === */}
+      <div className="battle-hud-bottom">
 
       {/* === COMBAT INFO: Speed, Stance, Momentum, Combos, Weather, Passives === */}
       <div className="battle-combat-info">
@@ -774,6 +785,8 @@ export default function BattleScreen({
           </button>
         </div>
       )}
+
+      </div>{/* end battle-hud-bottom */}
     </div>
   );
 }
