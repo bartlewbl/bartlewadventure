@@ -277,8 +277,7 @@ export default function BattleScreen({
 
   const passives = getPlayerPassiveSkills(player);
   const activeSkills = getPlayerActiveSkills(player);
-  const treeActives = activeSkills.filter(s => !s.isClassSkill);
-  const factionSkills = getUnlockedFactionSkills(tavern);
+  const factionSkills = getUnlockedFactionSkills(tavern, player.characterClass);
 
   const ROLE_ICONS = { attacker: '\u2694', defender: '\u26E8', healer: '\u2661', buffer: '\u2606', hybrid: '\u269B' };
 
@@ -734,9 +733,9 @@ export default function BattleScreen({
           <button
             className="btn btn-skills-toggle"
             disabled={disabled}
-            onClick={(treeActives.length > 0 || factionSkills.length > 0) ? onToggleSkillMenu : handleClassSkill}
+            onClick={factionSkills.length > 0 ? onToggleSkillMenu : handleClassSkill}
           >
-            {(treeActives.length > 0 || factionSkills.length > 0) ? 'Skills' : (activeSkills[0]?.name || 'Skill')}
+            {factionSkills.length > 0 ? 'Skills' : (activeSkills[0]?.name || 'Skill')}
           </button>
           <button
             className="btn btn-battle-channel"

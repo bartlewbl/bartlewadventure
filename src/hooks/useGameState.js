@@ -5916,9 +5916,9 @@ function gameReducer(state, action) {
     case 'TAVERN_LEARN_FACTION_SKILL': {
       const { skillId, npcId } = action;
       const tavern = state.tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
-      const npcFactionSkills = FACTION_SKILLS[npcId];
-      if (!npcFactionSkills) return state;
-      const skillDef = npcFactionSkills.find(s => s.id === skillId);
+      const classFactionSkills = FACTION_SKILLS[npcId]?.[state.player.characterClass];
+      if (!classFactionSkills) return state;
+      const skillDef = classFactionSkills.find(s => s.id === skillId);
       if (!skillDef) return state;
       if ((tavern.learnedFactionSkills || []).includes(skillId)) return { ...state, message: 'Already learned!' };
       const rep = tavern.reputation[npcId] || 0;
@@ -5939,7 +5939,7 @@ function gameReducer(state, action) {
       let b = { ...state.battle };
       let m = { ...b.monster };
       let p = { ...state.player };
-      const factionSkills = getUnlockedFactionSkills(state.tavern);
+      const factionSkills = getUnlockedFactionSkills(state.tavern, state.player.characterClass);
       const skill = factionSkills.find(s => s.id === action.skillId);
       if (!skill) return state;
       const stanceMods = getStanceModifiers(b.stance, p.stanceMaster, b.stanceMomentum);
