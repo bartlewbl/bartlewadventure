@@ -6928,6 +6928,133 @@ body {
   color: #4caf50;
 }
 
+/* --- Accepted Quests Panel (Locations Screen) --- */
+.accepted-quests-panel {
+  background: rgba(10, 10, 30, 0.85);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.accepted-quests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  color: #ffd700;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.accepted-quests-toggle {
+  font-size: 7px;
+  color: #9d9dc5;
+}
+
+.accepted-quests-hint {
+  font-size: 7px;
+  color: #81c784;
+  margin-top: 4px;
+}
+
+.accepted-quests-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.accepted-quest-item {
+  padding: 5px 6px;
+  border-radius: 5px;
+  background: rgba(20, 20, 50, 0.6);
+  border: 1px solid rgba(100, 100, 180, 0.15);
+}
+
+.accepted-quest-item.relevant {
+  border-color: rgba(255, 215, 0, 0.35);
+  background: rgba(40, 35, 15, 0.6);
+}
+
+.accepted-quest-item.complete {
+  opacity: 0.7;
+}
+
+.accepted-quest-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.accepted-quest-name {
+  font-size: 7px;
+  color: #c8c8ff;
+  font-weight: 500;
+}
+
+.accepted-quest-item.relevant .accepted-quest-name {
+  color: #ffe082;
+}
+
+.accepted-quest-source {
+  font-size: 6px;
+  color: #7a7aa0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.accepted-quest-location {
+  font-size: 6px;
+  color: #81c784;
+  margin-top: 2px;
+}
+
+.accepted-quest-bar {
+  height: 5px;
+  background: rgba(30, 30, 60, 0.9);
+  border: 1px solid #2e2e4a;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.accepted-quest-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #ffd700, #ffab00);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.accepted-quest-item.complete .accepted-quest-bar-fill {
+  background: linear-gradient(to right, #4caf50, #81c784);
+}
+
+.accepted-quest-count {
+  font-size: 6px;
+  color: #9d9dc5;
+  text-align: right;
+  margin-top: 2px;
+}
+
+.accepted-quest-item.complete .accepted-quest-count {
+  color: #4caf50;
+}
+
+.accepted-quests-more {
+  font-size: 7px;
+  color: #7a7aa0;
+  margin-top: 6px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.accepted-quests-more:hover {
+  color: #c8c8ff;
+}
+
 /* ============================================================
    FLEA MARKET
    ============================================================ */

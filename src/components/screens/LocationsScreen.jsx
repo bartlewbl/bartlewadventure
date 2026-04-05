@@ -2,7 +2,9 @@ import { useState } from 'react';
 import {
   TUTORIAL_QUESTS, STORY_MISSIONS, STORY_TASKS, SIDE_QUEST_CHAINS,
   getActiveDailyTasks, getActiveWeeklyTasks,
-  getQuestProgress,
+  getQuestProgress, getCompoundQuestProgress,
+  getCurrentTutorial, getCurrentSideQuest,
+  getMissionsForChapter, getUnlockedChapter,
 } from '../../data/tasks';
 import { MONSTERS, BOSSES, SPECIAL_LOCATIONS } from '../../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS } from '../../data/baseData';
@@ -14,18 +16,6 @@ function formatNumber(n) {
   return String(n);
 }
 
-function findQuestById(id, playerLevel) {
-  const allQuests = [
-    ...TUTORIAL_QUESTS,
-    ...STORY_MISSIONS,
-    ...STORY_TASKS,
-    ...getActiveDailyTasks(Date.now(), playerLevel || 1),
-    ...getActiveWeeklyTasks(Date.now(), playerLevel || 1),
-    ...SIDE_QUEST_CHAINS.flatMap(c => c.quests),
-  ];
-  return allQuests.find(q => q.id === id) || null;
-}
-
 function isQuestClaimed(id, tasks) {
   return (tasks.tutorialClaimed || []).includes(id)
     || (tasks.missionClaimed || []).includes(id)
@@ -35,39 +25,154 @@ function isQuestClaimed(id, tasks) {
     || (tasks.sideQuestClaimed || []).includes(id);
 }
 
-function PinnedQuestTracker({ pinnedQuests, stats, tasks, playerLevel }) {
-  if (!pinnedQuests || pinnedQuests.length === 0) return null;
+// Gather all accepted/active quests from quest lines, daily, and weekly
+function getAcceptedQuests(tasks, playerLevel) {
+  const quests = [];
+  const activeLines = tasks.activeQuestLines || [];
 
-  const activeQuests = pinnedQuests
-    .map(id => {
-      const quest = findQuestById(id, playerLevel);
-      if (!quest || isQuestClaimed(id, tasks)) return null;
-      return quest;
-    })
-    .filter(Boolean);
+  for (const lineKey of activeLines) {
+    if (lineKey === 'tutorial') {
+      const q = getCurrentTutorial(tasks.tutorialClaimed);
+      if (q) quests.push({ ...q, source: 'Tutorial' });
+    } else if (lineKey === 'mission') {
+      const ch = getUnlockedChapter(tasks.missionClaimed || []);
+      const chMissions = getMissionsForChapter(ch);
+      const q = chMissions.find(m => !(tasks.missionClaimed || []).includes(m.id));
+      if (q) quests.push({ ...q, source: 'Story Mission' });
+    } else if (lineKey.startsWith('side_')) {
+      const chainId = lineKey.replace('side_', '');
+      const chain = SIDE_QUEST_CHAINS.find(c => c.chainId === chainId);
+      const q = getCurrentSideQuest(chainId, tasks.sideQuestClaimed);
+      if (q) quests.push({ ...q, source: chain ? chain.name : 'Side Quest' });
+    }
+  }
 
-  if (activeQuests.length === 0) return null;
+  const now = Date.now();
+  const lvl = playerLevel || 1;
+  const dailyTasks = getActiveDailyTasks(now, lvl);
+  for (const q of dailyTasks) {
+    if (!isQuestClaimed(q.id, tasks)) {
+      quests.push({ ...q, source: 'Daily' });
+    }
+  }
+  const weeklyTasks = getActiveWeeklyTasks(now, lvl);
+  for (const q of weeklyTasks) {
+    if (!isQuestClaimed(q.id, tasks)) {
+      quests.push({ ...q, source: 'Weekly' });
+    }
+  }
+
+  return quests;
+}
+
+// Check if a quest has item requirements in any of the given location IDs
+function questLocationIds(quest) {
+  if (!quest.itemRequirements || quest.itemRequirements.length === 0) return [];
+  return quest.itemRequirements.map(r => r.locationId);
+}
+
+function AcceptedQuestsPanel({ tasks, stats, playerLevel, locations, playerInventory, now }) {
+  const [expanded, setExpanded] = useState(false);
+  const allQuests = getAcceptedQuests(tasks, playerLevel);
+  if (allQuests.length === 0) return null;
+
+  const locationIds = new Set(locations.map(l => l.id));
+
+  // Split into quests relevant to this region vs others
+  const relevantQuests = [];
+  const otherQuests = [];
+  for (const quest of allQuests) {
+    const locIds = questLocationIds(quest);
+    if (locIds.some(id => locationIds.has(id))) {
+      relevantQuests.push(quest);
+    } else {
+      otherQuests.push(quest);
+    }
+  }
+
+  // Relevant quests always shown, others only when expanded
+  const displayQuests = expanded ? [...relevantQuests, ...otherQuests] : relevantQuests;
 
   return (
-    <div className="pinned-quest-tracker">
-      <div className="pinned-quest-header">Tracked Quests</div>
-      {activeQuests.map(quest => {
-        const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
-        const pct = Math.min(100, Math.floor((progress / quest.target) * 100));
-        const complete = progress >= quest.target;
-        return (
-          <div key={quest.id} className={`pinned-quest-item ${complete ? 'complete' : ''}`}>
-            <div className="pinned-quest-name">{quest.name}</div>
-            <div className="pinned-quest-bar">
-              <div className="pinned-quest-bar-fill" style={{ width: `${pct}%` }} />
-            </div>
-            <div className="pinned-quest-count">
-              {formatNumber(Math.min(progress, quest.target))}/{formatNumber(quest.target)}
-              {complete && ' \u2713'}
-            </div>
-          </div>
-        );
-      })}
+    <div className="accepted-quests-panel">
+      <div className="accepted-quests-header" onClick={() => setExpanded(!expanded)}>
+        <span>Accepted Quests ({allQuests.length})</span>
+        <span className="accepted-quests-toggle">{expanded ? '\u25B2' : '\u25BC'}</span>
+      </div>
+
+      {relevantQuests.length > 0 && !expanded && (
+        <div className="accepted-quests-hint">
+          {relevantQuests.length} quest{relevantQuests.length > 1 ? 's' : ''} relevant to this region
+        </div>
+      )}
+
+      {displayQuests.length > 0 && (
+        <div className="accepted-quests-list">
+          {displayQuests.map(quest => {
+            const isRelevant = relevantQuests.includes(quest);
+            const locIds = questLocationIds(quest);
+            const matchingLocs = locIds.filter(id => locationIds.has(id));
+            const matchingNames = matchingLocs.map(id => {
+              const loc = locations.find(l => l.id === id);
+              return loc ? loc.name : id;
+            });
+
+            // Progress
+            let pct = 0;
+            let progressText = '';
+            let complete = false;
+
+            if (quest.compound && quest.subquests) {
+              const dailyIds = getActiveDailyTasks(now, playerLevel).map(q => q.id);
+              const progressData = dailyIds.includes(quest.id) ? tasks.dailyProgress : tasks.weeklyProgress;
+              const { completed, total } = getCompoundQuestProgress(quest, progressData);
+              pct = Math.floor((completed / total) * 100);
+              progressText = `${completed}/${total} objectives`;
+              complete = completed === total;
+            } else if (quest.itemRequirements && quest.itemRequirements.length > 0) {
+              const inv = playerInventory || [];
+              const fulfilled = quest.itemRequirements.filter(req =>
+                inv.some(item => item.name === req.itemName && item.foundLocation === req.locationId)
+              ).length;
+              pct = Math.floor((fulfilled / quest.itemRequirements.length) * 100);
+              progressText = `${fulfilled}/${quest.itemRequirements.length} items`;
+              complete = fulfilled === quest.itemRequirements.length;
+            } else if (quest.stat && quest.target > 0) {
+              const progress = getQuestProgress(stats, quest.id, quest.stat, tasks.questBaselines);
+              pct = Math.min(100, Math.floor((progress / quest.target) * 100));
+              progressText = `${formatNumber(Math.min(progress, quest.target))}/${formatNumber(quest.target)}`;
+              complete = progress >= quest.target;
+            }
+
+            return (
+              <div key={quest.id} className={`accepted-quest-item ${complete ? 'complete' : ''} ${isRelevant ? 'relevant' : ''}`}>
+                <div className="accepted-quest-top">
+                  <div className="accepted-quest-name">{quest.name}</div>
+                  <div className="accepted-quest-source">{quest.source}</div>
+                </div>
+                {matchingNames.length > 0 && (
+                  <div className="accepted-quest-location">
+                    Here: {matchingNames.join(', ')}
+                  </div>
+                )}
+                <div className="accepted-quest-bar">
+                  <div className="accepted-quest-bar-fill" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="accepted-quest-count">
+                  {progressText}
+                  {complete && ' \u2713'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!expanded && otherQuests.length > 0 && (
+        <div className="accepted-quests-more" onClick={() => setExpanded(true)}>
+          +{otherQuests.length} more quest{otherQuests.length > 1 ? 's' : ''}
+        </div>
+      )}
     </div>
   );
 }
@@ -329,11 +434,9 @@ export default function LocationsScreen({
   isArenaRegion,
   onSelect,
   onBack,
-  pinnedQuests,
   stats,
   tasks,
   player,
-  onRest,
   onArenaStartDuel,
   onArenaGauntletContinue,
   onArenaGauntletCashout,
@@ -342,6 +445,7 @@ export default function LocationsScreen({
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState('normal');
+  const [now] = useState(() => Date.now());
   const requiredEnergy = energyCost ?? 0;
   const availableEnergy = energy ?? requiredEnergy;
   const maxEnergy = energyMax ?? Math.max(availableEnergy, requiredEnergy, 1);
@@ -373,8 +477,15 @@ export default function LocationsScreen({
         Energy {availableEnergy}/{maxEnergy} · -{requiredEnergy} per expedition
       </div>
 
-      {pinnedQuests && stats && tasks && (
-        <PinnedQuestTracker pinnedQuests={pinnedQuests} stats={stats} tasks={tasks} playerLevel={playerLevel} />
+      {tasks && stats && (
+        <AcceptedQuestsPanel
+          tasks={tasks}
+          stats={stats}
+          playerLevel={playerLevel}
+          locations={locations}
+          playerInventory={player?.inventory}
+          now={now}
+        />
       )}
 
       {hasSpecial && (
