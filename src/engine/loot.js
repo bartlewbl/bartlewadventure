@@ -23,7 +23,10 @@ function gaussianWeight(itemLevel, targetLevel) {
 
 function pickFromLibrary(pool, targetLevel) {
   if (!pool || pool.length === 0) return null;
-  const weighted = pool.map(item => {
+  // Hard cap: never pick items more than 5 levels above target
+  const capped = pool.filter(item => item.level <= targetLevel + 5);
+  const source = capped.length > 0 ? capped : pool;
+  const weighted = source.map(item => {
     const levelWeight = gaussianWeight(item.level, targetLevel);
     return { item, weight: (item.weight || 1) * levelWeight };
   });
@@ -219,9 +222,13 @@ export function generateRewardItem(spec, playerLevel) {
 
   // Filter to matching rarity candidates near the player's level
   const candidates = pool.filter(t => t.rarity === spec.rarity && t.level <= effectiveLevel + 3);
-  const source = candidates.length > 0
-    ? candidates
-    : pool.filter(t => t.rarity === spec.rarity);
+  let source = candidates;
+  if (source.length === 0) {
+    source = pool.filter(t => t.rarity === spec.rarity && t.level <= effectiveLevel + 5);
+  }
+  if (source.length === 0) {
+    source = pool.filter(t => t.rarity === spec.rarity);
+  }
   if (source.length === 0) return generateItem(spec.type, effectiveLevel);
 
   const template = source[Math.floor(Math.random() * source.length)];
@@ -400,7 +407,7 @@ export function getArmourerStock(playerLevel, shopSeed, playerClass) {
       const def = template.baseDef > 0
         ? Math.max(0, Math.round(template.baseDef * baseLevelFactor * adaptFactor * rarityData.multiplier))
         : 0;
-      const effectiveLevel = Math.max(template.level, playerLevel);
+      const effectiveLevel = template.level;
       const buyPrice = Math.floor((atk + def) * 6 + effectiveLevel * 4 + rarityData.multiplier * 15);
       const passive = rollItemPassive(template.slot, template.rarity);
 
@@ -507,14 +514,14 @@ export function generateCraftedItem(templateId, playerLevel) {
   if (!template) return null;
 
   const rarityData = RARITY_LOOKUP[template.rarity] || RARITIES[0];
-  const levelFactor = 1 + Math.max(template.baseLevel, playerLevel) * 0.05;
+  const levelFactor = 1 + template.baseLevel * 0.05;
   const atk = template.baseAtk > 0
     ? Math.max(0, Math.round(template.baseAtk * levelFactor * rarityData.multiplier))
     : 0;
   const def = template.baseDef > 0
     ? Math.max(0, Math.round(template.baseDef * levelFactor * rarityData.multiplier))
     : 0;
-  const effectiveLevel = Math.max(template.baseLevel, playerLevel);
+  const effectiveLevel = template.baseLevel;
   const passive = rollItemPassive(template.slot, template.rarity);
 
   return {
@@ -672,7 +679,11 @@ export function openLootChest(chestId, playerLevel, playerClass) {
     let candidates = gearPool.filter(t =>
       allowedNames.has(t.rarity) && t.level <= playerLevel + 3
     );
-    // Fallback: relax level constraint
+    // Fallback: relax level constraint but still cap at playerLevel + 5
+    if (candidates.length === 0) {
+      candidates = gearPool.filter(t => allowedNames.has(t.rarity) && t.level <= playerLevel + 5);
+    }
+    // Last resort: any rarity match (should rarely happen)
     if (candidates.length === 0) {
       candidates = gearPool.filter(t => allowedNames.has(t.rarity));
     }

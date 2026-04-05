@@ -154,5 +154,7 @@ Quest-driven mechanic in `data/fireRitualData.js` + `hooks/useGameState.js`:
 
 - Stat getters in combat.js check 30+ skill flags — always verify skill IDs match data/skills
 - Scaling formulas have a hardcoded 0.5 multiplier on HP — don't remove it thinking it's a bug
-- Item generation uses Gaussian weighting (σ=4 above, σ=6 below player level) — items far above level are intentionally rare
+- Item generation uses Gaussian weighting (σ=4 above, σ=6 below player level) with a hard cap of +5 levels above target — items cannot exceed targetLevel + 5
+- Armourer shop and crafted items use template level as the equip requirement (not `Math.max(template.level, playerLevel)`)
+- Loot chest and daily reward fallbacks also cap item level at playerLevel + 5
 - Rarity multipliers affect both ATK and DEF on gear
