@@ -459,6 +459,11 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                 {item.healAmount > 0 && <span>Heal {item.healAmount}</span>}
                 {item.slot && <span className="tavern-shop-item-slot">{item.slot}</span>}
                 {item.level > 0 && <span>Lv{item.level}</span>}
+                {item.passive && (
+                  <span style={{ color: '#8f8', fontSize: '0.8em' }}>
+                    +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                  </span>
+                )}
               </div>
               {item.repLocked && (
                 <div className="tavern-shop-locked">Requires {REP_LEVELS.find(r => r.level === item.reqRep)?.label} reputation</div>
@@ -747,6 +752,11 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
                     <span className="enchant-v2-item-stats">
                       {item.atk > 0 && <span className="enchant-v2-stat atk">ATK {item.atk}</span>}
                       {item.def > 0 && <span className="enchant-v2-stat def">DEF {item.def}</span>}
+                      {item.passive && (
+                        <span style={{ color: '#8f8', fontSize: '0.8em' }}>
+                          +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                        </span>
+                      )}
                     </span>
                   </div>
                 </button>

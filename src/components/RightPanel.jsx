@@ -20,7 +20,7 @@ function ItemBadge({ item, selected, onClick }) {
       className={`barter-item-badge ${selected ? 'selected' : ''}`}
       style={{ borderColor: selected ? color : undefined }}
       onClick={onClick}
-      title={`${item.name} (${item.rarity})${item.atk ? ` ATK+${item.atk}` : ''}${item.def ? ` DEF+${item.def}` : ''}`}
+      title={`${item.name} (${item.rarity})${item.atk ? ` ATK+${item.atk}` : ''}${item.def ? ` DEF+${item.def}` : ''}${item.passive ? ` +${item.passive.value}${item.passive.format === 'pct' ? '%' : ''} ${item.passive.label}` : ''}`}
     >
       <span className="barter-item-name" style={{ color }}>{item.name}</span>
     </button>
