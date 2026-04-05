@@ -12,6 +12,7 @@ import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/loo
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
 import { TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_CROSS_EFFECTS, getRepLevel, FACTION_SKILLS, getUnlockedFactionSkills, RIVALRY_QUESTS } from '../data/tavernData';
+import { getRespecCost, CLASS_BASE_STATS, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, BOUNTIES, MERCENARIES, COSMETICS } from '../data/goldSinks';
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
@@ -177,6 +178,16 @@ function createInitialState() {
     previousRegionId: null,   // saved when entering arena so player can return
     activeRitualSite: null,   // current fire ritual site found during exploration
     waveDefense: null,        // { tier, currentWave, totalWaves, hpScale, atkScale, restHealPct, locationId }
+    // Gold sink features
+    bounties: {
+      active: [],       // [{ bountyId, baseline }]
+      completed: [],    // [bountyId, ...]
+    },
+    mercenary: null,    // { mercId, name, atkBonus, defBonus, battlesRemaining, rarity } or null
+    cosmetics: {
+      owned: [],        // [cosmeticId, ...]
+      equipped: {},     // { title: id|null, nameColor: id|null, frame: id|null }
+    },
   };
 }
 
@@ -414,6 +425,9 @@ function extractSaveData(state) {
     villageQuests: state.villageQuests,
     tavern: state.tavern,
     previousRegionId: state.previousRegionId || null,
+    bounties: state.bounties,
+    mercenary: state.mercenary,
+    cosmetics: state.cosmetics,
   };
 }
 
@@ -701,7 +715,7 @@ function gameReducer(state, action) {
   }
   switch (action.type) {
     case 'LOAD_SAVE': {
-      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests, tavern: savedTavern, previousRegionId: savedPreviousRegionId } = action.saveData || {};
+      const { player, screen, energy, lastEnergyUpdate, lastHpManaRegenUpdate, currentRegionId, stats, tasks, base: savedBase, pendingLevelUps: savedPending, discoveredItemLocations: savedDiscovered, pets: savedPets, villageQuests: savedVillageQuests, tavern: savedTavern, previousRegionId: savedPreviousRegionId, bounties: savedBounties, mercenary: savedMercenary, cosmetics: savedCosmetics } = action.saveData || {};
       const baseState = createInitialState();
       const regen = regenEnergy(
         energy ?? baseState.energy,
@@ -759,6 +773,9 @@ function gameReducer(state, action) {
         villageQuests: { ...baseState.villageQuests, ...savedVillageQuests },
         tavern: { ...baseState.tavern, ...savedTavern },
         previousRegionId: savedPreviousRegionId || null,
+        bounties: { ...baseState.bounties, ...savedBounties },
+        mercenary: savedMercenary || null,
+        cosmetics: { ...baseState.cosmetics, ...savedCosmetics },
       };
     }
 
@@ -6150,6 +6167,227 @@ function gameReducer(state, action) {
       };
     }
 
+    // ---- GOLD SINK: STAT RESPEC ----
+    case 'RESPEC_STATS': {
+      const cost = getRespecCost(state.player.level);
+      if (state.player.gold < cost) return { ...state, message: 'Not enough gold!' };
+      const cls = state.player.characterClass;
+      const baseStats = CLASS_BASE_STATS[cls];
+      if (!baseStats) return { ...state, message: 'No class selected!' };
+      const p = { ...state.player, gold: state.player.gold - cost };
+      // Reset stats to class base
+      for (const key of Object.keys(baseStats)) {
+        p[key] = baseStats[key];
+      }
+      p.hp = p.maxHp;
+      p.mana = p.maxMana;
+      // Generate pending level-ups for all levels gained (level 2 through current level)
+      const pendingLevels = [];
+      for (let lvl = 2; lvl <= p.level; lvl++) {
+        const offers = {
+          hpGain: 5 + Math.floor(lvl / 3),
+          manaGain: 3 + Math.floor(lvl / 4),
+          atkGain: 1 + Math.floor(lvl / 5),
+          defGain: 1 + Math.floor(lvl / 5),
+          charismaGain: 1,
+          wisdomGain: 1,
+          athleticsGain: 1,
+          speedGain: 1,
+          evasionGain: 1,
+          accuracyGain: 1,
+          resistanceGain: 1,
+          tenacityGain: 1,
+          aggressionGain: 1,
+          luckGain: 1,
+          fortitudeGain: 1,
+        };
+        pendingLevels.push({ level: lvl, offers, picks: lvl % 5 === 0 ? 3 : 2 });
+      }
+      let newStats = addStat(state.stats, 'goldSpent', cost);
+      let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', cost);
+      return {
+        ...state,
+        player: p,
+        pendingLevelUps: pendingLevels,
+        screen: pendingLevels.length > 0 ? 'stat-select' : state.screen,
+        stats: newStats,
+        tasks: newTasks,
+        message: `Stats reset! Redistributing ${pendingLevels.length} level-ups...`,
+      };
+    }
+
+    // ---- GOLD SINK: ITEM ENCHANTING ----
+    case 'ENCHANT_ITEM': {
+      const { item: enchantTarget, equippedSlot } = action;
+      if (!enchantTarget) return state;
+      const currentLevel = enchantTarget.enchantLevel || 0;
+      if (currentLevel >= MAX_ENCHANT_LEVEL) return { ...state, message: 'Item is already max enchanted!' };
+      const enchantCost = getEnchantCost(enchantTarget, currentLevel);
+      if (state.player.gold < enchantCost) return { ...state, message: 'Not enough gold!' };
+
+      const successRate = getEnchantSuccess(currentLevel);
+      const success = Math.random() < successRate;
+      const tier = ENCHANT_LEVELS[currentLevel];
+
+      let p = { ...state.player, gold: state.player.gold - enchantCost };
+      let newStats = addStat(state.stats, 'goldSpent', enchantCost);
+      let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', enchantCost);
+
+      if (success) {
+        const applyEnchant = (item) => ({
+          ...item,
+          enchantLevel: currentLevel + 1,
+          atk: (item.atk || 0) + tier.statBonus,
+          def: (item.def || 0) + tier.statBonus,
+          name: item.name.replace(/ \+\d+$/, '') + ` ${tier.label}`,
+        });
+
+        if (equippedSlot) {
+          const equip = p.equipment[equippedSlot];
+          if (equip && equip.id === enchantTarget.id) {
+            p = { ...p, equipment: { ...p.equipment, [equippedSlot]: applyEnchant(equip) } };
+          }
+        } else {
+          p = { ...p, inventory: p.inventory.map(i => i.id === enchantTarget.id ? applyEnchant(i) : i) };
+        }
+        return { ...state, player: p, stats: newStats, tasks: newTasks, message: `Enchantment success! Item enhanced to ${tier.label}!` };
+      } else {
+        return { ...state, player: p, stats: newStats, tasks: newTasks, message: 'Enchantment failed! The magic fizzled away...' };
+      }
+    }
+
+    // ---- GOLD SINK: BOUNTY BOARD ----
+    case 'ACCEPT_BOUNTY': {
+      const { bountyId } = action;
+      const bounty = BOUNTIES.find(b => b.id === bountyId);
+      if (!bounty) return state;
+      const bounties = state.bounties || { active: [], completed: [] };
+      if (bounties.completed.includes(bountyId)) return { ...state, message: 'Bounty already completed!' };
+      if (bounties.active.some(b => b.bountyId === bountyId)) return { ...state, message: 'Bounty already active!' };
+      if (state.player.gold < bounty.fee) return { ...state, message: 'Not enough gold!' };
+      if (state.player.level < bounty.minLevel) return state;
+      let newStats = addStat(state.stats, 'goldSpent', bounty.fee);
+      let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', bounty.fee);
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - bounty.fee },
+        bounties: {
+          ...bounties,
+          active: [...bounties.active, { bountyId, baseline: state.stats.monstersKilled || 0 }],
+        },
+        stats: newStats,
+        tasks: newTasks,
+        message: `Bounty accepted: ${bounty.name}!`,
+      };
+    }
+
+    case 'CLAIM_BOUNTY': {
+      const { bountyId } = action;
+      const bounty = BOUNTIES.find(b => b.id === bountyId);
+      if (!bounty) return state;
+      const bounties = state.bounties || { active: [], completed: [] };
+      const active = bounties.active.find(b => b.bountyId === bountyId);
+      if (!active) return state;
+      const progress = (state.stats.monstersKilled || 0) - active.baseline;
+      if (progress < bounty.killTarget) return { ...state, message: 'Bounty not yet complete!' };
+
+      const p = { ...state.player, gold: state.player.gold + bounty.goldReward, exp: state.player.exp + bounty.expReward };
+      // Check for level up from exp reward
+      let newStats = addStat(state.stats, 'goldEarned', bounty.goldReward);
+      let newTasks = incrementTaskProgress(state.tasks, 'goldEarned', bounty.goldReward);
+      return {
+        ...state,
+        player: p,
+        bounties: {
+          active: bounties.active.filter(b => b.bountyId !== bountyId),
+          completed: [...bounties.completed, bountyId],
+        },
+        stats: newStats,
+        tasks: newTasks,
+        message: `Bounty complete! +${bounty.goldReward}g +${bounty.expReward} XP!`,
+      };
+    }
+
+    // ---- GOLD SINK: MERCENARY HIRE ----
+    case 'HIRE_MERCENARY': {
+      const { mercId } = action;
+      const merc = MERCENARIES.find(m => m.id === mercId);
+      if (!merc) return state;
+      if (state.mercenary) return { ...state, message: 'You already have a mercenary hired!' };
+      if (state.player.gold < merc.cost) return { ...state, message: 'Not enough gold!' };
+      if (state.player.level < merc.minLevel) return state;
+      let newStats = addStat(state.stats, 'goldSpent', merc.cost);
+      let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', merc.cost);
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - merc.cost },
+        mercenary: {
+          mercId: merc.id,
+          name: merc.name,
+          atkBonus: merc.atkBonus,
+          defBonus: merc.defBonus,
+          battlesRemaining: merc.duration,
+          rarity: merc.rarity,
+        },
+        stats: newStats,
+        tasks: newTasks,
+        message: `Hired ${merc.name} for ${merc.duration} battles!`,
+      };
+    }
+
+    // ---- GOLD SINK: GAMBLING ----
+    case 'GAMBLE': {
+      const { wager, payout } = action;
+      if (state.player.gold < wager) return { ...state, message: 'Not enough gold!' };
+      const net = payout - wager;
+      let newStats = { ...state.stats };
+      let newTasks = { ...state.tasks };
+      newStats = addStat(newStats, 'goldSpent', wager);
+      newTasks = incrementTaskProgress(newTasks, 'goldSpent', wager);
+      if (payout > 0) {
+        newStats = addStat(newStats, 'goldEarned', payout);
+        newTasks = incrementTaskProgress(newTasks, 'goldEarned', payout);
+      }
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold + net },
+        stats: newStats,
+        tasks: newTasks,
+      };
+    }
+
+    // ---- GOLD SINK: COSMETIC SHOP ----
+    case 'BUY_COSMETIC': {
+      const { cosmeticId } = action;
+      const allCosmetics = [...COSMETICS.titles, ...COSMETICS.nameColors, ...COSMETICS.frames];
+      const cosmetic = allCosmetics.find(c => c.id === cosmeticId);
+      if (!cosmetic) return state;
+      const cs = state.cosmetics || { owned: [], equipped: {} };
+      if (cs.owned.includes(cosmeticId)) return { ...state, message: 'Already owned!' };
+      if (state.player.gold < cosmetic.cost) return { ...state, message: 'Not enough gold!' };
+      let newStats = addStat(state.stats, 'goldSpent', cosmetic.cost);
+      let newTasks = incrementTaskProgress(state.tasks, 'goldSpent', cosmetic.cost);
+      return {
+        ...state,
+        player: { ...state.player, gold: state.player.gold - cosmetic.cost },
+        cosmetics: { ...cs, owned: [...cs.owned, cosmeticId] },
+        stats: newStats,
+        tasks: newTasks,
+        message: `Purchased ${cosmetic.name}!`,
+      };
+    }
+
+    case 'EQUIP_COSMETIC': {
+      const { cosmeticId, cosmeticType } = action;
+      const cs = state.cosmetics || { owned: [], equipped: {} };
+      // Null means unequip
+      if (cosmeticId && !cs.owned.includes(cosmeticId)) return state;
+      return {
+        ...state,
+        cosmetics: { ...cs, equipped: { ...cs.equipped, [cosmeticType]: cosmeticId } },
+      };
+    }
+
     default:
       return state;
   }
@@ -6410,7 +6648,14 @@ function handleVictory(state) {
       totalWaves: wd?.totalWaves || 0,
       waveDefenseComplete: wd ? wd.currentWave >= wd.totalWaves : false,
       waveTier: wd?.tier || null,
+      mercenaryHelped: !!state.mercenary,
     },
+    // Decrement mercenary battles
+    mercenary: state.mercenary
+      ? state.mercenary.battlesRemaining <= 1
+        ? null  // Contract expired
+        : { ...state.mercenary, battlesRemaining: state.mercenary.battlesRemaining - 1 }
+      : null,
   };
 }
 
@@ -6655,8 +6900,8 @@ export function useGameState(isLoggedIn) {
   const saveTimerRef = useRef(null);
   const lastSaveRef = useRef(null);
 
-  const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle), [state.player, state.battle]);
-  const playerDef = useMemo(() => getPlayerDef(state.player, state.battle), [state.player, state.battle]);
+  const playerAtk = useMemo(() => getPlayerAtk(state.player, state.battle) + (state.mercenary?.atkBonus || 0), [state.player, state.battle, state.mercenary]);
+  const playerDef = useMemo(() => getPlayerDef(state.player, state.battle) + (state.mercenary?.defBonus || 0), [state.player, state.battle, state.mercenary]);
 
   // Auto-save to server on every meaningful state change (debounced)
   useEffect(() => {
@@ -6683,7 +6928,7 @@ export function useGameState(isLoggedIn) {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pets, state.pendingLevelUps, state.discoveredItemLocations, isLoggedIn]);
+  }, [state.player, state.screen, state.energy, state.lastEnergyUpdate, state.stats, state.tasks, state.base, state.pets, state.pendingLevelUps, state.discoveredItemLocations, state.bounties, state.mercenary, state.cosmetics, isLoggedIn]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -6816,6 +7061,15 @@ export function useGameState(isLoggedIn) {
     fireRitualLight: () => dispatch({ type: 'FIRE_RITUAL_LIGHT' }),
     fireRitualDefend: () => dispatch({ type: 'FIRE_RITUAL_DEFEND' }),
     fireRitualLeave: () => dispatch({ type: 'FIRE_RITUAL_LEAVE' }),
+    // Gold sink actions
+    respecStats: () => dispatch({ type: 'RESPEC_STATS' }),
+    enchantItem: (item, equippedSlot) => dispatch({ type: 'ENCHANT_ITEM', item, equippedSlot }),
+    acceptBounty: (bountyId) => dispatch({ type: 'ACCEPT_BOUNTY', bountyId }),
+    claimBounty: (bountyId) => dispatch({ type: 'CLAIM_BOUNTY', bountyId }),
+    hireMercenary: (mercId) => dispatch({ type: 'HIRE_MERCENARY', mercId }),
+    gamble: (wager, payout) => dispatch({ type: 'GAMBLE', wager, payout }),
+    buyCosmetic: (cosmeticId) => dispatch({ type: 'BUY_COSMETIC', cosmeticId }),
+    equipCosmetic: (cosmeticId, cosmeticType) => dispatch({ type: 'EQUIP_COSMETIC', cosmeticId, cosmeticType }),
   }), []);
 
   return { state, actions, playerAtk, playerDef };
