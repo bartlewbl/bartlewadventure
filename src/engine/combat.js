@@ -6,6 +6,16 @@ import { getTreeSkill } from '../data/skillTrees';
 import { prob } from '../data/probabilityStore';
 import { getElementCounter, getElementWeakness } from './elements';
 
+// Sum a specific passive bonus from all equipped items
+// Returns total value for a given passive id (e.g. 'atkPct', 'goldBonus')
+export function getEquipPassiveTotal(player, passiveId) {
+  let total = 0;
+  for (const item of Object.values(player.equipment)) {
+    if (item?.passive?.id === passiveId) total += item.passive.value;
+  }
+  return total;
+}
+
 export function calcDamage(atk, def) {
   const base = Math.max(1, atk - def * 0.5);
   const variance = prob('combat.damageVarianceLow') + Math.random() * prob('combat.damageVarianceRange');
@@ -57,6 +67,11 @@ export function getPlayerAtk(player, battle) {
   // Titan's Grip (war_t13a): equipment ATK +8%
   if (playerHasSkill(player, 'war_t13a')) {
     atk += Math.floor(equipAtk * 0.08);
+  }
+  // Item passive: atkPct
+  const atkPctPassive = getEquipPassiveTotal(player, 'atkPct');
+  if (atkPctPassive > 0) {
+    atk = Math.floor(atk * (1 + atkPctPassive / 100));
   }
   const cls = getClassData(player);
   // Berserker Rage: +10% ATK when below 40% HP
@@ -201,6 +216,11 @@ export function getPlayerDef(player, battle) {
   for (const item of Object.values(player.equipment)) {
     if (item) def += (item.def || 0);
   }
+  // Item passive: defPct
+  const defPctPassive = getEquipPassiveTotal(player, 'defPct');
+  if (defPctPassive > 0) {
+    def = Math.floor(def * (1 + defPctPassive / 100));
+  }
   // Armor Mastery: equipment DEF +5%
   if (playerHasSkill(player, 'war_t7a')) {
     let equipDef = 0;
@@ -258,6 +278,8 @@ export function getPlayerDodgeChance(player) {
   chance += athletics * 0.005;
   if (playerHasSkill(player, 'thf_t1a')) chance += prob('passive.shadowStep');
   if (playerHasSkill(player, 'thf_t3a')) chance += prob('passive.evasionMastery');
+  // Item passive: dodgeChance
+  chance += getEquipPassiveTotal(player, 'dodgeChance') / 100;
   return chance;
 }
 
@@ -265,6 +287,8 @@ export function getBattleMaxHp(player) {
   let maxHp = player.maxHp;
   if (playerHasSkill(player, 'war_t3a')) maxHp = Math.floor(maxHp * 1.05);
   if (playerHasSkill(player, 'nec_t7a')) maxHp = Math.floor(maxHp * 1.04);
+  // Item passive: hpFlat
+  maxHp += getEquipPassiveTotal(player, 'hpFlat');
   // Blood Oath (brs_t15a): -10% max HP permanently
   if (playerHasSkill(player, 'brs_t15a')) maxHp = Math.floor(maxHp * 0.90);
   // Archmage (mag_t15a): -15% max HP
@@ -333,6 +357,8 @@ export function getPlayerCritChance(player) {
   let chance = prob('combat.baseCritChance');
   chance += (player.athletics || 0) * prob('combat.critPerAthletics');
   chance += (player.wisdom || 0) * prob('combat.critPerWisdom');
+  // Item passive: critChance
+  chance += getEquipPassiveTotal(player, 'critChance') / 100;
   return Math.min(prob('combat.critCap'), chance);
 }
 
@@ -390,6 +416,8 @@ export function getPlayerSpeed(player, battle) {
   // Thief class: innate +2 speed
   const cls = getClassData(player);
   if (cls?.id === 'thief') speed += 2;
+  // Item passive: speed
+  speed += getEquipPassiveTotal(player, 'speed');
   // Berserker rage: +3 speed when below 40% HP
   if (cls?.passive === 'Rage' && player.hp < player.maxHp * 0.4) speed += 3;
   // Speed debuff from boss gimmick
@@ -441,6 +469,8 @@ export function getPlayerEvasion(player, battle) {
   for (const item of Object.values(player.equipment)) {
     if (item?.evasion) eva += item.evasion;
   }
+  // Item passive: evasion
+  eva += getEquipPassiveTotal(player, 'evasion');
   const cls = getClassData(player);
   if (cls?.id === 'thief') eva += 3;
   if (battle?.evasionBuff) eva += battle.evasionBuff;
@@ -452,6 +482,8 @@ export function getPlayerAccuracy(player, battle) {
   for (const item of Object.values(player.equipment)) {
     if (item?.accuracy) acc += item.accuracy;
   }
+  // Item passive: accuracy
+  acc += getEquipPassiveTotal(player, 'accuracy');
   if (battle?.accuracyBuff) acc += battle.accuracyBuff;
   return Math.max(0, acc);
 }
@@ -470,6 +502,8 @@ export function getPlayerResistance(player, battle) {
   for (const item of Object.values(player.equipment)) {
     if (item?.resistance) res += item.resistance;
   }
+  // Item passive: resistance
+  res += getEquipPassiveTotal(player, 'resistance');
   if (battle?.resistanceBuff) res += battle.resistanceBuff;
   return Math.max(0, res);
 }
@@ -486,6 +520,8 @@ export function getPlayerTenacity(player) {
   for (const item of Object.values(player.equipment)) {
     if (item?.tenacity) ten += item.tenacity;
   }
+  // Item passive: tenacity
+  ten += getEquipPassiveTotal(player, 'tenacity');
   const cls = getClassData(player);
   if (cls?.id === 'warrior') ten += 3;
   return Math.max(0, ten);
@@ -504,6 +540,8 @@ export function getPlayerAggression(player) {
   for (const item of Object.values(player.equipment)) {
     if (item?.aggression) agg += item.aggression;
   }
+  // Item passive: aggression
+  agg += getEquipPassiveTotal(player, 'aggression');
   const cls = getClassData(player);
   if (cls?.id === 'berserker') agg += 3;
   return Math.max(0, agg);
@@ -526,6 +564,8 @@ export function getPlayerLuck(player) {
   for (const item of Object.values(player.equipment)) {
     if (item?.luck) lck += item.luck;
   }
+  // Item passive: luck
+  lck += getEquipPassiveTotal(player, 'luck');
   return Math.max(0, lck);
 }
 
@@ -550,6 +590,8 @@ export function getPlayerFortitude(player) {
   for (const item of Object.values(player.equipment)) {
     if (item?.fortitude) fort += item.fortitude;
   }
+  // Item passive: fortitude
+  fort += getEquipPassiveTotal(player, 'fortitude');
   const cls = getClassData(player);
   if (cls?.id === 'warrior') fort += 2;
   return Math.max(0, fort);

@@ -1,7 +1,7 @@
 // Item generation, loot tables, and shop logic
 // All item creation logic extracted from gameData.js
 
-import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS } from '../data/gameData';
+import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS, ITEM_PASSIVES, PASSIVE_RARITY_VALUES } from '../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem, TICKET_DROP_CONFIG, createTicketItem } from '../data/baseData';
 import { CHEST_LOOKUP, RARITY_ORDER, CHEST_MATERIAL_POOLS } from '../data/lootChests';
 import { uid, pickWeighted, seededRandom, seededPickWeighted } from './utils';
@@ -36,6 +36,29 @@ function pickFromLibrary(pool, targetLevel) {
   return weighted[weighted.length - 1].item;
 }
 
+// Roll a random passive for Uncommon+ gear based on slot and rarity
+function rollItemPassive(slot, rarity) {
+  if (rarity === 'Common') return null;
+  const passivePool = ITEM_PASSIVES[slot];
+  if (!passivePool || passivePool.length === 0) return null;
+  const ranges = PASSIVE_RARITY_VALUES[rarity];
+  if (!ranges) return null;
+
+  // Weighted pick from the passive pool
+  const totalWeight = passivePool.reduce((s, p) => s + p.weight, 0);
+  let roll = Math.random() * totalWeight;
+  let picked = passivePool[passivePool.length - 1];
+  for (const p of passivePool) {
+    roll -= p.weight;
+    if (roll <= 0) { picked = p; break; }
+  }
+
+  const range = ranges[picked.format];
+  const value = range[0] + Math.floor(Math.random() * (range[1] - range[0] + 1));
+
+  return { id: picked.id, label: picked.label, format: picked.format, value };
+}
+
 function buildGearDrop(template, monsterLevel, dropType) {
   const rarityData = RARITY_LOOKUP[template.rarity] || RARITIES[0];
   const baseLevelFactor = 1 + template.level * 0.05;
@@ -48,6 +71,7 @@ function buildGearDrop(template, monsterLevel, dropType) {
     : 0;
   // Use the template level as the item's equip requirement level
   const effectiveLevel = template.level;
+  const passive = rollItemPassive(template.slot, template.rarity);
 
   return {
     id: uid(),
@@ -62,6 +86,7 @@ function buildGearDrop(template, monsterLevel, dropType) {
     def,
     icon: template.icon,
     classes: template.classes || null,
+    passive: passive || undefined,
     sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
   };
 }
@@ -309,6 +334,7 @@ export function getDailyFeaturedItems(playerLevel, shopSeed, playerClass) {
       : 0;
 
     const buyPrice = Math.floor((atk + def) * 8 + template.level * 6 + rarityData.multiplier * 20);
+    const passive = rollItemPassive(template.slot, template.rarity);
 
     featured.push({
       id: uid(),
@@ -323,6 +349,7 @@ export function getDailyFeaturedItems(playerLevel, shopSeed, playerClass) {
       def,
       icon: template.icon,
       classes: template.classes || null,
+      passive: passive || undefined,
       buyPrice,
       sellPrice: Math.max(10, Math.floor((atk + def) * 4 + template.level * 3 + rarityData.multiplier * 10)),
       stock: 1,
@@ -375,6 +402,7 @@ export function getArmourerStock(playerLevel, shopSeed, playerClass) {
         : 0;
       const effectiveLevel = Math.max(template.level, playerLevel);
       const buyPrice = Math.floor((atk + def) * 6 + effectiveLevel * 4 + rarityData.multiplier * 15);
+      const passive = rollItemPassive(template.slot, template.rarity);
 
       items.push({
         id: uid(),
@@ -389,6 +417,7 @@ export function getArmourerStock(playerLevel, shopSeed, playerClass) {
         def,
         icon: template.icon,
         classes: template.classes || null,
+        passive: passive || undefined,
         buyPrice,
         sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
         stock: 1,
@@ -486,6 +515,7 @@ export function generateCraftedItem(templateId, playerLevel) {
     ? Math.max(0, Math.round(template.baseDef * levelFactor * rarityData.multiplier))
     : 0;
   const effectiveLevel = Math.max(template.baseLevel, playerLevel);
+  const passive = rollItemPassive(template.slot, template.rarity);
 
   return {
     id: uid(),
@@ -500,6 +530,7 @@ export function generateCraftedItem(templateId, playerLevel) {
     def,
     icon: template.slot,
     classes: template.classes || null,
+    passive: passive || undefined,
     sellPrice: Math.max(10, Math.floor((atk + def) * 4 + effectiveLevel * 3 + rarityData.multiplier * 10)),
   };
 }

@@ -356,6 +356,11 @@ export default function TownScreen({ player, energy, energyCost, onRest, onEnter
                   <span className="town-featured-meta">
                     {item.rarity} &middot; Lv{item.level} &middot; {statLine(item)}
                   </span>
+                  {item.passive && (
+                    <span className="town-featured-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                      +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                    </span>
+                  )}
                 </div>
                 <button
                   className="btn btn-sm"

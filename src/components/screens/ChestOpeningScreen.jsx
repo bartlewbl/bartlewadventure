@@ -55,6 +55,11 @@ export default function ChestOpeningScreen({ pendingChest, chestResult, onOpen, 
                 </span>
                 {item.level && <span className="chest-item-level">Lv{item.level}</span>}
                 <span className="chest-item-stats">{itemStatLine(item)}</span>
+                {item.passive && (
+                  <span className="chest-item-passive" style={{ color: '#8f8', fontSize: '0.8em' }}>
+                    +{item.passive.value}{item.passive.format === 'pct' ? '%' : ''} {item.passive.label}
+                  </span>
+                )}
               </div>
             </div>
           ))}

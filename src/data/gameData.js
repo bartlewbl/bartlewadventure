@@ -2300,6 +2300,84 @@ export const RARITY_LOOKUP = RARITIES.reduce((acc, rarity) => {
   return acc;
 }, {});
 
+// ---- ITEM PASSIVES ----
+// Passive bonuses for Uncommon+ gear. Each passive has a display label, a stat key,
+// a format ('pct' for percentage, 'flat' for flat value), and per-rarity value ranges.
+// Only one passive is rolled per item. Values scale modestly with rarity.
+
+export const PASSIVE_RARITY_VALUES = {
+  // [min, max] per rarity — values are the raw numbers (pct passives display as "X%")
+  Uncommon:  { pct: [1, 2],  flat: [1, 2] },
+  Rare:      { pct: [2, 4],  flat: [2, 4] },
+  Epic:      { pct: [3, 6],  flat: [3, 6] },
+  Legendary: { pct: [5, 8],  flat: [5, 9] },
+};
+
+// Passives available per equipment slot
+export const ITEM_PASSIVES = {
+  weapon: [
+    { id: 'critChance',  label: 'Crit Chance',   format: 'pct', weight: 3 },
+    { id: 'lifeSteal',   label: 'Life Steal',     format: 'pct', weight: 2 },
+    { id: 'atkPct',      label: 'ATK',            format: 'pct', weight: 2 },
+    { id: 'aggression',  label: 'Aggression',     format: 'flat', weight: 1 },
+  ],
+  shield: [
+    { id: 'defPct',      label: 'DEF',            format: 'pct', weight: 3 },
+    { id: 'hpFlat',      label: 'Max HP',         format: 'flat', weight: 2 },
+    { id: 'fortitude',   label: 'Fortitude',      format: 'flat', weight: 2 },
+    { id: 'resistance',  label: 'Resistance',     format: 'flat', weight: 1 },
+  ],
+  helmet: [
+    { id: 'expBonus',    label: 'EXP Bonus',      format: 'pct', weight: 3 },
+    { id: 'defPct',      label: 'DEF',            format: 'pct', weight: 2 },
+    { id: 'hpFlat',      label: 'Max HP',         format: 'flat', weight: 2 },
+    { id: 'resistance',  label: 'Resistance',     format: 'flat', weight: 1 },
+  ],
+  armor: [
+    { id: 'defPct',      label: 'DEF',            format: 'pct', weight: 3 },
+    { id: 'hpFlat',      label: 'Max HP',         format: 'flat', weight: 3 },
+    { id: 'tenacity',    label: 'Tenacity',       format: 'flat', weight: 1 },
+    { id: 'fortitude',   label: 'Fortitude',      format: 'flat', weight: 1 },
+  ],
+  boots: [
+    { id: 'goldBonus',   label: 'Gold Bonus',     format: 'pct', weight: 3 },
+    { id: 'speed',       label: 'Speed',          format: 'flat', weight: 2 },
+    { id: 'dodgeChance', label: 'Dodge Chance',   format: 'pct', weight: 2 },
+    { id: 'evasion',     label: 'Evasion',        format: 'flat', weight: 1 },
+  ],
+  gloves: [
+    { id: 'critChance',  label: 'Crit Chance',    format: 'pct', weight: 3 },
+    { id: 'atkPct',      label: 'ATK',            format: 'pct', weight: 2 },
+    { id: 'accuracy',    label: 'Accuracy',       format: 'flat', weight: 2 },
+    { id: 'lifeSteal',   label: 'Life Steal',     format: 'pct', weight: 1 },
+  ],
+  belt: [
+    { id: 'hpFlat',      label: 'Max HP',         format: 'flat', weight: 3 },
+    { id: 'goldBonus',   label: 'Gold Bonus',     format: 'pct', weight: 2 },
+    { id: 'defPct',      label: 'DEF',            format: 'pct', weight: 2 },
+    { id: 'tenacity',    label: 'Tenacity',       format: 'flat', weight: 1 },
+  ],
+  cape: [
+    { id: 'dodgeChance', label: 'Dodge Chance',   format: 'pct', weight: 3 },
+    { id: 'atkPct',      label: 'ATK',            format: 'pct', weight: 2 },
+    { id: 'evasion',     label: 'Evasion',        format: 'flat', weight: 2 },
+    { id: 'speed',       label: 'Speed',          format: 'flat', weight: 1 },
+  ],
+  amulet: [
+    { id: 'expBonus',    label: 'EXP Bonus',      format: 'pct', weight: 2 },
+    { id: 'manaRegen',   label: 'Mana Regen',     format: 'flat', weight: 3 },
+    { id: 'resistance',  label: 'Resistance',     format: 'flat', weight: 2 },
+    { id: 'luck',        label: 'Luck',           format: 'flat', weight: 1 },
+  ],
+  accessory: [
+    { id: 'critChance',  label: 'Crit Chance',    format: 'pct', weight: 2 },
+    { id: 'goldBonus',   label: 'Gold Bonus',     format: 'pct', weight: 2 },
+    { id: 'luck',        label: 'Luck',           format: 'flat', weight: 2 },
+    { id: 'dodgeChance', label: 'Dodge Chance',   format: 'pct', weight: 1 },
+    { id: 'manaRegen',   label: 'Mana Regen',     format: 'flat', weight: 1 },
+  ],
+};
+
 // ---- POTION TIERS ----
 export const POTION_TIERS = [
   { name: 'Small Medkit', baseHeal: 35 },
