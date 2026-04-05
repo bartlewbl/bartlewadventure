@@ -585,6 +585,8 @@ export default function App() {
                 stats={state.stats}
                 onAcceptQuest={actions.tavernAcceptQuest}
                 onTurnInQuest={actions.tavernTurnInQuest}
+                onAcceptRivalryQuest={actions.tavernAcceptRivalryQuest}
+                onTurnInRivalryQuest={actions.tavernTurnInRivalryQuest}
                 onLearnFactionSkill={actions.tavernLearnFactionSkill}
                 onBuyItem={actions.tavernBuyItem}
                 onBack={actions.goToTown}

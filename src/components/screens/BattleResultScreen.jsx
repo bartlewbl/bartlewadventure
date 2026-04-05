@@ -93,6 +93,13 @@ export default function BattleResultScreen({ result, onContinue }) {
             {result.ticketDrop && (
               <ItemDropWindow item={result.ticketDrop} label="Region Ticket Found!" />
             )}
+            {result.tavernQuestDrops && result.tavernQuestDrops.map((item, i) => (
+              <div key={item.id || i} className="battle-result-quest-drop">
+                <div className="battle-result-quest-drop-label">Quest Item Found!</div>
+                <div className="battle-result-quest-drop-name" style={{ color: '#ffd700' }}>{item.name}</div>
+                <div className="battle-result-quest-drop-desc">{item.desc}</div>
+              </div>
+            ))}
             {!result.droppedItem && result.lostItemName && (
               <div className="rarity-common">
                 Pack full: {result.lostItemName} slipped away.
