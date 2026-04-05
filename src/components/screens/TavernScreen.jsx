@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS, RIVALRY_QUESTS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
-import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, DEALER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
+import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel, NPC_BOUNTIES, NPC_MERCENARIES, ENCHANTER_NPC, ENCHANT_LEVELS, getEnchantCost, getEnchantSuccess, MAX_ENCHANT_LEVEL, getRespecCost } from '../../data/goldSinks';
 
 function NpcSprite({ npcId, scale = 4 }) {
   const canvasRef = useRef(null);
@@ -58,8 +58,12 @@ const EMBER_TABS = [
   { id: 'enchant', label: 'Enchant' },
 ];
 
-const DEALER_TABS = [
+const MIRA_TABS = [
   { id: 'talk', label: 'Talk' },
+  { id: 'quests', label: 'Quests' },
+  { id: 'bounties', label: 'Bounties' },
+  { id: 'faction', label: 'Faction' },
+  { id: 'shop', label: 'Shop' },
   { id: 'gamble', label: 'Gamble' },
 ];
 
@@ -69,8 +73,8 @@ const GAMBLING_GAMES = [
   { id: 'wheel', label: 'Wheel of Fortune' },
 ];
 
-// Combined NPC list: original tavern NPCs + the enchanter + the dealer
-const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC, DEALER_NPC];
+// Combined NPC list: original tavern NPCs + the enchanter
+const ALL_TAVERN_NPCS = [...TAVERN_NPCS, ENCHANTER_NPC];
 
 function EmberSplash() {
   return (
@@ -182,9 +186,9 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
   const tav = tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
   const activeNpc = ALL_TAVERN_NPCS.find(n => n.id === activeNpcId);
   const isEmber = activeNpcId === 'ember';
-  const isDealer = activeNpcId === 'dealer';
-  const isRegularNpc = activeNpc && !isEmber && !isDealer;
-  const activeTabs = isEmber ? EMBER_TABS : isDealer ? DEALER_TABS : NPC_TABS;
+  const isMira = activeNpcId === 'mira';
+  const isRegularNpc = activeNpc && !isEmber;
+  const activeTabs = isEmber ? EMBER_TABS : isMira ? MIRA_TABS : NPC_TABS;
   const npcRep = activeNpcId ? (tav.reputation[activeNpcId] || 0) : 0;
   const npcRepLevel = getRepLevel(npcRep).level;
 
@@ -1188,50 +1192,17 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
           const rep = tav.reputation[npc.id] || 0;
           const repInfo = getRepLevel(rep);
           const isEnchanter = npc.id === 'ember';
-          const isGambler = npc.id === 'dealer';
-          const isSpecialNpc = isEnchanter || isGambler;
           return (
             <button
               key={npc.id}
               className={`tavern-npc-card ${activeNpcId === npc.id ? 'active' : ''}`}
               onClick={() => handleSelectNpc(npc.id)}
             >
-              {!isSpecialNpc && <NpcSprite npcId={npc.id} scale={3} />}
-              {isEnchanter && (
-                <svg viewBox="0 0 32 32" className="tavern-npc-ember-mini">
-                  <circle cx="16" cy="12" r="8" fill="#c44000" />
-                  <circle cx="16" cy="13" r="6" fill="#f0b888" />
-                  <circle cx="13" cy="12" r="1" fill="#ff7043" />
-                  <circle cx="19" cy="12" r="1" fill="#ff7043" />
-                  <path d="M14 15 Q16 17 18 15" stroke="#c47060" strokeWidth="0.8" fill="none" />
-                  <path d="M10 20 Q13 18 16 18 Q19 18 22 20 L24 28 L8 28Z" fill="#3a1a50" />
-                  <circle cx="16" cy="26" r="2" fill="#ffd700" opacity="0.4">
-                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
-                  </circle>
-                </svg>
-              )}
-              {isGambler && (
-                <svg viewBox="0 0 32 32" className="tavern-npc-dealer-mini">
-                  <circle cx="16" cy="11" r="7" fill="#2a2a3e" />
-                  <circle cx="16" cy="13" r="6" fill="#d4a574" />
-                  <circle cx="13" cy="12" r="1" fill="#1a1a2e" />
-                  <circle cx="19" cy="12" r="1" fill="#1a1a2e" />
-                  <path d="M14 15 Q16 16 18 15" stroke="#a0806a" strokeWidth="0.8" fill="none" />
-                  <rect x="10" y="6" width="12" height="5" rx="2" fill="#1a1a2e" />
-                  <rect x="11" y="10" width="10" height="1" fill="#ffd700" />
-                  <path d="M10 20 Q13 18 16 18 Q19 18 22 20 L24 28 L8 28Z" fill="#1a2a1a" />
-                  <circle cx="14" cy="24" r="1.5" fill="#ffd700" opacity="0.5">
-                    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  <circle cx="18" cy="22" r="1" fill="#ff6b6b" opacity="0.5">
-                    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="1.5s" repeatCount="indefinite" />
-                  </circle>
-                </svg>
-              )}
+              <NpcSprite npcId={npc.id} scale={3} />
               <span className="tavern-npc-name" style={{ color: npc.color }}>{npc.name}</span>
               <span className="tavern-npc-role">{npc.role}</span>
-              {!isSpecialNpc && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
-              {!isSpecialNpc && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
+              {!isEnchanter && FACTIONS[npc.id] && <span className="tavern-npc-faction">{FACTIONS[npc.id].icon} {FACTIONS[npc.id].name}</span>}
+              {!isEnchanter && <span className="tavern-npc-rep" style={{ color: npc.color }}>{repInfo.label}</span>}
             </button>
           );
         })}
@@ -1240,8 +1211,8 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
       {/* Active NPC panel */}
       {activeNpc && (
         <div className="tavern-conversation">
-          <div className={`tavern-conv-header ${isEmber ? 'ember-conv-header' : ''}`}>
-            {isEmber ? <EmberSplash /> : <NpcSprite npcId={activeNpc.id} scale={5} />}
+          <div className="tavern-conv-header">
+            <NpcSprite npcId={activeNpc.id} scale={5} />
             <div className="tavern-conv-info">
               <div className="tavern-conv-name" style={{ color: activeNpc.color }}>{activeNpc.name}</div>
               <div className="tavern-conv-role">{activeNpc.role}</div>
@@ -1272,7 +1243,7 @@ export default function TavernScreen({ tavern, player, stats, bounties, mercenar
             {activeTab === 'faction' && isRegularNpc && renderMercenaries()}
             {activeTab === 'shop' && isRegularNpc && renderShop()}
             {activeTab === 'enchant' && isEmber && renderEnchant()}
-            {activeTab === 'gamble' && isDealer && renderGambling()}
+            {activeTab === 'gamble' && isMira && renderGambling()}
           </div>
         </div>
       )}

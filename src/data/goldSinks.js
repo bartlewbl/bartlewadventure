@@ -174,35 +174,6 @@ export const ENCHANTER_NPC = {
   ],
 };
 
-// ---- DEALER NPC (gambling in tavern) ----
-export const DEALER_NPC = {
-  id: 'dealer',
-  name: 'Rattlebone Jack',
-  role: 'Dealer',
-  color: '#ffd700',
-  greeting: "Step right up, friend. The dice are hot, the coins are cold, and the wheel waits for no one. What's your poison?",
-  topics: [
-    {
-      id: 'odds',
-      label: 'What are the odds?',
-      lines: [
-        "Dice: bet over or under 7 on a 2d6 roll. Land exactly 7? That's mine. Otherwise, it's a clean double-or-nothing.",
-        "Coin flip: call heads or tails. Simple as it gets. Almost fair, too.",
-        "The Wheel? Now that's where the real thrill is. Could walk away with ten times your wager... or nothing at all.",
-      ],
-    },
-    {
-      id: 'backstory',
-      label: "Who are you?",
-      lines: [
-        "They call me Rattlebone Jack. Been running games since before Grog opened this dump.",
-        "I used to deal cards in the Undercity. Lost an eye and three fingers down there. Tavern life suits me better.",
-        "Don't worry about me cheating — Grog would break my remaining fingers. The house edge is built into the games.",
-      ],
-    },
-  ],
-};
-
 // ---- GAMBLING / DICE GAME (in tavern) ----
 export const DICE_WAGERS = [25, 50, 100, 250, 500, 1000];
 
