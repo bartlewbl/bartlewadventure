@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { TAVERN_NPCS, TAVERN_QUESTS, TAVERN_SHOP_UNLOCKS, REP_LEVELS, getRepLevel, FACTIONS, FACTION_SKILLS, RIVALRY_QUESTS } from '../../data/tavernData';
 import { SPRITES, drawSprite } from '../../data/sprites';
+import { DICE_WAGERS, COIN_FLIP_WAGERS, WHEEL_WAGERS, WHEEL_SEGMENTS, rollDice, flipCoin, spinWheel } from '../../data/goldSinks';
 
 function NpcSprite({ npcId, scale = 4 }) {
   const canvasRef = useRef(null);
@@ -51,11 +52,25 @@ const TABS = [
   { id: 'shop', label: 'Shop' },
 ];
 
-export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onAcceptRivalryQuest, onTurnInRivalryQuest, onLearnFactionSkill, onBuyItem, onBack }) {
+const GAMBLING_GAMES = [
+  { id: 'dice', label: 'Dice (Over/Under)' },
+  { id: 'coin', label: 'Coin Flip' },
+  { id: 'wheel', label: 'Wheel of Fortune' },
+];
+
+export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onTurnInQuest, onAcceptRivalryQuest, onTurnInRivalryQuest, onLearnFactionSkill, onBuyItem, onGamble, onBack }) {
   const [activeNpcId, setActiveNpcId] = useState(null);
   const [activeTab, setActiveTab] = useState('talk');
   const [activeTopic, setActiveTopic] = useState(null);
   const [lineIndex, setLineIndex] = useState(0);
+  const [gamblingGame, setGamblingGame] = useState('dice');
+  const [diceWager, setDiceWager] = useState(DICE_WAGERS[0]);
+  const [diceBet, setDiceBet] = useState('over'); // 'over' or 'under'
+  const [coinWager, setCoinWager] = useState(COIN_FLIP_WAGERS[0]);
+  const [coinBet, setCoinBet] = useState('heads');
+  const [wheelWager, setWheelWager] = useState(WHEEL_WAGERS[0]);
+  const [gamblingResult, setGamblingResult] = useState(null);
+  const [isRolling, setIsRolling] = useState(false);
 
   const tav = tavern || { reputation: {}, acceptedQuests: [], completedQuests: [], learnedFactionSkills: [], shopPurchases: {} };
   const activeNpc = TAVERN_NPCS.find(n => n.id === activeNpcId);
@@ -445,6 +460,169 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
     );
   };
 
+  // ---- GAMBLING HALL ----
+  const handleDiceRoll = () => {
+    if (isRolling || player.gold < diceWager) return;
+    setIsRolling(true);
+    setGamblingResult(null);
+    setTimeout(() => {
+      const result = rollDice();
+      const won = (diceBet === 'over' && result.total > 7) || (diceBet === 'under' && result.total < 7);
+      const payout = won ? diceWager * 2 : 0;
+      setGamblingResult({ type: 'dice', ...result, won, payout, wager: diceWager });
+      onGamble(diceWager, payout);
+      setIsRolling(false);
+    }, 600);
+  };
+
+  const handleCoinFlip = () => {
+    if (isRolling || player.gold < coinWager) return;
+    setIsRolling(true);
+    setGamblingResult(null);
+    setTimeout(() => {
+      const result = flipCoin();
+      const won = result === coinBet;
+      const payout = won ? coinWager * 2 : 0;
+      setGamblingResult({ type: 'coin', result, won, payout, wager: coinWager });
+      onGamble(coinWager, payout);
+      setIsRolling(false);
+    }, 600);
+  };
+
+  const handleWheelSpin = () => {
+    if (isRolling || player.gold < wheelWager) return;
+    setIsRolling(true);
+    setGamblingResult(null);
+    setTimeout(() => {
+      const segment = spinWheel();
+      const payout = wheelWager * segment.mult;
+      setGamblingResult({ type: 'wheel', segment, payout, wager: wheelWager, won: segment.mult > 1 });
+      onGamble(wheelWager, payout);
+      setIsRolling(false);
+    }, 800);
+  };
+
+  const renderGambling = () => (
+    <div className="tavern-gambling">
+      <div className="gambling-header">
+        <div className="gambling-title">The Back Room</div>
+        <div className="gambling-gold">Your Gold: {player.gold}g</div>
+      </div>
+
+      {/* Game selector */}
+      <div className="gambling-game-tabs">
+        {GAMBLING_GAMES.map(g => (
+          <button
+            key={g.id}
+            className={`gambling-game-tab ${gamblingGame === g.id ? 'active' : ''}`}
+            onClick={() => { setGamblingGame(g.id); setGamblingResult(null); }}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Dice Game */}
+      {gamblingGame === 'dice' && (
+        <div className="gambling-dice">
+          <div className="gambling-desc">Roll 2 dice. Bet if the total is over or under 7. Exactly 7 = house wins.</div>
+          <div className="gambling-controls">
+            <div className="gambling-wager-row">
+              <span>Wager:</span>
+              {DICE_WAGERS.map(w => (
+                <button key={w} className={`gambling-wager-btn ${diceWager === w ? 'active' : ''}`} onClick={() => setDiceWager(w)} disabled={player.gold < w}>{w}g</button>
+              ))}
+            </div>
+            <div className="gambling-bet-row">
+              <span>Bet:</span>
+              <button className={`gambling-bet-btn ${diceBet === 'over' ? 'active' : ''}`} onClick={() => setDiceBet('over')}>Over 7</button>
+              <button className={`gambling-bet-btn ${diceBet === 'under' ? 'active' : ''}`} onClick={() => setDiceBet('under')}>Under 7</button>
+            </div>
+            <div className="gambling-payout">Win: {diceWager * 2}g (2x)</div>
+            <button className="btn btn-primary gambling-roll-btn" disabled={isRolling || player.gold < diceWager} onClick={handleDiceRoll}>
+              {isRolling ? 'Rolling...' : `Roll Dice (${diceWager}g)`}
+            </button>
+          </div>
+          {gamblingResult?.type === 'dice' && (
+            <div className={`gambling-result ${gamblingResult.won ? 'win' : 'lose'}`}>
+              <div className="gambling-result-dice">[{gamblingResult.d1}] [{gamblingResult.d2}] = {gamblingResult.total}</div>
+              <div className="gambling-result-text">
+                {gamblingResult.won ? `You won ${gamblingResult.payout}g!` : gamblingResult.total === 7 ? 'Exactly 7 - House wins!' : `You lost ${gamblingResult.wager}g!`}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Coin Flip */}
+      {gamblingGame === 'coin' && (
+        <div className="gambling-coin">
+          <div className="gambling-desc">Call heads or tails. Win pays 2x your wager.</div>
+          <div className="gambling-controls">
+            <div className="gambling-wager-row">
+              <span>Wager:</span>
+              {COIN_FLIP_WAGERS.map(w => (
+                <button key={w} className={`gambling-wager-btn ${coinWager === w ? 'active' : ''}`} onClick={() => setCoinWager(w)} disabled={player.gold < w}>{w}g</button>
+              ))}
+            </div>
+            <div className="gambling-bet-row">
+              <span>Call:</span>
+              <button className={`gambling-bet-btn ${coinBet === 'heads' ? 'active' : ''}`} onClick={() => setCoinBet('heads')}>Heads</button>
+              <button className={`gambling-bet-btn ${coinBet === 'tails' ? 'active' : ''}`} onClick={() => setCoinBet('tails')}>Tails</button>
+            </div>
+            <div className="gambling-payout">Win: {coinWager * 2}g (2x)</div>
+            <button className="btn btn-primary gambling-roll-btn" disabled={isRolling || player.gold < coinWager} onClick={handleCoinFlip}>
+              {isRolling ? 'Flipping...' : `Flip Coin (${coinWager}g)`}
+            </button>
+          </div>
+          {gamblingResult?.type === 'coin' && (
+            <div className={`gambling-result ${gamblingResult.won ? 'win' : 'lose'}`}>
+              <div className="gambling-result-coin">{gamblingResult.result === 'heads' ? 'HEADS' : 'TAILS'}</div>
+              <div className="gambling-result-text">
+                {gamblingResult.won ? `You won ${gamblingResult.payout}g!` : `You lost ${gamblingResult.wager}g!`}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Wheel of Fortune */}
+      {gamblingGame === 'wheel' && (
+        <div className="gambling-wheel">
+          <div className="gambling-desc">Spin the wheel! Land on a multiplier to win big.</div>
+          <div className="gambling-wheel-segments">
+            {WHEEL_SEGMENTS.map((seg, i) => (
+              <span key={i} className="gambling-wheel-seg" style={{ color: seg.color }}>{seg.label} ({seg.weight}%)</span>
+            ))}
+          </div>
+          <div className="gambling-controls">
+            <div className="gambling-wager-row">
+              <span>Wager:</span>
+              {WHEEL_WAGERS.map(w => (
+                <button key={w} className={`gambling-wager-btn ${wheelWager === w ? 'active' : ''}`} onClick={() => setWheelWager(w)} disabled={player.gold < w}>{w}g</button>
+              ))}
+            </div>
+            <button className="btn btn-primary gambling-roll-btn" disabled={isRolling || player.gold < wheelWager} onClick={handleWheelSpin}>
+              {isRolling ? 'Spinning...' : `Spin Wheel (${wheelWager}g)`}
+            </button>
+          </div>
+          {gamblingResult?.type === 'wheel' && (
+            <div className={`gambling-result ${gamblingResult.won ? 'win' : gamblingResult.segment.mult === 1 ? 'push' : 'lose'}`}>
+              <div className="gambling-result-wheel" style={{ color: gamblingResult.segment.color }}>
+                {gamblingResult.segment.label}
+              </div>
+              <div className="gambling-result-text">
+                {gamblingResult.segment.mult === 0 ? `Bust! You lost ${gamblingResult.wager}g!`
+                  : gamblingResult.segment.mult === 1 ? `Push! You got your ${gamblingResult.wager}g back.`
+                  : `You won ${gamblingResult.payout}g! (${gamblingResult.segment.label})`}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="screen screen-tavern">
       <div className="tavern-header">
@@ -513,6 +691,9 @@ export default function TavernScreen({ tavern, player, stats, onAcceptQuest, onT
           <div className="tavern-empty-text">Choose someone to talk to...</div>
         </div>
       )}
+
+      {/* Gambling Hall - always visible in the tavern */}
+      {renderGambling()}
 
       <button className="btn btn-back tavern-back-btn" onClick={onBack}>Leave Tavern</button>
     </div>
