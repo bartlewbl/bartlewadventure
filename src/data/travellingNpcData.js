@@ -25,9 +25,9 @@ export const TRAVELLING_NPCS = [
       { id: 'rook-q2', name: "The Oath Fragment", description: "Find and defeat a boss monster. Rook believes it holds a fragment of his oath.", stat: 'bossesKilled', target: 1, reward: { gold: 500, item: 'armor' }, giverLine: "There's a powerful creature nearby. I sense something in it — a fragment of my past. Bring me proof of its death.", completeLine: "You've done it. I can feel the oath shifting... loosening. Take this armor. You'll need it more than I do." },
     ],
     deals: [
-      { id: 'rook-d1', description: 'Military-grade sword', cost: 200, type: 'rare_item' },
-      { id: 'rook-d2', description: 'Ironclad shield (+3 DEF levels)', cost: 180, type: 'armor_upgrade' },
-      { id: 'rook-d3', description: 'Battle rations (full HP restore)', cost: 60, type: 'full_heal' },
+      { id: 'rook-d1', description: 'Military-grade sword', cost: 200, type: 'rare_item', stock: 1 },
+      { id: 'rook-d2', description: 'Ironclad shield (+3 DEF levels)', cost: 180, type: 'armor_upgrade', stock: 1 },
+      { id: 'rook-d3', description: 'Battle rations (full HP restore)', cost: 60, type: 'full_heal', stock: 3 },
     ],
     // Boss stats when attacked
     boss: {
@@ -70,9 +70,9 @@ export const TRAVELLING_NPCS = [
       { id: 'sable-q2', name: "Whispered Bounty", description: "Earn 500 gold through any means. Sable respects resourcefulness.", stat: 'goldEarned', target: 500, reward: { gold: 400, item: 'amulet' }, giverLine: "Make 500 gold. I don't care how — just prove you know the value of coin.", completeLine: "You've got a head for business. Take this amulet — it belonged to a merchant prince. Now it's yours." },
     ],
     deals: [
-      { id: 'sable-d1', description: 'Mystery Box (rare surprise)', cost: 120, type: 'mystery_box' },
-      { id: 'sable-d2', description: 'Enchanted ring', cost: 200, type: 'rare_item' },
-      { id: 'sable-d3', description: 'Shadow cloak (boosted loot 5 fights)', cost: 250, type: 'lucky_charm' },
+      { id: 'sable-d1', description: 'Mystery Box (rare surprise)', cost: 120, type: 'mystery_box', stock: 2 },
+      { id: 'sable-d2', description: 'Enchanted ring', cost: 200, type: 'rare_item', stock: 1 },
+      { id: 'sable-d3', description: 'Shadow cloak (boosted loot 5 fights)', cost: 250, type: 'lucky_charm', stock: 1 },
     ],
     boss: {
       baseHp: 200,
@@ -114,9 +114,9 @@ export const TRAVELLING_NPCS = [
       { id: 'marshal-q2', name: "Veteran's Trial", description: "Defeat 3 boss monsters. The Marshal respects only true warriors.", stat: 'bossesKilled', target: 3, reward: { gold: 800, item: 'sword' }, giverLine: "Three bosses. Real ones. Not the scrappy runts — I mean the apex predators. Come back when they're dead.", completeLine: "Three bosses down. I've seen veterans fail that test. You've got the fire, kid. This warhammer fragment is yours." },
     ],
     deals: [
-      { id: 'marshal-d1', description: 'Warhammer fragment (legendary weapon)', cost: 400, type: 'legendary_item' },
-      { id: 'marshal-d2', description: 'Military armor set piece', cost: 250, type: 'rare_item' },
-      { id: 'marshal-d3', description: 'Combat rations (full HP + mana)', cost: 80, type: 'full_heal' },
+      { id: 'marshal-d1', description: 'Warhammer fragment (legendary weapon)', cost: 400, type: 'legendary_item', stock: 1 },
+      { id: 'marshal-d2', description: 'Military armor set piece', cost: 250, type: 'rare_item', stock: 1 },
+      { id: 'marshal-d3', description: 'Combat rations (full HP + mana)', cost: 80, type: 'full_heal', stock: 3 },
     ],
     boss: {
       baseHp: 400,
@@ -159,9 +159,9 @@ export const TRAVELLING_NPCS = [
       { id: 'zara-q2', name: "Stardust Collection", description: "Explore 15 times. Zara needs you to walk the ley lines and gather stardust.", stat: 'explorationsCompleted', target: 15, reward: { gold: 600, item: 'cape' }, giverLine: "Walk the paths. Fifteen journeys through the ley lines. The stardust clings to those who walk with purpose.", completeLine: "Beautiful. You're covered in stardust — more than most mortals gather in a lifetime. This cape will hold the residue." },
     ],
     deals: [
-      { id: 'zara-d1', description: 'Starlight amulet (cosmic rarity)', cost: 300, type: 'rare_item' },
-      { id: 'zara-d2', description: 'Cosmic restoration (full HP + mana)', cost: 70, type: 'full_heal' },
-      { id: 'zara-d3', description: 'Stardust blessing (boosted loot 5 fights)', cost: 280, type: 'lucky_charm' },
+      { id: 'zara-d1', description: 'Starlight amulet (cosmic rarity)', cost: 300, type: 'rare_item', stock: 1 },
+      { id: 'zara-d2', description: 'Cosmic restoration (full HP + mana)', cost: 70, type: 'full_heal', stock: 3 },
+      { id: 'zara-d3', description: 'Stardust blessing (boosted loot 5 fights)', cost: 280, type: 'lucky_charm', stock: 1 },
     ],
     boss: {
       baseHp: 320,
@@ -203,9 +203,9 @@ export const TRAVELLING_NPCS = [
       { id: 'vex-q2', name: "Demolition Derby", description: "Deal 3000 total damage. Vex wants to test his scrap weapons through you.", stat: 'damageDealt', target: 3000, reward: { gold: 500, item: 'sword' }, giverLine: "Take my latest invention and deal 3000 damage! If it breaks... well, that's useful data too!", completeLine: "3000 DAMAGE! The weapon survived! The SCIENCE is SOUND! Here, keep it — I'll make another one. BETTER!" },
     ],
     deals: [
-      { id: 'vex-d1', description: 'Scrap weapon (surprisingly good)', cost: 150, type: 'rare_item' },
-      { id: 'vex-d2', description: 'Junk armor (+3 DEF levels)', cost: 160, type: 'armor_upgrade' },
-      { id: 'vex-d3', description: 'Mystery scrap box', cost: 90, type: 'mystery_box' },
+      { id: 'vex-d1', description: 'Scrap weapon (surprisingly good)', cost: 150, type: 'rare_item', stock: 2 },
+      { id: 'vex-d2', description: 'Junk armor (+3 DEF levels)', cost: 160, type: 'armor_upgrade', stock: 1 },
+      { id: 'vex-d3', description: 'Mystery scrap box', cost: 90, type: 'mystery_box', stock: 2 },
     ],
     boss: {
       baseHp: 250,
@@ -248,9 +248,9 @@ export const TRAVELLING_NPCS = [
       { id: 'ember-q2', name: "Ash and Renewal", description: "Defeat 2 boss monsters. The Flame hungers for powerful souls.", stat: 'bossesKilled', target: 2, reward: { gold: 700, item: 'ring' }, giverLine: "The Flame needs powerful souls to sustain it. Two great beasts must fall. Their essence will feed the fire.", completeLine: "The Flame roars! You've given it strength it hasn't known in centuries. Take this ring — forged in the Eternal Flame itself." },
     ],
     deals: [
-      { id: 'ember-d1', description: 'Flame-blessed weapon', cost: 280, type: 'rare_item' },
-      { id: 'ember-d2', description: 'Sacred ember (full HP + mana)', cost: 65, type: 'full_heal' },
-      { id: 'ember-d3', description: 'Flame ward (boosted loot 5 fights)', cost: 260, type: 'lucky_charm' },
+      { id: 'ember-d1', description: 'Flame-blessed weapon', cost: 280, type: 'rare_item', stock: 1 },
+      { id: 'ember-d2', description: 'Sacred ember (full HP + mana)', cost: 65, type: 'full_heal', stock: 3 },
+      { id: 'ember-d3', description: 'Flame ward (boosted loot 5 fights)', cost: 260, type: 'lucky_charm', stock: 1 },
     ],
     boss: {
       baseHp: 360,

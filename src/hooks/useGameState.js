@@ -1782,11 +1782,25 @@ function gameReducer(state, action) {
       if (!tNpc) return state;
       const deal = tNpc.deals.find(d => d.id === dealId);
       if (!deal) return state;
+      // Check stock limits
+      if (deal.stock != null) {
+        const tPurchases = state.travellingPurchases || {};
+        const bought = tPurchases[dealId] || 0;
+        if (bought >= deal.stock) {
+          return { ...state, message: 'Sold out!' };
+        }
+      }
       if (state.player.gold < deal.cost) return { ...state, message: "Not enough gold!" };
       // Re-use the extraordinary trader buy logic for deal types
       const matchedTrader = { ...tNpc, deals: tNpc.deals };
       // Map deal to the same format the trader buy handler expects
       const result = gameReducer({ ...state, activeTrader: matchedTrader }, { type: 'TRADER_BUY', dealId });
+      // Track purchase if it succeeded
+      if (result.player.gold !== state.player.gold || (result.message && result.message !== 'Not enough gold!' && result.message !== 'Inventory full!')) {
+        const updatedPurchases = { ...(result.travellingPurchases || state.travellingPurchases || {}) };
+        updatedPurchases[dealId] = (updatedPurchases[dealId] || 0) + 1;
+        return { ...result, activeTrader: state.activeTrader, activeTravellingNpc: state.activeTravellingNpc, travellingPurchases: updatedPurchases };
+      }
       return { ...result, activeTrader: state.activeTrader, activeTravellingNpc: state.activeTravellingNpc };
     }
 
