@@ -3,6 +3,7 @@ import { SPRITES, drawSprite } from '../../data/sprites';
 
 export default function TravellingNpcScreen({
   npc, playerGold, playerLevel, villageQuests, stats,
+  travellingPurchases = {},
   onBuy, onLeave, onAcceptQuest, onTurnInQuest, onAttack,
 }) {
   const [entered, setEntered] = useState(false);
@@ -345,23 +346,28 @@ export default function TravellingNpcScreen({
             {npc.deals.map((deal, idx) => {
               const canAfford = playerGold >= deal.cost;
               const justBought = purchasedId === deal.id;
+              const purchased = travellingPurchases[deal.id] || 0;
+              const soldOut = deal.stock != null && purchased >= deal.stock;
+              const remaining = deal.stock != null ? deal.stock - purchased : null;
+              const canBuy = canAfford && !soldOut;
               return (
-                <div key={deal.id} className={`tnpc-deal ${!canAfford ? 'too-expensive' : ''} ${justBought ? 'deal-purchased' : ''}`} style={{ borderColor: canAfford ? `${theme.primary}44` : undefined }}>
+                <div key={deal.id} className={`tnpc-deal ${!canBuy ? 'too-expensive' : ''} ${justBought ? 'deal-purchased' : ''}`} style={{ borderColor: canBuy ? `${theme.primary}44` : undefined }}>
                   <div className="tnpc-deal-number" style={{ color: theme.primary }}>{idx + 1}</div>
                   <div className="tnpc-deal-info">
                     <div className="tnpc-deal-desc">{deal.description}</div>
                     <div className="tnpc-deal-cost">
                       <span className="tnpc-gold-icon">{'\u25CF'}</span>
                       {deal.cost > 0 ? `${deal.cost}g` : 'Free'}
+                      {remaining != null && <span style={{ marginLeft: 8, opacity: 0.7, fontSize: '0.85em' }}>Stock: {remaining}</span>}
                     </div>
                   </div>
                   <button
                     className="btn btn-primary btn-sm tnpc-buy-btn"
                     onClick={() => handleBuy(deal.id)}
-                    disabled={!canAfford}
-                    style={canAfford ? { background: `linear-gradient(135deg, ${theme.secondary}, ${theme.primary})` } : undefined}
+                    disabled={!canBuy}
+                    style={canBuy ? { background: `linear-gradient(135deg, ${theme.secondary}, ${theme.primary})` } : undefined}
                   >
-                    {justBought ? 'Sold!' : canAfford ? 'Buy' : "Can't afford"}
+                    {soldOut ? 'Sold out' : justBought ? 'Sold!' : canAfford ? 'Buy' : "Can't afford"}
                   </button>
                 </div>
               );
