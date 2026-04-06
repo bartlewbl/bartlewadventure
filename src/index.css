@@ -23,6 +23,7 @@ body {
   position: relative;
   width: calc(100vw / var(--ui-scale));
   height: calc(100vh / var(--ui-scale));
+  height: calc(100dvh / var(--ui-scale));
   overflow: hidden;
   background: #0a0a1a;
   --ui-scale: 1;
@@ -1725,6 +1726,11 @@ body {
   word-break: break-word;
 }
 
+.town-featured-passive {
+  font-size: 7px;
+  color: #8f8;
+}
+
 /* ---- DAILY REWARDS PANEL ---- */
 .town-daily-panel {
   grid-column: 1 / -1;
@@ -2425,6 +2431,12 @@ body {
 .profile-equip-item .equip-stats {
   font-size: 7px;
   color: #9ea2d3;
+}
+
+.equip-passive {
+  font-size: 7px;
+  color: #8f8;
+  margin-top: 1px;
 }
 
 .equip-empty {
@@ -4318,7 +4330,7 @@ body {
   /* Layout: stack vertically, full screen */
   .ui-main {
     flex-direction: column;
-    padding-bottom: 56px; /* space for bottom tab bar */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); /* space for bottom tab bar + notch */
   }
 
   .screen-stage {
@@ -4432,12 +4444,12 @@ body {
 
   /* Explore actions - above bottom nav */
   .explore-actions {
-    bottom: 64px;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Message overlay - above bottom nav */
   .message-overlay {
-    bottom: 60px;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -4445,7 +4457,7 @@ body {
 .mobile-stats-bar {
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 6px;
   background: rgba(4, 4, 18, 0.95);
   border-bottom: 1px solid #1e1e3c;
   position: fixed;
@@ -4472,6 +4484,11 @@ body {
 .mobile-stat-gold {
   font-size: 7px;
   color: #ffd700;
+}
+
+.mobile-stat-inv {
+  font-size: 6px;
+  color: #aaa;
 }
 
 .mobile-stats-bars {
@@ -4514,6 +4531,7 @@ body {
 .mobile-bar-hp { background: linear-gradient(to right, #4caf50, #66bb6a); }
 .mobile-bar-mp { background: linear-gradient(to right, #42a5f5, #64b5f6); }
 .mobile-bar-en { background: linear-gradient(to right, #26a69a, #4dd0c1); }
+.mobile-bar-xp { background: linear-gradient(to right, #ffa726, #ffcc02); }
 
 .mobile-bar-num {
   font-size: 5px;
@@ -4711,10 +4729,10 @@ body {
 /* ---- Landscape mobile with bottom nav ---- */
 @media (max-width: 768px) and (orientation: landscape) {
   .mobile-tab-bar { height: 44px; }
-  .ui-main { padding-bottom: 44px; }
+  .ui-main { padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)); }
   .mobile-tab-icon { font-size: 14px; }
   .mobile-tab-label { font-size: 5px; }
-  .mobile-stats-bar { padding: 4px 8px; }
+  .mobile-stats-bar { padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px; }
   .mobile-bar-track { height: 5px; }
   .mobile-more-overlay { bottom: 44px; }
 }
