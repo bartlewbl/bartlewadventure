@@ -681,6 +681,8 @@ export default function App() {
             energyMax={ENERGY_MAX}
             canRest={canRest}
             onRest={actions.restAtInn}
+            inventoryCount={state.player.inventory.length}
+            maxInventory={state.player.maxInventory}
           />
         )}
 

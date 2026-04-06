@@ -20,6 +20,8 @@ export default function MobileNav({
   energyMax,
   canRest,
   onRest,
+  inventoryCount,
+  maxInventory,
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -29,7 +31,11 @@ export default function MobileNav({
   const maxMana = player?.maxMana ?? 1;
   const gold = player?.gold ?? 0;
   const level = player?.level ?? 1;
+  const exp = player?.exp ?? 0;
+  const expToLevel = player?.expToLevel ?? 1;
   const currentEnergy = Math.max(0, Math.min(energy ?? 0, energyMax ?? 1));
+  const invCount = inventoryCount ?? 0;
+  const invMax = maxInventory ?? 0;
 
   const mainTabs = [
     { id: 'town', label: 'Town', icon: '🏠', onClick: onGoToTown, match: ['town'] },
@@ -59,6 +65,7 @@ export default function MobileNav({
         <div className="mobile-stats-left">
           <span className="mobile-stat-level">Lv{level}</span>
           <span className="mobile-stat-gold">● {gold.toLocaleString()}</span>
+          <span className="mobile-stat-inv">▦ {invCount}/{invMax}</span>
         </div>
         <div className="mobile-stats-bars">
           <div className="mobile-bar">
@@ -81,6 +88,13 @@ export default function MobileNav({
               <div className="mobile-bar-fill mobile-bar-en" style={{ width: `${(currentEnergy / (energyMax || 1)) * 100}%` }} />
             </div>
             <span className="mobile-bar-num">{currentEnergy}/{energyMax}</span>
+          </div>
+          <div className="mobile-bar">
+            <span className="mobile-bar-label">XP</span>
+            <div className="mobile-bar-track">
+              <div className="mobile-bar-fill mobile-bar-xp" style={{ width: `${(exp / (expToLevel || 1)) * 100}%` }} />
+            </div>
+            <span className="mobile-bar-num">{exp}/{expToLevel}</span>
           </div>
         </div>
         {canRest && (
