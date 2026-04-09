@@ -16,6 +16,7 @@ import { getRespecCost, CLASS_BASE_STATS, ENCHANT_LEVELS, getEnchantCost, getEnc
 import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
+import { generatePlayerEncounter, rollPlayerEncounterDrops } from '../engine/playerEncounter';
 import { pickRitualSite, RITUAL_DISCOVER_CHANCE, RITUAL_QUEST_DISCOVER_CHANCE, RITUAL_QUEST_LOCATION_DISCOVER_CHANCE, FIRE_RITUAL_CHAIN_IDS, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
 import { TRAVELLING_NPCS, TRAVELLING_NPC_ENCOUNTER_RATE } from '../data/travellingNpcData';
 import {
@@ -1097,6 +1098,28 @@ function gameReducer(state, action) {
 
       const adjustedEncounterRate = loc.encounterRate * effects.encounterMult;
       if (Math.random() < adjustedEncounterRate) {
+        // Player encounter check: ~8% of combat encounters are against another player
+        if (Math.random() < 0.08) {
+          const playerEnemy = generatePlayerEncounter(loc.levelReq, state.player.level);
+          const pEncBattle = createBattleState(playerEnemy, state.player);
+          const pEncLog = [{ text: `A hostile adventurer appears: ${playerEnemy.name} (Lv.${playerEnemy.encounterLevel})!`, type: 'info' }];
+          if (pEncBattle.playerIsFaster && pEncBattle.monsterNextMove) {
+            pEncLog.push({ text: `You're faster! Enemy intends to: ${pEncBattle.monsterNextMove.name}`, type: 'info' });
+          } else if (!pEncBattle.playerIsFaster) {
+            pEncLog.push({ text: `${playerEnemy.name} strikes first!`, type: 'info' });
+          }
+          return {
+            ...state, screen: 'battle',
+            exploreText: text,
+            energy: exploreEnergy,
+            lastEnergyUpdate: exploreLastUpdate,
+            pets: petsAfterExplore,
+            battle: pEncBattle,
+            battleLog: pEncLog,
+            battleResult: null,
+          };
+        }
+
         const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
         // Randomize monster level within the location's levelRange
         let encounterLevel = loc.levelReq;
@@ -6641,19 +6664,34 @@ function handleVictory(state) {
     }
   }
 
-  // Bosses always drop a gear item of at least Rare quality
-  const droppedItem = m.isBoss
-    ? rollBossDrop(m.dropTable, m.level)
-    : rollDrop(m.dropTable, m.level);
+  // Player encounters drop equipped items; bosses drop Rare+ gear; others roll from dropTable
+  let droppedItem = null;
+  let playerEncounterDrops = [];
+  if (m.isPlayerEncounter && m.encounterEquipment) {
+    playerEncounterDrops = rollPlayerEncounterDrops(m.encounterEquipment);
+    for (const drop of playerEncounterDrops) {
+      if (p.inventory.length < p.maxInventory) {
+        p.inventory = [...p.inventory, drop];
+      }
+    }
+    // Use first drop as the "primary" droppedItem for result display
+    droppedItem = playerEncounterDrops.length > 0 ? playerEncounterDrops[0] : null;
+  } else {
+    droppedItem = m.isBoss
+      ? rollBossDrop(m.dropTable, m.level)
+      : rollDrop(m.dropTable, m.level);
+  }
   let lootAdded = false;
   let lostItemName = null;
-  if (droppedItem) {
+  if (droppedItem && !m.isPlayerEncounter) {
     if (p.inventory.length < p.maxInventory) {
       p.inventory = [...p.inventory, droppedItem];
       lootAdded = true;
     } else {
       lostItemName = droppedItem.name;
     }
+  } else if (m.isPlayerEncounter) {
+    lootAdded = playerEncounterDrops.length > 0;
   }
 
   // Drop tavern quest-specific items from bosses when relevant quests are active
@@ -6700,6 +6738,7 @@ function handleVictory(state) {
   newStats = addStat(newStats, 'goldFromMonsters', goldGain);
   if (m.id) newStats = addStat(newStats, `killed_${m.id}`);
   if (m.isBoss) newStats = addStat(newStats, 'bossesKilled');
+  if (m.isPlayerEncounter) newStats = addStat(newStats, 'playerEncountersWon');
   // Track combat restriction achievements
   const b = state.battle;
   if (!b.usedDefend) {
@@ -6821,6 +6860,12 @@ function handleVictory(state) {
       isBoss: !!m.isBoss,
       bossName: m.isBoss ? m.name : null,
       innBonus: innBonus > 0 ? innBonus : null,
+      // Player encounter info
+      isPlayerEncounter: !!m.isPlayerEncounter,
+      encounterName: m.isPlayerEncounter ? m.name : null,
+      encounterClass: m.isPlayerEncounter ? m.encounterClassName : null,
+      encounterClassColor: m.isPlayerEncounter ? m.encounterClassColor : null,
+      playerEncounterDrops: m.isPlayerEncounter && playerEncounterDrops.length > 0 ? playerEncounterDrops : null,
       tavernQuestDrops: tavernQuestDrops.length > 0 ? tavernQuestDrops : null,
       // Wave defense info
       isWaveDefense: !!wd,

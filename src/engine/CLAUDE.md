@@ -13,6 +13,7 @@ Pure game logic, no UI. All files are imported by components and the main game l
 | scaling.js | Monster/boss stat scaling by area level |
 | loot.js | Item generation, rarity rolls, drop tables, shop filtering |
 | arena.js | NPC opponent generation with simulated stats/equipment |
+| playerEncounter.js | Player-like enemies during exploration (class stats, equipment, loot drops) |
 | utils.js | uid(), pickWeighted(), seededRandom() |
 
 ## Key Formulas
@@ -99,8 +100,47 @@ effectName: ({ dmg, player, monster, battle, battleMaxHp, log, manaCost }) => ({
 combat.js ← passives.js, skillEffects.js, elements.js
 loot.js ← utils.js
 arena.js ← loot.js, CHARACTER_CLASSES from data/
+playerEncounter.js ← loot.js, CHARACTER_CLASSES from data/
 scaling.js ← standalone (used by encounter spawning)
 ```
+
+## Player Encounter System (playerEncounter.js)
+
+Generates AI-controlled "player" enemies during exploration — adventurers with real class stats, equipment, and skills.
+
+**Trigger:** ~8% of normal combat encounters become player encounters (checked inside EXPLORE_STEP after encounter rate roll).
+
+**Generation (`generatePlayerEncounter(areaLevel, playerLevel)`):**
+- Random class from all 5 classes
+- Level = areaLevel ± 1
+- Stats simulated via same growth formulas as real players (`simulateStats()`)
+- Equipment generated via `generateItem()` per slot (weapon always, other slots 35-70% chance)
+- ATK/DEF = base stats + sum of equipment ATK/DEF
+- Combat stats (evasion, accuracy, etc.) from class growth, not scaled like monsters
+
+**Combat skills per class (from SKILLS pool, not class innate skills):**
+- Berserker: frenzy, bash, charge
+- Warrior: bash, slam, charge
+- Thief: backstab, venom, shadowstrike
+- Mage: shock, inferno, voidblast
+- Necromancer: drain, venom, deathgrip
+
+**Rewards:**
+- EXP: `20 + level * 8`
+- Gold: `15 + level * 5 + random(level * 3)`
+
+**Loot (`rollPlayerEncounterDrops(equipment)`):**
+- Always drops 1 equipped item, 30% chance for a 2nd
+- Items are actual generated gear (with passives, rarity, etc.)
+- Displayed as "Plundered Gear!" in battle results
+
+**Monster object flags:**
+- `isPlayerEncounter: true` — distinguishes from regular monsters and arena opponents
+- `encounterClassId`, `encounterClassName`, `encounterClassColor` — class display info
+- `encounterEquipment` — full equipment object (used for loot rolls on victory)
+- `encounterLevel` — the generated level
+
+**Stats tracked:** `playerEncountersWon`
 
 ## Faction Combat Skills (skillEffects.js)
 

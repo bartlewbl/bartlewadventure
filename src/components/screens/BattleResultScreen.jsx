@@ -5,6 +5,7 @@ export default function BattleResultScreen({ result, onContinue }) {
 
   const isBoss = result.isBoss;
   const isArena = result.isArena;
+  const isPlayerEncounter = result.isPlayerEncounter;
 
   // Arena result rendering
   if (isArena) {
@@ -66,10 +67,11 @@ export default function BattleResultScreen({ result, onContinue }) {
 
   return (
     <div className="screen screen-result">
-      <div className={`result-title ${result.victory ? 'victory' : 'defeat'} ${isBoss ? 'boss-result' : ''}`}>
+      <div className={`result-title ${result.victory ? 'victory' : 'defeat'} ${isBoss ? 'boss-result' : ''}`} style={isPlayerEncounter && result.victory ? { color: result.encounterClassColor || '#ff9800' } : undefined}>
         {result.victory
           ? result.isWaveDefense
             ? (result.waveDefenseComplete ? 'FIRE DEFENDED!' : `WAVE ${result.waveNumber} CLEAR!`)
+            : isPlayerEncounter ? 'ADVENTURER DEFEATED!'
             : (isBoss ? 'BOSS DEFEATED!' : 'VICTORY!')
           : result.isWaveDefense ? 'THE FIRE IS EXTINGUISHED...' : 'DEFEATED...'}
       </div>
@@ -86,9 +88,17 @@ export default function BattleResultScreen({ result, onContinue }) {
         {result.victory ? (
           <>
             {isBoss && <div className="boss-victory-text">You conquered {result.bossName}!</div>}
+            {isPlayerEncounter && (
+              <div className="boss-victory-text" style={{ color: result.encounterClassColor || '#ff9800' }}>
+                Defeated {result.encounterName} ({result.encounterClass})
+              </div>
+            )}
             <div>+{result.expGain} EXP{result.innBonus ? ` (Inn +${Math.round(result.innBonus * 100)}%)` : ''}{result.waveDefenseComplete ? ` (${result.waveTier} defense bonus!)` : ''}</div>
             <div>+{result.goldGain} Gold{result.waveDefenseComplete ? ' (defense bonus!)' : ''}</div>
-            {result.droppedItem && (
+            {result.playerEncounterDrops && result.playerEncounterDrops.map((item, i) => (
+              <ItemDropWindow key={item.id || i} item={item} label={i === 0 ? 'Plundered Gear!' : ''} />
+            ))}
+            {!isPlayerEncounter && result.droppedItem && (
               <ItemDropWindow item={result.droppedItem} label="Loot Drop!" />
             )}
             {result.materialDrop && (

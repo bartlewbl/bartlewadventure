@@ -272,6 +272,7 @@ export default function BattleScreen({
   const pHpPct = (player.hp / player.maxHp) * 100;
   const disabled = !battle.isPlayerTurn || pendingTurnRef.current;
   const isBoss = !!m.isBoss;
+  const isPlayerEncounter = !!m.isPlayerEncounter;
   const showSkillMenu = battle.showSkillMenu;
   const showInspect = battle.showInspect;
 
@@ -352,11 +353,13 @@ export default function BattleScreen({
         <div className="viewport-overlay viewport-overlay-monster">
           <div className="monster-header">
             {isBoss && <span className="boss-badge">BOSS</span>}
-            <span className={`combatant-name ${isBoss ? 'boss-name' : 'monster-name-tag'}`}>
+            {isPlayerEncounter && <span className="player-encounter-badge" style={{ color: m.encounterClassColor || '#ff9800', fontWeight: 'bold', fontSize: '0.75em', marginRight: 4 }}>ADVENTURER</span>}
+            <span className={`combatant-name ${isBoss ? 'boss-name' : isPlayerEncounter ? 'player-encounter-name' : 'monster-name-tag'}`} style={isPlayerEncounter ? { color: m.encounterClassColor || '#ff9800' } : undefined}>
               {m.name} (Lv.{m.level})
             </span>
           </div>
           {isBoss && m.title && <div className="boss-subtitle">{m.title}</div>}
+          {isPlayerEncounter && m.encounterClassName && <div className="boss-subtitle" style={{ color: m.encounterClassColor || '#ff9800' }}>{m.encounterClassName}</div>}
           {battle.monsterElement && battle.monsterElement !== 'physical' && (
             <div className={`monster-element element-${battle.monsterElement}`}>
               {ELEMENTS[battle.monsterElement]?.icon} {ELEMENTS[battle.monsterElement]?.label}
@@ -592,7 +595,7 @@ export default function BattleScreen({
       {showInspect ? (
         <div className="battle-actions battle-inspect-panel">
           <div className="inspect-stats">
-            <div className="inspect-title">{m.name} {isBoss ? '(BOSS)' : ''}</div>
+            <div className="inspect-title">{m.name} {isBoss ? '(BOSS)' : isPlayerEncounter ? '(ADVENTURER)' : ''}</div>
             <div className="inspect-row"><span className="inspect-label">Level:</span> <span className="inspect-value">{m.level}</span></div>
             <div className="inspect-row"><span className="inspect-label">HP:</span> <span className="inspect-value">{m.hp} / {m.maxHp}</span></div>
             <div className="inspect-row"><span className="inspect-label">ATK:</span> <span className="inspect-value">{m.atk}</span></div>
