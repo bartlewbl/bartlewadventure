@@ -118,9 +118,9 @@ export function getWaveTier(locationLevelReq) {
 }
 
 // Boosted discovery chance when a fire ritual quest is active
-export const RITUAL_QUEST_DISCOVER_CHANCE = 0.05;
+export const RITUAL_QUEST_DISCOVER_CHANCE = 0.25;
 // Even higher when in the exact location a quest targets
-export const RITUAL_QUEST_LOCATION_DISCOVER_CHANCE = 0.05;
+export const RITUAL_QUEST_LOCATION_DISCOVER_CHANCE = 0.40;
 
 // Fire ritual quest chain IDs
 export const FIRE_RITUAL_CHAIN_IDS = ['fire_keeper', 'flame_sentinel'];

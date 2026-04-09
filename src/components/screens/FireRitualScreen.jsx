@@ -26,31 +26,31 @@ export default function FireRitualScreen({ ritualSite, player, onLight, onDefend
 
       {/* Active quest banner */}
       {quest && (
-        <div style={{ margin: '8px 0', padding: '8px 10px', background: 'rgba(100,180,255,0.12)', borderRadius: 6, border: '1px solid rgba(100,180,255,0.35)', fontSize: '0.9em' }}>
-          <div style={{ fontWeight: 'bold', color: '#8cf', marginBottom: 2 }}>
+        <div style={{ margin: '4px 0', padding: '4px 8px', background: 'rgba(100,180,255,0.12)', borderRadius: 4, border: '1px solid rgba(100,180,255,0.35)', fontSize: '9px', maxWidth: 400, lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 'bold', color: '#8cf', marginBottom: 1 }}>
             Quest: {quest.name}
           </div>
           <div style={{ opacity: 0.85 }}>{quest.description}</div>
           {questRequiresDefense && (
-            <div style={{ color: '#f99', marginTop: 4, fontWeight: 'bold' }}>
+            <div style={{ color: '#f99', marginTop: 2, fontWeight: 'bold' }}>
               This quest requires you to defend the fire through the night!
             </div>
           )}
         </div>
       )}
 
-      <div style={{ margin: '12px 0', padding: '10px', background: 'rgba(255,160,40,0.1)', borderRadius: 6, border: '1px solid rgba(255,160,40,0.3)' }}>
-        <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#ffa028' }}>
+      <div style={{ margin: '4px 0', padding: '4px 8px', background: 'rgba(255,160,40,0.1)', borderRadius: 4, border: '1px solid rgba(255,160,40,0.3)', fontSize: '9px', maxWidth: 400, lineHeight: 1.6 }}>
+        <div style={{ fontWeight: 'bold', marginBottom: 2, color: '#ffa028' }}>
           Fuel Required: {ritualSite.fuelCost} fuel item{ritualSite.fuelCost > 1 ? 's' : ''}
         </div>
-        <div style={{ fontSize: '0.9em', opacity: 0.8 }}>
+        <div style={{ opacity: 0.8 }}>
           You have: {fuelCount} fuel item{fuelCount !== 1 ? 's' : ''}
           {fuelNames ? ` (${fuelNames})` : ''}
         </div>
       </div>
 
       {ritualSite.canDefend && !questRequiresDefense && (
-        <div style={{ margin: '8px 0', padding: '8px', background: 'rgba(255,60,60,0.1)', borderRadius: 6, border: '1px solid rgba(255,60,60,0.3)', fontSize: '0.9em' }}>
+        <div style={{ margin: '4px 0', padding: '4px 8px', background: 'rgba(255,60,60,0.1)', borderRadius: 4, border: '1px solid rgba(255,60,60,0.3)', fontSize: '9px', maxWidth: 400, lineHeight: 1.6 }}>
           This site radiates ancient power. Lighting it may attract creatures of the night.
           You can defend the fire for greater rewards.
         </div>
