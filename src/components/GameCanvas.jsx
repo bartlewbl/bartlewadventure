@@ -260,15 +260,8 @@ function renderBattle(ctx, w, h, location, battle, tick, battleAnim, activePet) 
 }
 
 function drawBattleArena(ctx, w, h) {
-  // Subtle ground highlight under the battle area
-  const gradient = ctx.createLinearGradient(0, h * 0.65, 0, h * 0.72);
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.03)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(w * 0.05, h * 0.65, w * 0.9, h * 0.07);
-
-  // Ground line
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+  // Clean ground line - no fog or overlays
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.fillRect(w * 0.08, h * 0.68, w * 0.84, 1);
 }
 

@@ -323,13 +323,12 @@ export default function BattleScreen({
         </div>
       </div>{/* end battle-hud-top */}
 
-      {/* === VIEWPORT: Clear zone for canvas sprites with HP overlays === */}
+      {/* === VIEWPORT: Clear zone for canvas sprites with minimal HP overlays === */}
       <div className="battle-viewport">
-        {/* Player HP overlay - bottom left of viewport */}
+        {/* Player HP overlay - bottom left, no background fog */}
         <div className="viewport-overlay viewport-overlay-player">
           <span className="combatant-name player-name-tag">{player.name} Lv.{player.level}</span>
           <div className="stat-bar">
-            <span className="bar-label">HP</span>
             <div className="bar hp-bar">
               <div className="bar-fill" style={{ width: pHpPct + '%' }} />
             </div>
@@ -349,7 +348,7 @@ export default function BattleScreen({
           })()}
         </div>
 
-        {/* Monster HP overlay - top right of viewport */}
+        {/* Monster HP overlay - top right, no background fog */}
         <div className="viewport-overlay viewport-overlay-monster">
           <div className="monster-header">
             {isBoss && <span className="boss-badge">BOSS</span>}
@@ -364,7 +363,6 @@ export default function BattleScreen({
             </div>
           )}
           <div className="stat-bar">
-            <span className="bar-label">HP</span>
             <div className={`bar hp-bar monster ${isBoss ? 'boss-hp' : ''}`}>
               <div className="bar-fill" style={{ width: mHpPct + '%' }} />
             </div>
