@@ -3845,9 +3845,12 @@ function gameReducer(state, action) {
       const charismaBonus = getCharismaPriceBonus(state.player);
       const unequippable = state.player.inventory.filter(item => {
         if (!item.slot) return false;
-        const levelLocked = item.level && item.level > playerLevel;
         const classLocked = !canClassEquip(item, playerClass);
-        return levelLocked || classLocked;
+        const levelLocked = item.level && item.level > playerLevel;
+        // Keep items the player's class can equip but which just need a higher level —
+        // they'll become usable as the player levels up.
+        if (!classLocked && levelLocked) return false;
+        return classLocked;
       });
       if (unequippable.length === 0) {
         return { ...state, message: 'No unequippable equipment to sell.' };

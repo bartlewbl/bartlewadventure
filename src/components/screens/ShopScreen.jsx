@@ -144,13 +144,15 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
     return player.inventory.filter(item => getItemCategory(item) === category);
   }, [player.inventory, category]);
 
-  // Unequippable equipment in inventory (class-locked or level-locked)
+  // Unequippable equipment in inventory (class-locked only — level-locked items
+  // of the player's class are kept because they'll be usable after leveling up)
   const unequippableItems = useMemo(() => {
     return player.inventory.filter(item => {
       if (!item.slot) return false;
-      const levelLocked = item.level && item.level > player.level;
       const classLocked = !canClassEquip(item, player.characterClass);
-      return levelLocked || classLocked;
+      const levelLocked = item.level && item.level > player.level;
+      if (!classLocked && levelLocked) return false;
+      return classLocked;
     });
   }, [player.inventory, player.level, player.characterClass]);
 

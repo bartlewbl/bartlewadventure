@@ -201,9 +201,12 @@ export default function App() {
   const canRest = !navLocked;
   const unequippableCount = state.player.inventory.filter(item => {
     if (!item.slot) return false;
-    const levelLocked = item.level && item.level > state.player.level;
     const classLocked = !canClassEquip(item, state.player.characterClass);
-    return levelLocked || classLocked;
+    const levelLocked = item.level && item.level > state.player.level;
+    // Keep items the player's class can equip but which just need a higher level —
+    // they'll become usable as the player levels up.
+    if (!classLocked && levelLocked) return false;
+    return classLocked;
   }).length;
 
   return (
