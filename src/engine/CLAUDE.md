@@ -11,7 +11,7 @@ Pure game logic, no UI. All files are imported by components and the main game l
 | passives.js | Passive triggers at 5 battle phases (turn start, after attack, after skill, taking damage, post-defense) |
 | elements.js | Elemental damage triangles (Fire>Ice>Lightning>Fire, Shadow>Nature>Arcane>Shadow) + weather system |
 | scaling.js | Monster/boss stat scaling by area level |
-| loot.js | Item generation, rarity rolls, drop tables, shop filtering |
+| loot.js | Item generation, rarity rolls, drop tables, shop filtering, `SELL_PRICE_MULTIPLIER` + `getSellPrice(item)` helper |
 | arena.js | NPC opponent generation with simulated stats/equipment |
 | utils.js | uid(), pickWeighted(), seededRandom() |
 
@@ -30,6 +30,7 @@ Pure game logic, no UI. All files are imported by components and the main game l
 - **Monster crit:** `5% base + 0.1%/level` (cap 12%), `1.6x` multiplier
 - **Monster skill chance:** `40%`
 - **Item rarity multipliers:** Common 0.7, Uncommon 1.0, Rare 1.7, Epic 2.5, Legendary 3.5
+- **Sell price:** Items store their raw `sellPrice`; the effective sale value is `Math.floor(sellPrice * SELL_PRICE_MULTIPLIER)` (currently `0.5`). Use `getSellPrice(item)` from `loot.js` at every read site (sell actions, UI displays) so displays and payouts stay in sync. Enchant cost (`goldSinks.js:getEnchantCost`) intentionally uses the raw `sellPrice`.
 
 ## Item Passives
 

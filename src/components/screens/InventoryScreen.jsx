@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { REGIONS, QUEST_VILLAGES, canClassEquip, getClassName, getClassColor, getClassShortName } from '../../data/gameData';
+import { getSellPrice } from '../../engine/loot';
 
 // Build a lookup from location id to location name
 const LOCATION_NAME_MAP = {};
@@ -397,7 +398,7 @@ export default function InventoryScreen({
                     <button className="btn btn-sm" onClick={() => onUse(item)}>Use</button>
                   )}
                   <button className="btn btn-sm btn-back" onClick={() => onSell(item)}>
-                    {item.sellPrice}g
+                    {getSellPrice(item)}g
                   </button>
                 </div>
               </div>

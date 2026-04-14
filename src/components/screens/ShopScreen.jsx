@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getShopItems, getArmourerStock, getDailyFeaturedItems } from '../../engine/loot';
+import { getShopItems, getArmourerStock, getDailyFeaturedItems, getSellPrice } from '../../engine/loot';
 import { getPetShopStock, getPetItemShop, getPetRarityClass, PET_MAX_SLOTS } from '../../data/petData';
 import { getGroceryStock } from '../../data/baseData';
 import { getTradingMarketStock } from '../../data/lootChests';
@@ -157,7 +157,7 @@ export default function ShopScreen({ player, pets, base, shopPurchases, tavern, 
   }, [player.inventory, player.level, player.characterClass]);
 
   const unequippableGold = useMemo(() => {
-    return unequippableItems.reduce((sum, item) => sum + (item.sellPrice || 0) * (item.stackCount || 1), 0);
+    return unequippableItems.reduce((sum, item) => sum + getSellPrice(item) * (item.stackCount || 1), 0);
   }, [unequippableItems]);
 
   return (
@@ -695,7 +695,7 @@ function renderSellList(items, player, onSell) {
             </div>
           </div>
           <button className="shop-sell-btn" onClick={() => onSell(item)}>
-            <span className="shop-btn-price">+{item.sellPrice}g</span>
+            <span className="shop-btn-price">+{getSellPrice(item)}g</span>
             <span className="shop-btn-label">Sell 1</span>
           </button>
         </div>
