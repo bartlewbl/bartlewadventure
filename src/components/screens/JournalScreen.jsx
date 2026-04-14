@@ -567,7 +567,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, play
     );
   }
 
-  // Chapter list view
+  // Chapter list view — The Ironflask Legacy
   if (selectedChapter === null) {
     const chapters = [];
     for (let ch = 1; ch <= MISSION_CHAPTER_COUNT; ch++) {
@@ -575,25 +575,44 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, play
       const completed = missions.filter(m => missionClaimed.includes(m.id)).length;
       const total = missions.length;
       const isLocked = ch > unlockedChapter;
-      const chapterName = missions[0]?.chapterName || `Chapter ${ch}`;
-      chapters.push({ ch, chapterName, completed, total, isLocked });
+      const firstMission = missions[0] || {};
+      const chapterName = firstMission.chapterName || `Chapter ${ch}`;
+      const chapterSubtitle = firstMission.chapterSubtitle || '';
+      const regionHint = firstMission.regionHint || '';
+      chapters.push({ ch, chapterName, chapterSubtitle, regionHint, completed, total, isLocked });
     }
 
     return (
-      <div className="journal-tasks-tab">
-        <div className="journal-section-header">
-          <div className="journal-section-title">Story Missions</div>
+      <div className="journal-tasks-tab main-quest-tab">
+        <div className="main-quest-banner">
+          <div className="main-quest-banner-title">The Ironflask Legacy</div>
+          <div className="main-quest-banner-subtitle">A story of betrayal, revenge, and the Old Guard</div>
+          <div className="main-quest-banner-body">
+            Ten years ago, Torren Ironflask was betrayed to the Void Overlord by one of his own.
+            His brother Grog keeps the Dusty Flagon alive in his memory — and in his corner booth,
+            the rest of the Old Guard still drinks, still hides, and still lies. Walk with them.
+            Find the traitor. Recover the seven relics. Finish what Torren started.
+          </div>
         </div>
-        <div className="journal-chapter-list">
-          {chapters.map(({ ch, chapterName, completed, total, isLocked }) => (
+        <div className="journal-section-header">
+          <div className="journal-section-title">Chapters</div>
+        </div>
+        <div className="journal-chapter-list main-quest-chapters">
+          {chapters.map(({ ch, chapterName, chapterSubtitle, regionHint, completed, total, isLocked }) => (
             <button
               key={ch}
-              className={`journal-chapter-card ${isLocked ? 'locked' : ''} ${completed === total ? 'complete' : ''}`}
+              className={`journal-chapter-card main-quest-chapter-card ${isLocked ? 'locked' : ''} ${completed === total ? 'complete' : ''}`}
               onClick={() => !isLocked && setSelectedChapter(ch)}
               disabled={isLocked}
             >
               <div className="journal-chapter-number">Chapter {ch}</div>
               <div className="journal-chapter-name">{chapterName}</div>
+              {chapterSubtitle && !isLocked && (
+                <div className="main-quest-chapter-subtitle">{chapterSubtitle}</div>
+              )}
+              {regionHint && !isLocked && (
+                <div className="main-quest-chapter-region">{regionHint}</div>
+              )}
               <div className="journal-chapter-progress">
                 {isLocked ? 'Locked' : `${completed}/${total}`}
               </div>
@@ -607,16 +626,31 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, play
 
   // Mission detail view for a chapter
   const missions = getMissionsForChapter(selectedChapter);
-  const chapterName = missions[0]?.chapterName || `Chapter ${selectedChapter}`;
+  const firstMission = missions[0] || {};
+  const lastMission = missions[missions.length - 1] || {};
+  const chapterName = firstMission.chapterName || `Chapter ${selectedChapter}`;
+  const chapterSubtitle = firstMission.chapterSubtitle || '';
+  const chapterIntro = firstMission.chapterIntro || '';
+  const chapterOutro = lastMission.chapterOutro || '';
+  const chapterComplete = missions.every(m => missionClaimed.includes(m.id));
 
   return (
-    <div className="journal-tasks-tab">
-      <div className="journal-section-header">
+    <div className="journal-tasks-tab main-quest-tab">
+      <div className="journal-section-header main-quest-detail-header">
         <button className="btn btn-sm journal-chapter-back" onClick={() => setSelectedChapter(null)}>
           Back
         </button>
         <div className="journal-section-title">Ch.{selectedChapter}: {chapterName}</div>
       </div>
+      {chapterSubtitle && (
+        <div className="main-quest-chapter-heading">{chapterSubtitle}</div>
+      )}
+      {chapterIntro && (
+        <div className="main-quest-intro">
+          <div className="main-quest-intro-label">Prologue</div>
+          <div className="main-quest-intro-body">{chapterIntro}</div>
+        </div>
+      )}
 
       {missions.map(mission => {
         const claimed = missionClaimed.includes(mission.id);
@@ -628,7 +662,7 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, play
 
         if (isLocked) {
           return (
-            <div key={mission.id} className="journal-task-card locked">
+            <div key={mission.id} className="journal-task-card main-quest-mission-card locked">
               <div className="journal-task-header">
                 <span className="journal-task-name">{mission.order}. {mission.name}</span>
                 <RewardLabel reward={mission.reward} />
@@ -644,22 +678,47 @@ function MissionsTab({ stats, tasks, onClaim, pinnedQuests, onPin, onUnpin, play
 
         const progress = getQuestProgress(stats, mission.id, mission.stat, tasks.questBaselines);
         return (
-          <TaskCard
-            key={mission.id}
-            task={mission}
-            progress={progress}
-            target={mission.target}
-            claimed={claimed}
-            onClaim={onClaim}
-            taskType="mission"
-            pinnedQuests={pinnedQuests}
-            onPin={onPin}
-            onUnpin={onUnpin}
-            showPin={!claimed}
-            playerInventory={playerInventory}
-          />
+          <div key={mission.id} className="main-quest-mission-wrapper">
+            {mission.storyText && (
+              <div className="main-quest-story">
+                <div className="main-quest-story-label">Story</div>
+                <div className="main-quest-story-body">{mission.storyText}</div>
+              </div>
+            )}
+            {mission.npcQuote && (
+              <div className="main-quest-quote">
+                <div className="main-quest-quote-body">&ldquo;{mission.npcQuote}&rdquo;</div>
+                {mission.npcName && (
+                  <div className="main-quest-quote-attribution">
+                    — {mission.npcName}
+                    {mission.npcLocation && <span className="main-quest-quote-location"> · {mission.npcLocation}</span>}
+                  </div>
+                )}
+              </div>
+            )}
+            <TaskCard
+              task={mission}
+              progress={progress}
+              target={mission.target}
+              claimed={claimed}
+              onClaim={onClaim}
+              taskType="mission"
+              pinnedQuests={pinnedQuests}
+              onPin={onPin}
+              onUnpin={onUnpin}
+              showPin={!claimed}
+              playerInventory={playerInventory}
+            />
+          </div>
         );
       })}
+
+      {chapterComplete && chapterOutro && (
+        <div className="main-quest-outro">
+          <div className="main-quest-outro-label">Epilogue</div>
+          <div className="main-quest-outro-body">{chapterOutro}</div>
+        </div>
+      )}
     </div>
   );
 }

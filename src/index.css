@@ -14732,3 +14732,210 @@ body {
 .cosmetic-buy-btn, .cosmetic-equip-btn, .cosmetic-unequip-btn { font-size: 7px; }
 .equipped-cosmetic { border-color: #4caf50 !important; }
 
+/* ============================================================
+   MAIN QUEST — The Ironflask Legacy
+   Rich narrative view for Story Missions journal tab
+   ============================================================ */
+
+.main-quest-tab {
+  background:
+    radial-gradient(ellipse at top, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #0d0a1c 0%, #12132a 100%);
+}
+
+.main-quest-banner {
+  position: relative;
+  margin: 8px 0 14px 0;
+  padding: 14px 14px 12px 14px;
+  background: linear-gradient(135deg, #1a1535 0%, #261a45 50%, #1a1535 100%);
+  border: 2px solid #7b5fd1;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px #3a2870 inset,
+    0 0 14px rgba(123, 95, 209, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.main-quest-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.10) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.14) 0%, transparent 50%);
+  pointer-events: none;
+}
+.main-quest-banner-title {
+  position: relative;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffd966;
+  text-shadow: 0 0 8px rgba(255, 217, 102, 0.5), 0 2px 0 #000;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+.main-quest-banner-subtitle {
+  position: relative;
+  font-size: 8px;
+  color: #c8b5f0;
+  font-style: italic;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.main-quest-banner-body {
+  position: relative;
+  font-size: 8px;
+  color: #ddd;
+  line-height: 1.55;
+}
+
+.main-quest-chapters .main-quest-chapter-card {
+  min-height: 96px;
+  background: linear-gradient(180deg, #161429 0%, #1c1736 100%);
+  border-color: #443074;
+}
+.main-quest-chapters .main-quest-chapter-card:hover:not(:disabled) {
+  border-color: #8b6fd4;
+  box-shadow: 0 0 10px rgba(139, 111, 212, 0.4);
+}
+.main-quest-chapters .main-quest-chapter-card.complete {
+  border-color: #ffd700;
+  background: linear-gradient(180deg, #1f1a30 0%, #2a2340 100%);
+}
+.main-quest-chapter-subtitle {
+  font-size: 7px;
+  color: #c8b5f0;
+  font-style: italic;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+.main-quest-chapter-region {
+  font-size: 7px;
+  color: #8c7fb8;
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+}
+
+.main-quest-detail-header {
+  border-bottom: 2px solid #443074;
+  padding-bottom: 6px;
+}
+.main-quest-chapter-heading {
+  font-size: 10px;
+  color: #ffd966;
+  font-style: italic;
+  text-align: center;
+  margin: 4px 0 10px 0;
+  letter-spacing: 0.8px;
+  text-shadow: 0 0 6px rgba(255, 217, 102, 0.3);
+}
+
+.main-quest-intro,
+.main-quest-outro {
+  margin: 10px 0 14px 0;
+  padding: 12px 12px 10px 12px;
+  background: linear-gradient(180deg, rgba(30, 24, 56, 0.9) 0%, rgba(22, 18, 42, 0.9) 100%);
+  border: 1px solid #5a4590;
+  border-left: 3px solid #ffd966;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+.main-quest-outro {
+  border-left-color: #7bd3a0;
+}
+.main-quest-intro-label,
+.main-quest-outro-label {
+  font-size: 7px;
+  color: #ffd966;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+.main-quest-outro-label { color: #7bd3a0; }
+.main-quest-intro-body,
+.main-quest-outro-body {
+  font-size: 8px;
+  color: #e3dbff;
+  line-height: 1.6;
+  font-style: italic;
+  text-align: justify;
+}
+.main-quest-outro-body { color: #d8f0e3; }
+
+.main-quest-mission-wrapper {
+  margin: 8px 0 14px 0;
+  padding: 0;
+}
+
+.main-quest-story {
+  margin: 0 0 6px 0;
+  padding: 9px 10px 8px 10px;
+  background: rgba(20, 15, 38, 0.75);
+  border: 1px solid #3a2d5f;
+  border-left: 2px solid #8b6fd4;
+  border-radius: 3px 3px 0 0;
+}
+.main-quest-story-label {
+  font-size: 6px;
+  color: #8b6fd4;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.main-quest-story-body {
+  font-size: 8px;
+  color: #d0c6e8;
+  line-height: 1.55;
+  text-align: justify;
+}
+
+.main-quest-quote {
+  margin: 0 0 6px 0;
+  padding: 8px 10px 7px 12px;
+  background: linear-gradient(90deg, rgba(139, 111, 212, 0.12) 0%, rgba(139, 111, 212, 0.03) 100%);
+  border-left: 3px solid #ffd966;
+  border-right: 1px solid #3a2d5f;
+  border-top: 1px solid #3a2d5f;
+  border-bottom: 1px solid #3a2d5f;
+  border-radius: 0;
+}
+.main-quest-quote-body {
+  font-size: 8px;
+  color: #fff4c0;
+  font-style: italic;
+  line-height: 1.55;
+  text-shadow: 0 1px 0 #000;
+}
+.main-quest-quote-attribution {
+  font-size: 7px;
+  color: #ffd966;
+  margin-top: 4px;
+  text-align: right;
+  letter-spacing: 0.3px;
+}
+.main-quest-quote-location {
+  color: #8c7fb8;
+  font-style: italic;
+}
+
+.main-quest-mission-wrapper .journal-task-card {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 1px solid #3a2d5f;
+}
+.main-quest-mission-card.locked {
+  background: rgba(20, 15, 38, 0.6);
+  border-color: #2a2045;
+}
+
+@media (max-width: 600px) {
+  .main-quest-banner-title { font-size: 11px; }
+  .main-quest-banner-body { font-size: 7px; }
+  .main-quest-intro-body,
+  .main-quest-outro-body,
+  .main-quest-story-body,
+  .main-quest-quote-body { font-size: 7px; }
+}
+
