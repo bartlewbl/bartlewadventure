@@ -7,7 +7,7 @@ import { calcDamage, getClassData, playerHasSkill, getEffectiveManaCost, getPlay
 import { applySkillEffect } from '../engine/skillEffects';
 import { applyAttackPassives, applySkillPassives, applyLifeTap, tryBladeDance, tryLuckyStrike, applyTurnStartPassives, applyDamageReduction, applyManaShield, checkDodge, applySurvivalPassives, applyCursedBlood } from '../engine/passives';
 import { scaleMonster, scaleBoss, scaleRewardByLevel } from '../engine/scaling';
-import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, rollTicketDrop, openLootChest } from '../engine/loot';
+import { rollDrop, rollBossDrop, rollBossMaterials, generateItem, generateRewardItem, rollMaterialDrop, generateCraftedItem, generateCampLoot, generateLocationItem, rollEggDrop, rollTicketDrop, openLootChest, getSellPrice } from '../engine/loot';
 import { createChestItem, CHEST_LOOKUP, TRADING_CHEST_LOOKUP } from '../data/lootChests';
 import { createInitialBase, BUILDINGS, BREWERY_RECIPES, SMELTER_RECIPES, WORKSHOP_RECIPES, BUILDING_MATERIALS, FUEL_ITEMS, getChamberBuffs, getInnExpBonus, getWarehouseBonus, createMaterialItem, createEggItem, createTicketItem, REGION_TICKETS, SPARRING_DUMMIES, EGG_TYPES, getIncubatorSpeedBonus, getIncubatorSlots, getIncubatorFood, INCUBATOR_MAX_FOOD, INCUBATOR_FOOD, createCropFoodItem, rollSeedDrop, FARM_SEEDS, rollCropQuality, createCropItem } from '../data/baseData';
 import { createInitialPetState, createPetInstance, PET_CATALOG, PET_MAX_BOND, PET_MAX_ENERGY, PET_MAX_SLOTS, PET_BOND_DECAY_PER_BATTLE, PET_ENERGY_COST_PER_BATTLE, PET_BUILDINGS, getPetBuildingBuffs, willPetFight, calcPetDamage, calcPetAbsorb, calcPetHeal, calcPetBuffs, PET_SNACKS, PET_ENERGY_POTIONS, PET_QUEST_POOL, PET_MAX_ACTIVE_QUESTS, pickQuestsToOffer, addPetXp, PET_MAX_LEVEL } from '../data/petData';
@@ -3826,17 +3826,18 @@ function gameReducer(state, action) {
     case 'SELL_ITEM': {
       const item = action.item;
       const charismaBonus = getCharismaPriceBonus(state.player);
-      const adjustedSellPrice = Math.floor(item.sellPrice * (1 + charismaBonus));
+      const basePrice = getSellPrice(item);
+      const adjustedSellPrice = Math.floor(basePrice * (1 + charismaBonus));
       const p = {
         ...state.player,
         gold: state.player.gold + adjustedSellPrice,
         inventory: removeOneFromStack(state.player.inventory, item.id),
       };
       let newStats = addStat(state.stats, 'itemsSold');
-      newStats = addStat(newStats, 'goldEarned', item.sellPrice);
+      newStats = addStat(newStats, 'goldEarned', adjustedSellPrice);
       let newTasks = incrementTaskProgress(state.tasks, 'itemsSold');
-      newTasks = incrementTaskProgress(newTasks, 'goldEarned', item.sellPrice);
-      return { ...state, player: p, message: `Sold for ${item.sellPrice}g!`, stats: newStats, tasks: newTasks };
+      newTasks = incrementTaskProgress(newTasks, 'goldEarned', adjustedSellPrice);
+      return { ...state, player: p, message: `Sold for ${adjustedSellPrice}g!`, stats: newStats, tasks: newTasks };
     }
 
     case 'SELL_UNEQUIPPABLE': {
@@ -3862,14 +3863,15 @@ function gameReducer(state, action) {
       let newTasks = { ...state.tasks };
       for (const item of unequippable) {
         const count = item.stackCount || 1;
-        const price = Math.floor(item.sellPrice * (1 + charismaBonus));
+        const basePrice = getSellPrice(item);
+        const price = Math.floor(basePrice * (1 + charismaBonus));
         totalGold += price * count;
         soldCount += count;
         remaining = remaining.filter(i => i.id !== item.id);
         newStats = addStat(newStats, 'itemsSold', count);
-        newStats = addStat(newStats, 'goldEarned', item.sellPrice * count);
+        newStats = addStat(newStats, 'goldEarned', price * count);
         newTasks = incrementTaskProgress(newTasks, 'itemsSold', count);
-        newTasks = incrementTaskProgress(newTasks, 'goldEarned', item.sellPrice * count);
+        newTasks = incrementTaskProgress(newTasks, 'goldEarned', price * count);
       }
       const p = { ...state.player, gold: state.player.gold + totalGold, inventory: remaining };
       return { ...state, player: p, message: `Sold ${soldCount} unequippable item${soldCount !== 1 ? 's' : ''} for ${totalGold}g!`, stats: newStats, tasks: newTasks };
@@ -4916,7 +4918,7 @@ function gameReducer(state, action) {
           ...state,
           player: { ...state.player, inventory: cropInv },
           base: { ...state.base, farmPlots: plots },
-          message: `Harvested ${quality.name} ${seedDef.cropName}! (Sell value: ${cropItem.sellPrice}g)`,
+          message: `Harvested ${quality.name} ${seedDef.cropName}! (Sell value: ${getSellPrice(cropItem)}g)`,
         };
       }
 

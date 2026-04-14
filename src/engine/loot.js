@@ -1,6 +1,19 @@
 // Item generation, loot tables, and shop logic
 // All item creation logic extracted from gameData.js
 
+// Global multiplier applied to every item's sellPrice when the player
+// actually sells or is shown the sell value. Items still store their
+// original sellPrice, so this constant is the single knob to tune how
+// much gold selling returns relative to shop buy prices.
+export const SELL_PRICE_MULTIPLIER = 0.5;
+
+// Compute the effective gold the player receives for selling `item`
+// (before any charisma / shop bonuses). Returns 0 for falsy items.
+export function getSellPrice(item) {
+  if (!item || !item.sellPrice) return 0;
+  return Math.max(0, Math.floor(item.sellPrice * SELL_PRICE_MULTIPLIER));
+}
+
 import { RARITIES, RARITY_LOOKUP, ITEM_LIBRARY, POTION_TIERS, ENERGY_DRINK_TIERS, ITEM_PASSIVES, PASSIVE_RARITY_VALUES } from '../data/gameData';
 import { MATERIAL_DROP_CONFIG, BUILDING_MATERIALS, CRAFTED_ITEMS, CAMP_LOOT_TABLES, createMaterialItem, EGG_DROP_CONFIG, createEggItem, TICKET_DROP_CONFIG, createTicketItem } from '../data/baseData';
 import { CHEST_LOOKUP, RARITY_ORDER, CHEST_MATERIAL_POOLS } from '../data/lootChests';

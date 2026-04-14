@@ -6,6 +6,7 @@ import {
   buyMarketListing,
   cancelMarketListing,
 } from '../../api';
+import { getSellPrice } from '../../engine/loot';
 
 const MARKET_CATEGORIES = [
   { id: 'all', label: 'All Items', icon: '\u2606' },
@@ -457,7 +458,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                     Category: {categoryLabel(getItemCategory(sellItem))}
                   </div>
                   <div className="market-sell-item-suggested">
-                    Sell to NPC: {sellItem.sellPrice}g
+                    Sell to NPC: {getSellPrice(sellItem)}g
                   </div>
                 </div>
               </div>
@@ -547,7 +548,7 @@ export default function MarketScreen({ player, onBack, onMarketTransaction }) {
                       </div>
                     </div>
                     <div className="market-sell-row-action">
-                      <span className="market-sell-row-npc">NPC: {item.sellPrice}g</span>
+                      <span className="market-sell-row-npc">NPC: {getSellPrice(item)}g</span>
                       <span className="market-sell-row-arrow">&rarr;</span>
                     </div>
                   </div>
