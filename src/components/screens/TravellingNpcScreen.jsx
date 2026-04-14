@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { SPRITES, drawSprite } from '../../data/sprites';
+import { MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER } from '../../data/travellingNpcData';
 
 export default function TravellingNpcScreen({
   npc, playerGold, playerLevel, villageQuests, stats,
   travellingPurchases = {},
+  encounterPurchases = 0,
   onBuy, onLeave, onAcceptQuest, onTurnInQuest, onAttack,
 }) {
   const [entered, setEntered] = useState(false);
@@ -342,6 +344,9 @@ export default function TravellingNpcScreen({
       {view === 'shop' && (
         <div className="tnpc-shop-view">
           <div className="tnpc-section-title" style={{ color: theme.primary }}>Wares</div>
+          <div className="tnpc-encounter-limit" style={{ opacity: 0.8, fontSize: '0.9em', marginBottom: 8 }}>
+            Purchases this visit: {encounterPurchases}/{MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER}
+          </div>
           <div className="tnpc-deal-list">
             {npc.deals.map((deal, idx) => {
               const canAfford = playerGold >= deal.cost;
@@ -349,7 +354,8 @@ export default function TravellingNpcScreen({
               const purchased = travellingPurchases[deal.id] || 0;
               const soldOut = deal.stock != null && purchased >= deal.stock;
               const remaining = deal.stock != null ? deal.stock - purchased : null;
-              const canBuy = canAfford && !soldOut;
+              const encounterCapped = encounterPurchases >= MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER;
+              const canBuy = canAfford && !soldOut && !encounterCapped;
               return (
                 <div key={deal.id} className={`tnpc-deal ${!canBuy ? 'too-expensive' : ''} ${justBought ? 'deal-purchased' : ''}`} style={{ borderColor: canBuy ? `${theme.primary}44` : undefined }}>
                   <div className="tnpc-deal-number" style={{ color: theme.primary }}>{idx + 1}</div>
@@ -367,7 +373,7 @@ export default function TravellingNpcScreen({
                     disabled={!canBuy}
                     style={canBuy ? { background: `linear-gradient(135deg, ${theme.secondary}, ${theme.primary})` } : undefined}
                   >
-                    {soldOut ? 'Sold out' : justBought ? 'Sold!' : canAfford ? 'Buy' : "Can't afford"}
+                    {soldOut ? 'Sold out' : justBought ? 'Sold!' : encounterCapped ? 'Visit limit' : canAfford ? 'Buy' : "Can't afford"}
                   </button>
                 </div>
               );

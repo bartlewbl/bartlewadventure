@@ -401,6 +401,7 @@ export default function App() {
                 villageQuests={state.villageQuests}
                 stats={state.stats}
                 travellingPurchases={state.travellingPurchases || {}}
+                encounterPurchases={state.travellingEncounterPurchases || 0}
                 onBuy={actions.tnpcBuy}
                 onLeave={actions.tnpcLeave}
                 onAcceptQuest={actions.tnpcAcceptQuest}

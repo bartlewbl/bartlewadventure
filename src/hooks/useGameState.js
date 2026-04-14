@@ -17,7 +17,7 @@ import { saveGame } from '../api';
 import { prob } from '../data/probabilityStore';
 import { generateArenaOpponent, getMinWager, getHighStakesReward, ARENA_TIERS } from '../engine/arena';
 import { pickRitualSite, RITUAL_DISCOVER_CHANCE, RITUAL_QUEST_DISCOVER_CHANCE, RITUAL_QUEST_LOCATION_DISCOVER_CHANCE, FIRE_RITUAL_CHAIN_IDS, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
-import { TRAVELLING_NPCS, TRAVELLING_NPC_ENCOUNTER_RATE } from '../data/travellingNpcData';
+import { TRAVELLING_NPCS, TRAVELLING_NPC_ENCOUNTER_RATE, MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER } from '../data/travellingNpcData';
 import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
@@ -174,6 +174,7 @@ function createInitialState() {
     activeTrader: null,       // current trader encounter
     activeVillage: null,      // current village encounter
     activeTravellingNpc: null, // current travelling NPC encounter
+    travellingEncounterPurchases: 0, // items bought in the current tNPC encounter (resets each meeting)
     pendingChest: null,       // { itemId, chestId } for chest opening screen
     chestResult: null,        // result of opening a chest (displayed on screen)
     arena: null,              // { tierId, wager, gauntletActive, gauntletWins, gauntletWager }
@@ -1039,6 +1040,7 @@ function gameReducer(state, action) {
             lastEnergyUpdate: exploreLastUpdate,
             pets: petsAfterExplore,
             activeTravellingNpc: tNpc,
+            travellingEncounterPurchases: 0,
             stats: tnpcStats,
           };
         }
@@ -1773,6 +1775,7 @@ function gameReducer(state, action) {
         ...state,
         screen: 'explore',
         activeTravellingNpc: null,
+        travellingEncounterPurchases: 0,
       };
     }
 
@@ -1782,6 +1785,12 @@ function gameReducer(state, action) {
       if (!tNpc) return state;
       const deal = tNpc.deals.find(d => d.id === dealId);
       if (!deal) return state;
+      // Per-encounter purchase cap — players can only buy a limited number
+      // of items per visit to a wandering NPC.
+      const encounterBought = state.travellingEncounterPurchases || 0;
+      if (encounterBought >= MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER) {
+        return { ...state, message: `${tNpc.name} won't sell you any more this visit.` };
+      }
       // Check stock limits
       if (deal.stock != null) {
         const tPurchases = state.travellingPurchases || {};
@@ -1799,7 +1808,13 @@ function gameReducer(state, action) {
       if (result.player.gold !== state.player.gold || (result.message && result.message !== 'Not enough gold!' && result.message !== 'Inventory full!')) {
         const updatedPurchases = { ...(result.travellingPurchases || state.travellingPurchases || {}) };
         updatedPurchases[dealId] = (updatedPurchases[dealId] || 0) + 1;
-        return { ...result, activeTrader: state.activeTrader, activeTravellingNpc: state.activeTravellingNpc, travellingPurchases: updatedPurchases };
+        return {
+          ...result,
+          activeTrader: state.activeTrader,
+          activeTravellingNpc: state.activeTravellingNpc,
+          travellingPurchases: updatedPurchases,
+          travellingEncounterPurchases: encounterBought + 1,
+        };
       }
       return { ...result, activeTrader: state.activeTrader, activeTravellingNpc: state.activeTravellingNpc };
     }
@@ -1860,7 +1875,7 @@ function gameReducer(state, action) {
     case 'TNPC_ATTACK': {
       const { npcId } = action;
       const tNpc = TRAVELLING_NPCS.find(n => n.id === npcId);
-      if (!tNpc || !tNpc.boss) return { ...state, screen: 'explore', activeTravellingNpc: null };
+      if (!tNpc || !tNpc.boss) return { ...state, screen: 'explore', activeTravellingNpc: null, travellingEncounterPurchases: 0 };
       // Scale the NPC boss based on location level or player level
       const loc = state.currentLocation;
       const bossLevel = Math.max(loc?.levelReq || 1, state.player.level);
@@ -1901,6 +1916,7 @@ function gameReducer(state, action) {
         ...state,
         screen: 'battle',
         activeTravellingNpc: null,
+        travellingEncounterPurchases: 0,
         battle: npcBattle,
         battleLog: npcBossLog,
         battleResult: null,

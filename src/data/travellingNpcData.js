@@ -275,3 +275,9 @@ export const TRAVELLING_NPCS = [
 
 // Encounter rate for travelling NPCs during exploration
 export const TRAVELLING_NPC_ENCOUNTER_RATE = 0.012; // ~1.2% per explore step
+
+// Max items the player can buy in a single encounter with a travelling NPC.
+// Per-deal `stock` still applies (a deal can still be sold out across
+// encounters), but this additionally caps total purchases per visit so
+// players can't clear out a wanderer's entire inventory in one meeting.
+export const MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER = 2;
