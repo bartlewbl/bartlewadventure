@@ -33,6 +33,9 @@ import ProbabilityDashboard from './components/screens/ProbabilityDashboard';
 import TavernScreen from './components/screens/TavernScreen';
 import FireRitualScreen from './components/screens/FireRitualScreen';
 import TravellingNpcScreen from './components/screens/TravellingNpcScreen';
+import CompanionEncounterScreen from './components/screens/CompanionEncounterScreen';
+import CompanionZoneScreen from './components/screens/CompanionZoneScreen';
+import CompanionRewardScreen from './components/screens/CompanionRewardScreen';
 import MobileNav from './components/MobileNav';
 import QuestSidebar from './components/QuestSidebar';
 import { loadProbabilityConfig } from './data/probabilityStore';
@@ -196,7 +199,7 @@ export default function App() {
     );
   }
 
-  const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select' || state.screen === 'fire-ritual';
+  const navLocked = state.screen === 'battle' || state.screen === 'battle-result' || state.screen === 'boss-confirm' || state.screen === 'stat-select' || state.screen === 'fire-ritual' || state.screen === 'companion-encounter' || state.screen === 'companion-zone' || state.screen === 'companion-reward';
   const hidePanels = navLocked;
   const canRest = !navLocked;
   const unequippableCount = state.player.inventory.filter(item => {
@@ -390,6 +393,31 @@ export default function App() {
                 onLeave={actions.traderLeave}
                 onAcceptQuest={actions.traderAcceptQuest}
                 onTurnInQuest={actions.traderTurnInQuest}
+              />
+            )}
+
+            {state.screen === 'companion-encounter' && (
+              <CompanionEncounterScreen
+                npc={state.activeCompanionNpc}
+                playerLevel={state.player.level}
+                onAccept={actions.companionAccept}
+                onDecline={actions.companionDecline}
+              />
+            )}
+
+            {state.screen === 'companion-zone' && (
+              <CompanionZoneScreen
+                companionRun={state.companionRun}
+                player={state.player}
+                onAdvance={actions.companionStartStage}
+                onAbandon={actions.companionAbandon}
+              />
+            )}
+
+            {state.screen === 'companion-reward' && (
+              <CompanionRewardScreen
+                companionReward={state.companionReward}
+                onContinue={actions.companionDismissReward}
               />
             )}
 

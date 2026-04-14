@@ -20,6 +20,11 @@ import { generatePlayerEncounter, rollPlayerEncounterDrops } from '../engine/pla
 import { pickRitualSite, RITUAL_DISCOVER_CHANCE, RITUAL_QUEST_DISCOVER_CHANCE, RITUAL_QUEST_LOCATION_DISCOVER_CHANCE, FIRE_RITUAL_CHAIN_IDS, findFuelItems, WAVE_CONFIGS, WAVE_DEFENSE_BONUS, getWaveTier } from '../data/fireRitualData';
 import { TRAVELLING_NPCS, TRAVELLING_NPC_ENCOUNTER_RATE, MAX_TRAVELLING_NPC_PURCHASES_PER_ENCOUNTER } from '../data/travellingNpcData';
 import {
+  COMPANION_NPCS, COMPANION_ENCOUNTER_RATE, ESCORT_DAMAGE_SHARE, ESCORT_MIN_STAGE_DAMAGE,
+  HELPER_STAGE_HEAL_PCT, COMPANION_FINAL_STAGE_BONUS,
+  findCompanionNpc,
+} from '../data/companionData';
+import {
   createInitialStats, createInitialTaskProgress,
   getActiveDailyTasks, getActiveWeeklyTasks, getActiveMonthlyTasks,
   STORY_TASKS, TUTORIAL_QUESTS, STORY_MISSIONS, SIDE_QUEST_CHAINS,
@@ -182,6 +187,13 @@ function createInitialState() {
     previousRegionId: null,   // saved when entering arena so player can return
     activeRitualSite: null,   // current fire ritual site found during exploration
     waveDefense: null,        // { tier, currentWave, totalWaves, hpScale, atkScale, restHealPct, locationId }
+    activeCompanionNpc: null, // current companion NPC encounter (offering a quest)
+    companionRun: null,       // active escort/expedition run: { questId, npcId, mode, stage, totalStages, companionHp, companionMaxHp, companionAtk, locationSnapshot }
+    companionQuests: {
+      acceptedQuests: [],     // [{ questId, npcId }]
+      completedQuests: [],    // [questId, ...]
+      failedQuests: [],       // [questId, ...]
+    },
     // Gold sink features
     bounties: {
       active: [],       // [{ bountyId, baseline }]
@@ -1043,6 +1055,27 @@ function gameReducer(state, action) {
             activeTravellingNpc: tNpc,
             travellingEncounterPurchases: 0,
             stats: tnpcStats,
+          };
+        }
+      }
+
+      // Companion NPC encounter (~1% chance) — offers an escort / expedition quest
+      if (Math.random() < COMPANION_ENCOUNTER_RATE) {
+        const completed = state.companionQuests?.completedQuests || [];
+        const eligibleCompanions = COMPANION_NPCS.filter(n =>
+          state.player.level >= (n.minLevel || 1) && !completed.includes(n.quest.id)
+        );
+        if (eligibleCompanions.length > 0) {
+          const cNpc = eligibleCompanions[Math.floor(Math.random() * eligibleCompanions.length)];
+          const cStats = addStat(state.stats, 'companionEncounters');
+          return {
+            ...state, screen: 'companion-encounter',
+            exploreText: text,
+            energy: exploreEnergy,
+            lastEnergyUpdate: exploreLastUpdate,
+            pets: petsAfterExplore,
+            activeCompanionNpc: cNpc,
+            stats: cStats,
           };
         }
       }
@@ -2100,6 +2133,176 @@ function gameReducer(state, action) {
       };
     }
 
+    // ---- COMPANION QUEST ACTIONS ----
+
+    case 'COMPANION_DECLINE': {
+      return {
+        ...state,
+        screen: 'explore',
+        activeCompanionNpc: null,
+      };
+    }
+
+    case 'COMPANION_ACCEPT': {
+      const cNpc = state.activeCompanionNpc;
+      if (!cNpc) return state;
+      const completed = state.companionQuests?.completedQuests || [];
+      if (completed.includes(cNpc.quest.id)) {
+        return { ...state, message: 'You have already completed this quest.' };
+      }
+      // Initialize the companion run state
+      const loc = state.currentLocation;
+      const run = {
+        questId: cNpc.quest.id,
+        npcId: cNpc.id,
+        mode: cNpc.mode,
+        stage: 0,
+        totalStages: cNpc.location.stages,
+        companionMaxHp: cNpc.companion.maxHp,
+        companionHp: cNpc.companion.maxHp,
+        companionAtk: cNpc.companion.atk || 0,
+        locationSnapshot: loc ? { id: loc.id, name: loc.name, monsters: loc.monsters, levelReq: loc.levelReq, levelRange: loc.levelRange } : null,
+        zoneId: cNpc.location.id,
+        zoneName: cNpc.location.name,
+      };
+      const accepted = state.companionQuests?.acceptedQuests || [];
+      const alreadyAccepted = accepted.some(q => q.questId === cNpc.quest.id);
+      return {
+        ...state,
+        screen: 'companion-zone',
+        activeCompanionNpc: null,
+        companionRun: run,
+        companionQuests: {
+          ...state.companionQuests,
+          acceptedQuests: alreadyAccepted
+            ? accepted
+            : [...accepted, { questId: cNpc.quest.id, npcId: cNpc.id }],
+          completedQuests: state.companionQuests?.completedQuests || [],
+          failedQuests: state.companionQuests?.failedQuests || [],
+        },
+        message: `Quest accepted: ${cNpc.quest.name}`,
+      };
+    }
+
+    case 'COMPANION_ABANDON': {
+      const run = state.companionRun;
+      if (!run) {
+        return { ...state, screen: 'town', companionRun: null };
+      }
+      const cq = state.companionQuests || { acceptedQuests: [], completedQuests: [], failedQuests: [] };
+      return {
+        ...state,
+        screen: 'town',
+        companionRun: null,
+        companionQuests: {
+          ...cq,
+          acceptedQuests: (cq.acceptedQuests || []).filter(q => q.questId !== run.questId),
+          failedQuests: [...(cq.failedQuests || []), run.questId],
+        },
+        message: 'You abandon the expedition.',
+      };
+    }
+
+    case 'COMPANION_START_STAGE': {
+      const run = state.companionRun;
+      if (!run) return state;
+      const nextStage = run.stage + 1;
+      if (nextStage > run.totalStages) return state;
+      const loc = state.currentLocation || run.locationSnapshot;
+      if (!loc || !loc.monsters || loc.monsters.length === 0) {
+        return { ...state, message: 'The zone is empty. Leave and try again.' };
+      }
+      const monsterId = loc.monsters[Math.floor(Math.random() * loc.monsters.length)];
+      let stageLevel = loc.levelReq || state.player.level;
+      if (loc.levelRange) {
+        const [minOff, maxOff] = loc.levelRange;
+        stageLevel = Math.max(1, (loc.levelReq || 1) + minOff + Math.floor(Math.random() * (maxOff - minOff + 1)));
+      }
+      // Later stages get slightly tougher; final stage is a small boss-ish enemy
+      const monster = scaleMonster(monsterId, stageLevel);
+      if (!monster) return { ...state, message: 'No monster could be spawned.' };
+      const difficultyRamp = 1 + (nextStage - 1) * 0.10;
+      monster.maxHp = Math.floor(monster.maxHp * difficultyRamp);
+      monster.hp = monster.maxHp;
+      monster.atk = Math.floor(monster.atk * difficultyRamp);
+      // Helper mode: give the player a between-stage heal before combat
+      let hpGain = 0;
+      let playerForBattle = state.player;
+      if (run.mode === 'helper' && run.stage > 0) {
+        const maxHp = getBattleMaxHp(state.player);
+        const heal = Math.floor(maxHp * HELPER_STAGE_HEAL_PCT);
+        const newHp = Math.min(maxHp, state.player.hp + heal);
+        hpGain = newHp - state.player.hp;
+        playerForBattle = { ...state.player, hp: newHp };
+      }
+      const cNpc = findCompanionNpc(run.npcId);
+      const encBattle = createBattleState(monster, playerForBattle);
+      // Mark the battle so the end-of-battle handler knows this is a companion stage
+      encBattle.companionStage = nextStage;
+      const stageName = cNpc?.location?.stageNames?.[nextStage - 1] || `Stage ${nextStage}`;
+      const log = [
+        { text: `${cNpc?.name || 'Your companion'}: "${cNpc?.quest?.giverLine || 'Stay sharp.'}"`, type: 'info' },
+        { text: `${stageName} (${nextStage}/${run.totalStages}) — A ${monster.name} blocks the path!`, type: 'info' },
+      ];
+      if (hpGain > 0) log.unshift({ text: `${cNpc?.name || 'Your companion'} patches you up. (+${hpGain} HP)`, type: 'heal' });
+      if (run.mode === 'helper' && run.companionAtk > 0) {
+        log.push({ text: `${cNpc?.name || 'Your companion'} holds the flank beside you.`, type: 'info' });
+      }
+      return {
+        ...state,
+        screen: 'battle',
+        player: playerForBattle,
+        battle: encBattle,
+        battleLog: log,
+        battleResult: null,
+        companionRun: { ...run, stage: nextStage },
+      };
+    }
+
+    case 'COMPANION_COMPLETE': {
+      // Triggered after the final stage victory — grant the quest reward
+      const run = state.companionRun;
+      if (!run) return state;
+      const cNpc = findCompanionNpc(run.npcId);
+      if (!cNpc) return { ...state, companionRun: null, screen: 'town' };
+      let p = { ...state.player };
+      p.gold += cNpc.quest.rewardGold;
+      const lvl = Math.max(run.locationSnapshot?.levelReq || 1, p.level);
+      let rewardItem = null;
+      if (cNpc.quest.rewardItem) {
+        rewardItem = generateItem(cNpc.quest.rewardItem, lvl + 3);
+        const newInv = addToInventory(p.inventory, rewardItem, p.maxInventory);
+        if (newInv) p = { ...p, inventory: newInv };
+      }
+      const cq = state.companionQuests || { acceptedQuests: [], completedQuests: [], failedQuests: [] };
+      let newStats = addStat(state.stats, 'companionQuestsCompleted');
+      newStats = addStat(newStats, 'goldEarned', cNpc.quest.rewardGold);
+      return {
+        ...state,
+        screen: 'companion-reward',
+        player: p,
+        companionRun: null,
+        companionQuests: {
+          ...cq,
+          acceptedQuests: (cq.acceptedQuests || []).filter(q => q.questId !== run.questId),
+          completedQuests: [...(cq.completedQuests || []), run.questId],
+        },
+        stats: newStats,
+        companionReward: {
+          npcId: cNpc.id,
+          questId: run.questId,
+          npcName: cNpc.name,
+          completeLine: cNpc.quest.completeLine,
+          gold: cNpc.quest.rewardGold,
+          item: rewardItem,
+        },
+      };
+    }
+
+    case 'COMPANION_DISMISS_REWARD': {
+      return { ...state, screen: 'town', companionReward: null };
+    }
+
     case 'TRADER_ACCEPT_QUEST': {
       const { questId, traderId } = action;
       const trader = state.activeTrader;
@@ -2834,8 +3037,11 @@ function gameReducer(state, action) {
     }
 
     case 'BATTLE_RUN': {
-      if (state.battle.noRun || state.waveDefense) {
-        return { ...state, message: state.waveDefense ? 'You must defend the fire!' : 'You cannot escape!' };
+      if (state.battle.noRun || state.waveDefense || state.companionRun) {
+        const msg = state.waveDefense ? 'You must defend the fire!'
+          : state.companionRun ? 'You cannot abandon your companion mid-fight!'
+          : 'You cannot escape!';
+        return { ...state, message: msg };
       }
       const cls = getClassData(state.player);
       let escapeChance = (cls?.passive === 'Greed') ? prob('combat.escapeChanceGreed') : prob('combat.escapeChanceBase');
@@ -3606,8 +3812,76 @@ function gameReducer(state, action) {
         };
       }
 
+      // Companion run: if player defeated, fail the quest
+      if (state.battleResult?.defeated && state.companionRun) {
+        const run = state.companionRun;
+        const cq = state.companionQuests || { acceptedQuests: [], completedQuests: [], failedQuests: [] };
+        return {
+          ...state, screen: 'town', battle: null, battleResult: null, battleLog: [],
+          currentLocation: null,
+          companionRun: null,
+          companionQuests: {
+            ...cq,
+            acceptedQuests: (cq.acceptedQuests || []).filter(q => q.questId !== run.questId),
+            failedQuests: [...(cq.failedQuests || []), run.questId],
+          },
+          message: 'Your companion watches you fall. The expedition is over.',
+        };
+      }
+
       if (state.battleResult?.defeated) {
         return { ...state, screen: 'town', battle: null, battleResult: null, battleLog: [], currentLocation: null };
+      }
+
+      // Companion run: stage cleared. Apply between-stage companion damage (escort mode)
+      // and either advance to next stage or complete the quest.
+      if (state.companionRun && state.battleResult?.isCompanionStage) {
+        const run = state.companionRun;
+        const wasFinalStage = run.stage >= run.totalStages;
+        // Handle pending level-ups first (like wave defense does)
+        if (state.pendingLevelUps?.length > 0) {
+          return { ...state, screen: 'stat-select', battle: null, battleResult: null, battleLog: [] };
+        }
+        // Escort damage: companion takes a chunk of what the player took
+        let newCompanionHp = run.companionHp;
+        if (run.mode === 'escort') {
+          const dmgTaken = state.battleResult?.companionStageDmgTaken || 0;
+          const companionDmg = Math.max(ESCORT_MIN_STAGE_DAMAGE, Math.floor(dmgTaken * ESCORT_DAMAGE_SHARE));
+          newCompanionHp = Math.max(0, run.companionHp - companionDmg);
+        }
+        // If companion died (escort only), fail the quest
+        if (run.mode === 'escort' && newCompanionHp <= 0) {
+          const cq = state.companionQuests || { acceptedQuests: [], completedQuests: [], failedQuests: [] };
+          return {
+            ...state,
+            screen: 'town',
+            battle: null,
+            battleResult: null,
+            battleLog: [],
+            currentLocation: null,
+            companionRun: null,
+            companionQuests: {
+              ...cq,
+              acceptedQuests: (cq.acceptedQuests || []).filter(q => q.questId !== run.questId),
+              failedQuests: [...(cq.failedQuests || []), run.questId],
+            },
+            message: 'Your companion fell. The expedition is lost.',
+          };
+        }
+        // If this was the final stage, grant the reward
+        if (wasFinalStage) {
+          const updated = { ...state, companionRun: { ...run, companionHp: newCompanionHp }, battle: null, battleResult: null, battleLog: [] };
+          return gameReducer(updated, { type: 'COMPANION_COMPLETE' });
+        }
+        // Otherwise, return to the zone screen for next-stage prompt
+        return {
+          ...state,
+          screen: 'companion-zone',
+          battle: null,
+          battleResult: null,
+          battleLog: [],
+          companionRun: { ...run, companionHp: newCompanionHp },
+        };
       }
 
       // Wave defense: more waves remaining - dispatch WAVE_DEFENSE_NEXT
@@ -6858,6 +7132,19 @@ function handleVictory(state) {
     leveledPlayer.gold = leveledPlayer.gold - goldGain + finalGoldGain;
   }
 
+  // Apply companion-run final-stage bonus multipliers
+  const cRun = state.companionRun;
+  const isCompanionStage = !!(cRun && state.battle?.companionStage);
+  if (cRun && isCompanionStage && cRun.stage >= cRun.totalStages) {
+    const cBonus = COMPANION_FINAL_STAGE_BONUS;
+    const prevFinalExp = finalExpGain;
+    const prevFinalGold = finalGoldGain;
+    finalExpGain = Math.floor(finalExpGain * cBonus.expMult);
+    finalGoldGain = Math.floor(finalGoldGain * cBonus.goldMult);
+    leveledPlayer.exp = leveledPlayer.exp - prevFinalExp + finalExpGain;
+    leveledPlayer.gold = leveledPlayer.gold - prevFinalGold + finalGoldGain;
+  }
+
   return {
     ...state,
     screen: 'battle-result',
@@ -6895,6 +7182,12 @@ function handleVictory(state) {
       waveDefenseComplete: wd ? wd.currentWave >= wd.totalWaves : false,
       waveTier: wd?.tier || null,
       mercenaryHelped: !!state.mercenary,
+      // Companion run info
+      isCompanionStage,
+      companionStageDmgTaken: (state.battle?.damageTakenInBattle || 0),
+      companionStageNumber: cRun?.stage || 0,
+      companionTotalStages: cRun?.totalStages || 0,
+      companionStageFinal: !!(cRun && isCompanionStage && cRun.stage >= cRun.totalStages),
     },
     // Decrement mercenary battles
     mercenary: state.mercenary
@@ -7314,6 +7607,12 @@ export function useGameState(isLoggedIn) {
     fireRitualLight: () => dispatch({ type: 'FIRE_RITUAL_LIGHT' }),
     fireRitualDefend: () => dispatch({ type: 'FIRE_RITUAL_DEFEND' }),
     fireRitualLeave: () => dispatch({ type: 'FIRE_RITUAL_LEAVE' }),
+    // Companion quest actions
+    companionAccept: () => dispatch({ type: 'COMPANION_ACCEPT' }),
+    companionDecline: () => dispatch({ type: 'COMPANION_DECLINE' }),
+    companionStartStage: () => dispatch({ type: 'COMPANION_START_STAGE' }),
+    companionAbandon: () => dispatch({ type: 'COMPANION_ABANDON' }),
+    companionDismissReward: () => dispatch({ type: 'COMPANION_DISMISS_REWARD' }),
     // Gold sink actions
     respecStats: () => dispatch({ type: 'RESPEC_STATS' }),
     enchantItem: (item, equippedSlot) => dispatch({ type: 'ENCHANT_ITEM', item, equippedSlot }),
